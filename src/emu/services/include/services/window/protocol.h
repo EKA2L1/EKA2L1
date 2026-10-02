@@ -45,7 +45,8 @@ namespace eka2l1::epoc {
 
         std::uint16_t window_opcode(std::uint16_t opcode) const {
             if (versioned_opcodes()) {
-                if (legacy_opcodes() && opcode >= EWsWinOpAbsPosition) {
+                // OS 7.0s has the new session table but predates RWindowBase::AbsPosition.
+                if ((legacy_opcodes() || os_ == epocver::epoc7) && opcode >= EWsWinOpAbsPosition) {
                     ++opcode;
                 }
                 if (client_.build <= WS_NEWARCH_VER && os_ <= epocver::epoc94

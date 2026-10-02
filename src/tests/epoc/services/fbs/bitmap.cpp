@@ -29,23 +29,101 @@
 
 using namespace eka2l1;
 
-TEST_CASE("color256_palette_matches_the_device_gdi_contract", "[fbs],[palette]") {
-    const auto [version, s80, uiq2, reference] = GENERATE(
-        std::make_tuple(epocver::epoc70, false, true, true),
-        std::make_tuple(epocver::epoc70, false, false, false),
-        std::make_tuple(epocver::epoc80, true, false, true),
-        std::make_tuple(epocver::epoc94, false, false, false),
-        std::make_tuple(epocver::epoc95, false, false, true));
-    const auto &palette = epoc::get_suitable_palette_256(version, s80, uiq2);
+TEST_CASE("color256_fallback_preserves_legacy_defaults", "[fbs],[palette]") {
+    const auto [version, reference] = GENERATE(
+        std::make_tuple(epocver::epoc70, false),
+        std::make_tuple(epocver::epoc80, false),
+        std::make_tuple(epocver::epoc94, false),
+        std::make_tuple(epocver::epoc95, true));
+    const auto &palette = epoc::get_suitable_palette_256(version);
 
-    // P900 GDI.DLL ordinal 164 indexes the Symbian reference Color256 table.
-    // The legacy S60 table assigns different colours to the same indices.
     REQUIRE(palette[0x01] == (reference ? 0x000033 : 0xCCFFFF));
     REQUIRE(palette[0x24] == (reference ? 0x330000 : 0xFFFFCC));
     REQUIRE(palette[0x6C] == (reference ? 0x111111 : 0xFFFF66));
     REQUIRE(palette[0xE1] == (reference ? 0xFF00FF : 0x111111));
     REQUIRE(palette[0x00] == 0x000000);
     REQUIRE(palette[0xFF] == 0xFFFFFF);
+}
+
+TEST_CASE("ROM palette follows the immutable DynamicPalette export", "[fbs],[palette]") {
+    const bool thumb = GENERATE(true, false);
+    constexpr std::uint32_t base = 0x5063a170;
+    constexpr std::uint32_t table = base + 64;
+    std::vector<std::uint8_t> code(64 + sizeof(epoc::palette_256));
+    const auto put = [&](std::size_t offset, std::uint32_t value) {
+        std::memcpy(code.data() + offset, &value, sizeof(value));
+    };
+    if (thumb) {
+        // 7710's DefaultColor256Util is LDR r0,[pc,#0]; BX lr.
+        put(0, 0x47704800);
+        put(4, table);
+        put(16, 0x4770);
+    } else {
+        put(0, 0xe59f0000);
+        put(4, 0xe12fff1e);
+        put(8, table);
+        put(16, 0xe12fff1e);
+    }
+    auto expected = epoc::color_256_palette_new;
+    expected[7] = 0x123456;
+    std::memcpy(code.data() + 64, expected.data(), sizeof(expected));
+    const auto read = [&] {
+        return epoc::read_rom_palette_256(code.data(), code.size(), base, base | thumb, (base + 16) | thumb);
+    };
+
+    SECTION("uses all ROM entries, including manufacturer-defined colours") {
+        const auto palette = read();
+        REQUIRE(palette);
+        REQUIRE(*palette == expected);
+    }
+    SECTION("does not cache a dynamic palette") {
+        put(16, 0);
+        REQUIRE_FALSE(read());
+    }
+    SECTION("rejects a getter that dereferences mutable state") {
+        put(0, 0);
+        REQUIRE_FALSE(read());
+    }
+    SECTION("rejects a table outside the image") {
+        put(thumb ? 4 : 8, base - 4);
+        REQUIRE_FALSE(read());
+    }
+    SECTION("rejects a truncated table") {
+        code.pop_back();
+        REQUIRE_FALSE(read());
+    }
+    SECTION("rejects missing exports") {
+        REQUIRE_FALSE(epoc::read_rom_palette_256(code.data(), code.size(), base, 0, 0));
+    }
+}
+
+TEST_CASE("ROM GDI palette follows the indexed colour lookup", "[fbs],[palette]") {
+    constexpr std::uint32_t base = 0x5018975c;
+    std::vector<std::uint32_t> code{0xe59f300c, 0xe1a00100, 0xe2000fff, 0xe7930000, 0xe12fff1e, base + 24};
+    auto expected = epoc::color_256_palette_new;
+    expected[7] = 0x123456;
+    code.insert(code.end(), expected.begin(), expected.end());
+    const auto read = [&] {
+        return epoc::read_rom_gdi_palette_256(reinterpret_cast<const std::uint8_t *>(code.data()),
+            code.size() * sizeof(code[0]), base, base);
+    };
+    SECTION("P800/P900 ARM lookup returns the ROM's exact entries") {
+        const auto palette = read();
+        REQUIRE(palette);
+        REQUIRE(*palette == expected);
+    }
+    SECTION("rejects a different lookup implementation") {
+        code[3] = 0xe5930000;
+        REQUIRE_FALSE(read());
+    }
+    SECTION("rejects a truncated table") {
+        code.pop_back();
+        REQUIRE_FALSE(read());
+    }
+    SECTION("rejects a literal outside the image") {
+        code[0] = 0xe59f3fff;
+        REQUIRE_FALSE(read());
+    }
 }
 
 TEST_CASE("gray256_decode_distinguishes_colour_from_mask_opacity", "icon_mask") {

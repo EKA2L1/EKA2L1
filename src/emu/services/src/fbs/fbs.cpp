@@ -342,6 +342,8 @@ namespace eka2l1 {
     }
 
     void fbs_server::initialize_server() {
+        initialize_palette();
+
         // Initialize those chunks
         shared_chunk = kern->create_and_add<kernel::chunk>(
                                kernel::owner_type::kernel,

@@ -1,0 +1,10 @@
+TARGET          avkonfep_v81a.dll
+TARGETTYPE      dll
+UID             0x10005e32 0x101f4d25
+USERINCLUDE     ..\..\inc
+SYSTEMINCLUDE   \epoc32\include
+SOURCEPATH      ..\..\src
+SOURCE          HostBridgedImeEka1.cpp Dispatch.s
+LIBRARY         euser.lib fepbase.lib cone.lib gdi.lib etext.lib
+DEFFILE         ..\..\eabi\avkonfep_v81a.def
+NOSTRICTDEF

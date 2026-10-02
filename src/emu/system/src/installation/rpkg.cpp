@@ -212,7 +212,7 @@ namespace eka2l1::loader {
             return device_installation_not_exist;
         }
 
-        if (!should_install_requires_additional_rpkg(rom_path)) {
+        if (rpkg_path.empty() && !should_install_requires_additional_rpkg(rom_path)) {
             return install_rom(dvcmngr, rom_path, rom_resident_path, drives_z_resident_path, isolate_drives, progress_cb, cancel_cb);
         }
 

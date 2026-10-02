@@ -210,6 +210,11 @@ namespace eka2l1::loader {
             return epocver::epoc70;
         }
 
+        if (common::exists(add_path(extracted_path, "system\\install\\series90v10.sis"))
+            || common::exists(add_path(extracted_path, "system\\install\\series90v11.sis"))) {
+            return epocver::epoc7;
+        }
+
         epocver target_ver = epocver::epoc94;
 
         // Some shipped s60v3 firmware some reason includes series60v5 SIS into install directory

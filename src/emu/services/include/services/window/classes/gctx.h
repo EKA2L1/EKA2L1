@@ -34,6 +34,7 @@
 
 namespace eka2l1 {
     struct fbsfont;
+    struct fbsbitmap;
 }
 
 namespace eka2l1::epoc {
@@ -60,6 +61,12 @@ namespace eka2l1::epoc {
         dot_dot_dash = 5
     };
 
+    enum class draw_mode {
+        invert_screen = 1,
+        exclusive_or = 2,
+        pen = 32
+    };
+
     struct graphic_context : public window_client_obj {
         canvas_base *attached_window;
 
@@ -71,9 +78,13 @@ namespace eka2l1::epoc {
 
         brush_style fill_mode;
         pen_style line_mode;
+        draw_mode drawing_mode = draw_mode::pen;
 
         common::rgba brush_color;
         common::rgba pen_color;
+
+        fbsbitmap *brush_pattern = nullptr;
+        eka2l1::vec2 brush_origin;
 
         eka2l1::vec2 pen_size;
         eka2l1::vec2 origin;
@@ -101,6 +112,8 @@ namespace eka2l1::epoc {
 
         void do_command_draw_bitmap(service::ipc_context &ctx, void *bitmap, eka2l1::rect source_rect, eka2l1::rect dest_rect, const std::uint8_t flags);
         bool get_brush_color(eka2l1::vec4 &color_brush);
+        bool make_brush_fill_command(const eka2l1::rect &area, gdi_store_command &cmd);
+        void set_brush_pattern(fbsbitmap *bitmap);
         bool get_pen_color_and_style(eka2l1::vec4 &pen_color, drivers::pen_style &style);
 
         void do_submit_clipping();
@@ -123,6 +136,9 @@ namespace eka2l1::epoc {
         void draw_polygon(service::ipc_context &context, ws_cmd &cmd);
         void set_brush_color(service::ipc_context &context, ws_cmd &cmd);
         void set_brush_style(service::ipc_context &context, ws_cmd &cmd);
+        void set_brush_origin(service::ipc_context &context, ws_cmd &cmd);
+        void use_brush_pattern(service::ipc_context &context, ws_cmd &cmd);
+        void discard_brush_pattern(service::ipc_context &context, ws_cmd &cmd);
         void set_pen_color(service::ipc_context &context, ws_cmd &cmd);
         void set_pen_style(service::ipc_context &context, ws_cmd &cmd);
         void set_pen_size(service::ipc_context &context, ws_cmd &cmd);

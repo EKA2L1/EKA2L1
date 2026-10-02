@@ -40,6 +40,7 @@ namespace eka2l1::epoc {
     enum gdi_store_command_opcode : std::uint32_t {
         gdi_store_command_invalid,
         gdi_store_command_draw_rect,
+        gdi_store_command_xor_rect,
         gdi_store_command_draw_line,
         gdi_store_command_draw_polygon,
         gdi_store_command_draw_bitmap,
@@ -56,6 +57,7 @@ namespace eka2l1::epoc {
     static inline bool gdi_store_command_draws_pixels(const gdi_store_command_opcode opcode) {
         switch (opcode) {
         case gdi_store_command_draw_rect:
+        case gdi_store_command_xor_rect:
         case gdi_store_command_draw_line:
         case gdi_store_command_draw_polygon:
         case gdi_store_command_draw_bitmap:
@@ -106,7 +108,8 @@ namespace eka2l1::epoc {
         GDI_STORE_COMMAND_INVERT_MASK = 1 << 0,
         GDI_STORE_COMMAND_MAIN_RAW = 1 << 1,
         GDI_STORE_COMMAND_MASK_RAW = 1 << 2,
-        GDI_STORE_COMMAND_BLIT = 1 << 3
+        GDI_STORE_COMMAND_BLIT = 1 << 3,
+        GDI_STORE_COMMAND_BRUSH_PATTERN = 1 << 4
     };
 
     struct gdi_store_command_draw_bitmap_data {
@@ -256,7 +259,7 @@ namespace eka2l1::epoc {
         void build_segment(const gdi_store_command_segment &segment);
         void build_texture_updates(const gdi_store_command_segment &segment);
         void build_single_command(const gdi_store_command &command);
-        void build_command_draw_rect(const gdi_store_command_draw_rect_data &cmd);
+        void build_command_draw_rect(const gdi_store_command_draw_rect_data &cmd, bool exclusive_or = false);
         void build_command_draw_line(const gdi_store_command_draw_line_data &cmd);
         void build_command_draw_polygon(const gdi_store_command_draw_polygon_data &cmd);
         void build_command_draw_text(const gdi_store_command_draw_text_data &cmd);

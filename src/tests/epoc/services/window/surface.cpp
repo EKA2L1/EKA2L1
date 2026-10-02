@@ -18,6 +18,7 @@
 #include <services/fbs/bitmap.h>
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <map>
 #include <thread>
@@ -59,15 +60,17 @@ namespace {
             destination.resize(source.size());
             for (std::size_t i = 0; i < source.size(); ++i) {
                 const double alpha = source[i / 4 * 4 + 3] / 255.0;
-                const auto factor = [alpha](drivers::blend_factor value) {
+                const auto factor = [&, alpha](drivers::blend_factor value) {
                     if (value == drivers::blend_factor::one) return 1.0;
                     if (value == drivers::blend_factor::frag_out_alpha) return alpha;
                     if (value == drivers::blend_factor::one_minus_frag_out_alpha) return 1.0 - alpha;
+                    if (value == drivers::blend_factor::one_minus_frag_out_color) return 1.0 - source[i] / 255.0;
+                    if (value == drivers::blend_factor::one_minus_current_color) return 1.0 - destination[i] / 255.0;
                     return 0.0;
                 };
                 const int offset = i % 4 == 3 ? 2 : 0;
-                destination[i] = static_cast<std::uint8_t>(std::min(255.0,
-                    source[i] * factor(factors_[offset]) + destination[i] * factor(factors_[offset + 1])));
+                destination[i] = static_cast<std::uint8_t>(std::lround(std::min(255.0,
+                    source[i] * factor(factors_[offset]) + destination[i] * factor(factors_[offset + 1]))));
             }
         }
 
@@ -377,6 +380,40 @@ TEST_CASE("Retained GDI pixels preserve alpha and redraw clears expose the surfa
     gdi.build_single_command(rectangle);
     submit(driver, builder);
     REQUIRE(driver.images[ui] == std::vector<std::uint8_t>{ 0, 0, 0, 0 });
+}
+
+TEST_CASE("Binary-colour XOR rectangles preserve destination pixels and undo themselves", "[window_surface]") {
+    const bool premultiplied = GENERATE(false, true);
+    surface_driver driver;
+    epoc::bitmap_cache cache(nullptr);
+    drivers::graphics_command_builder builder;
+    const auto target = drivers::create_bitmap(&driver, { 1, 1 }, 32);
+    const std::vector<std::uint8_t> original{ 0x12, 0x34, 0x56, 255 };
+    driver.images[target] = original;
+    builder.bind_bitmap(target);
+    common::region clip;
+    clip.add_rect(rect({ 0, 0 }, { 1, 1 }));
+    epoc::gdi_command_builder gdi(&driver, builder, cache, drivers::filter_option::nearest,
+        { 0, 0 }, 1.0f, clip, premultiplied);
+    epoc::gdi_store_command rectangle;
+    rectangle.opcode_ = epoc::gdi_store_command_xor_rect;
+    auto &data = rectangle.get_data_struct<epoc::gdi_store_command_draw_rect_data>();
+    data.rect_ = rect({ 0, 0 }, { 1, 1 });
+    data.color_ = { 255, 0, 255, 0 };
+    REQUIRE(epoc::gdi_store_command_draws_pixels(rectangle.opcode_));
+    gdi.build_single_command(rectangle);
+    submit(driver, builder);
+    REQUIRE(driver.images[target] == std::vector<std::uint8_t>{ 0xED, 0x34, 0xA9, 255 });
+
+    gdi.build_single_command(rectangle);
+    submit(driver, builder);
+    REQUIRE(driver.images[target] == original);
+
+    rectangle.opcode_ = epoc::gdi_store_command_draw_rect;
+    data.color_ = { 0, 127, 255, 255 };
+    gdi.build_single_command(rectangle);
+    submit(driver, builder);
+    REQUIRE(driver.images[target] == std::vector<std::uint8_t>{ 0, 127, 255, 255 });
 }
 
 TEST_CASE("Initial GDI replay consumes pending uploads without repeating pixel draws", "[window_surface]") {
