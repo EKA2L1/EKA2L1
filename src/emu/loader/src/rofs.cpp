@@ -126,7 +126,7 @@ namespace eka2l1::loader {
         }
 
         fname = add_path(base, fname);
-        std::ofstream extract_stream(fname, std::ios_base::binary);
+        common::wo_std_file_stream extract_stream(fname, true);
 
         const std::uint64_t org_pos = stream.tell();
         stream.seek(entry.file_addr_ - file_offset, common::seek_where::beg);

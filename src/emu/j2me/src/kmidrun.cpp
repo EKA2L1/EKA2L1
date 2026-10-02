@@ -176,7 +176,7 @@ namespace eka2l1::j2me {
     void uninstall_for_kmidrun(system *sys, app_list *applist, const app_entry &entry) {
         applist->remove_entry(entry.id_);
 
-        const std::string icon_real_path = eka2l1::add_path(sys->get_config()->storage, entry.icon_path_);
+        const std::string icon_real_path = eka2l1::add_path(sys->get_config()->storage_path(), entry.icon_path_);
         common::remove(icon_real_path);
 
         std::u16string jar_path = common::utf8_to_ucs2(build_path_to_jar(entry));

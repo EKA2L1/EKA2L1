@@ -26,7 +26,6 @@
 #include <config/config.h>
 
 #include <config/app_settings.h>
-#include <fstream>
 
 #include <yaml-cpp/yaml.h>
 
@@ -85,7 +84,7 @@ namespace eka2l1::config {
         std::string current_dir;
         common::get_current_directory(current_dir);
 
-        std::string compat_full = eka2l1::absolute_path(COMPAT_DIR_PATH, current_dir);
+        std::string compat_full = eka2l1::absolute_path(eka2l1::data_path(COMPAT_DIR_PATH), current_dir);
 
         if (!common::exists(compat_full)) {
             common::create_directories(compat_full);
@@ -137,14 +136,14 @@ namespace eka2l1::config {
     }
 
     void app_settings::save_setting(const epoc::uid id, const app_setting &setting) {
-        std::ofstream stream(eka2l1::add_path(COMPAT_DIR_PATH, fmt::format("{:X}.yml", id)));
+        common::wo_std_file_stream stream(eka2l1::data_path(eka2l1::add_path(COMPAT_DIR_PATH, fmt::format("{:X}.yml", id))), false);
         YAML::Emitter emitter;
 
         emitter << YAML::BeginMap;
         serialize_app_setting(emitter, setting);
         emitter << YAML::EndMap;
 
-        stream << emitter.c_str();
+        stream.write(emitter.c_str(), emitter.size());
     }
 
     bool app_settings::add_or_replace_setting(const epoc::uid app_uid, const app_setting &setting_to_add) {
@@ -161,7 +160,7 @@ namespace eka2l1::config {
     }
 
     void app_settings::update_setting(const epoc::uid app_uid) {
-        const std::string setting_file = eka2l1::add_path(COMPAT_DIR_PATH, fmt::format("{:X}.yml", app_uid));
+        const std::string setting_file = eka2l1::data_path(eka2l1::add_path(COMPAT_DIR_PATH, fmt::format("{:X}.yml", app_uid)));
 
         if (!common::exists(setting_file)) {
             return;
