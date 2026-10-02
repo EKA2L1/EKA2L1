@@ -126,6 +126,55 @@ TEST_CASE("ROM GDI palette follows the indexed colour lookup", "[fbs],[palette]"
     }
 }
 
+TEST_CASE("gray4_decode_preserves_packed_pixels_and_stencil_masks", "[fbs],[palette]") {
+    const bool as_mask = GENERATE(false, true);
+    // Symbian's two-bit scanlines start at the low bits and align to 32 bits.
+    std::uint8_t samples[] = {0xE4, 0xE4, 0xE4, 0xE4, 0xFC, 0xFF, 0xFF, 0xFF,
+        0x1B, 0x1B, 0x1B, 0x1B, 0x03, 0, 0, 0};
+    loader::sbm_header header{};
+    header.size_pixels = eka2l1::vec2(17, 2);
+    header.bit_per_pixels = 2;
+    common::ro_buf_stream source(samples, sizeof(samples));
+    std::vector<std::uint8_t> rgba(17 * 2 * 4);
+    common::wo_buf_stream destination(rgba.data(), rgba.size());
+
+    REQUIRE(epoc::convert_to_rgba8888(nullptr, source, destination, header, -1,
+        epoc::bitmap_file_no_compression, as_mask));
+
+    for (std::size_t y = 0; y < 2; y++) {
+        for (std::size_t x = 0; x < 17; x++) {
+            const std::size_t offset = (y * 17 + x) * 4;
+            const std::uint8_t level = (y == 0 ? x % 4 : 3 - x % 4) * 85;
+            REQUIRE(rgba[offset] == level);
+            REQUIRE(rgba[offset + 1] == level);
+            REQUIRE(rgba[offset + 2] == level);
+            REQUIRE(rgba[offset + 3] == (as_mask ? (level == 255 ? 255 : 0) : 255));
+        }
+    }
+
+    if (as_mask) {
+        std::vector<std::uint8_t> icon(rgba.size(), 255);
+        epoc::apply_icon_mask_alpha(icon.data(), rgba.data(), 17, 2, epoc::display_mode::gray4);
+        REQUIRE(icon[3] == 255);
+        REQUIRE(icon[7] == 255);
+        REQUIRE(icon[11] == 255);
+        REQUIRE(icon[15] == 0);
+    }
+}
+
+TEST_CASE("gray4_decode_rejects_truncated_pixel_data", "[fbs],[palette]") {
+    std::uint8_t samples[] = {0xE4};
+    loader::sbm_header header{};
+    header.size_pixels = eka2l1::vec2(5, 1);
+    header.bit_per_pixels = 2;
+    common::ro_buf_stream source(samples, sizeof(samples));
+    std::vector<std::uint8_t> rgba(5 * 4);
+    common::wo_buf_stream destination(rgba.data(), rgba.size());
+
+    REQUIRE_FALSE(epoc::convert_to_rgba8888(nullptr, source, destination, header, -1,
+        epoc::bitmap_file_no_compression, false));
+}
+
 TEST_CASE("gray256_decode_distinguishes_colour_from_mask_opacity", "icon_mask") {
     // TRgb::Gray256() uses the opaque RGB constructor; BITGDI alone treats
     // EGray256 mask samples as opacity (RGB.CPP, GDI.INL, BITBLT.CPP).
