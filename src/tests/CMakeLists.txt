@@ -22,6 +22,7 @@ target_link_libraries(ekatests PRIVATE
     epocservs
     epocdispatch
     drivers
+    gdbstub
     mbedtls
     libtess2
     lunasvg)
