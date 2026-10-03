@@ -19,12 +19,14 @@
 #include <common/algorithm.h>
 #include <common/fileutils.h>
 #include <common/log.h>
+#include <common/path.h>
 #include <common/platform.h>
 #include <common/pystr.h>
 
 #include <spdlog/spdlog.h>
 
 #include <algorithm>
+#include <cerrno>
 #include <cstdio>
 #include <fstream>
 #include <iostream>
@@ -32,13 +34,17 @@
 #include <string>
 #include <vector>
 
+#if EKA2L1_PLATFORM(WIN32)
+#include <common/cvt.h>
+#include <filesystem>
+#endif
+
 #ifdef _MSC_VER
 #include <spdlog/sinks/msvc_sink.h>
 #elif EKA2L1_PLATFORM_ANDROID
 #include "spdlog/sinks/android_sink.h"
 #endif
 
-#include <spdlog/details/file_helper.h>
 #include <spdlog/details/os.h>
 #include <spdlog/sinks/base_sink.h>
 #include <spdlog/sinks/basic_file_sink.h>
@@ -173,19 +179,76 @@ namespace eka2l1 {
 
         bool console_shown = false;
 
+#if EKA2L1_PLATFORM(WIN32)
+        // Windows reads a narrow file name in the ANSI code page, so the standard
+        // streams are given the UTF-8 name as a wide one.
+        static std::filesystem::path stream_path(const std::string &path) {
+            return std::filesystem::path(common::utf8_to_wstr(path));
+        }
+#else
+        static const std::string &stream_path(const std::string &path) {
+            return path;
+        }
+#endif
+
+        // The file sink runs under its own lock, and every log line ends up in it, so
+        // it works on its file through the C runtime alone: common's file helpers take
+        // a lock of their own and may log, which would come back into the sink.
+        namespace log_file {
+#if EKA2L1_PLATFORM(WIN32)
+            // Windows reads a narrow name in the ANSI code page: hand it the wide one.
+            static std::FILE *open(const std::string &path, const char *mode) {
+                return _wfopen(common::utf8_to_wstr(path).c_str(), common::utf8_to_wstr(mode).c_str());
+            }
+
+            static void create_folder(const std::string &folder) {
+                std::error_code ignored;
+                std::filesystem::create_directories(stream_path(folder), ignored);
+            }
+
+            static void remove(const std::string &path) {
+                _wremove(common::utf8_to_wstr(path).c_str());
+            }
+
+            static void rename(const std::string &path, const std::string &new_path) {
+                _wrename(common::utf8_to_wstr(path).c_str(), common::utf8_to_wstr(new_path).c_str());
+            }
+#else
+            static std::FILE *open(const std::string &path, const char *mode) {
+                return std::fopen(path.c_str(), mode);
+            }
+
+            static void create_folder(const std::string &folder) {
+                spdlog::details::os::create_dir(folder);
+            }
+
+            static void remove(const std::string &path) {
+                std::remove(path.c_str());
+            }
+
+            static void rename(const std::string &path, const std::string &new_path) {
+                std::rename(path.c_str(), new_path.c_str());
+            }
+#endif
+        }
+
         // A file sink that stays within a line budget. Once the budget is reached the
         // oldest half of the file is dropped: the newest lines are the ones worth
         // keeping, and halving makes the rewrite rare enough not to matter.
+        //
+        // The sink opens its file itself rather than through spdlog's file helper,
+        // which takes a narrow name: on Windows a log in a folder whose name is not
+        // ASCII could not be opened.
         class capped_file_sink final : public spdlog::sinks::base_sink<std::mutex> {
         public:
             capped_file_sink(const std::string &filename, const std::size_t max_lines)
                 : filename_(filename)
                 , max_lines_(max_lines) {
-                file_.open(filename_, true);
+                open_file(true);
             }
 
             ~capped_file_sink() override {
-                file_.close();
+                close_file();
             }
 
         protected:
@@ -193,7 +256,7 @@ namespace eka2l1 {
                 spdlog::memory_buf_t formatted;
                 base_sink<std::mutex>::formatter_->format(msg, formatted);
 
-                file_.write(formatted);
+                write_file(formatted.data(), formatted.size());
                 lines_ += static_cast<std::size_t>(std::count(formatted.begin(), formatted.end(), '\n'));
 
                 if (lines_ >= max_lines_) {
@@ -202,10 +265,58 @@ namespace eka2l1 {
             }
 
             void flush_() override {
-                file_.flush();
+                if (file_ && (std::fflush(file_) != 0)) {
+                    spdlog::throw_spdlog_ex("Failed flush to file " + filename_, errno);
+                }
             }
 
         private:
+            static constexpr int OPEN_TRIES = 5;
+            static constexpr unsigned int OPEN_RETRY_INTERVAL_MS = 10;
+
+            // Opens the file the way spdlog's file helper does: the folder is created,
+            // a truncation is done separately and the file is written in append mode, and
+            // a file that is briefly held elsewhere gets a few more tries.
+            void open_file(const bool truncate) {
+                close_file();
+
+                const std::string folder = eka2l1::file_directory(filename_);
+                if (!folder.empty()) {
+                    log_file::create_folder(folder);
+                }
+
+                for (int tries = 0; tries < OPEN_TRIES; tries++) {
+                    std::FILE *truncated = truncate ? log_file::open(filename_, "wb") : nullptr;
+                    if (truncated) {
+                        std::fclose(truncated);
+                    }
+
+                    if (!truncate || truncated) {
+                        file_ = log_file::open(filename_, "ab");
+                        if (file_) {
+                            return;
+                        }
+                    }
+
+                    spdlog::details::os::sleep_for_millis(OPEN_RETRY_INTERVAL_MS);
+                }
+
+                spdlog::throw_spdlog_ex("Failed opening file " + filename_ + " for writing", errno);
+            }
+
+            void close_file() {
+                if (file_) {
+                    std::fclose(file_);
+                    file_ = nullptr;
+                }
+            }
+
+            void write_file(const char *data, const std::size_t size) {
+                if (file_ && (std::fwrite(data, 1, size, file_) != size)) {
+                    spdlog::throw_spdlog_ex("Failed writing to file " + filename_, errno);
+                }
+            }
+
             std::string trim_notice(const std::size_t dropped_total) const {
                 // The rest of the file ends its lines the way spdlog does, so this one has to too.
                 return "--- log trimmed: " + std::to_string(dropped_total) + " oldest lines dropped so far ---"
@@ -219,11 +330,10 @@ namespace eka2l1 {
                 std::size_t kept_lines = 0;
                 bool rewritten = false;
 
-                file_.flush();
-                file_.close();
+                close_file();
 
                 {
-                    std::ifstream source(filename_, std::ios::binary);
+                    std::ifstream source(stream_path(filename_), std::ios::binary);
 
                     if (source) {
                         // Counting the dropped lines off rather than seeking to the middle
@@ -237,7 +347,7 @@ namespace eka2l1 {
                             skipped++;
                         }
 
-                        std::ofstream kept(trimmed_path, std::ios::binary | std::ios::trunc);
+                        std::ofstream kept(stream_path(trimmed_path), std::ios::binary | std::ios::trunc);
 
                         if (kept) {
                             const std::string notice = trim_notice(dropped_ + skipped);
@@ -267,10 +377,10 @@ namespace eka2l1 {
                 dropped_ += dropped;
 
                 if (rewritten) {
-                    std::remove(filename_.c_str());
-                    std::rename(trimmed_path.c_str(), filename_.c_str());
+                    log_file::remove(filename_);
+                    log_file::rename(trimmed_path, filename_);
 
-                    file_.open(filename_, false);
+                    open_file(false);
                     lines_ = kept_lines;
 
                     return;
@@ -278,18 +388,15 @@ namespace eka2l1 {
 
                 // The rewrite failed, but the budget still has to hold: start the file
                 // over rather than let it grow.
-                std::remove(trimmed_path.c_str());
-                file_.open(filename_, true);
+                log_file::remove(trimmed_path);
+                open_file(true);
 
                 const std::string notice = trim_notice(dropped_);
-                spdlog::memory_buf_t notice_buf;
-                notice_buf.append(notice.data(), notice.data() + notice.size());
-
-                file_.write(notice_buf);
+                write_file(notice.data(), notice.size());
                 lines_ = 1;
             }
 
-            spdlog::details::file_helper file_;
+            std::FILE *file_ = nullptr;
             std::string filename_;
             std::size_t max_lines_;
             std::size_t lines_ = 0;
@@ -340,11 +447,7 @@ namespace eka2l1 {
 
             std::vector<spdlog::sink_ptr> sinks;
 
-#if EKA2L1_PLATFORM(WIN32)
-            DeleteFileA(log_file_name);
-#else
-            remove(log_file_name);
-#endif
+            common::remove(log_file_name);
 
             color_dist_sink = std::make_shared<spdlog::sinks::dist_sink_mt>();
 
