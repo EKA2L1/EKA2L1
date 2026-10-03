@@ -51,11 +51,17 @@ namespace eka2l1 {
     }
 
     class window_server;
+
+    namespace control {
+        class server;
+    }
 }
 
 class main_window;
 
 namespace eka2l1::desktop {
+    class control_frontend;
+
     /**
      * \brief State of the emulator on desktop.
      */
@@ -110,7 +116,13 @@ namespace eka2l1::desktop {
 
         std::string launched_app_name_;
 
+        // Where --control asked the control server to listen; empty when it was not given.
+        std::string control_endpoint;
+        std::unique_ptr<control_frontend> control_host;
+        std::unique_ptr<control::server> control_server;
+
         explicit emulator();
+        ~emulator();
 
         void stage_one();
         bool stage_two();

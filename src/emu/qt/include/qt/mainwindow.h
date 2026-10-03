@@ -264,6 +264,12 @@ public:
 
     std::function<void(eka2l1::kernel::process *)> get_process_exit_callback();
 
+    // Show the registrations as they are now, after someone else rescanned them.
+    void reload_applist();
+
+    // Show a pause or resume that came from outside the UI, without pausing or resuming again.
+    void show_paused(const bool paused);
+
 private:
     Ui::main_window *ui_;
     applist_widget *applist_;
