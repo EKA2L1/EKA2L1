@@ -102,6 +102,14 @@ namespace eka2l1::manager {
         scripting::cpu::set_register(15, scripting::cpu::get_pc() + 0x74);
     }
 
+    static void ssx_skip_null_client_read() {
+        // A missing menu controller has the same offline state as a null client.
+        if (scripting::cpu::get_register(2) == 0) {
+            scripting::cpu::set_register(3, 0);
+            scripting::cpu::set_register(15, scripting::cpu::get_pc() + 4);
+        }
+    }
+
     void scripts::register_builtin_patches() {
         // The kernel-level hooks must be live for breakpoints to fire.
         register_kernel_hooks();
@@ -163,6 +171,10 @@ namespace eka2l1::manager {
         // QSymbianFontDatabaseExtrasImplementation::extras() in Qt 4.7.4 and 4.8.0
         register_breakpoint("qtgui.dll", 0x001570B5, 0, 0x2001B2DD, 0x8E4B3F71, qt_skip_font_extras_thread_check);
         register_breakpoint("qtgui.dll", 0x0015DC71, 0, 0x2001B2DD, 0xAA4C4DCA, qt_skip_font_extras_thread_check);
+
+        for (const std::uint32_t addr : { 0x10024F88, 0x10024FDC, 0x10025030 }) {
+            register_breakpoint("6r65.app", addr, 0, 0x101FD402, 0xBA80BDA5, ssx_skip_null_client_read);
+        }
 
         current_module = nullptr;
 
