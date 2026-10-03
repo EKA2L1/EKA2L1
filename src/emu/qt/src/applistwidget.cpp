@@ -23,6 +23,7 @@
 #include <QMovie>
 #include <QSettings>
 #include <QMenu>
+#include <QPointer>
 #include <QInputDialog>
 #include <QtSvg/QSvgRenderer>
 #include <QtConcurrent/QtConcurrent>
@@ -167,6 +168,8 @@ applist_widget::applist_widget(QWidget *parent, eka2l1::applist_server *lister, 
     , hide_system_apps_(hide_system_apps)
     , conf_(conf)
     , should_dead_(false)
+    , reloading_(false)
+    , reload_again_(false)
     , context_j2me_item_(nullptr) {
     search_bar_ = new applist_search_bar;
     device_combo_bar_ = new applist_device_combo;
@@ -319,20 +322,23 @@ void applist_widget::on_list_widget_item_clicked(QListWidgetItem *item) {
     emit app_launch(item_translated);
 }
 
-void applist_widget::on_new_registeration_item_come(QListWidgetItem *item) {
-    if (item->text().contains(search_bar_->value(), Qt::CaseInsensitive)) {
-        item->setHidden(false);
-    } else {
-        item->setHidden(true);
+// The scan runs on a worker thread and sends what each item shows here, so the items are made
+// and put into the list on the thread the list belongs to.
+void applist_widget::on_new_registeration_item_come(const QIcon &icon, const QString &name, const QString &tool_tip,
+    int registry_index, bool is_j2me) {
+    QListWidgetItem *item = new applist_widget_item(icon, name, registry_index, is_j2me,
+        is_j2me ? list_j2me_widget_ : list_widget_);
+
+    item->setSizeHint(ICON_GRID_SIZE + QSize(20, 20));
+    item->setTextAlignment(Qt::AlignHCenter | Qt::AlignBottom);
+
+    if (!tool_tip.isEmpty()) {
+        item->setToolTip(tool_tip);
     }
+
+    item->setHidden(!name.contains(search_bar_->value(), Qt::CaseInsensitive));
 
     const bool in_j2me = j2me_mode_btn_->isChecked();
-
-    if (in_j2me) {
-        list_j2me_widget_->addItem(item);
-    } else {
-        list_widget_->addItem(item);
-    }
 
     if (!loading_label_->isHidden()) {
         loading_label_->hide();
@@ -350,6 +356,33 @@ void applist_widget::on_new_registeration_item_come(QListWidgetItem *item) {
 }
 
 void applist_widget::reload_whole_list() {
+    // A reload pumps the event loop while it waits for its scan. Another reload started from
+    // there (a refresh after an install, say) would clear the list under the first one and
+    // race it with a second scan, so it runs once the first has finished instead.
+    if (reloading_) {
+        reload_again_ = true;
+        return;
+    }
+
+    // The window can delete this widget from inside the event loop a reload pumps (a device
+    // restart after an app exits); nothing of it may be touched after that.
+    const QPointer<applist_widget> alive(this);
+
+    reloading_ = true;
+
+    do {
+        reload_again_ = false;
+        reload_whole_list_now();
+
+        if (!alive) {
+            return;
+        }
+    } while (reload_again_ && !should_dead_);
+
+    reloading_ = false;
+}
+
+void applist_widget::reload_whole_list_now() {
     if (should_dead_) {
         scanning_done_evt_.set();
         return;
@@ -414,18 +447,15 @@ void applist_widget::reload_whole_list() {
             std::vector<eka2l1::j2me::app_entry> entries = lister_j2me_->get_entries();
             exit_mutex_.unlock();
 
-            if (entries.size() == 0) {
-                show_no_apps_avail();
-            } else {
-                for (std::size_t i = 0; i < entries.size(); i++) {
-                    const std::lock_guard<std::mutex> guard(exit_mutex_);
-                    if (should_dead_) {
-                        scanning_done_evt_.set();
-                        return;
-                    }
-
-                    add_registeration_item_j2me(entries[i]);
+            // An empty list is reported once the scan is done, on the UI thread.
+            for (std::size_t i = 0; i < entries.size(); i++) {
+                const std::lock_guard<std::mutex> guard(exit_mutex_);
+                if (should_dead_) {
+                    scanning_done_evt_.set();
+                    return;
                 }
+
+                add_registeration_item_j2me(entries[i]);
             }
 
             const std::lock_guard<std::mutex> guard(exit_mutex_);
@@ -455,20 +485,17 @@ void applist_widget::reload_whole_list() {
                 registries = live_registries;
             }
 
-            if (registries.size() == 0) {
-                show_no_apps_avail();
-            } else {
-                for (std::size_t i = 0; i < registries.size(); i++) {
-                    const std::lock_guard<std::mutex> guard(exit_mutex_);
-                    if (should_dead_) {
-                        scanning_done_evt_.set();
-                        return;
-                    }
+            // An empty list is reported once the scan is done, on the UI thread.
+            for (std::size_t i = 0; i < registries.size(); i++) {
+                const std::lock_guard<std::mutex> guard(exit_mutex_);
+                if (should_dead_) {
+                    scanning_done_evt_.set();
+                    return;
+                }
 
-                    if (!registries[i].caps.is_hidden) {
-                        if (!hide_system_apps_ || (hide_system_apps_ && !is_app_reg_system_app(registries.data() + i))) {
-                            add_registeration_item_native(registries[i], static_cast<int>(i));
-                        }
+                if (!registries[i].caps.is_hidden) {
+                    if (!hide_system_apps_ || (hide_system_apps_ && !is_app_reg_system_app(registries.data() + i))) {
+                        add_registeration_item_native(registries[i], static_cast<int>(i));
                     }
                 }
             }
@@ -480,10 +507,20 @@ void applist_widget::reload_whole_list() {
         });
     }
 
+    const QPointer<applist_widget> alive(this);
+
     while (!future.isFinished()) {
         QCoreApplication::processEvents();
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
+
+    if (!alive) {
+        return;
+    }
+
+    // The scan can finish with items still on their way here. Take them in now, so the list is
+    // complete when it is checked below, and a following reload's clear() cannot come before them.
+    QCoreApplication::sendPostedEvents(this, QEvent::MetaCall);
 
     if (in_j2me) {
         if (list_j2me_widget_->count() == 0) {
@@ -566,13 +603,8 @@ void applist_widget::add_registeration_item_j2me(const eka2l1::j2me::app_entry &
         display_icon = QIcon(pixmap);
     }
 
-    QListWidgetItem *newItem = new applist_widget_item(display_icon, QString::fromStdString(entry.title_),
-        static_cast<int>(entry.id_), true, list_j2me_widget_);
-
-    newItem->setSizeHint(ICON_GRID_SIZE + QSize(20, 20));
-    newItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignBottom);
-
-    emit new_registeration_item_come(newItem);
+    emit new_registeration_item_come(display_icon, QString::fromStdString(entry.title_), QString(),
+        static_cast<int>(entry.id_), true);
 }
 
 void applist_widget::add_registeration_item_native(eka2l1::apa_app_registry &reg, const int index) {
@@ -726,15 +758,10 @@ void applist_widget::add_registeration_item_native(eka2l1::apa_app_registry &reg
         }
     }
 
-    QListWidgetItem *newItem = new applist_widget_item(final_icon, app_name, index, false, list_widget_);
-    newItem->setSizeHint(ICON_GRID_SIZE + QSize(20, 20));
-    newItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignBottom);
-
     // Sometimes app can't have full name. Just display it :)
     QString tool_tip = app_name + tr("<br>App UID: 0x%1").arg(reg.mandatory_info.uid, 0, 16);
-    newItem->setToolTip(tool_tip);
 
-    emit new_registeration_item_come(newItem);
+    emit new_registeration_item_come(final_icon, app_name, tool_tip, index, false);
 }
 
 void applist_widget::set_hide_system_apps(const bool should_hide) {
