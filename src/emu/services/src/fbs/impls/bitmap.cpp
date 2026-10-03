@@ -1800,6 +1800,27 @@ namespace eka2l1 {
                 break;
             }
 
+            case epoc::display_mode::gray4:
+                for (std::size_t y = 0; y < header.size_pixels.y; y++) {
+                    current_to_look->seek(y * byte_width, common::seek_where::beg);
+                    std::uint8_t packed = 0;
+
+                    for (std::size_t x = 0; x < header.size_pixels.x; x++) {
+                        if ((x % 4 == 0) && (current_to_look->read(&packed, 1) != 1)) {
+                            return false;
+                        }
+
+                        const std::uint8_t level = ((packed >> ((x % 4) * 2)) & 3) * 85;
+                        const std::uint8_t alpha = make_standard_mask ? ((level == 255) ? 255 : 0) : 255;
+                        dest.write(&level, 1);
+                        dest.write(&level, 1);
+                        dest.write(&level, 1);
+                        dest.write(&alpha, 1);
+                    }
+                }
+
+                break;
+
             case epoc::display_mode::gray256:
                 for (std::size_t y = 0; y < header.size_pixels.y; y++) {
                     current_to_look->seek(y * byte_width, common::seek_where::beg);
