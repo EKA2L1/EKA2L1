@@ -45,6 +45,7 @@ namespace eka2l1::control {
             add_emulator_methods(rpc, ctx);
             add_app_methods(rpc, ctx);
             add_input_methods(rpc, ctx);
+            add_screen_methods(rpc, ctx);
         }
     };
 

@@ -1,7 +1,7 @@
 # Control server
 
 The control server lets another program drive a running emulator: list, install, launch and
-kill apps, press keys, touch the screen, pause and quit. It speaks [JSON-RPC 2.0](https://www.jsonrpc.org/specification) over a local socket.
+kill apps, press keys, touch the screen, take screenshots, pause and quit. It speaks [JSON-RPC 2.0](https://www.jsonrpc.org/specification) over a local socket.
 
 ```
 eka2l1_qt --control "$XDG_RUNTIME_DIR/eka2l1.sock"
@@ -87,9 +87,9 @@ The first five codes are JSON-RPC 2.0's own.
 | -32601 | method not found | No method by that name. |
 | -32602 | invalid params | A parameter is missing, has the wrong type or is out of range; the message names it. |
 | -32603 | internal error | Something failed that should not have; the message says what. |
-| -32000 | not ready | No device has been booted, or the emulator has no system yet. |
+| -32000 | not ready | No device has been booted, or the emulator has no system or graphics driver yet. |
 | -32001 | unauthorized | `auth` was not called with the right token (TCP endpoints only). A wrong token also closes the connection. |
-| -32002 | not found | The app, package or file named in the request does not exist. |
+| -32002 | not found | The app, package, file or screen named in the request does not exist. |
 | -32003 | failed | The emulator tried and could not do it; the message says why, or points to the log. Also sent, with `"id": null`, to a connection past the limit before it is closed. |
 | -32004 | shutting down | The emulator is exiting; the request was not run. |
 
@@ -223,6 +223,23 @@ send one half each.
 the frontend shows the screen at. `move` drags a pressed pointer; `pointer` tells fingers apart
 on multi-touch devices. `tap` works as for keys.
 
+### `screen.capture`
+
+| Params | `path`: host file path, optional; `screen`: integer, optional |
+|---|---|
+| Result | `width`, `height`; and `path` when a path was given, else `png`: the PNG file in base64 |
+| Errors | -32000 no graphics driver yet; -32002 no such screen; -32003 nothing has been drawn on the screen yet, reading it back failed, something already exists at `path`, or `path` could not be written |
+
+Takes a PNG of what the emulated screen shows (RGB, no alpha), at the size the emulator renders
+it. Without `screen`, the screen that has the focus. It is what the guest drew, without the
+frontend's scaling, borders or overlays.
+
+Without `path` the PNG comes back in the answer, and the client writes it where it likes. With
+`path` the emulator creates a new file there, with its own rights: it never replaces,
+truncates or follows anything already at that path, a symbolic link included, and answers
+-32003 naming the path instead. A relative `path` is resolved against the emulator's working
+directory; give an absolute one.
+
 ## Examples
 
 One request from a shell, with OpenBSD netcat (`-N` ends the stream after the request; the
@@ -235,7 +252,7 @@ echo '{"jsonrpc":"2.0","id":1,"method":"apps.list"}' | nc -N -U "$XDG_RUNTIME_DI
 A Python client, standard library only:
 
 ```python
-import json, os, socket, time
+import base64, json, os, socket, time
 
 sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 sock.connect(os.path.join(os.environ["XDG_RUNTIME_DIR"], "eka2l1.sock"))
@@ -256,6 +273,8 @@ call("package.install", path="/home/me/hello.sisx")
 pid = call("app.launch", uid="0xE7351C2F")["pid"]
 time.sleep(10)  # the answer comes before the app has drawn anything
 call("input.key", key="down")
+with open("screen.png", "wb") as screen:
+    screen.write(base64.b64decode(call("screen.capture")["png"]))
 call("app.kill", uid="0xE7351C2F")
 ```
 
@@ -264,7 +283,8 @@ call("app.kill", uid="0xE7351C2F")
 - An app started with `app.launch` is treated like one started from the app list: the window
   switches to the screen, and when the app exits the device reboots and the app list comes
   back. `app.launch` waits for such a reboot to finish before it starts the next app, and right
-  after start-up for the window to finish loading.
+  after start-up for the window to finish loading. Until an app draws again, `screen.capture`
+  answers -32003.
 - `emulator.pause` and `emulator.resume` flip the same switch as the Pause menu item.
 - `emulator.exit` ends the main loop, as closing the main window does.
 

@@ -145,6 +145,7 @@ TEST_CASE("guest_methods_say_when_there_is_no_system", "[control][server]") {
     REQUIRE(fixture.error_of("app.kill", R"({"uid":3879017519})") == error_not_ready);
     REQUIRE(fixture.error_of("input.key", R"({"key":"select"})") == error_not_ready);
     REQUIRE(fixture.error_of("input.touch", R"({"x":10,"y":20})") == error_not_ready);
+    REQUIRE(fixture.error_of("screen.capture") == error_not_ready);
     REQUIRE(fixture.error_of("package.remove", R"({"uid":1})") == error_not_ready);
 }
 
@@ -161,6 +162,7 @@ TEST_CASE("parameters_are_checked_before_the_guest_is_touched", "[control][serve
     REQUIRE(fixture.error_of("input.touch", R"({"x":10})") == error_invalid_params);
     REQUIRE(fixture.error_of("input.touch", R"({"x":10,"y":-1})") == error_invalid_params);
     REQUIRE(fixture.error_of("input.touch", R"({"x":10,"y":10,"pointer":8})") == error_invalid_params);
+    REQUIRE(fixture.error_of("screen.capture", R"({"path":7})") == error_invalid_params);
     REQUIRE(fixture.error_of("package.install") == error_invalid_params);
     REQUIRE(fixture.error_of("package.install", R"({"path":"/nonexistent/app.sisx"})") == error_not_found);
 }
