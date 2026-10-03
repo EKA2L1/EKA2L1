@@ -20,6 +20,7 @@
 #include <catch2/catch.hpp>
 #include <gdbstub/gdbstub.h>
 
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -89,4 +90,26 @@ TEST_CASE("xfer_reply_stops_before_exceeding_the_size_limit", "gdbstub") {
     // The marker takes one byte and every escaped byte two, so only two of the four fit.
     REQUIRE(make_gdb_xfer_reply("####", 0, 4, 5) == "m}\x03}\x03");
     REQUIRE(make_gdb_xfer_reply("####", 2, 4, 5) == "l}\x03}\x03");
+}
+
+TEST_CASE("xfer_read_range_takes_offset_and_length", "gdbstub") {
+    const std::optional<gdb_xfer_range> range = parse_gdb_xfer_read_range(":1f,1000");
+
+    REQUIRE(range.has_value());
+    REQUIRE(range->offset == 0x1f);
+    REQUIRE(range->length == 0x1000);
+}
+
+TEST_CASE("xfer_read_range_rejects_zero_or_missing_length", "gdbstub") {
+    // An 'm' reply must carry at least one byte, so a read of zero bytes has no valid reply.
+    REQUIRE_FALSE(parse_gdb_xfer_read_range(":0,0").has_value());
+    REQUIRE_FALSE(parse_gdb_xfer_read_range(":0,").has_value());
+    REQUIRE_FALSE(parse_gdb_xfer_read_range(":0").has_value());
+    REQUIRE(parse_gdb_xfer_read_range(":0,1").has_value());
+}
+
+TEST_CASE("xfer_read_range_rejects_missing_offset_and_annex", "gdbstub") {
+    REQUIRE_FALSE(parse_gdb_xfer_read_range(":,10").has_value());
+    REQUIRE_FALSE(parse_gdb_xfer_read_range("target.xml:0,10").has_value());
+    REQUIRE_FALSE(parse_gdb_xfer_read_range("").has_value());
 }

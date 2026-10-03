@@ -14,7 +14,9 @@
 #include <cstdint>
 #include <map>
 #include <memory>
+#include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #ifdef _WIN32
@@ -112,6 +114,21 @@ namespace eka2l1 {
      * main executable is left out: it is GDB's "file", not a shared library.
      */
     std::string make_gdb_library_list(const std::vector<gdb_library> &libraries);
+
+    /// The part of a document that a qXfer read asks for.
+    struct gdb_xfer_range {
+        std::size_t offset;
+        std::size_t length;
+    };
+
+    /**
+     * Parse the "annex:offset,length" arguments of a qXfer read of an object that only has the
+     * empty annex.
+     *
+     * Returns nothing when the annex is not empty, the offset or the length is missing, or the
+     * length is zero: an 'm' reply must carry at least one byte, so no reply fits a read of zero.
+     */
+    std::optional<gdb_xfer_range> parse_gdb_xfer_read_range(const std::string_view args);
 
     /**
      * Build the reply to a qXfer read of a document.

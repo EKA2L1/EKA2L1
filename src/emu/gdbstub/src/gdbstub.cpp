@@ -595,25 +595,41 @@ namespace eka2l1 {
         return reply;
     }
 
+    std::optional<gdb_xfer_range> parse_gdb_xfer_read_range(const std::string_view args) {
+        if (args.empty() || (args[0] != ':')) {
+            return std::nullopt;
+        }
+
+        const std::string_view offset_and_length = args.substr(1);
+        const std::size_t comma = offset_and_length.find(',');
+
+        if ((comma == std::string_view::npos) || (comma == 0) || (comma + 1 == offset_and_length.size())) {
+            return std::nullopt;
+        }
+
+        const std::string_view offset = offset_and_length.substr(0, comma);
+        const std::string_view length = offset_and_length.substr(comma + 1);
+
+        gdb_xfer_range range;
+        range.offset = hex_to_int(reinterpret_cast<const std::uint8_t *>(offset.data()), offset.size());
+        range.length = hex_to_int(reinterpret_cast<const std::uint8_t *>(length.data()), length.size());
+
+        if (range.length == 0) {
+            return std::nullopt;
+        }
+
+        return range;
+    }
+
     void gdbstub::handle_command_read_libraries() {
-        // qXfer:libraries:read:annex:offset,length. This object only has the empty annex.
-        const std::uint8_t *args = command_buffer + strlen("qXfer:libraries:read:");
-        const std::uint8_t *args_end = command_buffer + command_length;
+        // qXfer:libraries:read:annex:offset,length
+        const std::size_t prefix_length = strlen("qXfer:libraries:read:");
+        const std::optional<gdb_xfer_range> range = parse_gdb_xfer_read_range(std::string_view(reinterpret_cast<const char *>(command_buffer) + prefix_length, command_length - prefix_length));
 
-        if ((args >= args_end) || (*args != ':')) {
+        if (!range) {
             send_reply("E00");
             return;
         }
-
-        const std::uint8_t *comma = std::find(args + 1, args_end, ',');
-
-        if (comma == args_end) {
-            send_reply("E00");
-            return;
-        }
-
-        const std::uint32_t offset = hex_to_int(args + 1, static_cast<std::size_t>(comma - (args + 1)));
-        const std::uint32_t length = hex_to_int(comma + 1, static_cast<std::size_t>(args_end - (comma + 1)));
 
         // Memory reads go through the current thread's process, so report the code segments
         // loaded in that process, at the addresses they run at there.
@@ -645,7 +661,7 @@ namespace eka2l1 {
         }
 
         const std::string document = make_gdb_library_list(libraries);
-        send_reply(make_gdb_xfer_reply(document, offset, length, sizeof(command_buffer) - 4).c_str());
+        send_reply(make_gdb_xfer_reply(document, range->offset, range->length, sizeof(command_buffer) - 4).c_str());
     }
 
     /// Handle query command from gdb client.
