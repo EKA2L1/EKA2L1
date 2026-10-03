@@ -68,6 +68,7 @@ set(PROJECT_SOURCES
         include/qt/btnetplay_friends_dialog.h
         include/qt/btnet_dialog.h
         include/qt/cmdhandler.h
+        include/qt/control_frontend.h
         include/qt/custom_question_dialog.h
         include/qt/device_install_dialog.h
         include/qt/discord_rpc.h
@@ -100,6 +101,7 @@ set(PROJECT_SOURCES
         src/btnet_dialog.cpp
         src/btnet_dialog.ui
         src/cmdhandler.cpp
+        src/control_frontend.cpp
         src/common_library_plugin.cpp
         src/custom_question_dialog.cpp
         src/device_install_dialog.cpp
@@ -202,6 +204,7 @@ target_link_libraries(eka2l1_qt PRIVATE
     ${EXCLUSIVE_QT_LIBRARIES}
     common
     config
+    control
     drivers
     epoc
     epocservs

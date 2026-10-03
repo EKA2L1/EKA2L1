@@ -484,3 +484,17 @@ bool python_docgen_option_handler(eka2l1::common::arg_parser *parser, void *user
     return false;
 }
 #endif
+
+bool control_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
+    const char *endpoint = parser->next_token();
+
+    if (!endpoint) {
+        *err = "--control needs an endpoint: a socket path (a pipe name on Windows), or tcp:127.0.0.1:<port>";
+        return false;
+    }
+
+    desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
+    emu->control_endpoint = endpoint;
+
+    return true;
+}
