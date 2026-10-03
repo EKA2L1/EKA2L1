@@ -19,10 +19,13 @@
 
 #include <catch2/catch.hpp>
 
+#include <common/buffer.h>
+#include <common/fileutils.h>
 #include <common/log.h>
+#include <common/path.h>
 
 #include <cstdio>
-#include <fstream>
+#include <sstream>
 #include <string>
 #include <vector>
 
@@ -30,8 +33,13 @@ using namespace eka2l1;
 
 namespace {
     std::vector<std::string> read_lines(const std::string &path) {
+        // Read through the emulator's own helper, which opens a UTF-8 name on every host.
+        common::ro_std_file_stream file(path, true);
+        std::string content(file.size(), '\0');
+        content.resize(file.read(content.data(), content.size()));
+
         std::vector<std::string> lines;
-        std::ifstream stream(path, std::ios::binary);
+        std::istringstream stream(content);
         std::string line;
 
         while (std::getline(stream, line)) {
@@ -132,4 +140,30 @@ TEST_CASE("capped_log_sink_survives_a_budget_of_one_line", "log_sink") {
     REQUIRE(!lines.empty());
     REQUIRE(lines.size() <= 3);
     REQUIRE(lines.front().rfind("--- log trimmed: ", 0) == 0);
+}
+
+TEST_CASE("capped_log_sink_writes_into_a_folder_with_a_non_ascii_name", "log_sink") {
+    // A Cyrillic word, written as its UTF-8 bytes so the source encoding does not matter.
+    const std::string folder = "capped_log_\xD0\xB6\xD1\x83\xD1\x80\xD0\xBD\xD0\xB0\xD0\xBB";
+    const std::string path = add_path(folder, "capped.log");
+    const std::size_t max_lines = 100;
+
+    common::delete_folder(folder);
+
+    {
+        // The sink creates the folder, and the trims rewrite the file in it.
+        auto logger = make_logger(path, max_lines);
+
+        for (int i = 0; i < 1000; i++) {
+            logger->info("line {}", i);
+        }
+    }
+
+    const std::vector<std::string> lines = read_lines(path);
+    REQUIRE(common::delete_folder(folder));
+
+    REQUIRE(lines.size() >= 2);
+    REQUIRE(lines.size() <= max_lines);
+    REQUIRE(lines.front().rfind("--- log trimmed: ", 0) == 0);
+    REQUIRE(lines.back() == "line 999");
 }
