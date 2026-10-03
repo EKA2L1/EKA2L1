@@ -3,6 +3,7 @@ add_library(control
         include/control/endpoint.h
         include/control/frontend.h
         include/control/keys.h
+        include/control/new_file.h
         include/control/params.h
         include/control/rpc_server.h
         include/control/server.h
@@ -14,6 +15,8 @@ add_library(control
         src/methods_apps.cpp
         src/methods_emulator.cpp
         src/methods_input.cpp
+        src/methods_screen.cpp
+        src/new_file.cpp
         src/params.cpp
         src/rpc_server.cpp
         src/server.cpp)
@@ -32,4 +35,5 @@ target_link_libraries(control PRIVATE
         epocpkg
         epocservs
         epocutils
+        stb
         uvw)

@@ -70,4 +70,5 @@ namespace eka2l1::control {
     void add_emulator_methods(dispatcher &rpc, context &ctx);
     void add_app_methods(dispatcher &rpc, context &ctx);
     void add_input_methods(dispatcher &rpc, context &ctx);
+    void add_screen_methods(dispatcher &rpc, context &ctx);
 }
