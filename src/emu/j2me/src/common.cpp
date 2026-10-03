@@ -55,7 +55,7 @@ namespace eka2l1::j2me {
         const std::string fname = eka2l1::filename(entry.icon_path_);
         const std::string relative_path = fmt::format("j2me\\{}_{}_{}", common::lowercase_string(entry.name_),
             common::lowercase_string(entry.version_), fname);
-        const std::string storing_file = eka2l1::add_path(conf.storage, relative_path);
+        const std::string storing_file = eka2l1::add_path(conf.storage_path(), relative_path);
 
         std::vector<char> icon;
 

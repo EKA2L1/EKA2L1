@@ -309,6 +309,10 @@ namespace eka2l1::config {
         }
     }
 
+    std::string state::storage_path() const {
+        return eka2l1::data_path(storage);
+    }
+
     void state::serialize(const bool with_bindings) {
         audio_master_volume = common::clamp(0, 100, audio_master_volume);
         screen_buffer_sync_string = get_string_from_screen_buffer_sync_option(screen_buffer_sync);
@@ -341,13 +345,13 @@ namespace eka2l1::config {
         emitter << YAML::EndMap;
 
         {
-            common::wo_std_file_stream file("config.yml", true);
+            common::wo_std_file_stream file(eka2l1::data_path("config.yml"), true);
             file.write(emitter.c_str(), emitter.size());
         }
 
         if (with_bindings) {
-            common::create_directories("bindings");
-            keybinds.serialize(fmt::format("bindings/{}.yml", current_keybind_profile));
+            common::create_directories(eka2l1::data_path("bindings"));
+            keybinds.serialize(eka2l1::data_path(fmt::format("bindings/{}.yml", current_keybind_profile)));
         }
 
         if (current_mmc_id.empty()) {
@@ -359,7 +363,7 @@ namespace eka2l1::config {
         YAML::Node node;
 
         try {
-            common::ro_std_file_stream config_stream("config.yml", true);
+            common::ro_std_file_stream config_stream(eka2l1::data_path("config.yml"), true);
             if (!config_stream.valid()) {
                 return;
             }
@@ -397,16 +401,17 @@ namespace eka2l1::config {
         screen_buffer_sync = get_screen_buffer_sync_option_from_string(screen_buffer_sync_string);
         midi_backend = get_midi_backend_from_string(midi_backend_string);
 
-        if (!eka2l1::common::exists(hsb_bank_path)) {
+        // An empty path is no bank, although data_path() makes it the data folder.
+        if (hsb_bank_path.empty() || !eka2l1::common::exists(eka2l1::data_path(hsb_bank_path))) {
             hsb_bank_path = "resources/defaultbank.hsb";
         }
         
-        if (!eka2l1::common::exists(sf2_bank_path)) {
+        if (sf2_bank_path.empty() || !eka2l1::common::exists(eka2l1::data_path(sf2_bank_path))) {
             sf2_bank_path = "resources/defaultbank.sf2";
         }
 
         if (with_bindings)
-            keybinds.deserialize(fmt::format("bindings/{}.yml", current_keybind_profile));
+            keybinds.deserialize(eka2l1::data_path(fmt::format("bindings/{}.yml", current_keybind_profile)));
 
 #if BUILD_FOR_USER
         // If not yet been modified by user, see extensive logging option

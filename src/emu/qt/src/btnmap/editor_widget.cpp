@@ -25,6 +25,7 @@
 #include <qt/utils.h>
 
 #include <common/cvt.h>
+#include <common/path.h>
 #include <QDir>
 #include <QLabel>
 #include <QGridLayout>
@@ -89,7 +90,7 @@ void editor_widget::on_potential_current_app_changed() {
         ui_->current_app_profile_label->setText(tr("For app: %1 (0x%2)").arg(QString::fromStdString(current_app_name_),
                                                                              QString::fromStdString(current_app_uid_)));
 
-        profile_folder_path_ = QString(BINDING_TOUCH_FOLDER_FORMAT).arg(QString::fromStdString(current_app_uid_));
+        profile_folder_path_ = QString::fromStdString(eka2l1::data_path(QString(BINDING_TOUCH_FOLDER_FORMAT).arg(QString::fromStdString(current_app_uid_)).toStdString()));
         
         ui_->profile_combo_box->clear();
 

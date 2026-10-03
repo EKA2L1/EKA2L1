@@ -183,7 +183,7 @@ namespace eka2l1 {
         }
 
         try {
-            common::ro_std_file_stream devices_stream(add_path(conf->storage, "devices.yml"), true);
+            common::ro_std_file_stream devices_stream(add_path(conf->storage_path(), "devices.yml"), true);
             if (!devices_stream.valid()) {
                 LOG_ERROR(SYSTEM, "Devices file not found (or is invalid)!");
                 return;
@@ -222,7 +222,7 @@ namespace eka2l1 {
             }
 
             if (device_node.second["pending-deletion"].as<bool>(false)) {
-                delete_device_storage(conf->storage, firmcode);
+                delete_device_storage(conf->storage_path(), firmcode);
                 continue;
             }
 
@@ -257,7 +257,7 @@ namespace eka2l1 {
 
         emitter << YAML::EndMap;
 
-        common::wo_std_file_stream outdevicefile(add_path(conf->storage, "devices.yml"), true);
+        common::wo_std_file_stream outdevicefile(add_path(conf->storage_path(), "devices.yml"), true);
         outdevicefile.write(emitter.c_str(), emitter.size());
 
         return;
@@ -330,7 +330,7 @@ namespace eka2l1 {
 
         std::vector<int> languages;
         int default_language = -1;
-        const auto lang_path = eka2l1::add_path(conf->storage, "/drives/z/" + common::lowercase_string(firmcode) + (ver < epocver::eka2 ? "/system/bootdata/languages.txt" : "/resource/bootdata/languages.txt"));
+        const auto lang_path = eka2l1::add_path(conf->storage_path(), "/drives/z/" + common::lowercase_string(firmcode) + (ver < epocver::eka2 ? "/system/bootdata/languages.txt" : "/resource/bootdata/languages.txt"));
         common::dynamic_ifile ifile(lang_path);
         if (ifile.fail()) {
             LOG_ERROR(SYSTEM, "Fail to load languages.txt file! (Searched path: {}).", lang_path);
@@ -367,7 +367,7 @@ namespace eka2l1 {
 
         // rescan_devices() recognises isolated drives by this folder, so it must exist before the first boot.
         if (isolated_drives) {
-            common::create_directories(eka2l1::add_path(conf->storage, device_isolated_drives_folder(firmcode)));
+            common::create_directories(eka2l1::add_path(conf->storage_path(), device_isolated_drives_folder(firmcode)));
         }
 
         devices.push_back(dvc);

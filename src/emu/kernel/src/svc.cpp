@@ -38,6 +38,7 @@
 #include <config/config.h>
 
 #include <common/algorithm.h>
+#include <common/buffer.h>
 #include <common/cvt.h>
 #include <common/path.h>
 #include <common/platform.h>
@@ -1587,8 +1588,8 @@ namespace eka2l1::epoc {
                     addr.ptr_address(), local_tm.tm_year + 1900, local_tm.tm_mon + 1, local_tm.tm_mday, local_tm.tm_hour, local_tm.tm_min,
                     local_tm.tm_sec);
 
-                std::ofstream out(filename, std::ios_base::binary | std::ios_base::out);
-                out.write(reinterpret_cast<char *>(addr_space_ptr), size);
+                common::wo_std_file_stream out(eka2l1::data_path(filename), true);
+                out.write(addr_space_ptr, size);
             }
         }
 

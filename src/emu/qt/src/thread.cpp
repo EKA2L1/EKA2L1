@@ -385,6 +385,10 @@ namespace eka2l1::desktop {
             keybind_profile_option_handler);
         parser.add("--mmcid, --cid, -cid", "Set the MMC-ID for the mounted card", set_mmcid_option_handler);
         parser.add("--runng, --appng, -rng, -ang", "Run a single N-Gage game inside the E drive", run_ngage_game_option_handler);
+        parser.add("--data-dir", "Keep this instance's data (configuration, devices, drives, logs) in the given folder\n"
+                                 "\t\t\t  instead of the default one, so several emulators can run side by side.\n"
+                                 "\t\t\t  Example: eka2l1 --data-dir /tmp/eka2l1-a",
+            data_dir_option_handler);
 
 #if ENABLE_PYTHON_SCRIPTING
         parser.add("--gendocs", "Generate Python documentation", python_docgen_option_handler);

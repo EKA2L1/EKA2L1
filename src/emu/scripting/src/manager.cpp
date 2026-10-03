@@ -35,8 +35,75 @@
 
 #include <xxhash.h>
 
+#include <algorithm>
+
 namespace eka2l1::manager {
 #ifdef ENABLE_SCRIPTING_LUA
+    // Lua's own searcher finds a module through package.path, which cannot hold
+    // every folder: the templates in it are split at ';' and '?' stands for the
+    // module name. It also opens the file with the C runtime's narrow fopen(),
+    // which on Windows cannot open a name that is not ASCII. This searcher looks
+    // the module up in the scripts folder held in its upvalue instead.
+    static int search_scripts_folder(lua_State *state) {
+        const char *module_name = luaL_checkstring(state, 1);
+        bool failed = false;
+
+        {
+            std::string relative_path(module_name);
+            std::replace(relative_path.begin(), relative_path.end(), '.', eka2l1::get_separator());
+
+            const std::string module_path = eka2l1::add_path(lua_tostring(state, lua_upvalueindex(1)), relative_path + ".lua");
+            common::ro_std_file_stream module_stream(module_path, true);
+
+            if (!module_stream.valid()) {
+                lua_pushfstring(state, "\n\tno file '%s'", module_path.c_str());
+                return 1;
+            }
+
+            std::string source(module_stream.size(), '\0');
+            source.resize(module_stream.read(source.data(), source.size()));
+
+            // LuaJIT's lexer skips a first line starting with '#' in any chunk, so the
+            // buffer loads just as luaL_loadfile() would load the file.
+            const std::string chunk_name = "@" + module_path;
+
+            if (luaL_loadbuffer(state, source.data(), source.size(), chunk_name.c_str()) != 0) {
+                lua_pushfstring(state, "error loading module '%s' from file '%s':\n\t%s", module_name, module_path.c_str(),
+                    lua_tostring(state, -1));
+                failed = true;
+            }
+        }
+
+        // Raised once nothing is left to destroy: lua_error() does not return.
+        if (failed) {
+            return lua_error(state);
+        }
+
+        return 1;
+    }
+
+    void add_scripts_folder_searcher(lua_State *state, const std::string &folder) {
+        lua_getglobal(state, "package");
+        lua_getfield(state, -1, "loaders");
+
+        // Right after the searcher for package.path, before the ones for C modules:
+        // the folder used to be found through 'scripts/?.lua', the last template of
+        // package.path, resolved against the working directory, which was the data
+        // folder by the time a script ran its require()s.
+        static constexpr int SEARCHER_SLOT = 3;
+
+        for (int i = static_cast<int>(lua_objlen(state, -1)); i >= SEARCHER_SLOT; i--) {
+            lua_rawgeti(state, -1, i);
+            lua_rawseti(state, -2, i + 1);
+        }
+
+        lua_pushlstring(state, folder.data(), folder.size());
+        lua_pushcclosure(state, search_scripts_folder, 1);
+        lua_rawseti(state, -2, SEARCHER_SLOT);
+
+        lua_pop(state, 2);
+    }
+
     static void script_file_changed_callback(void *data, common::directory_changes &changes) {
         scripts *manager = reinterpret_cast<scripts*>(data);
         for (std::size_t i = 0; i < changes.size(); i++) {
@@ -49,7 +116,7 @@ namespace eka2l1::manager {
 
             if (!(changes[i].change_ & common::directory_change_action_moved_from) &&
                 !(changes[i].change_ & common::directory_change_action_delete))
-                manager->import_module("scripts/" + changes[i].filename_);
+                manager->import_module(eka2l1::data_path("scripts/" + changes[i].filename_));
         }
     }
 #endif
@@ -196,10 +263,9 @@ namespace eka2l1::manager {
     void scripts::import_all_modules() {
 #ifdef ENABLE_SCRIPTING_LUA
         // Import all scripts
-        std::string cur_dir;
-        common::get_current_directory(cur_dir);
+        const std::string scripts_folder = eka2l1::data_path("scripts/");
 
-        auto scripts_dir = common::make_directory_iterator("scripts/", "*.lua");
+        auto scripts_dir = common::make_directory_iterator(scripts_folder, "*.lua");
         if (!scripts_dir) {
             return;
         }
@@ -211,13 +277,11 @@ namespace eka2l1::manager {
             const std::string ext = path_extension(scripts_entry.name);
 
             auto module_name = filename(scripts_entry.name);
-            import_module("scripts/" + module_name);
+            import_module(eka2l1::add_path(scripts_folder, module_name));
         }
 
-        common::set_current_directory(cur_dir);
-
         // Listen for script change
-        folder_watcher.watch("scripts/", script_file_changed_callback, this, common::directory_change_move | common::directory_change_creation
+        folder_watcher.watch(scripts_folder, script_file_changed_callback, this, common::directory_change_move | common::directory_change_creation
             | common::directory_change_last_write);
 #else
         // No Lua runtime: the shipped scripts/*.lua patches are compiled in as
@@ -232,26 +296,16 @@ namespace eka2l1::manager {
         const std::string name = eka2l1::replace_extension(name_full, "");
 
         if (modules.find(name) == modules.end()) {
-            std::string crr_path;
-            if (!common::get_current_directory(crr_path)) {
-                LOG_ERROR(SCRIPTING, "Unable to get current directory!");
-                return false;
-            }
-
-            const std::string &pr_path = eka2l1::absolute_path(eka2l1::file_directory(path), crr_path);
+            // The working directory is shared by every thread of the process, so
+            // the script is opened by its own path rather than by changing it.
             std::lock_guard<std::mutex> guard(smutex);
-
-            if (!common::set_current_directory(pr_path)) {
-                LOG_ERROR(SCRIPTING, "Fail to set current directory to script folder!");
-                return false;
-            }
 
             if (eka2l1::path_extension(path) == ".lua") {
                 lua_State *new_state = luaL_newstate();
                 luaL_openlibs(new_state);
-                luaL_dostring(new_state, "package.path = package.path .. ';scripts/?.lua'");
+                add_scripts_folder_searcher(new_state, eka2l1::file_directory(path));
 
-                common::ro_std_file_stream script_stream(name_full, true);
+                common::ro_std_file_stream script_stream(path, true);
                 std::string script_content(script_stream.size(), '0');
 
                 script_stream.read(script_content.data(), script_content.size());
@@ -262,10 +316,6 @@ namespace eka2l1::manager {
                     LOG_WARN(SCRIPTING, "Fail to load script {}, error {}", name, lua_tostring(new_state, -1));
                     lua_close(new_state);
                 }
-            }
-
-            if (!common::set_current_directory(crr_path)) {
-                LOG_WARN(SCRIPTING, "Can't restore the previous current directory!");
             }
 
             if (!call_module_entry(name.c_str())) {

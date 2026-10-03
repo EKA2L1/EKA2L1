@@ -440,7 +440,7 @@ namespace eka2l1 {
         // a separate pass. They are appended after the ROM set, and
         // seek_the_open_font takes the first exact face-name match, so an
         // imported font never displaces a ROM one -- it only adds coverage.
-        load_custom_fonts(sys->get_config()->storage);
+        load_custom_fonts(sys->get_config()->storage_path());
 
         // A CJK variant presents a Latin font and a CJK font as one typeface
         // through link.ini. Both have to be in the store before the typefaces
