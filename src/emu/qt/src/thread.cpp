@@ -30,6 +30,7 @@
 #include <common/time.h>
 #include <common/vecx.h>
 #include <qt/cmdhandler.h>
+#include <qt/control_frontend.h>
 #include <qt/displaywidget.h>
 #include <qt/seh_handler.h>
 #include <qt/state.h>
@@ -45,6 +46,7 @@
 #include <qt/custom_question_dialog.h>
 #include <qt/dialog_driver.h>
 
+#include <control/server.h>
 #include <kernel/kernel.h>
 
 #if EKA2L1_PLATFORM(WIN32)
@@ -383,6 +385,31 @@ namespace eka2l1::desktop {
         }
 
         state.ui_main = new main_window(application, nullptr, state);
+
+        if (!state.control_endpoint.empty()) {
+            state.control_host = std::make_unique<control_frontend>(state);
+            state.control_server = std::make_unique<control::server>(*state.control_host);
+
+            std::string err;
+
+            if (!state.control_server->start(state.control_endpoint, err)) {
+                std::cout << err << std::endl;
+
+                state.control_server.reset();
+                delete state.ui_main;
+                state.ui_main = nullptr;
+
+                // Same as for a bad argument: release the OS thread, still waiting for the
+                // graphics thread, and let it tear down.
+                state.should_emu_quit = true;
+                state.graphics_event.set();
+                state.kill_event.set();
+                os_thread_obj.join();
+
+                return -1;
+            }
+        }
+
         state.ui_main->setWindowTitle(get_emulator_window_title());
         state.ui_main->load_and_show();
 
@@ -398,7 +425,17 @@ namespace eka2l1::desktop {
             state.ui_main->setup_and_switch_to_game_mode();
         }
 
+        if (state.control_host) {
+            state.control_host->main_loop_starting();
+        }
+
         const int exec_code = application.exec();
+
+        // Before the threads stop: requests in flight still need the emulation and graphics threads.
+        if (state.control_server) {
+            state.control_server->stop();
+        }
+
         kill_emulator(state);
 
         // Wait for OS thread to die
