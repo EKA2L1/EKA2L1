@@ -402,7 +402,7 @@ namespace eka2l1::config {
         }
         
         if (!eka2l1::common::exists(sf2_bank_path)) {
-            hsb_bank_path = "resources/defaultbank.sf2";
+            sf2_bank_path = "resources/defaultbank.sf2";
         }
 
         if (with_bindings)
