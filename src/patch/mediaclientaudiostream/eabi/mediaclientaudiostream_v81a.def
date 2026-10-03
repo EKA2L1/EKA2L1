@@ -35,4 +35,4 @@ EXPORTS
 	SetSingleBufferMode__20CMdaAudioInputStreami @ 34 NONAME R3UNUSED ; CMdaAudioInputStream::SetSingleBufferMode(int)
 	Stop__20CMdaAudioInputStream @ 35 NONAME R3UNUSED ; CMdaAudioInputStream::Stop(void)
 	BitRateL__C20CMdaAudioInputStream @ 36 NONAME R3UNUSED ; CMdaAudioInputStream::BitRateL(void) const
-
+    NewLegacyL__21CMdaAudioOutputStreamR29MMdaAudioOutputStreamCallbackP10CMdaServer @ 37 NONAME R3UNUSED

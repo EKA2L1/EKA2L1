@@ -85,7 +85,7 @@
 8 8             ; NewL__21CMdaAudioOutputStreamR29MMdaAudioOutputStreamCallbacki22TMdaPriorityPreference
 
 [epoc70]
-7 1             ; NewL__21CMdaAudioOutputStreamR29MMdaAudioOutputStreamCallbackP10CMdaServer
+37 1            ; CMdaAudioOutputStream::NewLegacyL
 
 [epoc7]
 7 1             ; NewL__21CMdaAudioOutputStreamR29MMdaAudioOutputStreamCallbackP10CMdaServer
@@ -97,5 +97,5 @@
 8 8             ; NewL__21CMdaAudioOutputStreamR29MMdaAudioOutputStreamCallbacki22TMdaPriorityPreference
 
 [epoc6]
-7 1             ; NewL__21CMdaAudioOutputStreamR29MMdaAudioOutputStreamCallbackP10CMdaServer
-7 2             ; NewL__21CMdaAudioOutputStreamR29MMdaAudioOutputStreamCallbackP10CMdaServer, guessing for now
+37 1            ; CMdaAudioOutputStream::NewLegacyL
+37 2            ; CMdaAudioOutputStream::NewLegacyL

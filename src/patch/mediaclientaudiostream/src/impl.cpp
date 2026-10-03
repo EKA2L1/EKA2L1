@@ -44,8 +44,7 @@ static const TUint32 KWaitBufferTimeInMicroseconds = 500000;
 // Buffer work outranks redraw (50) but yields to window events (100).
 static const TInt KMMFMdaOutputBufferPriority = 70;
 #else
-// S60v1 completes copied buffers above standard-priority animation timers.
-static const TInt KMMFMdaOutputBufferPriority = 20;
+static const TInt KMMFMdaOutputBufferPriority = CActive::EPriorityStandard;
 #endif
 
 static TInt OnWaitBufferTimeout(void *aUserdata) {
@@ -88,8 +87,8 @@ void CMMFMdaBufferQueue::DoCancel() {
     iStream->CancelRegisterNotifyBufferSent();
 }
 
-CMMFMdaOutputBufferQueue::CMMFMdaOutputBufferQueue(CMMFMdaAudioStream *aStream)
-    : CMMFMdaBufferQueue(aStream, KMMFMdaOutputBufferPriority)
+CMMFMdaOutputBufferQueue::CMMFMdaOutputBufferQueue(CMMFMdaAudioStream *aStream, TInt aPriority)
+    : CMMFMdaBufferQueue(aStream, aPriority)
     , iCopied(NULL) {
 }
 
@@ -371,9 +370,9 @@ void CMMFMdaAudioStream::SetPriorityUnimplNotified() {
 }
 
 /// AUDIO OUTPUT STREAM
-CMMFMdaAudioOutputStream::CMMFMdaAudioOutputStream(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref)
+CMMFMdaAudioOutputStream::CMMFMdaAudioOutputStream(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref, TInt aBufferPriority)
     : CMMFMdaAudioStream(aPriority, aPref)
-    , iBufferQueue(this)
+    , iBufferQueue(this, aBufferPriority)
     , iWaitBufferEndTimer(NULL)
     , iCallback(aCallback) {
 }
@@ -386,7 +385,11 @@ CMMFMdaAudioOutputStream::~CMMFMdaAudioOutputStream() {
 }
 
 CMMFMdaAudioOutputStream *CMMFMdaAudioOutputStream::NewL(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref) {
-    CMMFMdaAudioOutputStream *newStream = new (ELeave) CMMFMdaAudioOutputStream(aCallback, aPriority, aPref);
+    return NewL(aCallback, aPriority, aPref, KMMFMdaOutputBufferPriority);
+}
+
+CMMFMdaAudioOutputStream *CMMFMdaAudioOutputStream::NewL(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref, TInt aBufferPriority) {
+    CMMFMdaAudioOutputStream *newStream = new (ELeave) CMMFMdaAudioOutputStream(aCallback, aPriority, aPref, aBufferPriority);
     CleanupStack::PushL(newStream);
     newStream->ConstructL();
     CleanupStack::Pop(newStream);
