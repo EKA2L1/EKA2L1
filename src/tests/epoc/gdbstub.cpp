@@ -28,13 +28,29 @@ using namespace eka2l1;
 TEST_CASE("library_list_gives_code_then_data_segment", "gdbstub") {
     const std::vector<gdb_library> libraries = {
         { "Z:\\sys\\bin\\euser.dll", 0x80123000, 0 },
-        { "C:\\sys\\bin\\hello.exe", 0x70004000, 0x00400000 }
+        { "C:\\sys\\bin\\hello.dll", 0x70004000, 0x00400000 }
     };
 
     REQUIRE(make_gdb_library_list(libraries) == "<?xml version=\"1.0\"?>"
                                                 "<library-list version=\"1.0\">"
                                                 "<library name=\"Z:\\sys\\bin\\euser.dll\"><segment address=\"0x80123000\"/></library>"
-                                                "<library name=\"C:\\sys\\bin\\hello.exe\"><segment address=\"0x70004000\"/><segment address=\"0x400000\"/></library>"
+                                                "<library name=\"C:\\sys\\bin\\hello.dll\"><segment address=\"0x70004000\"/><segment address=\"0x400000\"/></library>"
+                                                "</library-list>");
+}
+
+TEST_CASE("library_list_leaves_out_the_main_executable", "gdbstub") {
+    // GDB loads the main executable with "file". Listed as a library as well, it would get a
+    // second copy of its symbols at the run address, and "break E32Main" two locations.
+    const std::vector<gdb_library> libraries = {
+        { "Z:\\sys\\bin\\euser.dll", 0x80123000, 0, false },
+        { "C:\\sys\\bin\\app.exe", 0x70000000, 0x00400000, true },
+        { "C:\\sys\\bin\\helper.dll", 0x70004000, 0x00600000, false }
+    };
+
+    REQUIRE(make_gdb_library_list(libraries) == "<?xml version=\"1.0\"?>"
+                                                "<library-list version=\"1.0\">"
+                                                "<library name=\"Z:\\sys\\bin\\euser.dll\"><segment address=\"0x80123000\"/></library>"
+                                                "<library name=\"C:\\sys\\bin\\helper.dll\"><segment address=\"0x70004000\"/><segment address=\"0x600000\"/></library>"
                                                 "</library-list>");
 }
 

@@ -101,13 +101,15 @@ namespace eka2l1 {
         std::string name; ///< Path of the image in the emulated file system.
         address code_run_addr; ///< Address the image's code runs at.
         address data_run_addr; ///< Address its .data and .bss run at, or 0 if it has neither.
+        bool main_executable = false; ///< The process's own EXE, which GDB loads with "file", not as a library.
     };
 
     /**
      * Build the library-list document that answers qXfer:libraries:read.
      *
      * Each library lists the run address of its code segment, then that of its data segment
-     * when it has one, so GDB relocates the matching loadable segments of the ELF file.
+     * when it has one, so GDB relocates the matching loadable segments of the ELF file. The
+     * main executable is left out: it is GDB's "file", not a shared library.
      */
     std::string make_gdb_library_list(const std::vector<gdb_library> &libraries);
 

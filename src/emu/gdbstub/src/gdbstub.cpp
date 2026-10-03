@@ -512,6 +512,12 @@ namespace eka2l1 {
         std::string document = "<?xml version=\"1.0\"?><library-list version=\"1.0\">";
 
         for (const gdb_library &library : libraries) {
+            // GDB already has the main executable if the user loaded it with "file". Listing it
+            // as well would add a second, differently relocated copy of its symbols.
+            if (library.main_executable) {
+                continue;
+            }
+
             document += "<library name=\"";
 
             for (const char c : library.name) {
@@ -626,6 +632,7 @@ namespace eka2l1 {
                 library.name = common::ucs2_to_utf8(seg->get_full_path());
                 library.code_run_addr = seg->get_code_run_addr(target_process);
                 library.data_run_addr = seg->get_data_run_addr(target_process);
+                library.main_executable = (seg == target_process->get_codeseg());
 
                 if (library.name.empty()) {
                     library.name = seg->name();
