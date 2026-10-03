@@ -42,7 +42,9 @@
 
 #include <algorithm>
 #include <functional>
+#include <set>
 #include <utils/err.h>
+#include <vector>
 
 #include <config/config.h>
 
@@ -405,12 +407,16 @@ namespace eka2l1 {
     }
 
     void applist_server::sort_registry_list() {
+        const std::lock_guard<std::mutex> guard(list_access_mut_);
+
         std::sort(regs.begin(), regs.end(), [](const apa_app_registry &lhs, const apa_app_registry &rhs) {
             return lhs.mandatory_info.uid < rhs.mandatory_info.uid;
         });
     }
 
     void applist_server::remove_registries_on_drive(const drive_number drv) {
+        const std::lock_guard<std::mutex> guard(list_access_mut_);
+
         common::erase_elements(regs, [drv](const apa_app_registry &reg) {
             return reg.land_drive == drv;
         });
@@ -526,15 +532,37 @@ namespace eka2l1 {
             }
         }
 
-        // Delete entries that no longer exist...
-        std::size_t prev = regs.size();
+        // Delete entries that no longer exist. Ask the I/O system without the list lock: mounting a
+        // drive holds the I/O lock while it calls on_drive_change, which takes the list lock.
+        std::vector<std::u16string> listed_paths;
 
-        common::erase_elements(regs, [io](const apa_app_registry &reg) {
-            return !io->exist(reg.rsc_path);
-        });
+        {
+            const std::lock_guard<std::mutex> guard(list_access_mut_);
 
-        if (prev != regs.size()) {
-            global_modified = true;
+            for (const apa_app_registry &reg : regs) {
+                listed_paths.push_back(reg.rsc_path);
+            }
+        }
+
+        std::set<std::u16string> missing_paths;
+
+        for (std::u16string &path : listed_paths) {
+            if (!io->exist(path)) {
+                missing_paths.insert(std::move(path));
+            }
+        }
+
+        if (!missing_paths.empty()) {
+            const std::lock_guard<std::mutex> guard(list_access_mut_);
+            const std::size_t prev = regs.size();
+
+            common::erase_elements(regs, [&missing_paths](const apa_app_registry &reg) {
+                return missing_paths.count(reg.rsc_path) != 0;
+            });
+
+            if (prev != regs.size()) {
+                global_modified = true;
+            }
         }
 
         std::vector<std::u16string> register_file_paths;
