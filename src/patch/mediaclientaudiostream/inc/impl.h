@@ -47,7 +47,7 @@ struct CMMFMdaBufferQueue : public CActive {
     CMMFMdaAudioStream *iStream;
     TDblQue<TMMFMdaBufferNode> iBufferNodes;
 
-    explicit CMMFMdaBufferQueue(CMMFMdaAudioStream *aStream);
+    CMMFMdaBufferQueue(CMMFMdaAudioStream *aStream, TInt aPriority);
     virtual ~CMMFMdaBufferQueue();
 
     virtual void FixupActiveStatus();
@@ -58,7 +58,7 @@ struct CMMFMdaBufferQueue : public CActive {
 struct CMMFMdaOutputBufferQueue : public CMMFMdaBufferQueue {
     TMMFMdaBufferNode *iCopied;
 
-    explicit CMMFMdaOutputBufferQueue(CMMFMdaAudioStream *aStream);
+    CMMFMdaOutputBufferQueue(CMMFMdaAudioStream *aStream, TInt aPriority);
 
     void WriteAndWait();
     void StartTransfer();
@@ -151,12 +151,13 @@ class CMMFMdaAudioOutputStream : public CMMFMdaAudioStream {
 public:
     MMdaAudioOutputStreamCallback &iCallback;
 
-    CMMFMdaAudioOutputStream(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref);
+    CMMFMdaAudioOutputStream(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref, TInt aBufferPriority);
     
     virtual ~CMMFMdaAudioOutputStream();
     virtual void NotifyOpenComplete();
 
     static CMMFMdaAudioOutputStream *NewL(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref);
+    static CMMFMdaAudioOutputStream *NewL(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref, TInt aBufferPriority);
 
     void Stop();
     void ConstructL();

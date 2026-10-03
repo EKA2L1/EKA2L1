@@ -64,6 +64,10 @@ public:
     EXPORT_C static CMdaAudioOutputStream *NewL(MMdaAudioOutputStreamCallback &aCallBack,
         CMdaServer *aServer = NULL);
 
+#ifndef EKA2
+    EXPORT_C static CMdaAudioOutputStream *NewLegacyL(MMdaAudioOutputStreamCallback &aCallBack, CMdaServer *aServer);
+#endif
+
     EXPORT_C static CMdaAudioOutputStream *NewL(MMdaAudioOutputStreamCallback &aCallBack,
         TInt aPriority,
         TMdaPriorityPreference aPref = EMdaPriorityPreferenceTimeAndQuality);

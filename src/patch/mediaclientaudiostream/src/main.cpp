@@ -29,6 +29,18 @@
 #include <e32std.h>
 
 /// == AUDIO OUTPUT STREAM PROXY ==
+#ifndef EKA2
+CMdaAudioOutputStream *CMdaAudioOutputStream::NewLegacyL(MMdaAudioOutputStreamCallback &aCallBack, CMdaServer *aServer) {
+    CMdaAudioOutputStream *stream = new (ELeave) CMdaAudioOutputStream();
+    CleanupStack::PushL(stream);
+    // Pre-MMF MDA completes copied buffers above standard-priority animation timers.
+    stream->iProperties = CMMFMdaAudioOutputStream::NewL(aCallBack, 0, EMdaPriorityPreferenceTimeAndQuality, 20);
+    CleanupStack::Pop(stream);
+
+    return stream;
+}
+#endif
+
 CMdaAudioOutputStream *CMdaAudioOutputStream::NewL(MMdaAudioOutputStreamCallback &aCallBack, CMdaServer *aServer) {
     CMdaAudioOutputStream *stream = new (ELeave) CMdaAudioOutputStream();
     CleanupStack::PushL(stream);

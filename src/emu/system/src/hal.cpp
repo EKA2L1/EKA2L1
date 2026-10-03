@@ -47,7 +47,6 @@
     sys->add_new_hal(cage, hal_com);
 
 namespace eka2l1::epoc {
-    static constexpr std::uint32_t HAL_CONTRAST_MAX = 100;
 
     hal::hal(eka2l1::system *sys)
         : sys(sys) {}
@@ -498,10 +497,6 @@ namespace eka2l1::epoc {
             *reinterpret_cast<std::uint32_t *>(data) = 1000000 / epoc::TICK_TIMER_HZ;
             break;
 
-        case kernel::hal_data_eka1_display_contrast_max:
-            *reinterpret_cast<std::uint32_t *>(data) = HAL_CONTRAST_MAX;
-            break;
-
         case kernel::hal_data_eka1_display_memory_address: {    
             window_server *winserv = reinterpret_cast<window_server *>(sys->get_kernel_system()->get_by_name<service::server>(
                 eka2l1::get_winserv_name_by_epocver(sys->get_symbian_version_use())));
@@ -535,6 +530,7 @@ namespace eka2l1::epoc {
             return the_hal->current_mode_info(reinterpret_cast<int *>(data), nullptr, 0);
         }
 
+        case kernel::hal_data_eka1_display_num_of_colors:
         case kernel::hal_data_eka1_screen_num_of_colors: {
             display_hal *the_hal = reinterpret_cast<display_hal *>(sys->get_hal(hal_category_display));
 

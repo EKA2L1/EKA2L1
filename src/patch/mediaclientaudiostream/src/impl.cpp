@@ -40,11 +40,12 @@
 // not wait at all - see HandleBufferInsufficient().
 static const TUint32 KWaitBufferTimeInMicroseconds = 500000;
 
-// This sits between the redraw priority (50) and ws events priority (100) of the UI framework.
-// Audio is intensive, we don't want redraw too take two much time, but at same time, we also
-// want input or other events to be responsive and not missing out any events.
-// Only apply to EKA2 onwards
+#ifdef EKA2
+// Buffer work outranks redraw (50) but yields to window events (100).
 static const TInt KMMFMdaOutputBufferPriority = 70;
+#else
+static const TInt KMMFMdaOutputBufferPriority = CActive::EPriorityStandard;
+#endif
 
 static TInt OnWaitBufferTimeout(void *aUserdata) {
     CMMFMdaAudioOutputStream *stream = reinterpret_cast<CMMFMdaAudioOutputStream *>(aUserdata);
@@ -55,12 +56,8 @@ static TInt OnWaitBufferTimeout(void *aUserdata) {
     return KErrNone;
 }
 
-CMMFMdaBufferQueue::CMMFMdaBufferQueue(CMMFMdaAudioStream *aStream)
-#ifdef EKA2
-    : CActive(KMMFMdaOutputBufferPriority)
-#else
-    : CActive(CActive::EPriorityStandard)
-#endif
+CMMFMdaBufferQueue::CMMFMdaBufferQueue(CMMFMdaAudioStream *aStream, TInt aPriority)
+    : CActive(aPriority)
     , iStream(aStream)
     , iBufferNodes(_FOFF(TMMFMdaBufferNode, iLink)) {
 }
@@ -90,8 +87,8 @@ void CMMFMdaBufferQueue::DoCancel() {
     iStream->CancelRegisterNotifyBufferSent();
 }
 
-CMMFMdaOutputBufferQueue::CMMFMdaOutputBufferQueue(CMMFMdaAudioStream *aStream)
-    : CMMFMdaBufferQueue(aStream)
+CMMFMdaOutputBufferQueue::CMMFMdaOutputBufferQueue(CMMFMdaAudioStream *aStream, TInt aPriority)
+    : CMMFMdaBufferQueue(aStream, aPriority)
     , iCopied(NULL) {
 }
 
@@ -373,9 +370,9 @@ void CMMFMdaAudioStream::SetPriorityUnimplNotified() {
 }
 
 /// AUDIO OUTPUT STREAM
-CMMFMdaAudioOutputStream::CMMFMdaAudioOutputStream(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref)
+CMMFMdaAudioOutputStream::CMMFMdaAudioOutputStream(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref, TInt aBufferPriority)
     : CMMFMdaAudioStream(aPriority, aPref)
-    , iBufferQueue(this)
+    , iBufferQueue(this, aBufferPriority)
     , iWaitBufferEndTimer(NULL)
     , iCallback(aCallback) {
 }
@@ -388,7 +385,11 @@ CMMFMdaAudioOutputStream::~CMMFMdaAudioOutputStream() {
 }
 
 CMMFMdaAudioOutputStream *CMMFMdaAudioOutputStream::NewL(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref) {
-    CMMFMdaAudioOutputStream *newStream = new (ELeave) CMMFMdaAudioOutputStream(aCallback, aPriority, aPref);
+    return NewL(aCallback, aPriority, aPref, KMMFMdaOutputBufferPriority);
+}
+
+CMMFMdaAudioOutputStream *CMMFMdaAudioOutputStream::NewL(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref, TInt aBufferPriority) {
+    CMMFMdaAudioOutputStream *newStream = new (ELeave) CMMFMdaAudioOutputStream(aCallback, aPriority, aPref, aBufferPriority);
     CleanupStack::PushL(newStream);
     newStream->ConstructL();
     CleanupStack::Pop(newStream);
@@ -545,7 +546,11 @@ void CMMFMdaAudioOutputStream::HandleBufferInsufficient() {
 
 /// INPUT STREAM BUFFER QUEUE
 CMMFMdaInputBufferQueue::CMMFMdaInputBufferQueue(CMMFMdaAudioStream *aStream)
-    : CMMFMdaBufferQueue(aStream) {
+#ifdef EKA2
+    : CMMFMdaBufferQueue(aStream, KMMFMdaOutputBufferPriority) {
+#else
+    : CMMFMdaBufferQueue(aStream, CActive::EPriorityStandard) {
+#endif
 
 }
 
