@@ -24,6 +24,7 @@
 
 #include <kernel/kernel.h>
 #include <services/applist/applist.h>
+#include <services/window/window.h>
 #include <system/epoc.h>
 
 #include <chrono>
@@ -135,6 +136,18 @@ namespace eka2l1::control {
         kernel_system &kern = require_kernel(sys);
         applist_server *server = reinterpret_cast<applist_server *>(kern.get_by_name<service::server>(
             get_app_list_server_name_by_epocver(kern.get_epoc_version())));
+
+        if (!server) {
+            throw rpc_error(error_not_ready, "No device has been booted");
+        }
+
+        return *server;
+    }
+
+    window_server &require_window_server(system &sys) {
+        kernel_system &kern = require_kernel(sys);
+        window_server *server = reinterpret_cast<window_server *>(kern.get_by_name<service::server>(
+            get_winserv_name_by_epocver(kern.get_epoc_version())));
 
         if (!server) {
             throw rpc_error(error_not_ready, "No device has been booted");

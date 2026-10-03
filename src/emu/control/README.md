@@ -1,7 +1,7 @@
 # Control server
 
 The control server lets another program drive a running emulator: list, install, launch and
-kill apps, pause and quit. It speaks [JSON-RPC 2.0](https://www.jsonrpc.org/specification) over a local socket.
+kill apps, press keys, touch the screen, pause and quit. It speaks [JSON-RPC 2.0](https://www.jsonrpc.org/specification) over a local socket.
 
 ```
 eka2l1_qt --control "$XDG_RUNTIME_DIR/eka2l1.sock"
@@ -64,15 +64,17 @@ A UID parameter is a number (`3879017519`) or a string of hexadecimal digits aft
 ## Threading and ordering
 
 - The server runs on a thread of its own and handles one request at a time, in the order the
-  requests arrive, over all connections. A request that waits (`app.launch` waiting for the
-  frontend) holds up the others.
+  requests arrive, over all connections. A request that waits (`input.key` holding a key down,
+  `app.launch` waiting for the frontend) holds up the others.
 - Whatever touches the emulated system runs between two emulation slices: on the emulation
   thread right before it schedules the next guest thread, or on the server thread with the
   emulation locked out, whenever the emulation thread is outside its loop (between two slices,
   while paused, or when no device runs). No guest instruction runs at the same time, and the
   device cannot be reset or switched in the middle.
 - When a response arrives, what the method did is done in the emulated system: the process
-  exists, the killed process is gone, the package is installed and the app list rescanned.
+  exists, the killed process is gone, the package is installed and the app list rescanned, the
+  input event is queued to the window server. The app handles queued input the next time it
+  runs, not before the response.
 
 ## Errors
 
@@ -126,7 +128,8 @@ and new optional parameters do not change it.
 | Result | `paused`: `true` (pause) or `false` (resume) |
 
 `emulator.pause` answers once the slice in flight has ended: from then on no guest instruction
-runs until `emulator.resume`. Every other method keeps working while paused. The frontend's own pause control shows the same state.
+runs until `emulator.resume`. Every other method keeps working while paused; input sent while
+paused is handled after the resume. The frontend's own pause control shows the same state.
 
 ### `emulator.exit`
 
@@ -187,6 +190,39 @@ absolute `path`: a relative one is resolved against the emulator's working direc
 | Result | `{}` |
 | Errors | -32002 no package with that UID is installed; -32003 it could not be removed |
 
+### `input.key`
+
+| Params | `key`: key name, or `scancode`: integer (exactly one of them); `action`: `"tap"` (default), `"press"` or `"release"`; `hold_ms`: integer 0–10000, default 50 |
+|---|---|
+| Result | `{}` |
+
+Sends the key to the guest as a standard scan code, whatever the frontend's key bindings are.
+`tap` presses the key, lets the emulation run for `hold_ms` milliseconds, releases it and
+answers after the release. While the emulation is paused the hold passes with no guest time,
+so the app gets the press and the release together once it resumes. `press` and `release`
+send one half each.
+
+| Name | Scan code | | Name | Scan code |
+|---|---|---|---|---|
+| `left_softkey` | `0xA4` | | `send` | `0xC4` |
+| `right_softkey` | `0xA5` | | `end` | `0xC5` |
+| `select` | `0xA7` | | `menu` | `0xB4` |
+| `up` | `0x10` | | `edit` | `0x12` |
+| `down` | `0x11` | | `clear` | `0x01` |
+| `left` | `0x0E` | | `hash` | `0x7F` |
+| `right` | `0x0F` | | `star` | `0x2A` |
+| `0` … `9` | `0x30` … `0x39` | | | |
+
+### `input.touch`
+
+| Params | `x`, `y`: integers; `action`: `"tap"` (default), `"press"`, `"move"` or `"release"`; `pointer`: integer 0–7, default 0; `hold_ms`: integer 0–10000, default 50 |
+|---|---|
+| Result | `{}` |
+
+`x` and `y` are guest screen pixels, from the top left corner of the screen, whatever size
+the frontend shows the screen at. `move` drags a pressed pointer; `pointer` tells fingers apart
+on multi-touch devices. `tap` works as for keys.
+
 ## Examples
 
 One request from a shell, with OpenBSD netcat (`-N` ends the stream after the request; the
@@ -199,7 +235,7 @@ echo '{"jsonrpc":"2.0","id":1,"method":"apps.list"}' | nc -N -U "$XDG_RUNTIME_DI
 A Python client, standard library only:
 
 ```python
-import json, os, socket
+import json, os, socket, time
 
 sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 sock.connect(os.path.join(os.environ["XDG_RUNTIME_DIR"], "eka2l1.sock"))
@@ -218,7 +254,8 @@ def call(method, **params):
 
 call("package.install", path="/home/me/hello.sisx")
 pid = call("app.launch", uid="0xE7351C2F")["pid"]
-print([app["name"] for app in call("apps.list")["apps"] if app["running"]])
+time.sleep(10)  # the answer comes before the app has drawn anything
+call("input.key", key="down")
 call("app.kill", uid="0xE7351C2F")
 ```
 
