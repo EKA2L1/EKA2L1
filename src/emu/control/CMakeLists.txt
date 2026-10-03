@@ -2,6 +2,7 @@ add_library(control
         include/control/dispatcher.h
         include/control/endpoint.h
         include/control/frontend.h
+        include/control/keys.h
         include/control/params.h
         include/control/rpc_server.h
         include/control/server.h
@@ -9,8 +10,10 @@ add_library(control
         src/context.h
         src/dispatcher.cpp
         src/endpoint.cpp
+        src/keys.cpp
         src/methods_apps.cpp
         src/methods_emulator.cpp
+        src/methods_input.cpp
         src/params.cpp
         src/rpc_server.cpp
         src/server.cpp)

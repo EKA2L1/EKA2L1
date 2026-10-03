@@ -23,6 +23,7 @@
 #include <config/config.h>
 #include <control/dispatcher.h>
 #include <control/frontend.h>
+#include <control/keys.h>
 #include <control/server.h>
 #include <system/epoc.h>
 
@@ -142,6 +143,8 @@ TEST_CASE("guest_methods_say_when_there_is_no_system", "[control][server]") {
     REQUIRE(fixture.error_of("apps.list") == error_not_ready);
     REQUIRE(fixture.error_of("app.launch", R"({"uid":"0xE7351C2F"})") == error_not_ready);
     REQUIRE(fixture.error_of("app.kill", R"({"uid":3879017519})") == error_not_ready);
+    REQUIRE(fixture.error_of("input.key", R"({"key":"select"})") == error_not_ready);
+    REQUIRE(fixture.error_of("input.touch", R"({"x":10,"y":20})") == error_not_ready);
     REQUIRE(fixture.error_of("package.remove", R"({"uid":1})") == error_not_ready);
 }
 
@@ -150,6 +153,14 @@ TEST_CASE("parameters_are_checked_before_the_guest_is_touched", "[control][serve
 
     REQUIRE(fixture.error_of("app.launch") == error_invalid_params);
     REQUIRE(fixture.error_of("app.launch", R"({"uid":"launcher"})") == error_invalid_params);
+    REQUIRE(fixture.error_of("input.key") == error_invalid_params);
+    REQUIRE(fixture.error_of("input.key", R"({"key":"jump"})") == error_invalid_params);
+    REQUIRE(fixture.error_of("input.key", R"({"key":"select","scancode":167})") == error_invalid_params);
+    REQUIRE(fixture.error_of("input.key", R"({"key":"select","action":"hold"})") == error_invalid_params);
+    REQUIRE(fixture.error_of("input.key", R"({"key":"select","action":"move"})") == error_invalid_params);
+    REQUIRE(fixture.error_of("input.touch", R"({"x":10})") == error_invalid_params);
+    REQUIRE(fixture.error_of("input.touch", R"({"x":10,"y":-1})") == error_invalid_params);
+    REQUIRE(fixture.error_of("input.touch", R"({"x":10,"y":10,"pointer":8})") == error_invalid_params);
     REQUIRE(fixture.error_of("package.install") == error_invalid_params);
     REQUIRE(fixture.error_of("package.install", R"({"path":"/nonexistent/app.sisx"})") == error_not_found);
 }
@@ -161,6 +172,7 @@ TEST_CASE("guest_methods_run_without_an_emulation_loop", "[control][server]") {
     fixture.host.sys = guest.sys.get();
 
     REQUIRE(fixture.error_of("apps.list") == error_not_ready);
+    REQUIRE(fixture.error_of("input.key", R"({"key":"5"})") == error_not_ready);
 
     // The pause waits for the emulation thread to settle, which here means not at all.
     REQUIRE(fixture.call("emulator.pause")["result"]["paused"].GetBool());
@@ -204,4 +216,22 @@ TEST_CASE("tcp_refuses_a_token_shorter_than_16_bytes", "[control][server]") {
 #else
     unsetenv("EKA2L1_CONTROL_TOKEN");
 #endif
+}
+
+TEST_CASE("keys_have_names_for_the_phone_keypad", "[control][keys]") {
+    REQUIRE(scan_code_of_key("left_softkey") == 0xA4u);
+    REQUIRE(scan_code_of_key("right_softkey") == 0xA5u);
+    REQUIRE(scan_code_of_key("select") == 0xA7u);
+    REQUIRE(scan_code_of_key("up") == 0x10u);
+    REQUIRE(scan_code_of_key("down") == 0x11u);
+    REQUIRE(scan_code_of_key("left") == 0x0Eu);
+    REQUIRE(scan_code_of_key("right") == 0x0Fu);
+    REQUIRE(scan_code_of_key("send") == 0xC4u);
+    REQUIRE(scan_code_of_key("end") == 0xC5u);
+    REQUIRE(scan_code_of_key("5") == static_cast<std::uint32_t>('5'));
+    REQUIRE(scan_code_of_key("star") == static_cast<std::uint32_t>('*'));
+    REQUIRE(scan_code_of_key("hash") == 0x7Fu);
+    REQUIRE_FALSE(scan_code_of_key("55").has_value());
+    REQUIRE_FALSE(scan_code_of_key("Select").has_value());
+    REQUIRE_FALSE(scan_code_of_key("").has_value());
 }

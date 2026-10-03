@@ -29,6 +29,7 @@ namespace eka2l1 {
     class system;
     class kernel_system;
     class applist_server;
+    class window_server;
 }
 
 namespace eka2l1::control {
@@ -64,7 +65,9 @@ namespace eka2l1::control {
     // Call them inside run_in_guest(): the services are rebuilt when the system resets.
     kernel_system &require_kernel(system &sys);
     applist_server &require_applist(system &sys);
+    window_server &require_window_server(system &sys);
 
     void add_emulator_methods(dispatcher &rpc, context &ctx);
     void add_app_methods(dispatcher &rpc, context &ctx);
+    void add_input_methods(dispatcher &rpc, context &ctx);
 }
