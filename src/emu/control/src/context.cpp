@@ -1,0 +1,246 @@
+/*
+ * Copyright (c) 2026 EKA2L1 Team.
+ *
+ * This file is part of EKA2L1 project.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include "context.h"
+
+#include <control/dispatcher.h>
+#include <control/frontend.h>
+#include <control/rpc_server.h>
+
+#include <common/cvt.h>
+#include <kernel/kernel.h>
+#include <kernel/process.h>
+#include <services/applist/applist.h>
+#include <services/window/window.h>
+#include <system/epoc.h>
+
+#include <chrono>
+#include <condition_variable>
+#include <exception>
+
+namespace eka2l1::control {
+    event_sink::event_sink(rpc_server *transport)
+        : transport_(transport) {
+    }
+
+    void event_sink::publish(const std::string &topic, const std::string &line) {
+        const std::lock_guard<std::mutex> guard(mut_);
+
+        if (transport_) {
+            transport_->publish(topic, line);
+        }
+    }
+
+    void event_sink::detach() {
+        const std::lock_guard<std::mutex> guard(mut_);
+        transport_ = nullptr;
+    }
+
+    context::context(frontend &host, rpc_server &transport)
+        : host(host)
+        , transport(transport)
+        , events(std::make_shared<event_sink>(&transport)) {
+    }
+
+    system &context::require_system() {
+        system *sys = host.get_system();
+
+        if (!sys) {
+            throw rpc_error(error_not_ready, "The emulator has no system running");
+        }
+
+        return *sys;
+    }
+
+    void context::run_in_guest(const std::function<void(system &)> &task) {
+        system &sys = require_system();
+
+        enum class task_state {
+            pending,
+            running,
+            done,
+            cancelled
+        };
+
+        struct shared_state {
+            std::mutex mut;
+            std::condition_variable done_cond;
+            task_state state = task_state::pending;
+            std::exception_ptr failure;
+        };
+
+        auto shared = std::make_shared<shared_state>();
+
+        sys.post_task([shared, &task, &sys]() {
+            {
+                const std::lock_guard<std::mutex> guard(shared->mut);
+
+                // The waiter gave up before the task started; `task` may be gone already.
+                if (shared->state == task_state::cancelled) {
+                    return;
+                }
+
+                shared->state = task_state::running;
+            }
+
+            try {
+                task(sys);
+            } catch (...) {
+                shared->failure = std::current_exception();
+            }
+
+            {
+                const std::lock_guard<std::mutex> guard(shared->mut);
+                shared->state = task_state::done;
+            }
+
+            shared->done_cond.notify_all();
+        });
+
+        std::unique_lock<std::mutex> lock(shared->mut);
+
+        while (shared->state != task_state::done) {
+            if ((shared->state == task_state::pending) && stopping) {
+                shared->state = task_state::cancelled;
+                throw rpc_error(error_shutting_down, "The emulator is shutting down");
+            }
+
+            // The emulation thread may be outside loop(): paused by the frontend, no device
+            // booted yet, or simply between two loop() calls. Then run the queue here, under the
+            // same system lock loop() takes.
+            lock.unlock();
+            sys.try_run_pending_tasks();
+            lock.lock();
+
+            if (shared->state != task_state::done) {
+                shared->done_cond.wait_for(lock, std::chrono::milliseconds(10));
+            }
+        }
+
+        lock.unlock();
+
+        // The task may have queued follow-up work, such as an exit event after a kill. Run it
+        // now if the emulation thread is parked, instead of when the emulation resumes.
+        sys.try_run_pending_tasks();
+
+        if (shared->failure) {
+            std::rethrow_exception(shared->failure);
+        }
+    }
+
+    static const char *exit_type_name(const kernel::entity_exit_type type) {
+        switch (type) {
+        case kernel::entity_exit_type::kill:
+            return "kill";
+
+        case kernel::entity_exit_type::terminate:
+            return "terminate";
+
+        case kernel::entity_exit_type::panic:
+            return "panic";
+
+        default:
+            break;
+        }
+
+        return "pending";
+    }
+
+    void context::hook_app_exits(system &sys) {
+        kernel_system &kern = require_kernel(sys);
+
+        if (hooked_kernel == &kern) {
+            return;
+        }
+
+        hooked_kernel = &kern;
+
+        std::shared_ptr<event_sink> sink = events;
+        system *sys_ptr = &sys;
+
+        kern.register_process_exit_callback([sink, sys_ptr](kernel::process *pr) {
+            const std::uint32_t uid = pr->get_uid();
+            const kernel::uid pid = pr->unique_id();
+            const std::string name = pr->name();
+            const char *exit_type = exit_type_name(pr->get_exit_type());
+            const int exit_reason = pr->get_exit_reason();
+            const std::string exit_category = common::ucs2_to_utf8(pr->get_exit_category());
+
+            // This runs inside process::kill, possibly under the kernel lock. Report the exit
+            // once the kill is complete, which also comes after the frontend's own exit callback
+            // (the launch logon) has run.
+            sys_ptr->post_task([sink, sys_ptr, uid, pid, name, exit_type, exit_reason, exit_category]() {
+                try {
+                    if (!require_applist(*sys_ptr).get_registration(uid)) {
+                        return;
+                    }
+                } catch (rpc_error &) {
+                    return;
+                }
+
+                rapidjson::Document params;
+                json_allocator &allocator = params.GetAllocator();
+
+                params.SetObject();
+                params.AddMember("uid", uid, allocator);
+                params.AddMember("pid", static_cast<std::uint64_t>(pid), allocator);
+                params.AddMember("name", rapidjson::Value(name.c_str(), allocator), allocator);
+                params.AddMember("exit_type", rapidjson::StringRef(exit_type), allocator);
+                params.AddMember("exit_reason", exit_reason, allocator);
+                params.AddMember("exit_category", rapidjson::Value(exit_category.c_str(), allocator), allocator);
+
+                sink->publish("app_exited", make_notification("event.app_exited", params));
+            });
+        });
+    }
+
+    kernel_system &require_kernel(system &sys) {
+        kernel_system *kern = sys.get_kernel_system();
+
+        if (!kern) {
+            throw rpc_error(error_not_ready, "No device has been booted");
+        }
+
+        return *kern;
+    }
+
+    applist_server &require_applist(system &sys) {
+        kernel_system &kern = require_kernel(sys);
+        applist_server *server = reinterpret_cast<applist_server *>(kern.get_by_name<service::server>(
+            get_app_list_server_name_by_epocver(kern.get_epoc_version())));
+
+        if (!server) {
+            throw rpc_error(error_not_ready, "No device has been booted");
+        }
+
+        return *server;
+    }
+
+    window_server &require_window_server(system &sys) {
+        kernel_system &kern = require_kernel(sys);
+        window_server *server = reinterpret_cast<window_server *>(kern.get_by_name<service::server>(
+            get_winserv_name_by_epocver(kern.get_epoc_version())));
+
+        if (!server) {
+            throw rpc_error(error_not_ready, "No device has been booted");
+        }
+
+        return *server;
+    }
+}
