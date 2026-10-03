@@ -77,6 +77,7 @@
 #include <QMessageBox>
 #include <QProgressDialog>
 #include <QSettings>
+#include <QSignalBlocker>
 #include <QLineEdit>
 #include <QThreadPool>
 #include <QtConcurrent/QtConcurrent>
@@ -599,6 +600,12 @@ void main_window::on_settings_triggered() {
     }
 }
 
+void main_window::reload_applist() {
+    if (applist_) {
+        applist_->request_reload(false);
+    }
+}
+
 void main_window::force_refresh_applist() {
     // Try to refersh app lists
     if (applist_ && applist_->lister_->rescan_registries(applist_->io_)) {
@@ -682,6 +689,11 @@ void main_window::on_device_set_requested(const int index) {
 void main_window::on_restart_requested() {
     on_device_set_requested(-1);
     emit restart_requested();
+}
+
+void main_window::show_paused(const bool paused) {
+    const QSignalBlocker blocker(ui_->action_pause);
+    ui_->action_pause->setChecked(paused);
 }
 
 void main_window::on_pause_toggled(bool checked) {
