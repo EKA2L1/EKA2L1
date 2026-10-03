@@ -47,7 +47,7 @@ struct CMMFMdaBufferQueue : public CActive {
     CMMFMdaAudioStream *iStream;
     TDblQue<TMMFMdaBufferNode> iBufferNodes;
 
-    explicit CMMFMdaBufferQueue(CMMFMdaAudioStream *aStream);
+    CMMFMdaBufferQueue(CMMFMdaAudioStream *aStream, TInt aPriority);
     virtual ~CMMFMdaBufferQueue();
 
     virtual void FixupActiveStatus();
