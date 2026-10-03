@@ -222,12 +222,13 @@ namespace eka2l1::desktop {
 
         // Signal that the initialization is done
         state.graphics_event.set();
+        state.graphics_driver_ready_event.set();
         return 0;
     }
 
     static int graphics_driver_thread_deinitialization(emulator &state) {
         if (state.stage_two_inited)
-            state.graphics_event.wait();
+            state.system_released_event.wait();
 
         state.joystick_controller->stop_polling();
         state.graphics_driver.reset();
@@ -328,7 +329,7 @@ namespace eka2l1::desktop {
 
         state.kill_event.wait();
         state.symsys.reset();
-        state.graphics_event.set();
+        state.system_released_event.set();
 
 #if EKA2L1_PLATFORM(WIN32)
         CoUninitialize();
@@ -347,6 +348,7 @@ namespace eka2l1::desktop {
             kern->stop_cores_idling();
         }
 
+        state.graphics_driver_ready_event.wait();
         state.graphics_driver->abort();
         state.init_event.set();
         state.kill_event.set();
