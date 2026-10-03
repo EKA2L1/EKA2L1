@@ -14,6 +14,7 @@ add_library(control
         src/keys.cpp
         src/methods_apps.cpp
         src/methods_emulator.cpp
+        src/methods_events.cpp
         src/methods_input.cpp
         src/methods_screen.cpp
         src/new_file.cpp

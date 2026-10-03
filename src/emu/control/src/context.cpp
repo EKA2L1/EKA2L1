@@ -21,8 +21,11 @@
 
 #include <control/dispatcher.h>
 #include <control/frontend.h>
+#include <control/rpc_server.h>
 
+#include <common/cvt.h>
 #include <kernel/kernel.h>
+#include <kernel/process.h>
 #include <services/applist/applist.h>
 #include <services/window/window.h>
 #include <system/epoc.h>
@@ -32,8 +35,27 @@
 #include <exception>
 
 namespace eka2l1::control {
-    context::context(frontend &host)
-        : host(host) {
+    event_sink::event_sink(rpc_server *transport)
+        : transport_(transport) {
+    }
+
+    void event_sink::publish(const std::string &topic, const std::string &line) {
+        const std::lock_guard<std::mutex> guard(mut_);
+
+        if (transport_) {
+            transport_->publish(topic, line);
+        }
+    }
+
+    void event_sink::detach() {
+        const std::lock_guard<std::mutex> guard(mut_);
+        transport_ = nullptr;
+    }
+
+    context::context(frontend &host, rpc_server &transport)
+        : host(host)
+        , transport(transport)
+        , events(std::make_shared<event_sink>(&transport)) {
     }
 
     system &context::require_system() {
@@ -120,6 +142,72 @@ namespace eka2l1::control {
         if (shared->failure) {
             std::rethrow_exception(shared->failure);
         }
+    }
+
+    static const char *exit_type_name(const kernel::entity_exit_type type) {
+        switch (type) {
+        case kernel::entity_exit_type::kill:
+            return "kill";
+
+        case kernel::entity_exit_type::terminate:
+            return "terminate";
+
+        case kernel::entity_exit_type::panic:
+            return "panic";
+
+        default:
+            break;
+        }
+
+        return "pending";
+    }
+
+    void context::hook_app_exits(system &sys) {
+        kernel_system &kern = require_kernel(sys);
+
+        if (hooked_kernel == &kern) {
+            return;
+        }
+
+        hooked_kernel = &kern;
+
+        std::shared_ptr<event_sink> sink = events;
+        system *sys_ptr = &sys;
+
+        kern.register_process_exit_callback([sink, sys_ptr](kernel::process *pr) {
+            const std::uint32_t uid = pr->get_uid();
+            const kernel::uid pid = pr->unique_id();
+            const std::string name = pr->name();
+            const char *exit_type = exit_type_name(pr->get_exit_type());
+            const int exit_reason = pr->get_exit_reason();
+            const std::string exit_category = common::ucs2_to_utf8(pr->get_exit_category());
+
+            // This runs inside process::kill, possibly under the kernel lock. Report the exit
+            // once the kill is complete, which also comes after the frontend's own exit callback
+            // (the launch logon) has run.
+            sys_ptr->post_task([sink, sys_ptr, uid, pid, name, exit_type, exit_reason, exit_category]() {
+                try {
+                    if (!require_applist(*sys_ptr).get_registration(uid)) {
+                        return;
+                    }
+                } catch (rpc_error &) {
+                    return;
+                }
+
+                rapidjson::Document params;
+                json_allocator &allocator = params.GetAllocator();
+
+                params.SetObject();
+                params.AddMember("uid", uid, allocator);
+                params.AddMember("pid", static_cast<std::uint64_t>(pid), allocator);
+                params.AddMember("name", rapidjson::Value(name.c_str(), allocator), allocator);
+                params.AddMember("exit_type", rapidjson::StringRef(exit_type), allocator);
+                params.AddMember("exit_reason", exit_reason, allocator);
+                params.AddMember("exit_category", rapidjson::Value(exit_category.c_str(), allocator), allocator);
+
+                sink->publish("app_exited", make_notification("event.app_exited", params));
+            });
+        });
     }
 
     kernel_system &require_kernel(system &sys) {

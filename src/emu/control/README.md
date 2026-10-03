@@ -1,7 +1,8 @@
 # Control server
 
 The control server lets another program drive a running emulator: list, install, launch and
-kill apps, press keys, touch the screen, take screenshots, pause and quit. It speaks [JSON-RPC 2.0](https://www.jsonrpc.org/specification) over a local socket.
+kill apps, press keys, touch the screen, take screenshots, pause, quit, and hear when an app
+exits. It speaks [JSON-RPC 2.0](https://www.jsonrpc.org/specification) over a local socket.
 
 ```
 eka2l1_qt --control "$XDG_RUNTIME_DIR/eka2l1.sock"
@@ -48,6 +49,8 @@ prints why and exits with a non-zero code.
 - A valid request without an `id` (a JSON-RPC notification) runs, but gets no answer. An
   invalid one is answered with `"id": null`, with or without an `id`.
 - Batches run their calls in order and answer with an array, without the notifications.
+- The server sends notifications of its own (`event.<name>`) only to connections that
+  subscribed with `events.subscribe`.
 
 A UID parameter is a number (`3879017519`) or a string of hexadecimal digits after `0x`
 (`"0xE7351C2F"`).
@@ -75,6 +78,7 @@ A UID parameter is a number (`3879017519`) or a string of hexadecimal digits aft
   exists, the killed process is gone, the package is installed and the app list rescanned, the
   input event is queued to the window server. The app handles queued input the next time it
   runs, not before the response.
+- Notifications are written between responses, never inside one.
 
 ## Errors
 
@@ -240,6 +244,33 @@ truncates or follows anything already at that path, a symbolic link included, an
 -32003 naming the path instead. A relative `path` is resolved against the emulator's working
 directory; give an absolute one.
 
+### `events.subscribe`, `events.unsubscribe`
+
+| Params | `events`: array of event names |
+|---|---|
+| Result | `events`: what this connection is subscribed to now |
+| Errors | -32602 unknown event name; -32000 (subscribe) no device booted |
+
+Subscriptions belong to the connection and end with it. The events:
+
+| Event | Notification | Sent when |
+|---|---|---|
+| `app_exited` | `event.app_exited` | a process of an installed app ends, however it was started |
+
+### `event.app_exited` (notification)
+
+| Params | `uid`, `pid`, `name`: the process; `exit_type`: `"kill"`, `"terminate"` or `"panic"`; `exit_reason`: integer; `exit_category`: string |
+|---|---|
+
+`exit_type`, `exit_reason` and `exit_category` are the process's exit information as the
+kernel recorded it. An app that ended by itself reports `kill`, reason 0, category `None`; one
+killed with `app.kill` reports `kill`, reason 0, category `Kill`. For a process killed with
+`app.kill`, the notification comes after the answer to `app.kill`.
+
+```
+{"jsonrpc":"2.0","method":"event.app_exited","params":{"uid":3879017519,"pid":107,"name":"ctlkeys[e7351c2f]0003","exit_type":"kill","exit_reason":0,"exit_category":"Kill"}}
+```
+
 ## Examples
 
 One request from a shell, with OpenBSD netcat (`-N` ends the stream after the request; the
@@ -264,10 +295,14 @@ def call(method, **params):
     next_id += 1
     stream.write(json.dumps({"jsonrpc": "2.0", "id": next_id, "method": method, "params": params}) + "\n")
     stream.flush()
-    message = json.loads(stream.readline())
-    if "error" in message:
-        raise RuntimeError(message["error"])
-    return message["result"]
+    while True:
+        message = json.loads(stream.readline())
+        if message.get("id") != next_id:
+            print("notification:", message)  # an event, when subscribed
+            continue
+        if "error" in message:
+            raise RuntimeError(message["error"])
+        return message["result"]
 
 call("package.install", path="/home/me/hello.sisx")
 pid = call("app.launch", uid="0xE7351C2F")["pid"]
