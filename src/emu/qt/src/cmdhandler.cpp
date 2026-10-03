@@ -60,11 +60,24 @@ bool app_install_option_handler(eka2l1::common::arg_parser *parser, void *userda
     // Since it's inconvenient for user to specify the drive (they are all the same on computer),
     // and it's better to install in C since there is many apps required
     // to be in it and hardcoded the drive, just hardcode drive E here.
-    bool result = emu->symsys->install_package(common::utf8_to_ucs2(path), drive_e);
+    // installation_result_success is 0: compare, don't convert the enum to bool.
+    const bool result = emu->symsys->install_package(common::utf8_to_ucs2(path), drive_e)
+        == package::installation_result_success;
 
     if (!result) {
         *err = "Installation of SIS failed";
         return false;
+    }
+
+    // The app list was loaded at boot. Rescan so a following --run sees the app
+    // this package just registered, as the GUI install path does.
+    kernel_system *kern = emu->symsys->get_kernel_system();
+    if (kern) {
+        auto *svr = reinterpret_cast<eka2l1::applist_server *>(kern->get_by_name<service::server>(
+            get_app_list_server_name_by_epocver(kern->get_epoc_version())));
+        if (svr) {
+            svr->rescan_registries(emu->symsys->get_io_system());
+        }
     }
 
     return true;
