@@ -41,11 +41,17 @@ namespace eka2l1::control {
 
         explicit server_impl(frontend &host)
             : transport(rpc)
-            , ctx(host) {
+            , ctx(host, transport) {
             add_emulator_methods(rpc, ctx);
             add_app_methods(rpc, ctx);
             add_input_methods(rpc, ctx);
             add_screen_methods(rpc, ctx);
+            add_event_methods(rpc, ctx);
+        }
+
+        ~server_impl() {
+            // The kernel keeps the app-exit callback, and with it the sink, after the server is gone.
+            ctx.events->detach();
         }
     };
 

@@ -35,17 +35,40 @@ namespace eka2l1 {
 namespace eka2l1::control {
     class dispatcher;
     class frontend;
+    class rpc_server;
+
+    /**
+     * \brief Hands app-exit events to the server for as long as it runs.
+     *
+     * The kernel keeps the exit callback for its whole life, so the callback holds this
+     * instead of the server, and the server switches it off when it stops.
+     */
+    class event_sink {
+        std::mutex mut_;
+        rpc_server *transport_;
+
+    public:
+        explicit event_sink(rpc_server *transport);
+
+        void publish(const std::string &topic, const std::string &line);
+        void detach();
+    };
 
     /**
      * \brief What the method handlers share.
      */
     struct context {
         frontend &host;
+        rpc_server &transport;
+        std::shared_ptr<event_sink> events;
 
         // Set when the server stops; a handler waiting on the guest gives up.
         std::atomic<bool> stopping{ false };
 
-        explicit context(frontend &host);
+        // The kernel the app-exit callback is registered with. Touched only inside run_in_guest().
+        kernel_system *hooked_kernel = nullptr;
+
+        explicit context(frontend &host, rpc_server &transport);
 
         /**
          * \brief The emulated system, or throws rpc_error(error_not_ready).
@@ -59,6 +82,12 @@ namespace eka2l1::control {
          * stops before the task started.
          */
         void run_in_guest(const std::function<void(system &)> &task);
+
+        /**
+         * \brief Register the app-exit callback with the current kernel, unless already done.
+         *        Call inside run_in_guest().
+         */
+        void hook_app_exits(system &sys);
     };
 
     // Lookups that need a booted device; they throw rpc_error(error_not_ready) without one.
@@ -71,4 +100,5 @@ namespace eka2l1::control {
     void add_app_methods(dispatcher &rpc, context &ctx);
     void add_input_methods(dispatcher &rpc, context &ctx);
     void add_screen_methods(dispatcher &rpc, context &ctx);
+    void add_event_methods(dispatcher &rpc, context &ctx);
 }

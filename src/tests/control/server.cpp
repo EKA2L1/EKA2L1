@@ -147,6 +147,7 @@ TEST_CASE("guest_methods_say_when_there_is_no_system", "[control][server]") {
     REQUIRE(fixture.error_of("input.touch", R"({"x":10,"y":20})") == error_not_ready);
     REQUIRE(fixture.error_of("screen.capture") == error_not_ready);
     REQUIRE(fixture.error_of("package.remove", R"({"uid":1})") == error_not_ready);
+    REQUIRE(fixture.error_of("events.subscribe", R"({"events":["app_exited"]})") == error_not_ready);
 }
 
 TEST_CASE("parameters_are_checked_before_the_guest_is_touched", "[control][server]") {
@@ -163,6 +164,8 @@ TEST_CASE("parameters_are_checked_before_the_guest_is_touched", "[control][serve
     REQUIRE(fixture.error_of("input.touch", R"({"x":10,"y":-1})") == error_invalid_params);
     REQUIRE(fixture.error_of("input.touch", R"({"x":10,"y":10,"pointer":8})") == error_invalid_params);
     REQUIRE(fixture.error_of("screen.capture", R"({"path":7})") == error_invalid_params);
+    REQUIRE(fixture.error_of("events.subscribe", R"({"events":["app_launched"]})") == error_invalid_params);
+    REQUIRE(fixture.error_of("events.subscribe", R"({"events":"app_exited"})") == error_invalid_params);
     REQUIRE(fixture.error_of("package.install") == error_invalid_params);
     REQUIRE(fixture.error_of("package.install", R"({"path":"/nonexistent/app.sisx"})") == error_not_found);
 }
@@ -175,6 +178,14 @@ TEST_CASE("guest_methods_run_without_an_emulation_loop", "[control][server]") {
 
     REQUIRE(fixture.error_of("apps.list") == error_not_ready);
     REQUIRE(fixture.error_of("input.key", R"({"key":"5"})") == error_not_ready);
+
+    rapidjson::Document subscribed = fixture.call("events.subscribe", R"({"events":["app_exited"]})");
+    REQUIRE(subscribed["result"]["events"].Size() == 1);
+    REQUIRE(std::string(subscribed["result"]["events"][0].GetString()) == "app_exited");
+    REQUIRE(fixture.client.subscriptions.count("app_exited") == 1);
+
+    rapidjson::Document unsubscribed = fixture.call("events.unsubscribe", R"({"events":["app_exited"]})");
+    REQUIRE(unsubscribed["result"]["events"].Size() == 0);
 
     // The pause waits for the emulation thread to settle, which here means not at all.
     REQUIRE(fixture.call("emulator.pause")["result"]["paused"].GetBool());
