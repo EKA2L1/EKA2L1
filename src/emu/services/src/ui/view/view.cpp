@@ -409,7 +409,15 @@ namespace eka2l1 {
             ctx->msg->function += 1;
         }
 
-        if (!kern->is_eka1() && (kern->get_epoc_version() <= epocver::epoc95)) {
+        if (kern->get_epoc_version() == epocver::epoc93fp2) {
+            // FP2 places background color before Priority; FP1 uses privileged opcode 112.
+            if (ctx->msg->function == view_opcode_priority) {
+                ctx->msg->function = view_opcode_set_background_color;
+            } else if (ctx->msg->function == view_opcode_set_background_color) {
+                ctx->msg->function = view_opcode_priority;
+            }
+        } else if (!kern->is_eka1() && ((kern->get_epoc_version() < epocver::epoc93fp1)
+            || (kern->get_epoc_version() == epocver::epoc95))) {
             // These are swapped orders
             if (ctx->msg->function == view_opcode_deactivate_active_view_if_owner_match) {
                 ctx->msg->function = view_opcode_set_background_color;
@@ -484,6 +492,11 @@ namespace eka2l1 {
 
         case view_opcode_request_custom_message:
             get_custom_message(ctx);
+            break;
+
+        case view_opcode_set_protected:
+            // External view activation is unsupported; views are already isolated by session.
+            ctx->complete(epoc::error_none);
             break;
 
         case view_opcode_set_background_color: {
