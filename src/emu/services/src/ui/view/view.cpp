@@ -416,8 +416,8 @@ namespace eka2l1 {
             } else if (ctx->msg->function == view_opcode_set_background_color) {
                 ctx->msg->function = view_opcode_priority;
             }
-        } else if (!kern->is_eka1() && (kern->get_epoc_version() != epocver::epoc93fp1)
-            && (kern->get_epoc_version() <= epocver::epoc95)) {
+        } else if (!kern->is_eka1() && ((kern->get_epoc_version() < epocver::epoc93fp1)
+            || (kern->get_epoc_version() == epocver::epoc95))) {
             // These are swapped orders
             if (ctx->msg->function == view_opcode_deactivate_active_view_if_owner_match) {
                 ctx->msg->function = view_opcode_set_background_color;
