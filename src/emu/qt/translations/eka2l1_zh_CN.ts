@@ -27,7 +27,7 @@
     <message>
         <location filename="../src/aboutdialog.ui" line="14"/>
         <source>About EKA2L1</source>
-        <translation>关于EKA2L1</translation>
+        <translation>关于 EKA2L1</translation>
     </message>
     <message>
         <location filename="../src/aboutdialog.ui" line="69"/>
@@ -42,7 +42,7 @@
     <message>
         <location filename="../src/aboutdialog.cpp" line="53"/>
         <source>&lt;b&gt;(C) 2018- EKA2L1 Team&lt;/b&gt;&lt;br&gt;&lt;b&gt;Thank you for using the emulator!&lt;/b&gt;&lt;br&gt;</source>
-        <translation>&lt;b&gt;(C) 2018-EKA2L1 团队&lt;/b&gt;&lt;br&gt;&lt;b&gt;感谢您使用此模拟器！&lt;/b&gt;&lt;br&gt;</translation>
+        <translation>&lt;b&gt;(C) 2018- EKA2L1 团队&lt;/b&gt;&lt;br&gt;&lt;b&gt;感谢您使用本模拟器！&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
         <location filename="../src/aboutdialog.cpp" line="64"/>
@@ -72,12 +72,12 @@
     <message>
         <location filename="../src/aboutdialog.cpp" line="133"/>
         <source>&lt;b&gt;Special thanks:&lt;/b&gt;&lt;br&gt;</source>
-        <translation type="unfinished"></translation>
+        <translation>&lt;b&gt;特别感谢：&lt;/b&gt;&lt;br&gt;</translation>
     </message>
     <message>
         <location filename="../src/aboutdialog.cpp" line="134"/>
         <source>- nikita36708 for publishing the Android version on Play Store and for his help!&lt;br&gt;- Symbian/N-Gage OG sceners: BinPDA, pSyGAGE, Engage, zg, eskMaemo, BodyZ, Ilya Dianov, iCodeRUS, huellif, ... for wonderful contributions!&lt;br&gt;- Phone manufacturers for creating wonderful Symbian devices: Nokia, Sony Ericsson, Samsung, Siemens, ...&lt;br&gt;- The N-Gage Discord community&lt;br&gt;- vk.com/Symbian_zone community&lt;br&gt;- EKA2L1 Discord community</source>
-        <translation type="unfinished"></translation>
+        <translation>- 感谢 nikita36708 将 Android 版本发布到 Play 商店并提供帮助！&lt;br&gt;- 感谢 Symbian/N-Gage 早期社区成员 BinPDA、pSyGAGE、Engage、zg、eskMaemo、BodyZ、Ilya Dianov、iCodeRUS、huellif 等作出的杰出贡献！&lt;br&gt;- 感谢诺基亚、索尼爱立信、三星、西门子等手机厂商打造出色的 Symbian 设备！&lt;br&gt;- N-Gage Discord 社区&lt;br&gt;- vk.com/Symbian_zone 社区&lt;br&gt;- EKA2L1 Discord 社区</translation>
     </message>
 </context>
 <context>
@@ -101,7 +101,7 @@
     <message>
         <location filename="../src/applistwidget.cpp" line="725"/>
         <source>&lt;br&gt;App UID: 0x%1</source>
-        <translation>&lt;br&gt;应用UID：0x%1</translation>
+        <translation>&lt;br&gt;应用 UID：0x%1</translation>
     </message>
     <message>
         <location filename="../src/applistwidget.cpp" line="797"/>
@@ -116,17 +116,17 @@
     <message>
         <location filename="../src/applistwidget.cpp" line="806"/>
         <source>An error occured while trying to rename the app!</source>
-        <translation>试图移除小部件时出错。</translation>
+        <translation>尝试重命名应用时出错！</translation>
     </message>
     <message>
         <location filename="../src/applistwidget.cpp" line="815"/>
         <source>Delete app failed</source>
-        <translation>删除失败</translation>
+        <translation>删除应用失败</translation>
     </message>
     <message>
         <location filename="../src/applistwidget.cpp" line="815"/>
         <source>An error occured while trying to delete the app!</source>
-        <translation>试图移除小部件时出错。</translation>
+        <translation>尝试删除应用时出错！</translation>
     </message>
     <message>
         <location filename="../src/applistwidget.cpp" line="835"/>
@@ -144,7 +144,7 @@
     <message>
         <location filename="../src/btnet_dialog.ui" line="20"/>
         <source>Bluetooth netplay settings</source>
-        <translation>蓝牙网络播放设置</translation>
+        <translation>蓝牙联机游玩设置</translation>
     </message>
     <message>
         <location filename="../src/btnet_dialog.ui" line="47"/>
@@ -159,7 +159,7 @@
     <message>
         <location filename="../src/btnet_dialog.ui" line="60"/>
         <source>Direct IP</source>
-        <translation>直接IP</translation>
+        <translation>直连 IP</translation>
     </message>
     <message>
         <location filename="../src/btnet_dialog.ui" line="65"/>
@@ -174,7 +174,7 @@
     <message>
         <location filename="../src/btnet_dialog.ui" line="134"/>
         <source>Enable UPnP (for IPv4 public play)</source>
-        <translation>启用 UPnP (适用于 IPv4 公共播放)</translation>
+        <translation>启用 UPnP（用于 IPv4 公网游玩）</translation>
     </message>
     <message>
         <location filename="../src/btnet_dialog.ui" line="166"/>
@@ -184,12 +184,12 @@
     <message>
         <location filename="../src/btnet_dialog.ui" line="188"/>
         <source>Open friends&apos; IP editor</source>
-        <translation>打开好友&apos; IP 编辑器</translation>
+        <translation>打开好友 IP 编辑器</translation>
     </message>
     <message>
         <location filename="../src/btnet_dialog.ui" line="225"/>
         <source>Players with the same password will be able to see each others. This can be empty.</source>
-        <translation>具有相同密码的玩家可以看到其他人。这可以是空的。</translation>
+        <translation>拥有相同密码的玩家可以相互看到对方。此处可以为空。</translation>
     </message>
     <message>
         <location filename="../src/btnet_dialog.ui" line="228"/>
@@ -214,7 +214,7 @@
     <message>
         <location filename="../src/btnet_dialog.cpp" line="119"/>
         <source>The Bluetooth netplay configuration has not been saved. Do you want to save?</source>
-        <translation>蓝牙网络播放配置未保存。您想要保存吗？</translation>
+        <translation>蓝牙联机游玩配置未保存。您想要保存吗？</translation>
     </message>
     <message>
         <location filename="../src/btnet_dialog.cpp" line="127"/>
@@ -232,17 +232,17 @@
     <message>
         <location filename="../src/btnetplay_friends_dialog.cpp" line="70"/>
         <source>Modify friends&apos; IP addresses</source>
-        <translation>修改朋友的IP地址</translation>
+        <translation>修改好友的 IP 地址</translation>
     </message>
     <message>
         <location filename="../src/btnetplay_friends_dialog.cpp" line="85"/>
         <source>IP address (IPv4 or IPv6)</source>
-        <translation>IP地址 (IPv4或IPv6)</translation>
+        <translation>IP 地址（IPv4 或 IPv6）</translation>
     </message>
     <message>
         <location filename="../src/btnetplay_friends_dialog.cpp" line="90"/>
         <source>Port (can be empty)</source>
-        <translation>端口（可以留空）</translation>
+        <translation>端口（可以为空）</translation>
     </message>
     <message>
         <location filename="../src/btnetplay_friends_dialog.cpp" line="133"/>
@@ -267,27 +267,27 @@
     <message>
         <location filename="../src/btnetplay_friends_dialog.cpp" line="201"/>
         <source>Friends&apos; IP addresses have been successfully saved!</source>
-        <translation>好友的IP地址已成功保存！</translation>
+        <translation>好友的 IP 地址已成功保存！</translation>
     </message>
     <message>
         <location filename="../src/btnetplay_friends_dialog.cpp" line="214"/>
         <source>Friend %1 has empty IP address!
 </source>
-        <translation>朋友%1的IP地址为空！
+        <translation>好友 %1 的 IP 地址为空！
 </translation>
     </message>
     <message>
         <location filename="../src/btnetplay_friends_dialog.cpp" line="216"/>
         <source>Friend %1 has invalid IP address!
 </source>
-        <translation>好友%1的IP地址无效！
+        <translation>好友 %1 的 IP 地址无效！
 </translation>
     </message>
     <message>
         <location filename="../src/btnetplay_friends_dialog.cpp" line="221"/>
         <source>Friend %1 has invalid port number (must be between 0 and 65535)!
 </source>
-        <translation>好友%1的端口号无效（必须在0至65535之间）！
+        <translation>好友 %1 的端口号无效（必须在 0 到 65535 之间）！
 </translation>
     </message>
     <message>
@@ -298,7 +298,7 @@
     <message>
         <location filename="../src/btnetplay_friends_dialog.cpp" line="249"/>
         <source>Some friends&apos; IP addresses can&apos;t be updated (see detailed text).&lt;br&gt;Addresses that are able to update have been saved.</source>
-        <translation>某些好友&apos; IP 地址可以更新&apos;t (见详细文本)。&lt;br&gt;能够更新的地址已保存。</translation>
+        <translation>一些好友的 IP 地址无法更新（见详细文本）。&lt;br&gt;能够更新的地址已保存。</translation>
     </message>
 </context>
 <context>
@@ -323,12 +323,12 @@
     <message>
         <location filename="../src/device_install_dialog.ui" line="94"/>
         <source>Device dump (RPKG + ROM)</source>
-        <translation>设备转储(RPKG + ROM)</translation>
+        <translation>设备转储（RPKG + ROM）</translation>
     </message>
     <message>
         <location filename="../src/device_install_dialog.ui" line="99"/>
         <source>Firmware (VPL)</source>
-        <translation>固件(VPL)</translation>
+        <translation>固件（VPL）</translation>
     </message>
     <message>
         <location filename="../src/device_install_dialog.ui" line="125"/>
@@ -343,12 +343,12 @@
     <message>
         <location filename="../src/device_install_dialog.ui" line="217"/>
         <source>Drives C, D and E of this device are kept apart from other devices.</source>
-        <translation type="unfinished"></translation>
+        <translation>此设备的 C、D、E 盘与其他设备相互独立。</translation>
     </message>
     <message>
         <location filename="../src/device_install_dialog.ui" line="220"/>
         <source>Separate storage for this device</source>
-        <translation type="unfinished"></translation>
+        <translation>为此设备使用独立存储空间</translation>
     </message>
     <message>
         <location filename="../src/device_install_dialog.cpp" line="117"/>
@@ -363,12 +363,12 @@
     <message>
         <location filename="../src/device_install_dialog.cpp" line="201"/>
         <source>Device %1 (%2) has been successfully installed!</source>
-        <translation>设备 %1 (%2) 已成功安装！</translation>
+        <translation>设备 %1（%2）已成功安装！</translation>
     </message>
     <message>
         <location filename="../src/device_install_dialog.cpp" line="209"/>
         <source>The device has already been installed!</source>
-        <translation>设备已经安装了！</translation>
+        <translation>该设备已经安装过了！</translation>
     </message>
     <message>
         <location filename="../src/device_install_dialog.cpp" line="213"/>
@@ -378,7 +378,7 @@
     <message>
         <location filename="../src/device_install_dialog.cpp" line="217"/>
         <source>One of the FPSX files provided in the firmware is corrupted!</source>
-        <translation>固件中提供的FPSX文件之一已损坏！</translation>
+        <translation>固件中提供的 FPSX 文件之一已损坏！</translation>
     </message>
     <message>
         <location filename="../src/device_install_dialog.cpp" line="221"/>
@@ -398,27 +398,27 @@
     <message>
         <location filename="../src/device_install_dialog.cpp" line="233"/>
         <source>The ROFS in the firmware file is corrupted! Please make sure your firmware files are not corrupted.</source>
-        <translation>固件文件中的ROFS已损坏！请确保您的固件文件未损坏。</translation>
+        <translation>固件文件中的 ROFS 已损坏！请确保您的固件文件未损坏。</translation>
     </message>
     <message>
         <location filename="../src/device_install_dialog.cpp" line="237"/>
         <source>Fail to copy ROM file!</source>
-        <translation>复制ROM文件失败！</translation>
+        <translation>复制 ROM 文件失败！</translation>
     </message>
     <message>
         <location filename="../src/device_install_dialog.cpp" line="241"/>
         <source>The provided ROM is corrupted! Please make sure your ROM is valid!</source>
-        <translation>提供的ROM已损坏！请确保您的ROM是有效的！</translation>
+        <translation>提供的 ROM 已损坏！请确保您的 ROM 是有效的！</translation>
     </message>
     <message>
         <location filename="../src/device_install_dialog.cpp" line="245"/>
         <source>The provided RPKG is corrupted! Please make sure your RPKG is valid!</source>
-        <translation>提供的RPKG已损坏！请确保您的RPKG是有效的！</translation>
+        <translation>提供的 RPKG 已损坏！请确保您的 RPKG 是有效的！</translation>
     </message>
     <message>
         <location filename="../src/device_install_dialog.cpp" line="249"/>
         <source>The provided VPL file is invalid. Please check your firmware files again!</source>
-        <translation>提供的VPL文件无效。请重新检查您的固件文件！</translation>
+        <translation>提供的 VPL 文件无效。请重新检查您的固件文件！</translation>
     </message>
     <message>
         <location filename="../src/device_install_dialog.cpp" line="257"/>
@@ -428,32 +428,32 @@
     <message>
         <location filename="../src/device_install_dialog.cpp" line="266"/>
         <source>Choose VPL file</source>
-        <translation>选择VPL文件</translation>
+        <translation>选择 VPL 文件</translation>
     </message>
     <message>
         <location filename="../src/device_install_dialog.cpp" line="267"/>
         <source>VPL file (*.vpl);;All files (*.*)</source>
-        <translation>VPL文件 (*.vpl);;所有文件 (*.*)</translation>
+        <translation>VPL 文件 (*.vpl);;所有文件 (*.*)</translation>
     </message>
     <message>
         <location filename="../src/device_install_dialog.cpp" line="276"/>
         <source>Choose the ROM</source>
-        <translation>选择ROM</translation>
+        <translation>选择 ROM</translation>
     </message>
     <message>
         <location filename="../src/device_install_dialog.cpp" line="277"/>
         <source>ROM file (*.rom *.ROM);;All files (*.*)</source>
-        <translation>ROM文件 (*.rom *.ROM);;所有文件 (*.*)</translation>
+        <translation>ROM 文件 (*.rom *.ROM);;所有文件 (*.*)</translation>
     </message>
     <message>
         <location filename="../src/device_install_dialog.cpp" line="301"/>
         <source>Choose the RPKG</source>
-        <translation>选择RPKG文件</translation>
+        <translation>选择 RPKG 文件</translation>
     </message>
     <message>
         <location filename="../src/device_install_dialog.cpp" line="302"/>
         <source>RPKG file (*.rpkg *.RPKG);;All files (*.*</source>
-        <translation>RPKG文件 (*.rpkg *.RPKG);;所有文件 (*.*</translation>
+        <translation>RPKG 文件 (*.rpkg *.RPKG);;所有文件 (*.*)</translation>
     </message>
 </context>
 <context>
@@ -466,7 +466,7 @@
     <message>
         <location filename="../src/btnmap/editor_widget.ui" line="26"/>
         <source>&lt;b&gt;Mapping elements&lt;/b&gt;</source>
-        <translation>&lt;b&gt;映射元素&lt;/b&gt;</translation>
+        <translation>&lt;b&gt;映射元件&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../src/btnmap/editor_widget.ui" line="40"/>
@@ -476,7 +476,7 @@
     <message>
         <location filename="../src/btnmap/editor_widget.ui" line="45"/>
         <source>Single touch</source>
-        <translation>单次触摸：</translation>
+        <translation>单触摸点</translation>
     </message>
     <message>
         <location filename="../src/btnmap/editor_widget.ui" line="64"/>
@@ -507,7 +507,7 @@
     <message>
         <location filename="../src/btnmap/editor_widget.ui" line="181"/>
         <source>Profiles are saved per app/game. Press &lt;b&gt;Edit&lt;/b&gt; to enter Edit mode. To delete mapping element, press &lt;b&gt;Delete&lt;/b&gt; and click on the element you want to remove.</source>
-        <translation>每个应用/游戏保存配置文件。按 &lt;b&gt;编辑&lt;/b&gt; 进入编辑模式。 要删除映射元素，请按 &lt;b&gt;删除&lt;/b&gt; 并点击您想要删除的元素。</translation>
+        <translation>每个应用/游戏保存配置文件。按 &lt;b&gt;编辑&lt;/b&gt; 进入编辑模式。 要删除映射元件，请按 &lt;b&gt;删除&lt;/b&gt; 并点击您想要删除的元素。</translation>
     </message>
     <message>
         <location filename="../src/btnmap/editor_widget.ui" line="212"/>
@@ -527,7 +527,7 @@
     <message>
         <location filename="../src/btnmap/editor_widget.cpp" line="89"/>
         <source>For app: %1 (0x%2)</source>
-        <translation>应用程序: %1 (0x%2)</translation>
+        <translation>应用程序：%1（0x%2）</translation>
     </message>
     <message>
         <location filename="../src/btnmap/editor_widget.cpp" line="151"/>
@@ -537,12 +537,12 @@
     <message>
         <location filename="../src/btnmap/editor_widget.cpp" line="164"/>
         <source>Error creating profile!</source>
-        <translation>更新个人资料时出错。</translation>
+        <translation>创建配置文件时出错！</translation>
     </message>
     <message>
         <location filename="../src/btnmap/editor_widget.cpp" line="164"/>
         <source>Profile name contains special characters or system error encountered!</source>
-        <translation>配置文件名称包含特殊字符或系统错误 ！</translation>
+        <translation>配置文件名称包含特殊字符，或发生了系统错误！</translation>
     </message>
     <message>
         <location filename="../src/btnmap/editor_widget.cpp" line="285"/>
@@ -555,7 +555,7 @@
     <message>
         <location filename="../src/discord_rpc.cpp" line="76"/>
         <source>A Symbian/N-Gage emulator, available on PC and Android.</source>
-        <translation type="unfinished"></translation>
+        <translation>一款适用于 PC 和 Android 的 Symbian/N-Gage 模拟器。</translation>
     </message>
 </context>
 <context>
@@ -563,49 +563,49 @@
     <message>
         <location filename="../src/host_overrides.cpp" line="22"/>
         <source>Redirect guest hostnames or wildcard suffixes to an IP address or another hostname, optionally with a port. Changes affect new connections; restart the game if it has cached an address.</source>
-        <translation type="unfinished"></translation>
+        <translation>将模拟设备中的主机名或通配符后缀重定向到 IP 地址或其他主机名，可指定端口。更改对新连接生效；如果游戏已缓存地址，请重启游戏。</translation>
     </message>
     <message>
         <location filename="../src/host_overrides.cpp" line="26"/>
         <location filename="../src/host_overrides.cpp" line="72"/>
         <source>Hostname or *.suffix</source>
-        <translation type="unfinished"></translation>
+        <translation>主机名或 *.后缀</translation>
     </message>
     <message>
         <location filename="../src/host_overrides.cpp" line="26"/>
         <location filename="../src/host_overrides.cpp" line="73"/>
         <source>Target and optional port</source>
-        <translation type="unfinished"></translation>
+        <translation>目标地址及可选端口</translation>
     </message>
     <message>
         <location filename="../src/host_overrides.cpp" line="31"/>
         <source>Add</source>
-        <translation type="unfinished">添加</translation>
+        <translation>添加</translation>
     </message>
     <message>
         <location filename="../src/host_overrides.cpp" line="32"/>
         <source>Edit</source>
-        <translation type="unfinished">编辑</translation>
+        <translation>编辑</translation>
     </message>
     <message>
         <location filename="../src/host_overrides.cpp" line="33"/>
         <source>Remove</source>
-        <translation type="unfinished">移除</translation>
+        <translation>移除</translation>
     </message>
     <message>
         <location filename="../src/host_overrides.cpp" line="66"/>
         <source>Host mapping</source>
-        <translation type="unfinished"></translation>
+        <translation>主机映射</translation>
     </message>
     <message>
         <location filename="../src/host_overrides.cpp" line="84"/>
         <source>Enter a valid hostname or *.suffix and an IP address or hostname with an optional port.</source>
-        <translation type="unfinished"></translation>
+        <translation>请输入有效的主机名或 *.后缀，以及目标 IP 地址或主机名，可指定端口。</translation>
     </message>
     <message>
         <location filename="../src/host_overrides.cpp" line="89"/>
         <source>This hostname already has a mapping. Edit the existing entry.</source>
-        <translation type="unfinished"></translation>
+        <translation>此主机名已有映射，请编辑现有条目。</translation>
     </message>
 </context>
 <context>
@@ -613,7 +613,7 @@
     <message>
         <location filename="../src/launch_process_dialog.ui" line="14"/>
         <source>Launch process</source>
-        <translation>启动程序</translation>
+        <translation>启动进程</translation>
     </message>
     <message>
         <location filename="../src/launch_process_dialog.ui" line="31"/>
@@ -661,7 +661,7 @@
     <message>
         <location filename="../src/mainwindow.ui" line="53"/>
         <source>App launcher is unavailable.&lt;br&gt;Visit &lt;a href=&quot;https://eka2l1.miraheze.org/wiki/Main_Page&quot;&gt;EKA2L1 wiki&lt;/a&gt; to get started, or install a device to continue.</source>
-        <translation type="unfinished"></translation>
+        <translation>应用启动器不可用。&lt;br&gt;请访问 &lt;a href=&quot;https://eka2l1.miraheze.org/wiki/Main_Page&quot;&gt;EKA2L1 wiki&lt;/a&gt; 了解入门指南，或安装设备以继续。</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="72"/>
@@ -706,7 +706,7 @@
     <message>
         <location filename="../src/mainwindow.ui" line="141"/>
         <source>Netplay</source>
-        <translation>网络播放</translation>
+        <translation>联机游玩</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="150"/>
@@ -781,7 +781,7 @@
     <message>
         <location filename="../src/mainwindow.ui" line="245"/>
         <source>Recent dumps</source>
-        <translation>最近转储的</translation>
+        <translation>最近的转储</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="285"/>
@@ -796,12 +796,12 @@
     <message>
         <location filename="../src/mainwindow.ui" line="300"/>
         <source>Friends&apos;s IP addresses</source>
-        <translation type="unfinished">Friends&apos;s IP addresses</translation>
+        <translation>好友的 IP 地址</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="305"/>
         <source>Button mapping editor</source>
-        <translation type="unfinished">Button mapping editor</translation>
+        <translation>按键映射编辑器</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="310"/>
@@ -811,27 +811,27 @@
     <message>
         <location filename="../src/mainwindow.ui" line="315"/>
         <source>N-Gage card game</source>
-        <translation type="unfinished">N-Gage card game</translation>
+        <translation>N-Gage 游戏</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="320"/>
         <source>Check for update</source>
-        <translation type="unfinished">Check for update</translation>
+        <translation>检查更新</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="325"/>
         <source>Launch process</source>
-        <translation>启动程序</translation>
+        <translation>启动进程</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="335"/>
         <source>Configure</source>
-        <translation type="unfinished">Configure</translation>
+        <translation>配置</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.ui" line="346"/>
         <source>Stretch to fill window (ignore aspect ratio)</source>
-        <translation type="unfinished">Stretch to fill window (ignore aspect ratio)</translation>
+        <translation>拉伸以填满窗口（忽略宽高比）</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="321"/>
@@ -866,98 +866,98 @@
     <message>
         <location filename="../src/mainwindow.cpp" line="485"/>
         <source>You have not installed any device. Please visit &lt;a href=&quot;%1&quot;&gt;EKA2L1 wiki&lt;/a&gt; to get started or install a device.</source>
-        <translation type="unfinished"></translation>
+        <translation>您尚未安装任何设备。请访问 &lt;a href=&quot;%1&quot;&gt;EKA2L1 wiki&lt;/a&gt; 了解入门指南，或安装设备。</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="499"/>
         <source>Browsing</source>
-        <translation type="unfinished"></translation>
+        <translation>正在浏览</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="499"/>
         <source>App list</source>
-        <translation type="unfinished"></translation>
+        <translation>应用列表</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="757"/>
         <source>Installing &lt;b&gt;%1&lt;/b&gt;</source>
-        <translation type="unfinished">Installing &lt;b&gt;%1&lt;/b&gt;</translation>
+        <translation>正在安装 &lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="770"/>
         <source>Choose the N-Gage game card folder</source>
-        <translation type="unfinished">Choose the N-Gage game card folder</translation>
+        <translation>选择 N-Gage 游戏文件夹</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="778"/>
         <source>Installing N-Gage game...</source>
-        <translation type="unfinished">Installing N-Gage game...</translation>
+        <translation>正在安装 N-Gage 游戏…</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="795"/>
         <source>Install success!</source>
-        <translation type="unfinished">Install success!</translation>
+        <translation>安装成功！</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="795"/>
         <source>Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</source>
-        <translation type="unfinished">Successfully install N-Gage card game: &lt;b&gt;%1&lt;/b&gt;</translation>
+        <translation>成功安装 N-Gage 游戏：&lt;b&gt;%1&lt;/b&gt;</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="801"/>
         <source>Can&apos;t find the game data folder!</source>
-        <translation type="unfinished">Can&apos;t find the game data folder!</translation>
+        <translation>无法找到游戏数据文件夹！</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="805"/>
         <source>There is more than one game in the given card game folder!</source>
-        <translation type="unfinished">There is more than one game in the given card game folder!</translation>
+        <translation>在指定的游戏文件夹中有不止一个游戏！</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="809"/>
         <source>The game information file does not exist in the card game folder!</source>
-        <translation type="unfinished">The game information file does not exist in the card game folder!</translation>
+        <translation>游戏信息文件在游戏文件夹中不存在！</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="813"/>
         <source>The game information file has been corrupted. Please check your data&apos;s validity!</source>
-        <translation type="unfinished">The game information file has been corrupted. Please check your data&apos;s validity!</translation>
+        <translation>游戏信息文件已损坏。请检查您的数据是否有效！</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="817"/>
         <source>General error occured...</source>
-        <translation type="unfinished">General error occured...</translation>
+        <translation>发生了常规错误…</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="822"/>
         <location filename="../src/mainwindow.cpp" line="824"/>
         <location filename="../src/mainwindow.cpp" line="1812"/>
         <source>Install failed</source>
-        <translation type="unfinished">Install failed</translation>
+        <translation>安装失败</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="822"/>
         <source>Installation failed with error:
   -%1</source>
-        <translation type="unfinished">Installation failed with error:
+        <translation>安装失败，错误：
   -%1</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="824"/>
         <source>Installation of %1% failed with error:
   -%2</source>
-        <translation type="unfinished">Installation of %1% failed with error:
+        <translation>安装 %1% 失败，错误：
   -%2</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="892"/>
         <source>MMC ID found</source>
-        <translation type="unfinished"></translation>
+        <translation>已找到 MMC ID</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="892"/>
         <source>MMC ID found in folder name. Using it as current MMC ID.</source>
-        <translation type="unfinished"></translation>
+        <translation>已在文件夹名称中找到 MMC ID，并将其设为当前 MMC ID。</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="901"/>
@@ -978,17 +978,17 @@
     <message>
         <location filename="../src/mainwindow.cpp" line="926"/>
         <source>The ZIP file is corrupted!</source>
-        <translation>ZIP文件已损坏！</translation>
+        <translation>ZIP 文件已损坏！</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="931"/>
         <source>The ZIP does not have System folder in the root folder. System folder must exist in a game dump.</source>
-        <translation>ZIP在根文件夹中没有系统文件夹。系统文件夹必须存在于游戏转储中。</translation>
+        <translation>ZIP 的根目录中没有 System 文件夹。游戏转储必须包含 System 文件夹。</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="937"/>
         <source>The choosen file is not a ZIP file!</source>
-        <translation>选择的文件不是ZIP文件！</translation>
+        <translation>选择的文件不是 ZIP 文件！</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="954"/>
@@ -1008,7 +1008,7 @@
     <message>
         <location filename="../src/mainwindow.cpp" line="958"/>
         <source>The selected path seems to be incorrect.&lt;br&gt;Do you want the emulator to correct it?</source>
-        <translation>选定的路径似乎不正确。&lt;br&gt;您想要模拟器纠正吗？</translation>
+        <translation>选定的路径似乎不正确。&lt;br&gt;您想要模拟器校正它吗？</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1016"/>
@@ -1026,37 +1026,37 @@
         <location filename="../src/mainwindow.cpp" line="1112"/>
         <location filename="../src/mainwindow.cpp" line="1116"/>
         <source>Application exited</source>
-        <translation type="unfinished"></translation>
+        <translation>应用程序已退出</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1097"/>
         <source>The application exited normally</source>
-        <translation type="unfinished"></translation>
+        <translation>应用程序正常退出</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1108"/>
         <source>The application was killed with code: %1/%2</source>
-        <translation type="unfinished"></translation>
+        <translation>应用程序被强制结束，代码：%1/%2</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1112"/>
         <source>The application panicked with code: %1/%2</source>
-        <translation type="unfinished"></translation>
+        <translation>应用程序因 panic 退出，代码：%1/%2</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1116"/>
         <source>The application terminated with code: %1/%2</source>
-        <translation type="unfinished"></translation>
+        <translation>应用程序已终止，代码：%1/%2</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1145"/>
         <source>Playing %1</source>
-        <translation type="unfinished"></translation>
+        <translation>正在玩 %1</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1146"/>
         <source>In game</source>
-        <translation type="unfinished"></translation>
+        <translation>游戏中</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1169"/>
@@ -1066,7 +1066,7 @@
     <message>
         <location filename="../src/mainwindow.cpp" line="1169"/>
         <source>Fail to launch the selected application!</source>
-        <translation type="unfinished">Fail to launch the selected application!</translation>
+        <translation>无法启动选中的应用程序！</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1186"/>
@@ -1101,7 +1101,7 @@
     <message>
         <location filename="../src/mainwindow.cpp" line="1257"/>
         <source>Fail to install package at path: %1. Ensure the path points to a valid SIS/SISX file.</source>
-        <translation>无法在路径上安装包：%1。请确保路径定位到一个有效的SIS/SISX文件。</translation>
+        <translation>无法安装位于 %1 的软件包。请确保此路径指向有效的 SIS/SISX 文件。</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1264"/>
@@ -1121,7 +1121,7 @@
     <message>
         <location filename="../src/mainwindow.cpp" line="1289"/>
         <source>SIS file (*.sis *.sisx)</source>
-        <translation>SIS文件(*.sis *.sisx)</translation>
+        <translation>SIS 文件 (*.sis *.sisx)</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1484"/>
@@ -1136,72 +1136,72 @@
     <message>
         <location filename="../src/mainwindow.cpp" line="1630"/>
         <source>Continue to modify friends&apos; IP addresses</source>
-        <translation type="unfinished">Continue to modify friends&apos; IP addresses</translation>
+        <translation>继续修改好友的 IP 地址</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1631"/>
         <source>This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</source>
-        <translation type="unfinished">This dialog will show all stored IP addresses, which has the potential of revealing others&apos; personal information.&lt;br&gt;Do you wish to continue?</translation>
+        <translation>此对话框将显示所有已保存的 IP 地址，可能会泄露他人的个人信息。&lt;br&gt;是否继续？</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1648"/>
         <source>Bluetooth manager service not available!</source>
-        <translation type="unfinished">Bluetooth manager service not available!</translation>
+        <translation>蓝牙管理服务不可用！</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1648"/>
         <source>The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</source>
-        <translation type="unfinished">The emulated device does not have a bluetooth manager service! Bluetooth is not supported.</translation>
+        <translation>模拟的设备没有蓝牙管理器服务！蓝牙不被支持。</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1765"/>
         <source>Choose the JAR file to install</source>
-        <translation type="unfinished">Choose the JAR file to install</translation>
+        <translation>选择要安装的 JAR 文件</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1765"/>
         <source>JAR file (*.jar)</source>
-        <translation type="unfinished">JAR file (*.jar)</translation>
+        <translation>JAR 文件 (*.jar)</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1773"/>
         <source>%1 version %2 (by %3) has been installed!</source>
-        <translation type="unfinished">%1 version %2 (by %3) has been installed!</translation>
+        <translation>%1 版本 %2（作者：%3）已安装！</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1776"/>
         <source>Install success</source>
-        <translation type="unfinished">Install success</translation>
+        <translation>安装成功</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1788"/>
         <source>Can not add the JAR to the apps database!</source>
-        <translation type="unfinished">Can not add the JAR to the apps database!</translation>
+        <translation>无法将 JAR 添加到应用数据库！</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1792"/>
         <source>The given file is not a valid JAR file!</source>
-        <translation type="unfinished">The given file is not a valid JAR file!</translation>
+        <translation>给定文件不是有效的 JAR 文件！</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1796"/>
         <source>Can not find the JAR file!</source>
-        <translation type="unfinished">Can not find the JAR file!</translation>
+        <translation>找不到 JAR 文件！</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1800"/>
         <source>The JAR needs MIDP-2.0, but the emulator only support MIDP-1.0 JAR running on S60v1 devices!</source>
-        <translation type="unfinished">The JAR needs MIDP-2.0, but the emulator only support MIDP-1.0 JAR running on S60v1 devices!</translation>
+        <translation>该 JAR 需要 MIDP-2.0，但模拟器只支持在 S60v1 设备上运行 MIDP-1.0 JAR！</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1804"/>
         <source>The JAR can not be installed for this current device! Only S60v1 devices can install this JAR at the moment</source>
-        <translation type="unfinished">The JAR can not be installed for this current device! Only S60v1 devices can install this JAR at the moment</translation>
+        <translation>无法为当前设备安装 JAR！目前只有 S60v1 设备可以安装此 JAR</translation>
     </message>
     <message>
         <location filename="../src/mainwindow.cpp" line="1808"/>
         <source>An unexpected error has happened. Error code: %1</source>
-        <translation type="unfinished">An unexpected error has happened. Error code: %1</translation>
+        <translation>发生意外错误。错误代码：%1</translation>
     </message>
 </context>
 <context>
@@ -1259,7 +1259,7 @@
     <message>
         <location filename="../src/package_manager_dialog.cpp" line="143"/>
         <source>%1&apos;s files</source>
-        <translation>%1&apos;s 文件</translation>
+        <translation>%1 的文件</translation>
     </message>
     <message>
         <location filename="../src/package_manager_dialog.cpp" line="152"/>
@@ -1297,7 +1297,7 @@
     <message>
         <location filename="../src/settings_dialog.ui" line="149"/>
         <source>Time delay (0-1000us)</source>
-        <translation>时间延时(0-1000us)</translation>
+        <translation>时间延迟（0-1000 微秒）</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="205"/>
@@ -1332,7 +1332,7 @@
     <message>
         <location filename="../src/settings_dialog.ui" line="292"/>
         <source>Hide system applications across all devices</source>
-        <translation type="unfinished">Hide system applications across all devices</translation>
+        <translation>隐藏所有设备的系统应用程序</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="295"/>
@@ -1347,22 +1347,22 @@
     <message>
         <location filename="../src/settings_dialog.ui" line="341"/>
         <source>CPU read</source>
-        <translation>CPU读取</translation>
+        <translation>CPU 读取</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="348"/>
         <source>CPU write</source>
-        <translation>CPU写入</translation>
+        <translation>CPU 写入</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="355"/>
         <source>This option will not be saved after emulator shutdown. Non-effective when GDBStub is enabled.</source>
-        <translation>此选项将不会在模拟器关闭后保存，当GDBStub启用时则无效。</translation>
+        <translation>此选项将不会在模拟器关闭后保存，当 GDBStub 启用时则无效。</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="358"/>
         <source>CPU step</source>
-        <translation>CPU步进</translation>
+        <translation>CPU 步进</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="371"/>
@@ -1387,17 +1387,17 @@
     <message>
         <location filename="../src/settings_dialog.ui" line="408"/>
         <source>Log filter</source>
-        <translation type="unfinished">Log filter</translation>
+        <translation>日志过滤器</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="425"/>
         <source>Apply</source>
-        <translation type="unfinished">Apply</translation>
+        <translation>应用</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="434"/>
         <source>Show log console (Windows only)</source>
-        <translation type="unfinished">Show log console (Windows only)</translation>
+        <translation>显示日志控制台（仅适用于Windows）</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="444"/>
@@ -1455,7 +1455,7 @@
     <message>
         <location filename="../src/settings_dialog.ui" line="641"/>
         <source>Allow resizing display to phone screen&apos;s true size in pixels</source>
-        <translation>允许调整显示到手机屏幕的真大小像素</translation>
+        <translation>允许将显示屏大小调整为手机屏幕的实际像素尺寸</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="653"/>
@@ -1485,17 +1485,17 @@
     <message>
         <location filename="../src/settings_dialog.ui" line="659"/>
         <source>Enable this will make window has the constant name of &quot;EKA2L1&quot;, with no additional info.</source>
-        <translation>启用此选项将使窗口具有 &quot;EKA2L1&quot;的常量名，但没有附加信息。</translation>
+        <translation>启用此选项将使窗口具有常量名称“EKA2L1”，没有其他任何信息。</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="305"/>
         <source>Show what apps/games you are playing on emulator on your Discord profile.</source>
-        <translation type="unfinished"></translation>
+        <translation>在您的 Discord 个人资料中显示正在模拟器中运行的应用或游戏。</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="308"/>
         <source>Enable Discord Rich Presence</source>
-        <translation type="unfinished"></translation>
+        <translation>启用 Discord 活动状态</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="496"/>
@@ -1505,27 +1505,27 @@
     <message>
         <location filename="../src/settings_dialog.ui" line="517"/>
         <source>Image</source>
-        <translation type="unfinished">Image</translation>
+        <translation>图像</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="553"/>
         <source>Color</source>
-        <translation type="unfinished">Color</translation>
+        <translation>颜色</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="588"/>
         <source>Opacity</source>
-        <translation type="unfinished">Opacity</translation>
+        <translation>不透明度</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="611"/>
         <source>TextLabel</source>
-        <translation type="unfinished">TextLabel</translation>
+        <translation>文本标签</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="665"/>
         <source>Disable window name with emulator version</source>
-        <translation type="unfinished">Disable window name with emulator version</translation>
+        <translation>在窗口名称中隐藏模拟器版本</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="672"/>
@@ -1540,14 +1540,14 @@
     <message>
         <location filename="../src/settings_dialog.ui" line="744"/>
         <source>Graphics</source>
-        <translation>图像</translation>
+        <translation>图形</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="752"/>
         <source>This allows emulated softwares to have recording abilities, and prevent flashing in some old S60v1/S60v2 games.
 Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
-        <translation>这允许模拟软件具有录制能力，并防止在一些旧的S60v1/S60v2游戏中闪屏。
-首选选项将在S60v1/S60v2设备上自动启用此选项。</translation>
+        <translation>这允许模拟软件具有录制功能，并防止在某些旧的 S60v1/S60v2 游戏中闪屏。
+首选选项将自动在 S60v1/S60v2 设备上启用此选项。</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="756"/>
@@ -1572,12 +1572,12 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
         <location filename="../src/settings_dialog.ui" line="790"/>
         <source>Allow the emulator to perform native GPU acceleration for Symbian&apos;s GLES1 API.</source>
-        <translation>允许模拟器为塞班GLES1 API执行原生的GPU加速。</translation>
+        <translation>允许模拟器为塞班 GLES1 API 执行原生 GPU 加速。</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="793"/>
         <source>Enable GPU accelerated GLES1</source>
-        <translation>启用GPU加速GLES1</translation>
+        <translation>启用 GPU 加速的 GLES1</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="803"/>
@@ -1623,14 +1623,14 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
         <location filename="../src/settings_dialog.ui" line="906"/>
         <source>Battery level (0 - 100)</source>
-        <translation>电池电量(0 - 100)</translation>
+        <translation>电量（0 - 100）</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="935"/>
         <location filename="../src/settings_dialog.ui" line="1260"/>
         <location filename="../src/settings_dialog.ui" line="2029"/>
         <source>0</source>
-        <translation type="unfinished">0</translation>
+        <translation>0</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="952"/>
@@ -1660,22 +1660,22 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
         <location filename="../src/settings_dialog.ui" line="1048"/>
         <source>CPU emulator</source>
-        <translation>CPU模拟器</translation>
+        <translation>CPU 模拟器</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="1056"/>
         <source>Dynarmic (CPU recompiler)</source>
-        <translation>动态(CPU重新编译)</translation>
+        <translation>Dynarmic（CPU 重编译器）</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="1061"/>
         <source>Dyncom (CPU interpreter)</source>
-        <translation>Dyncom(CPU解释器)</translation>
+        <translation>Dyncom（CPU 解释器）</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="1073"/>
         <source>Choose the level of accuracy for timing operations.&lt;br&gt;The higher the level, the more CPU power is consumed, but potentially faster operation in some apps!</source>
-        <translation>选择计时操作的精确度。级别越高，CPU功耗越大，但在一些应用中操作可能更快！</translation>
+        <translation>选择计时操作的精度。&lt;br&gt;精度越高，消耗的 CPU 资源越多，但某些应用的运行速度可能更快！</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="1076"/>
@@ -1705,7 +1705,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
         <location filename="../src/settings_dialog.ui" line="1115"/>
         <source>SF2 bank</source>
-        <translation type="unfinished">SF2 bank</translation>
+        <translation>SF2 音色库</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="1142"/>
@@ -1716,22 +1716,22 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
         <location filename="../src/settings_dialog.ui" line="1156"/>
         <source>HSB bank</source>
-        <translation type="unfinished">HSB bank</translation>
+        <translation>HSB 音色库</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="1200"/>
         <source>MIDI backend</source>
-        <translation>MIDI后端</translation>
+        <translation>MIDI 后端</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="1214"/>
         <source>TinySoundFont (High-quality, support SF2)</source>
-        <translation>TinySoundFont（高质量，支持SF2）</translation>
+        <translation>TinySoundFont（高质量，支持 SF2）</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="1219"/>
         <source>MiniBAE (Lower-quality, support HSB)</source>
-        <translation>MiniBAE（低质量，支持HSB）</translation>
+        <translation>MiniBAE（低质量，支持 HSB）</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="1237"/>
@@ -1777,7 +1777,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
         <location filename="../src/settings_dialog.ui" line="1435"/>
         <source>Up arrow</source>
-        <translation>上方向键</translation>
+        <translation>向上键</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="1467"/>
@@ -1787,7 +1787,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
         <location filename="../src/settings_dialog.ui" line="1503"/>
         <source>Left arrow</source>
-        <translation>左方向键</translation>
+        <translation>向左键</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="1535"/>
@@ -1797,82 +1797,82 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
         <location filename="../src/settings_dialog.ui" line="1567"/>
         <source>Right arrow</source>
-        <translation>右方向键</translation>
+        <translation>向右键</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="1603"/>
         <source>Green softkey</source>
-        <translation>绿软键</translation>
+        <translation>接听键</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="1635"/>
         <source>Down arrow</source>
-        <translation>下方向键</translation>
+        <translation>向下键</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="1667"/>
         <source>Red softkey</source>
-        <translation>红软键</translation>
+        <translation>挂断键</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="1703"/>
         <source>1</source>
-        <translation type="unfinished">1</translation>
+        <translation>1</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="1735"/>
         <source>2</source>
-        <translation type="unfinished">2</translation>
+        <translation>2</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="1767"/>
         <source>3</source>
-        <translation type="unfinished">3</translation>
+        <translation>3</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="1803"/>
         <source>4</source>
-        <translation type="unfinished">4</translation>
+        <translation>4</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="1835"/>
         <source>5</source>
-        <translation type="unfinished">5</translation>
+        <translation>5</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="1867"/>
         <source>6</source>
-        <translation type="unfinished">6</translation>
+        <translation>6</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="1897"/>
         <source>7</source>
-        <translation type="unfinished">7</translation>
+        <translation>7</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="1929"/>
         <source>8</source>
-        <translation type="unfinished">8</translation>
+        <translation>8</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="1961"/>
         <source>9</source>
-        <translation type="unfinished">9</translation>
+        <translation>9</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="1997"/>
         <source>*</source>
-        <translation type="unfinished">*</translation>
+        <translation>*</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="2061"/>
         <source>#</source>
-        <translation type="unfinished">#</translation>
+        <translation>#</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.cpp" line="238"/>
         <source>Hosts</source>
-        <translation type="unfinished"></translation>
+        <translation>主机映射</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.cpp" line="321"/>
@@ -1924,12 +1924,12 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
         <location filename="../src/settings_dialog.cpp" line="602"/>
         <source>Delete device?</source>
-        <translation type="unfinished"></translation>
+        <translation>删除设备？</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.cpp" line="602"/>
         <source>This device&apos;s data will be deleted along with it.&lt;br&gt;The emulator will relaunch to finish.</source>
-        <translation type="unfinished"></translation>
+        <translation>此设备的数据也将一并删除。&lt;br&gt;模拟器将重新启动以完成操作。</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.cpp" line="702"/>
@@ -1998,17 +1998,17 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
         <location filename="../src/settings_dialog.cpp" line="1082"/>
         <source>IMEI sequence contains non-numeric character!</source>
-        <translation>IMEI序列包含非数字字符！</translation>
+        <translation>IMEI 序列包含非数字字符！</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.cpp" line="1085"/>
         <source>IMEI sequence has invalid sum!</source>
-        <translation>IMEI序列值无效！</translation>
+        <translation>IMEI 序列值无效！</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.cpp" line="1088"/>
         <source>IMEI sequence length must be 15!</source>
-        <translation>IMEI序列长度必须为15！</translation>
+        <translation>IMEI 序列长度必须为 15！</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.cpp" line="1094"/>
@@ -2018,22 +2018,22 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
         <location filename="../src/settings_dialog.cpp" line="1101"/>
         <source>IMEI valid!</source>
-        <translation>IMEI有效！</translation>
+        <translation>IMEI 有效！</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.cpp" line="1101"/>
         <source>The IMEI sequence is valid!</source>
-        <translation>IMEI序列有效！</translation>
+        <translation>IMEI 序列有效！</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.cpp" line="1104"/>
         <source>IMEI invalid!</source>
-        <translation>IMEI无效！</translation>
+        <translation>IMEI 无效！</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.cpp" line="1114"/>
         <source>Your IMEI is invalid because: %1.&lt;br&gt;Do you want to edit the current IMEI instead of closing? Choosing &quot;No&quot; will save the current IMEI value.</source>
-        <translation>您的IMEI无效，因为：%1。&lt;br&gt;您想要编辑当前IMEI而不是关闭吗？选择&quot;没有&quot;将保存当前IMEI值。</translation>
+        <translation>您的 IMEI 无效，因为：%1。&lt;br&gt;您想要编辑当前 IMEI 而不是关闭吗？选择“不”将保存当前 IMEI 值。</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.cpp" line="1116"/>
@@ -2058,7 +2058,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
         <location filename="../src/settings_dialog.cpp" line="1188"/>
         <source>The language will be updated on the next launch of the emulator.</source>
-        <translation>此语言将在下次启动模拟器时更新。</translation>
+        <translation>语言将在下次启动模拟器时更新。</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.cpp" line="1215"/>
@@ -2073,17 +2073,17 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
         <location filename="../src/settings_dialog.cpp" line="1280"/>
         <source>Next time the application requests to play a new MIDI, the choosen backend will be used!</source>
-        <translation>下次应用程序请求播放新的MIDI时，将使用选择的后端！</translation>
+        <translation>下次应用程序请求播放新的 MIDI 时，将使用选择的后端！</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.cpp" line="1293"/>
         <source>Choose the HSB bank file</source>
-        <translation>选择HSB bank文件</translation>
+        <translation>选择 HSB 音色库文件</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.cpp" line="1316"/>
         <source>Choose the SF2 bank file</source>
-        <translation>选择SF2 bank文件</translation>
+        <translation>选择 SF2 音色库文件</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.cpp" line="1352"/>
@@ -2098,7 +2098,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
         <location filename="../src/settings_dialog.cpp" line="1434"/>
         <source>Choose the background image</source>
-        <translation type="unfinished">Choose the background image</translation>
+        <translation>选择背景图片</translation>
     </message>
 </context>
 <context>
@@ -2106,27 +2106,27 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
         <location filename="../src/update_dialog.ui" line="14"/>
         <source>New update available</source>
-        <translation type="unfinished">New update available</translation>
+        <translation>新的可用更新</translation>
     </message>
     <message>
         <location filename="../src/update_dialog.ui" line="43"/>
         <source>A new update has been released on GitHub!</source>
-        <translation type="unfinished">A new update has been released on GitHub!</translation>
+        <translation>GitHub 上发布了一个新的更新！</translation>
     </message>
     <message>
         <location filename="../src/update_dialog.ui" line="61"/>
         <source>Changelog</source>
-        <translation type="unfinished">Changelog</translation>
+        <translation>更新日志</translation>
     </message>
     <message>
         <location filename="../src/update_dialog.ui" line="84"/>
         <source>Downloading update ... %p%</source>
-        <translation type="unfinished">Downloading update ... %p%</translation>
+        <translation>正在下载更新… %p%</translation>
     </message>
     <message>
         <location filename="../src/update_dialog.ui" line="91"/>
         <source>Do not automatically check for update when startup</source>
-        <translation type="unfinished">Do not automatically check for update when startup</translation>
+        <translation>启动时不自动检查更新</translation>
     </message>
     <message>
         <location filename="../src/update_dialog.ui" line="126"/>
@@ -2136,7 +2136,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
         <location filename="../src/update_dialog.ui" line="139"/>
         <source>Ignore</source>
-        <translation type="unfinished">Ignore</translation>
+        <translation>忽略</translation>
     </message>
     <message>
         <location filename="../src/update_dialog.ui" line="149"/>
@@ -2146,22 +2146,22 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
         <location filename="../src/update_dialog.cpp" line="137"/>
         <source>Update success</source>
-        <translation type="unfinished">Update success</translation>
+        <translation>更新成功</translation>
     </message>
     <message>
         <location filename="../src/update_dialog.cpp" line="149"/>
         <source>Update failed</source>
-        <translation type="unfinished">Update failed</translation>
+        <translation>更新失败</translation>
     </message>
     <message>
         <location filename="../src/update_dialog.cpp" line="180"/>
         <source>The emulator is already updated to lastest version!</source>
-        <translation type="unfinished">The emulator is already updated to lastest version!</translation>
+        <translation>模拟器已更新为最新版本！</translation>
     </message>
     <message>
         <location filename="../src/update_dialog.cpp" line="189"/>
         <source>The release channel is not available. Please check your internet connection!</source>
-        <translation>发行频道不可用。请检查您的网络连接！</translation>
+        <translation>发布频道不可用。请检查您的网络连接！</translation>
     </message>
     <message>
         <location filename="../src/update_dialog.cpp" line="195"/>
@@ -2171,7 +2171,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
         <location filename="../src/update_dialog.cpp" line="229"/>
         <source>Can&apos;t find the download link of newest update for your platform!</source>
-        <translation>可以&apos;找到您平台最新更新的下载链接！</translation>
+        <translation>无法找到用于您的平台的最新更新的下载链接！</translation>
     </message>
     <message>
         <location filename="../src/update_dialog.cpp" line="237"/>
@@ -2181,12 +2181,12 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
         <location filename="../src/update_dialog.cpp" line="255"/>
         <source>Error retrieving changelog from GitHub...</source>
-        <translation>从 GitHub 获取更新日志时发生错误...</translation>
+        <translation>从 GitHub 获取更新日志时发生错误…</translation>
     </message>
     <message>
         <location filename="../src/update_dialog.cpp" line="279"/>
         <source>Changelog (update commit: %1)</source>
-        <translation>更新日志 (更新提交: %1)</translation>
+        <translation>更新日志（更新提交：%1）</translation>
     </message>
     <message>
         <location filename="../src/update_dialog.cpp" line="300"/>
@@ -2207,22 +2207,22 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
         <location filename="../src/update_dialog.cpp" line="353"/>
         <source>Can&apos;t not open temporary file for storing the update files!</source>
-        <translation type="unfinished">Can&apos;t not open temporary file for storing the update files!</translation>
+        <translation>无法打开临时文件来存储更新文件！</translation>
     </message>
     <message>
         <location filename="../src/update_dialog.cpp" line="440"/>
         <source>Failed to download update with error: %1</source>
-        <translation type="unfinished">Failed to download update with error: %1</translation>
+        <translation>无法下载更新，错误：%1</translation>
     </message>
     <message>
         <location filename="../src/update_dialog.cpp" line="449"/>
         <source>Downloaded update is not in zip format!</source>
-        <translation type="unfinished">Downloaded update is not in zip format!</translation>
+        <translation>下载的更新不是 zip 格式！</translation>
     </message>
     <message>
         <location filename="../src/update_dialog.cpp" line="485"/>
         <source>Failed to update the updater program!</source>
-        <translation type="unfinished">Failed to update the updater program!</translation>
+        <translation>升级更新程序失败！</translation>
     </message>
     <message>
         <source>Update zip file is corrupted!</source>
@@ -2232,7 +2232,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
         <location filename="../src/update_dialog.cpp" line="490"/>
         <location filename="../src/update_dialog.cpp" line="505"/>
         <source>Can&apos;t find the updater program in the update archive file!</source>
-        <translation type="unfinished">Can&apos;t find the updater program in the update archive file!</translation>
+        <translation>在更新文件中未找到更新程序！</translation>
     </message>
 </context>
 <context>
@@ -2240,7 +2240,7 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
         <location filename="../src/update_notice_dialog.ui" line="14"/>
         <source>Update news</source>
-        <translation type="unfinished">Update news</translation>
+        <translation>更新消息</translation>
     </message>
 </context>
 <context>
@@ -2248,52 +2248,52 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
     <message>
         <location filename="../src/updater.ui" line="14"/>
         <source>EKA2L1 Updater</source>
-        <translation type="unfinished">EKA2L1 Updater</translation>
+        <translation>EKA2L1 更新器</translation>
     </message>
     <message>
         <location filename="../src/updater.ui" line="59"/>
         <source>Updating...</source>
-        <translation type="unfinished">Updating...</translation>
+        <translation>更新中…</translation>
     </message>
     <message>
         <location filename="../src/updater.ui" line="85"/>
         <source>Extracting ... %p%</source>
-        <translation type="unfinished">Extracting ... %p%</translation>
+        <translation>正在提取… %p%</translation>
     </message>
     <message>
         <location filename="../src/updater.cpp" line="93"/>
         <source>Update failed</source>
-        <translation type="unfinished">Update failed</translation>
+        <translation>更新失败</translation>
     </message>
     <message>
         <location filename="../src/updater.cpp" line="102"/>
         <source>Downloaded update is not a zip file!</source>
-        <translation type="unfinished">Downloaded update is not a zip file!</translation>
+        <translation>下载的更新不是 zip 格式！</translation>
     </message>
     <message>
         <location filename="../src/updater.cpp" line="150"/>
         <source>The downloaded archive zip is corrupted</source>
-        <translation type="unfinished">The downloaded archive zip is corrupted</translation>
+        <translation>下载的压缩包已损坏</translation>
     </message>
     <message>
         <location filename="../src/updater.cpp" line="138"/>
         <source>Extracted: %1</source>
-        <translation type="unfinished">Extracted: %1</translation>
+        <translation>已提取：%1</translation>
     </message>
     <message>
         <location filename="../src/updater.cpp" line="167"/>
         <source>Update&apos;s archive file does not exist!</source>
-        <translation type="unfinished">Update&apos;s archive file does not exist!</translation>
+        <translation>更新文件不存在！</translation>
     </message>
     <message>
         <location filename="../src/updater.cpp" line="182"/>
         <source>Update success</source>
-        <translation type="unfinished">Update success</translation>
+        <translation>更新成功</translation>
     </message>
     <message>
         <location filename="../src/updater.cpp" line="182"/>
         <source>Update success. Relaunch the emulator?</source>
-        <translation type="unfinished">Update success. Relaunch the emulator?</translation>
+        <translation>更新成功。重新启动模拟器？</translation>
     </message>
 </context>
 </TS>
