@@ -76,8 +76,8 @@ namespace eka2l1::drivers::camera {
         }
 
         CGContextTranslateCTM(context, dw * 0.5, dh * 0.5);
-        CGContextRotateCTM(context, rotation * M_PI / 180.0);
         CGContextScaleCTM(context, dw / rotated_width, dh / rotated_height);
+        CGContextRotateCTM(context, rotation * M_PI / 180.0);
         CGContextDrawImage(context, CGRectMake(-source_width * 0.5, -source_height * 0.5,
             source_width, source_height), image);
         CGContextRelease(context);
