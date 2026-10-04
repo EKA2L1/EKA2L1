@@ -189,6 +189,12 @@ namespace eka2l1 {
     void accessory_session::fetch(service::ipc_context *ctx) {
         kernel_system *kern = server<accessory_server>()->get_kernel_object_owner();
 
+        // RAccessoryMode uses the same opcodes on S60v3 and later versions.
+        if (ctx->msg->function == epoc::acc::opcode_modern_create_accessory_mode_subsession) {
+            create_accessory_mode_subsession(ctx);
+            return;
+        }
+
         if (kern->get_epoc_version() <= epocver::epoc93fp2) {
             switch (ctx->msg->function) {
             case epoc::acc::opcode_s60v3_create_accessory_connection_subsession:
@@ -203,10 +209,6 @@ namespace eka2l1 {
             case epoc::acc::opcode_modern_create_accessory_connection_subsession:
             case epoc::acc::opcode_modern_create_accessory_single_connection_subsession:
                 create_accessory_single_connection_subsession(ctx);
-                return;
-
-            case epoc::acc::opcode_modern_create_accessory_mode_subsession:
-                create_accessory_mode_subsession(ctx);
                 return;
 
             default:

@@ -106,9 +106,9 @@ namespace eka2l1 {
     }
 
     static std::u16string get_private_path_trim_uid(kernel::process *pr) {
-        // Try to get the app uid
-        uint32_t uid = std::get<2>(pr->get_uid_type());
-        std::string hex_id = common::uppercase_string(common::to_string(uid, std::hex));
+        const std::uint32_t uid = pr->get_kernel_object_owner()->support_capabilities()
+            ? pr->get_sec_info().secure_id : std::get<2>(pr->get_uid_type());
+        const std::string hex_id = fmt::format("{:08X}", uid);
 
         return u"\\Private\\" + common::utf8_to_ucs2(hex_id) + u"\\";
     }

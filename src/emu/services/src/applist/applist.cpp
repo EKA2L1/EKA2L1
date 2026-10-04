@@ -323,19 +323,10 @@ namespace eka2l1 {
             return false;
         }
 
-        // Getting our localised resource info
         if (reg.localised_info_rsc_path.empty()) {
-            // Assume default path is used
-            reg.localised_info_rsc_path.append(1, drive_to_char16(land_drive));
-            reg.localised_info_rsc_path += u":\\resource\\apps\\";
-
-            std::u16string name_rsc = eka2l1::replace_extension(eka2l1::filename(reg.rsc_path), u"");
-
-            if (common::lowercase_ucs2_string(name_rsc.substr(name_rsc.length() - 4, 4)) == u"_reg") {
-                name_rsc.erase(name_rsc.length() - 4, 4);
-            }
-
-            reg.localised_info_rsc_path += name_rsc + u".rsc";
+            // Localisable resources are optional, including for background app services.
+            const std::lock_guard<std::mutex> guard(list_access_mut_);
+            return commit_registry(regs, std::move(reg));
         }
 
         // Absolute the localised info path
