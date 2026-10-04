@@ -482,7 +482,7 @@ void main_window::setup_app_list(const bool load_now) {
 
         if (!no_notify_install.isValid() || !no_notify_install.toBool()) {
             const QMessageBox::StandardButton result = make_dialog_with_checkbox_and_choices(
-                tr("No device installed"), tr("You have not installed any device. Please visit <a href=\"" WIKI_LINK "\">EKA2L1 wiki</a> to get started or install a device."),
+                tr("No device installed"), tr("You have not installed any device. Please visit <a href=\"%1\">EKA2L1 wiki</a> to get started or install a device.").arg(WIKI_LINK),
                 tr("Don't show this again"), false, [](bool on) {
                     QSettings settings;
                     settings.setValue(NO_DEVICE_INSTALL_DISABLE_NOF_SETTING, on);
