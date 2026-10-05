@@ -3,10 +3,16 @@ include(FileUtils)
 add_subdirectory(epoc)
 add_subdirectory(common)
 
+# Built only where a frontend uses it (src/emu/CMakeLists.txt).
+if (TARGET control)
+    add_subdirectory(control)
+endif()
+
 add_executable(ekatests 
 	tests.cpp
     platform.cpp
     ${COMMON_TEST_FILES}
+    ${CONTROL_TEST_FILES}
     ${CORE_TEST_FILES})
 
 
@@ -26,6 +32,10 @@ target_link_libraries(ekatests PRIVATE
     mbedtls
     libtess2
     lunasvg)
+
+if (TARGET control)
+    target_link_libraries(ekatests PRIVATE control)
+endif()
 
 if (EKA2L1_HAVE_FFMPEG)
     target_link_libraries(ekatests PRIVATE ffmpeg)
