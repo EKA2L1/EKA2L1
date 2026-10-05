@@ -23,6 +23,7 @@
 
 LOGCLASS(FRONTEND_UI, "Frontend.UI", "UI")
 LOGCLASS(FRONTEND_CMDLINE, "Frontend.Cmdline", "Command line")
+LOGCLASS(FRONTEND_CONTROL, "Frontend.Control", "Control server")
 
 LOGCLASS(CONFIG, "Config", "Config")
 LOGCLASS(CPU, "CPU", "CPU")

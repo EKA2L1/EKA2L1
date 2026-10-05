@@ -21,6 +21,7 @@
 #pragma once
 
 #include <cstdint>
+#include <services/window/classes/winuser.h>
 #include <services/window/classes/wsobj.h>
 #include <common/container.h>
 
@@ -38,16 +39,21 @@ namespace eka2l1::epoc {
         std::uint32_t opcode_;
     };
 
-    struct anim_executor {
+    struct anim_executor : public canvas_observer {
+        // The window this animation runs in, or null once that window is destroyed.
+        // The executor belongs to an anim DLL object, which can outlive the window:
+        // a client that exits without freeing them has its objects destroyed in
+        // handle order, which can put the window first.
         canvas_base *canvas_;
 
     public:
-        explicit anim_executor(canvas_base *canvas)
-            : canvas_(canvas) {
-        }
+        explicit anim_executor(canvas_base *canvas);
 
         virtual std::int32_t handle_request(const std::int32_t opcode, void *args) = 0;
-        virtual ~anim_executor() = default;
+        virtual ~anim_executor();
+
+        void on_window_size_changed(canvas_interface *obj) override {}
+        void on_window_destroyed(canvas_interface *obj) override;
     };
 
     struct anim_executor_factory {
