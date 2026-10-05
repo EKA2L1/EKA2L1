@@ -48,53 +48,51 @@ namespace eka2l1::drivers {
 
         supply_stuff();
 
-        if ((frame_copied < size) || (flags_ & 1)) {
-            bool no_more_way = false;
-
-            // There is no more data for us! Either repeat or kill
-            if (repeat_left_ == 0) {
-                no_more_way = true;
-            } else {
-                // Seek back to do a loop. Intentionally left this so that negative repeat can do infinite loop
-                if (repeat_left_ > 0) {
-                    repeat_left_ -= 1;
-                }
-
-                // Reset the stream if we are the custom format guy!
-                reset_request();
-
-                data_pointer_ = 0;
-                flags_ = 0;
-
-                // We want to supply silence samples
-                // 1s = 1ms
-                const std::size_t silence_samples = freq_ * silence_micros_ / 1000000;
-                data_.resize(silence_samples * sizeof(std::uint16_t) * channels_);
-                std::fill(data_.begin(), data_.end(), 0);
-
-                use_push_new_data_ = true;
-                supply_stuff();
+        while ((frame_copied < size) && (repeat_left_ != 0)) {
+            const std::size_t before_repeat = frame_copied;
+            if (repeat_left_ > 0) {
+                repeat_left_ -= 1;
             }
 
-            // We are drained (out of frame)
-            // Call the finish callback
-            if (no_more_way && callback_) {
-                callback_(userdata_.data());
+            reset_request();
+            data_pointer_ = 0;
+            flags_ = 0;
+
+            const std::size_t silence_samples = freq_ * silence_micros_ / 1000000;
+            data_.resize(silence_samples * sizeof(std::uint16_t) * channels_);
+            std::fill(data_.begin(), data_.end(), 0);
+
+            use_push_new_data_ = true;
+            supply_stuff();
+            if (frame_copied == before_repeat) {
+                break;
             }
         }
 
         return frame_copied;
     }
 
+    void player_shared::on_stream_drained() {
+        const std::lock_guard<std::mutex> guard(lock_);
+        if (playback_complete_.exchange(true)) {
+            return;
+        }
+        if (callback_) {
+            callback_(userdata_.data());
+        }
+    }
+
     bool player_shared::play() {
         // Stop previous session
         if (output_stream_) {
-            if (output_stream_->is_pausing()) {
+            if (output_stream_->is_pausing() && !playback_complete_) {
                 output_stream_->start();
                 return true;
             }
 
-            output_stream_->stop();
+            if (!stop()) {
+                return false;
+            }
         }
 
         // Reset the request
@@ -107,6 +105,7 @@ namespace eka2l1::drivers {
         data_pointer_ = 0;
         flags_ = 0;
         data_.clear();
+        playback_complete_ = false;
 
         // New stream to restart everything
         output_stream_ = aud_->new_output_stream(freq_, channels_, [this](std::int16_t *u1, std::size_t u2) {
@@ -118,15 +117,14 @@ namespace eka2l1::drivers {
             return true;
         }
 
+        output_stream_->set_drained_callback([this]() { on_stream_drained(); });
         output_stream_->set_volume(static_cast<float>(volume_) / 10.0f);
         return output_stream_->start();
     }
 
     bool player_shared::stop() {
-        if (output_stream_)
-            return output_stream_->stop();
-
-        return true;
+        playback_complete_ = true;
+        return !output_stream_ || output_stream_->stop();
     }
 
     void player_shared::pause() {
@@ -199,6 +197,9 @@ namespace eka2l1::drivers {
     }
 
     std::uint64_t player_shared::position() const {
+        if (playback_complete_) {
+            return 0;
+        }
         std::uint64_t pos_in_frames = 0;
         if (!output_stream_ || !freq_ || !output_stream_->current_frame_position(&pos_in_frames)) {
             return 0;

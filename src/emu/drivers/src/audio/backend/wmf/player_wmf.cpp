@@ -226,6 +226,7 @@ namespace eka2l1::drivers {
     }
 
     player_wmf::~player_wmf() {
+        stop();
         destroy_wmf_objects();
     }
 
@@ -476,13 +477,10 @@ namespace eka2l1::drivers {
     }
 
     bool player_wmf::open_url(const std::string &url) {
-        const std::lock_guard<std::mutex> guard(lock_);
-        flags_ |= 1;
-
-        if (output_stream_ && output_stream_->is_playing()) {
-            output_stream_->stop();
+        if (!stop()) {
+            return false;
         }
-
+        const std::lock_guard<std::mutex> guard(lock_);
         flags_ &= ~1;
 
         destroy_wmf_objects();
@@ -494,14 +492,11 @@ namespace eka2l1::drivers {
     }
 
     bool player_wmf::open_custom(common::rw_stream *lower_stream) {
-        const std::lock_guard<std::mutex> guard(lock_);
-
-        IMFByteStream *stream = NULL;
-        flags_ |= 1;
-
-        if (output_stream_ && output_stream_->is_playing()) {
-            output_stream_->stop();
+        if (!stop()) {
+            return false;
         }
+        const std::lock_guard<std::mutex> guard(lock_);
+        flags_ &= ~1;
 
         destroy_wmf_objects();
 
