@@ -59,6 +59,8 @@ if (ANDROID)
 elseif (EKA2L1_IOS)
     add_subdirectory(ios)
 else()
+    # The control server (--control); so far only the Qt frontend offers it.
+    add_subdirectory(control)
     add_subdirectory(qt)
 endif()
 

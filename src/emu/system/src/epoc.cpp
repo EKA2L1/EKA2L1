@@ -49,6 +49,7 @@
 #include <atomic>
 #include <fstream>
 #include <string>
+#include <vector>
 
 #include <disasm/disasm.h>
 #include <drivers/itc.h>
@@ -118,6 +119,11 @@ namespace eka2l1 {
 
     class system_impl {
         std::mutex mut;
+
+        // Work queued by post_task(), run under `mut` by whoever owns the system next.
+        std::mutex pending_tasks_mut_;
+        std::vector<std::function<void()>> pending_tasks_;
+        std::atomic<bool> has_pending_tasks_{ false };
 
         arm::core_instance cpu;
         arm::exclusive_monitor_instance exmonitor;
@@ -549,6 +555,10 @@ namespace eka2l1 {
         bool pause();
         bool unpause();
 
+        void post_task(std::function<void()> task);
+        bool try_run_pending_tasks();
+        void run_pending_tasks();
+
         memory_system *get_memory_system() {
             return mem_.get();
         }
@@ -746,10 +756,61 @@ namespace eka2l1 {
         return true;
     }
 
+    void system_impl::post_task(std::function<void()> task) {
+        {
+            const std::lock_guard<std::mutex> guard(pending_tasks_mut_);
+            pending_tasks_.push_back(std::move(task));
+            has_pending_tasks_ = true;
+        }
+
+        // A scheduler with nothing to run idles inside loop(); wake it so the tasks do not wait
+        // for the next guest timer.
+        if (kern_) {
+            kern_->stop_cores_idling();
+        }
+    }
+
+    // Tasks run here, or on loop()'s paused path, are not followed by a reschedule. A task that
+    // kills the current thread (app.kill) leaves crr_thread() on it until the next loop(). That is
+    // safe: the scheduler holds an access count on its current thread, so the object stays valid;
+    // and the kill's prepare_reschedule() halts the CPU, which dynarmic keeps pending while the
+    // CPU is not running (x64 backend checked: run code returns at once when a halt is pending,
+    // and clears it on return), so the next loop()'s cpu->run() runs no instruction of the dead
+    // thread and loop() reschedules right after.
+    bool system_impl::try_run_pending_tasks() {
+        std::unique_lock<std::mutex> guard(mut, std::try_to_lock);
+
+        if (!guard.owns_lock()) {
+            return false;
+        }
+
+        run_pending_tasks();
+        return true;
+    }
+
+    void system_impl::run_pending_tasks() {
+        if (!has_pending_tasks_) {
+            return;
+        }
+
+        std::vector<std::function<void()>> tasks;
+
+        {
+            const std::lock_guard<std::mutex> guard(pending_tasks_mut_);
+            tasks.swap(pending_tasks_);
+            has_pending_tasks_ = false;
+        }
+
+        for (std::function<void()> &task : tasks) {
+            task();
+        }
+    }
+
     int system_impl::loop() {
         const std::lock_guard<std::mutex> guard(mut);
 
         if (paused) {
+            run_pending_tasks();
             return 1;
         }
 
@@ -806,6 +867,10 @@ namespace eka2l1 {
 
             to_run->add_ticks(cpu->get_num_instruction_executed());
         }
+
+        // Run queued work where a system call would: between slices, before rescheduling, so a
+        // task that stops the current thread is switched away from right after it.
+        run_pending_tasks();
 
         if (!kern_->should_terminate()) {
             kern_->reschedule();
@@ -1619,6 +1684,14 @@ namespace eka2l1 {
 
     bool system::unpause() {
         return impl->unpause();
+    }
+
+    void system::post_task(std::function<void()> task) {
+        impl->post_task(std::move(task));
+    }
+
+    bool system::try_run_pending_tasks() {
+        return impl->try_run_pending_tasks();
     }
 
     memory_system *system::get_memory_system() {

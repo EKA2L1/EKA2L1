@@ -197,6 +197,27 @@ namespace eka2l1 {
         bool pause();
         bool unpause();
 
+        /**
+         * \brief Queue a task to run between two emulation slices.
+         *
+         * The task runs while no guest instruction executes and the system cannot be reset
+         * or switched to another device: on the thread inside loop(), before it reschedules,
+         * or on a thread that calls try_run_pending_tasks() while no thread is inside loop()
+         * (when the frontend paused the emulation, for example). Tasks run in the order they
+         * were posted. Thread-safe.
+         *
+         * \param task The task to run. It may post further tasks.
+         */
+        void post_task(std::function<void()> task);
+
+        /**
+         * \brief Run the queued tasks on the calling thread, unless another thread owns the system.
+         *
+         * \returns False if another thread is inside loop() or resetting the system. That thread
+         *          (or the next caller) runs the tasks instead.
+         */
+        bool try_run_pending_tasks();
+
         bool set_device(const std::uint8_t idx);
         int install_package(std::u16string path, drive_number drv);
 
