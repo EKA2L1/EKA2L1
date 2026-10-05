@@ -37,7 +37,7 @@
 #include <algorithm>
 #include <cwctype>
 
-#include <fstream>
+#include <sstream>
 #include <yaml-cpp/yaml.h>
 
 #include <fmt/format.h>
@@ -55,7 +55,7 @@ namespace eka2l1 {
         }
 
         static std::string get_bucket_stream_path(config::state *state, const uid package_uid) {
-            return add_path(state->storage, add_path(PACKAGE_FOLDER_PATH, common::to_string(package_uid, std::hex) + ".txt"));
+            return add_path(state->storage_path(), add_path(PACKAGE_FOLDER_PATH, common::to_string(package_uid, std::hex) + ".txt"));
         }
 
         static std::u16string get_virtual_registry_parent_folder(const drive_number residing) {
@@ -153,7 +153,7 @@ namespace eka2l1 {
         }
 
         void packages::migrate_legacy_registries() {
-            const std::string app_registry_file_path = add_path(conf->storage, APP_REGISTRY_FILENAME);
+            const std::string app_registry_file_path = add_path(conf->storage_path(), APP_REGISTRY_FILENAME);
             if (!common::exists(app_registry_file_path)) {
                 return;
             }
@@ -194,7 +194,12 @@ namespace eka2l1 {
 
                 const std::string bucket_path = get_bucket_stream_path(conf, obj.uid);
                 if (common::exists(bucket_path)) {
-                    std::ifstream bucket_stream(bucket_path);
+                    // Read as text, the way the stream that wrote it did.
+                    common::ro_std_file_stream bucket_file(bucket_path, false);
+                    std::string bucket(bucket_file.size(), '\0');
+                    bucket.resize(bucket_file.read(bucket.data(), bucket.size()));
+
+                    std::istringstream bucket_stream(bucket);
                     std::string virtual_path;
 
                     while (std::getline(bucket_stream, virtual_path)) {
@@ -215,7 +220,7 @@ namespace eka2l1 {
                 add_package(obj, nullptr);
             }
 
-            common::delete_folder(add_path(conf->storage, std::string(PACKAGE_FOLDER_PATH) + get_separator()));
+            common::delete_folder(add_path(conf->storage_path(), std::string(PACKAGE_FOLDER_PATH) + get_separator()));
             common::remove(app_registry_file_path);
         }
 

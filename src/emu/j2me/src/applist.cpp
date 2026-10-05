@@ -78,8 +78,8 @@ namespace eka2l1::j2me {
     }
 
     void app_list::create_and_initialize_database(const config::state &conf) {
-        common::create_directories(eka2l1::add_path(conf.storage, APPLIST_DB_DIR));
-        const std::string path_to_db = eka2l1::add_path(conf.storage, APPLIST_DB_NAME);
+        common::create_directories(eka2l1::add_path(conf.storage_path(), APPLIST_DB_DIR));
+        const std::string path_to_db = eka2l1::add_path(conf.storage_path(), APPLIST_DB_NAME);
         const int result = sqlite3_open(path_to_db.c_str(), &database_);
         if (result != SQLITE_OK) {
             LOG_ERROR(J2ME, "Failed to open new J2ME app database connection!");
@@ -340,8 +340,8 @@ namespace eka2l1::j2me {
     void app_list::flush() {
         reset();
         
-        common::create_directories(eka2l1::add_path(conf_.storage, APPLIST_DB_DIR));
-        const std::string path_to_db = eka2l1::add_path(conf_.storage, APPLIST_DB_NAME);
+        common::create_directories(eka2l1::add_path(conf_.storage_path(), APPLIST_DB_DIR));
+        const std::string path_to_db = eka2l1::add_path(conf_.storage_path(), APPLIST_DB_NAME);
         const int result = sqlite3_open(path_to_db.c_str(), &database_);
 
         if (result != SQLITE_OK) {

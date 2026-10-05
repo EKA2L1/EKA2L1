@@ -22,6 +22,7 @@
 #include <drivers/input/backend/emu_controller_sdl2.h>
 #include <drivers/input/common.h>
 #include <common/log.h>
+#include <common/path.h>
 
 #include "../../sdl2_scoping.h"
 
@@ -142,7 +143,7 @@ namespace eka2l1::drivers {
 
     void emu_controller_sdl2::run() {
         static constexpr const char *MAPPING_PATH = "resources//gamecontrollerdb.txt";
-        SDL_GameControllerAddMappingsFromFile(MAPPING_PATH);
+        SDL_GameControllerAddMappingsFromFile(eka2l1::runtime_resource_path(MAPPING_PATH).c_str());
 
         while (!shall_stop) {
             poll();
