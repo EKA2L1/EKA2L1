@@ -19,6 +19,7 @@
 
 #include <drivers/input/common.h>
 
+#include <qt/cmdhandler.h>
 #include <qt/state.h>
 #include <qt/thread.h>
 #include <qt/utils.h>
@@ -56,6 +57,10 @@ static void prefer_selfcontained_media_backend() {
 #endif
 
 int main(int argc, char *argv[]) {
+    if (handle_command_line_help(argc, const_cast<const char **>(argv))) {
+        return 0;
+    }
+
 #if EKA2L1_PLATFORM(UNIX)
     prefer_selfcontained_media_backend();
 #endif

@@ -26,6 +26,9 @@ namespace eka2l1::common {
     class arg_parser;
 }
 
+void register_command_line_options(eka2l1::common::arg_parser &parser);
+bool handle_command_line_help(const int argc, const char **argv);
+
 bool app_install_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err);
 bool package_remove_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err);
 bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err);
