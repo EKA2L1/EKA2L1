@@ -20,6 +20,7 @@
 #include <common/arghandler.h>
 #include <common/cvt.h>
 #include <common/path.h>
+#include <common/platform.h>
 #include <common/pystr.h>
 #include <qt/cmdhandler.h>
 #include <qt/mainwindow.h>
@@ -43,9 +44,79 @@
 #include <vfs/vfs.h>
 #include <qt/utils.h>
 
+#include <cstdio>
+#include <cstring>
 #include <iostream>
 
+#if EKA2L1_PLATFORM(WIN32)
+#include <Windows.h>
+#include <io.h>
+
+static void attach_command_line_console() {
+    if (!AttachConsole(ATTACH_PARENT_PROCESS) && GetLastError() != ERROR_ACCESS_DENIED) {
+        return;
+    }
+
+    // Keep inherited files and pipes; only bind streams that have no output handle.
+    if (_fileno(stdout) < 0 || _get_osfhandle(_fileno(stdout)) == -1) {
+        std::freopen("CONOUT$", "w", stdout);
+        std::cout.clear();
+    }
+    if (_fileno(stderr) < 0 || _get_osfhandle(_fileno(stderr)) == -1) {
+        std::freopen("CONOUT$", "w", stderr);
+        std::cerr.clear();
+    }
+}
+#endif
+
 using namespace eka2l1;
+
+void register_command_line_options(eka2l1::common::arg_parser &parser) {
+    parser.add("--help, -h", "Display this help and exit", help_option_handler);
+    parser.add("--listapp", "List all installed applications", list_app_option_handler);
+    parser.add("--listdevices", "List all installed devices", list_devices_option_handler);
+    parser.add("--app, -a, --run", "Run an app with given name or UID, or the absolute virtual path to executable.\n"
+                                    "\t\t\t  See list of apps with --listapp.\n"
+                                    "\t\t\t  Extra command line arguments can be passed to the application.\n"
+                                    "\n"
+                                    "\t\t\t  Some example:\n"
+                                    "\t\t\t    eka2l1 --run C:\\sys\\bin\\BitmapTest.exe \"--hi --arg 5\"\n"
+                                    "\t\t\t    eka2l1 --run Bounce\n"
+                                    "\t\t\t    eka2l1 --run 0x200412ED\n",
+        app_specifier_option_handler);
+    parser.add("--device, -dvc", "Set a device to be ran, through the given firmware code. This device will also be saved in the configuration as the current device.\n"
+                           "\t\t\t Example: --device RH-29",
+        device_set_option_handler);
+    parser.add("--install, -i", "Install a SIS.", app_install_option_handler);
+    parser.add("--remove, -r", "Remove an package.", package_remove_option_handler);
+    parser.add("--fullscreen, -f", "Display the emulator in fullscreen.", fullscreen_option_handler);
+    parser.add("--mount, -m", "Load a folder/zip as a Game Card ROM.", mount_card_option_handler);
+    parser.add("--keybindprofile, -kbp", "Set a keybind profile to associate with the emulator launch. Don't include any file extension here.\n"
+                                          "\t Example: eka2l1 --kbp controller_for_octopus",
+        keybind_profile_option_handler);
+    parser.add("--mmcid, --cid, -cid", "Set the MMC-ID for the mounted card", set_mmcid_option_handler);
+    parser.add("--runng, --appng, -rng, -ang", "Run a single N-Gage game inside the E drive", run_ngage_game_option_handler);
+
+#if ENABLE_PYTHON_SCRIPTING
+    parser.add("--gendocs", "Generate Python documentation", python_docgen_option_handler);
+#endif
+}
+
+bool handle_command_line_help(const int argc, const char **argv) {
+    // Later tokens may be arguments to a guest app, so only inspect the first option.
+    if (argc <= 1 || (std::strcmp(argv[1], "--help") != 0 && std::strcmp(argv[1], "-h") != 0)) {
+        return false;
+    }
+
+#if EKA2L1_PLATFORM(WIN32)
+    attach_command_line_console();
+#endif
+
+    eka2l1::common::arg_parser parser(argc, argv);
+    register_command_line_options(parser);
+    help_option_handler(&parser, nullptr, nullptr);
+    return true;
+}
 
 bool app_install_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
     const char *path = parser->next_token();
