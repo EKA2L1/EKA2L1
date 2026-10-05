@@ -42,19 +42,25 @@ namespace eka2l1::drivers {
         std::atomic<bool> running_{false};
         std::atomic<std::uint64_t> position_frames_{0};
         std::atomic<std::uint64_t> idle_frames_{0};
+        std::uint64_t output_end_time_ = 0;
+        std::uint64_t output_latency_ = 0;
+        bool draining_ = false;
+        bool drained_ = false;
 
     public:
         audiounit_ios_stream_base(const std::uint32_t sample_rate,
             const std::uint8_t channels, data_callback callback, bool is_input);
         virtual ~audiounit_ios_stream_base();
 
-        std::size_t call_callback(std::int16_t *buffer, const long frames);
+        std::size_t call_callback(std::int16_t *buffer, const long frames,
+            const std::uint64_t render_time = 0);
         std::uint8_t channel_count() const {
             return channels_;
         }
 
     protected:
         virtual bool should_idle() = 0;
+        virtual void on_drained() {}
 
         bool create_unit();
         bool start_unit();
@@ -90,6 +96,7 @@ namespace eka2l1::drivers {
 
     protected:
         bool should_idle() override;
+        void on_drained() override;
 
     private:
         audiounit_ios_audio_driver *ios_driver_;

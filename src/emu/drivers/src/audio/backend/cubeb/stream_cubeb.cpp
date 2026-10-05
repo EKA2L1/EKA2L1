@@ -34,6 +34,9 @@ namespace eka2l1::drivers {
     }
 
     void state_callback_redirector(cubeb_stream *stream, void *user_data, cubeb_state state) {
+        if (state == CUBEB_STATE_DRAINED) {
+            static_cast<cubeb_audio_stream_base *>(user_data)->on_drained();
+        }
     }
 
     cubeb_audio_stream_base::cubeb_audio_stream_base(cubeb *context, const std::uint32_t sample_rate,
@@ -143,6 +146,12 @@ namespace eka2l1::drivers {
     }
 
     cubeb_audio_output_stream::~cubeb_audio_output_stream() {
+    }
+
+    void cubeb_audio_output_stream::on_drained() {
+        if (drained_callback_) {
+            drained_callback_();
+        }
     }
 
     bool cubeb_audio_output_stream::should_stream_idle() {

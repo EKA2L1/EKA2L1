@@ -47,6 +47,7 @@ namespace eka2l1::drivers {
         virtual ~cubeb_audio_stream_base();
 
         std::size_t call_callback(std::int16_t *output_buffer, const long frames);
+        virtual void on_drained() {}
     };
 
     struct cubeb_audio_output_stream : public audio_output_stream, public cubeb_audio_stream_base {
@@ -63,6 +64,7 @@ namespace eka2l1::drivers {
             const std::uint8_t channels, data_callback callback);
 
         ~cubeb_audio_output_stream() override;
+        void on_drained() override;
 
         bool start() override;
         bool stop() override;

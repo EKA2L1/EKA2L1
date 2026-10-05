@@ -82,6 +82,11 @@ namespace eka2l1::drivers {
             return false;
         }
 
+        if (nice_codec->id == AV_CODEC_ID_MP3) {
+            // Symbian's MP3 controller counts complete frames, including encoder padding.
+            codec_->flags2 |= AV_CODEC_FLAG2_SKIP_MANUAL;
+        }
+
         if (avcodec_open2(codec_, nice_codec, nullptr) < 0) {
             LOG_ERROR(DRIVER_AUD, "Unable to open codec of stream url {}", url_);
 
@@ -91,20 +96,37 @@ namespace eka2l1::drivers {
         channels_ = codec_->ch_layout.nb_channels;
         freq_ = codec_->sample_rate;
 
-        const double time_base = av_q2d(stream->time_base);
-        duration_us_ = static_cast<std::uint64_t>(static_cast<double>(stream->duration) * time_base * common::microsecs_per_sec);
+        std::int64_t duration = std::max<std::int64_t>(stream->duration, 0);
+        if ((nice_codec->id == AV_CODEC_ID_MP3) && (stream->start_time > 0)
+            && format_context_->pb && (format_context_->pb->seekable & AVIO_SEEKABLE_NORMAL)) {
+            // The demuxer's LAME duration excludes padding. Packet durations retain
+            // the full frame timeline without relying on private demuxer fields.
+            std::int64_t frame_duration = 0;
+            int result;
+            while ((result = av_read_frame(format_context_, packet_)) >= 0) {
+                if (packet_->stream_index == best_stream_index) {
+                    frame_duration += packet_->duration;
+                }
+                av_packet_unref(packet_);
+            }
+            if ((result == AVERROR_EOF) && (frame_duration > 0)) {
+                duration = frame_duration;
+            }
+            if (!set_position_for_custom_format(0)) {
+                return false;
+            }
+        }
+        duration_us_ = av_rescale_q_rnd(duration, stream->time_base,
+            AVRational{1, common::microsecs_per_sec}, AV_ROUND_DOWN);
 
         return true;
     }
 
     bool player_ffmpeg::open_url(const std::string &url) {
-        const std::lock_guard<std::mutex> guard(lock_);
-        flags_ |= 1;
-
-        if (output_stream_ && output_stream_->is_playing()) {
-            output_stream_->stop();
+        if (!stop()) {
+            return false;
         }
-
+        const std::lock_guard<std::mutex> guard(lock_);
         flags_ &= ~1;
 
         deinit();
@@ -246,13 +268,10 @@ namespace eka2l1::drivers {
     }
 
     bool player_ffmpeg::open_custom(common::rw_stream *the_stream) {
-        const std::lock_guard<std::mutex> guard(lock_);
-        flags_ |= 1;
-
-        if (output_stream_ && output_stream_->is_playing()) {
-            output_stream_->stop();
+        if (!stop()) {
+            return false;
         }
-
+        const std::lock_guard<std::mutex> guard(lock_);
         flags_ &= ~1;
         deinit();
 
@@ -434,14 +453,8 @@ namespace eka2l1::drivers {
     }
 
     player_ffmpeg::~player_ffmpeg() {
-        // Stop the hardware stream before freeing the decode contexts: the
-        // render callback pulls get_more_data(), which reads them, and once
-        // this destructor finishes the vtable rolls back to player_shared
-        // where get_more_data is pure. ~player_shared's own stop runs too
-        // late for both.
-        if (output_stream_) {
-            output_stream_->stop();
-        }
+        // Render callbacks must finish before their decoder and derived vtable disappear.
+        stop();
 
         deinit();
         av_packet_free(&packet_);

@@ -10,6 +10,7 @@
 #include <drivers/audio/audio.h>
 #include <drivers/audio/backend/audiounit_ios/audio_audiounit_ios.h>
 #include <drivers/audio/backend/audiounit_ios/stream_audiounit_ios.h>
+#include <mach/mach_time.h>
 
 #include <algorithm>
 #include <cstring>
@@ -25,6 +26,15 @@ namespace eka2l1::drivers {
 
 namespace {
 
+std::uint64_t seconds_to_host_time(const double seconds) {
+    static const double ticks_per_second = []() {
+        mach_timebase_info_data_t timebase;
+        mach_timebase_info(&timebase);
+        return 1000000000.0 * timebase.denom / timebase.numer;
+    }();
+    return static_cast<std::uint64_t>(seconds * ticks_per_second);
+}
+
 // CoreAudio invokes these render callbacks through a C ABI on its realtime
 // I/O thread; some are reached via AudioConverterFillComplexBufferRealtimeSafe,
 // which is not exception-aware. The guest callback chain below can legitimately
@@ -37,7 +47,7 @@ namespace {
 
 OSStatus output_render_cb(void *inRefCon,
                           AudioUnitRenderActionFlags *ioActionFlags,
-                          const AudioTimeStamp * /*inTimeStamp*/,
+                          const AudioTimeStamp *inTimeStamp,
                           UInt32 /*inBusNumber*/,
                           UInt32 inNumberFrames,
                           AudioBufferList *ioData) noexcept {
@@ -50,7 +60,9 @@ OSStatus output_render_cb(void *inRefCon,
     auto *out = reinterpret_cast<std::int16_t *>(buf.mData);
     std::size_t got = 0;
     try {
-        got = self->call_callback(out, inNumberFrames);
+        const std::uint64_t render_time = inTimeStamp && (inTimeStamp->mFlags & kAudioTimeStampHostTimeValid)
+            ? inTimeStamp->mHostTime : mach_absolute_time();
+        got = self->call_callback(out, inNumberFrames, render_time);
     } catch (...) {
         got = 0;
     }
@@ -139,7 +151,8 @@ namespace eka2l1::drivers {
         unit_ = nullptr;
     }
 
-    std::size_t audiounit_ios_stream_base::call_callback(std::int16_t *buffer, const long frames) {
+    std::size_t audiounit_ios_stream_base::call_callback(std::int16_t *buffer, const long frames,
+        const std::uint64_t render_time) {
         if (should_idle()) {
             std::memset(buffer, 0, frames * channels_ * sizeof(std::int16_t));
             idle_frames_.fetch_add(static_cast<std::uint64_t>(frames),
@@ -148,17 +161,32 @@ namespace eka2l1::drivers {
                 std::memory_order_relaxed);
             return static_cast<std::size_t>(frames);
         }
+        if (!is_input_ && draining_) {
+            if (!drained_ && mach_absolute_time() >= output_end_time_) {
+                drained_ = true;
+                on_drained();
+            }
+            std::memset(buffer, 0, frames * channels_ * sizeof(std::int16_t));
+            return 0;
+        }
         const std::size_t got = callback_ ? callback_(buffer, frames) : 0;
+        if (!is_input_) {
+            if (got != 0) {
+                output_end_time_ = render_time + seconds_to_host_time(static_cast<double>(got) / sample_rate_) + output_latency_;
+            }
+            draining_ = got < static_cast<std::size_t>(frames);
+        }
         if (got < static_cast<std::size_t>(frames)) {
             std::memset(buffer + got * channels_, 0,
                 (frames - got) * channels_ * sizeof(std::int16_t));
         }
-        position_frames_.fetch_add(static_cast<std::uint64_t>(frames),
+        position_frames_.fetch_add(static_cast<std::uint64_t>(got),
             std::memory_order_relaxed);
-        return static_cast<std::size_t>(frames);
+        return got;
     }
 
     bool audiounit_ios_stream_base::create_unit() {
+        output_latency_ = seconds_to_host_time([AVAudioSession sharedInstance].outputLatency);
         AudioComponentDescription desc{};
         desc.componentType = kAudioUnitType_Output;
         // RemoteIO is the iOS hardware I/O AudioUnit. The macOS-only HAL
@@ -325,6 +353,11 @@ namespace eka2l1::drivers {
     }
 
     bool audiounit_ios_output_stream::start() {
+        if (!running_.load()) {
+            draining_ = false;
+            drained_ = false;
+            output_end_time_ = 0;
+        }
         pausing_.store(false);
         return start_unit();
     }
@@ -340,6 +373,12 @@ namespace eka2l1::drivers {
 
     bool audiounit_ios_output_stream::is_playing() { return running_.load(); }
     bool audiounit_ios_output_stream::is_pausing() { return pausing_.load(); }
+
+    void audiounit_ios_output_stream::on_drained() {
+        if (drained_callback_) {
+            drained_callback_();
+        }
+    }
 
     bool audiounit_ios_output_stream::set_volume(const float volume) {
         const float clamped = std::clamp(volume, 0.0f, 1.0f);

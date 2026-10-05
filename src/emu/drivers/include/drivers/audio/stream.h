@@ -21,6 +21,7 @@
 
 #include <cstdint>
 #include <functional>
+#include <utility>
 
 namespace eka2l1::drivers {
     constexpr std::uint64_t frames_to_microseconds(const std::uint64_t frames,
@@ -38,6 +39,7 @@ namespace eka2l1::drivers {
 
         std::uint32_t sample_rate;
         std::uint8_t channels;
+        std::function<void()> drained_callback_;
 
     public:
         explicit audio_output_stream(audio_driver *driver, const std::uint32_t sample_rate, const std::uint8_t channels);
@@ -54,6 +56,12 @@ namespace eka2l1::drivers {
         virtual float get_volume() const = 0;
 
         virtual bool current_frame_position(std::uint64_t *pos) = 0;
+
+        // A short data callback ends the stream; notify after its queued frames play.
+        // Set before start(), and stop() must quiesce this callback before returning.
+        void set_drained_callback(std::function<void()> callback) {
+            drained_callback_ = std::move(callback);
+        }
 
         const std::uint8_t get_channels() {
             return channels;
