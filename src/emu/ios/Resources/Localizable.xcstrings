@@ -785,6 +785,22 @@
         }
       }
     },
+    "display.editor.background" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Background"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "背景"
+          }
+        }
+      }
+    },
     "display.editor.editLayout" : {
       "localizations" : {
         "en" : {
@@ -813,6 +829,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "拖动以移动画面"
+          }
+        }
+      }
+    },
+    "display.editor.removeBackground" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove background"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除背景"
           }
         }
       }

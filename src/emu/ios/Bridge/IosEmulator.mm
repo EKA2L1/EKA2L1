@@ -302,6 +302,15 @@ namespace eka2l1::ios {
         int present_slot = 0;
         std::atomic<std::uint64_t> rendered_frame_count{0};
 
+        // Picture behind the guest screen (config background-image). The
+        // texture belongs to submit_screen_frame under present_mutex; writes to
+        // conf.background_image take background_mutex instead, since a present
+        // can hold present_mutex across a GPU fence wait.
+        std::mutex background_mutex;
+        std::atomic<bool> background_dirty{true};
+        eka2l1::drivers::handle background_texture = 0;
+        eka2l1::vec2 background_size{ 0, 0 };
+
         // Where the guest picture is placed on the render surface, in surface
         // pixels. Guarded by display_geometry_mutex.
         struct display_layout {
@@ -595,6 +604,119 @@ namespace eka2l1::ios {
         return true;
     }
 
+    // Decodes into RGBA rows, top row first, capped so a camera photo
+    // does not cost more texture memory than a phone screen can show.
+    static std::vector<std::uint8_t> decode_background_image(const std::string &path, eka2l1::vec2 &size) {
+        @autoreleasepool {
+            UIImage *image = [UIImage imageWithContentsOfFile:[NSString stringWithUTF8String:path.c_str()]];
+            CGImageRef cg_image = image.CGImage;
+            if (!cg_image) {
+                return {};
+            }
+
+            constexpr double max_edge = 3072.0;
+            const double source_w = static_cast<double>(CGImageGetWidth(cg_image));
+            const double source_h = static_cast<double>(CGImageGetHeight(cg_image));
+            const double fit = std::min(1.0, max_edge / std::max(source_w, source_h));
+            const int width = std::max(1, static_cast<int>(std::lround(source_w * fit)));
+            const int height = std::max(1, static_cast<int>(std::lround(source_h * fit)));
+
+            std::vector<std::uint8_t> pixels(static_cast<std::size_t>(width) * height * 4);
+            CGColorSpaceRef color_space = CGColorSpaceCreateDeviceRGB();
+            CGContextRef context = CGBitmapContextCreate(pixels.data(), width, height, 8, width * 4,
+                color_space, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+            CGColorSpaceRelease(color_space);
+            if (!context) {
+                return {};
+            }
+            CGContextSetInterpolationQuality(context, kCGInterpolationHigh);
+            CGContextDrawImage(context, CGRectMake(0, 0, width, height), cg_image);
+            CGContextRelease(context);
+
+            size = eka2l1::vec2(width, height);
+            return pixels;
+        }
+    }
+
+    // Caller holds present_mutex.
+    static void refresh_background_texture(emulator *state, eka2l1::drivers::graphics_command_builder &builder) {
+        if (!state->background_dirty.exchange(false)) {
+            return;
+        }
+
+        std::string path;
+        {
+            std::lock_guard<std::mutex> background_lock(state->background_mutex);
+            path = state->conf.background_image;
+        }
+        eka2l1::vec2 size{ 0, 0 };
+        std::vector<std::uint8_t> pixels;
+        if (!path.empty()) {
+            if (path.front() != '/') {
+                path = eka2l1::add_path(state->conf.storage, path);
+            }
+            pixels = decode_background_image(path, size);
+            if (pixels.empty()) {
+                LOG_ERROR(eka2l1::FRONTEND_UI, "Unable to load background image {}", path);
+            }
+        }
+
+        if (pixels.empty()) {
+            if (state->background_texture) {
+                builder.destroy(state->background_texture);
+                state->background_texture = 0;
+            }
+            return;
+        }
+
+        if (!state->background_texture) {
+            state->background_texture = eka2l1::drivers::create_texture(state->graphics_driver.get(), 2, 0,
+                eka2l1::drivers::texture_format::rgba, eka2l1::drivers::texture_format::rgba,
+                eka2l1::drivers::texture_data_type::ubyte, pixels.data(), pixels.size(),
+                eka2l1::vec3(size.x, size.y, 0));
+            if (!state->background_texture) {
+                return;
+            }
+        } else {
+            builder.recreate_texture(state->background_texture, 2, 0, eka2l1::drivers::texture_format::rgba,
+                eka2l1::drivers::texture_format::rgba, eka2l1::drivers::texture_data_type::ubyte,
+                pixels.data(), pixels.size(), eka2l1::vec3(size.x, size.y, 0));
+        }
+        builder.set_texture_filter(state->background_texture, true, eka2l1::drivers::filter_option::linear);
+        builder.set_texture_filter(state->background_texture, false, eka2l1::drivers::filter_option::linear);
+        state->background_size = size;
+    }
+
+    // Aspect-fill: crop the image's centre to the surface's aspect ratio.
+    static void draw_background(emulator *state, eka2l1::drivers::graphics_command_builder &builder,
+        const eka2l1::vec2 &swapchain_size) {
+        const eka2l1::vec2 image_size = state->background_size;
+        if (!state->background_texture || (image_size.x <= 0) || (image_size.y <= 0)
+            || (swapchain_size.x <= 0) || (swapchain_size.y <= 0)) {
+            return;
+        }
+
+        const float fill = std::max(static_cast<float>(swapchain_size.x) / image_size.x,
+            static_cast<float>(swapchain_size.y) / image_size.y);
+        eka2l1::rect source;
+        source.size.x = std::min(image_size.x, static_cast<int>(std::lround(swapchain_size.x / fill)));
+        source.size.y = std::min(image_size.y, static_cast<int>(std::lround(swapchain_size.y / fill)));
+        source.top = (image_size - source.size) / 2;
+
+        eka2l1::rect dest;
+        dest.size = swapchain_size;
+
+        builder.set_feature(eka2l1::drivers::graphics_feature::blend, true);
+        builder.blend_formula(eka2l1::drivers::blend_equation::add, eka2l1::drivers::blend_equation::add,
+            eka2l1::drivers::blend_factor::frag_out_alpha, eka2l1::drivers::blend_factor::one_minus_frag_out_alpha,
+            eka2l1::drivers::blend_factor::one, eka2l1::drivers::blend_factor::one_minus_frag_out_alpha);
+        builder.set_brush_color_detail(eka2l1::vec4(255, 255, 255,
+            std::clamp(state->conf.background_image_opacity, 0, 255)));
+        builder.draw_bitmap(state->background_texture, 0, dest, source, eka2l1::vec2(0, 0), 0.0f,
+            eka2l1::drivers::bitmap_draw_flag_use_brush);
+        builder.set_feature(eka2l1::drivers::graphics_feature::blend, false);
+    }
+
     static void submit_screen_frame(emulator *state, eka2l1::epoc::screen *scr) {
         if (!state || !state->graphics_driver || !state->window) {
             return;
@@ -630,6 +752,8 @@ namespace eka2l1::ios {
         builder.set_viewport(viewport);
         builder.clear({ 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f },
             eka2l1::drivers::draw_buffer_bit_color_buffer);
+        refresh_background_texture(state, builder);
+        draw_background(state, builder, swapchain_size);
 
         // The guest's own orientation.
         const int rotation = scr->ui_rotation % 360;
@@ -1212,6 +1336,8 @@ namespace eka2l1::ios {
         _state->graphics_thread->join();
     }
     _state->graphics_driver.reset();
+    _state->background_texture = 0;
+    _state->background_dirty = true;
     _state->symsys.reset();
     _state->audio_driver.reset();
     _state->sensor_driver.reset();
@@ -2531,6 +2657,10 @@ namespace eka2l1::ios {
 
     // A paused or menu-static guest produces no frame of its own, so the move
     // would not show until it next draws.
+    [self scheduleRePresent];
+}
+
+- (void)scheduleRePresent {
     if (!_state->display_layout_represent_pending.exchange(true)) {
         dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
             std::lock_guard<std::recursive_mutex> session_lock(self->_sessionMutex);
@@ -2724,7 +2854,8 @@ static constexpr std::uint8_t k_unlimited_refresh_rate = 240;
         @"btnetPassword": [NSString stringWithUTF8String:_state->conf.btnet_password.c_str()],
         @"btCentralServerUrl": [NSString stringWithUTF8String:_state->conf.bt_central_server_url.c_str()],
         @"btnetFriendAddresses": friends,
-        @"hosts": hosts
+        @"hosts": hosts,
+        @"backgroundImage": [NSString stringWithUTF8String:_state->conf.background_image.c_str()]
     };
 }
 
@@ -2901,6 +3032,16 @@ static constexpr std::uint8_t k_unlimited_refresh_rate = 240;
             address.port_ = port.unsignedIntValue;
             _state->conf.friend_addresses.push_back(address);
         }
+    }
+
+    NSString *backgroundImage = snapshot[@"backgroundImage"];
+    if ([backgroundImage isKindOfClass:NSString.class]) {
+        {
+            std::lock_guard<std::mutex> background_lock(_state->background_mutex);
+            _state->conf.background_image = backgroundImage.UTF8String;
+            _state->background_dirty = true;
+        }
+        [self scheduleRePresent];
     }
 
     if (hosts) {

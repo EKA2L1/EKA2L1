@@ -1,3 +1,4 @@
+import PhotosUI
 import SwiftUI
 
 // One layout for portrait and one for landscape, shared by every game.
@@ -130,6 +131,12 @@ struct DisplayLayoutEditor: View {
             .padding(.leading, max(14, safeAreaInsets.leading + 10))
             .padding(.trailing, max(14, safeAreaInsets.trailing + 10))
             .padding(.top, max(12, safeAreaInsets.top + 8))
+
+            // The canvas is safe-area sized but drawn from the screen's top
+            // edge, so its bottom sits both insets above the screen's.
+            BackgroundImageControl()
+                .frame(maxHeight: .infinity, alignment: .bottom)
+                .offset(y: safeAreaInsets.top + safeAreaInsets.bottom - max(16, safeAreaInsets.bottom + 4))
         }
         .frame(width: size.width, height: size.height)
         .ignoresSafeArea()
@@ -260,5 +267,123 @@ struct DisplayLayoutEditor: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(label)
+    }
+}
+
+// MARK: - Background image
+
+// The picture the emulator draws behind the guest screen, stored as the
+// config's background-image (shared with the Qt frontend) relative to data/.
+enum BackgroundImage {
+    static let fileName = "background.jpg"
+
+    private static var fileURL: URL {
+        URL(fileURLWithPath: documentsRoot()).appendingPathComponent("data/\(fileName)")
+    }
+
+    @MainActor
+    static var isSet: Bool {
+        let path = EKA2L1Bridge.shared.currentConfigSnapshot()["backgroundImage"] as? String
+        return !(path ?? "").isEmpty
+    }
+
+    // The emulator decodes the file without EXIF orientation, so store an
+    // upright copy, no larger than it would ever draw.
+    static func writeUprightCopy(of data: Data) -> Bool {
+        guard let image = UIImage(data: data), image.size.width > 0, image.size.height > 0 else {
+            return false
+        }
+        let fit = min(1, 3072 / max(image.size.width, image.size.height))
+        let size = CGSize(width: (image.size.width * fit).rounded(), height: (image.size.height * fit).rounded())
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = 1
+        format.opaque = true
+        let jpeg = UIGraphicsImageRenderer(size: size, format: format).jpegData(withCompressionQuality: 0.9) { _ in
+            image.draw(in: CGRect(origin: .zero, size: size))
+        }
+        do {
+            try jpeg.write(to: fileURL, options: .atomic)
+            return true
+        } catch {
+            return false
+        }
+    }
+
+    @MainActor
+    static func apply() -> Bool {
+        EKA2L1Bridge.shared.applyConfigSnapshot(["backgroundImage": fileName])
+    }
+
+    @MainActor
+    static func clear() {
+        _ = EKA2L1Bridge.shared.applyConfigSnapshot(["backgroundImage": ""])
+        try? FileManager.default.removeItem(at: fileURL)
+    }
+}
+
+private struct BackgroundImageControl: View {
+    @State private var selection: PhotosPickerItem?
+    @State private var isSet = BackgroundImage.isSet
+    @State private var loading = false
+
+    var body: some View {
+        PhotosPicker(selection: $selection, matching: .images, preferredItemEncoding: .current) {
+            HStack(spacing: 8) {
+                if loading {
+                    ProgressView()
+                        .tint(.white)
+                } else {
+                    Image(systemName: "photo")
+                }
+                Text("display.editor.background")
+            }
+            .font(.callout.weight(.semibold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 18)
+            .frame(height: 50)
+            .background(.black.opacity(0.72), in: Capsule())
+            .overlay(Capsule().strokeBorder(.white.opacity(0.16), lineWidth: 1))
+        }
+        .disabled(loading)
+        // Hung off the side so the picker button stays centred.
+        .overlay(alignment: .trailing) {
+            if isSet {
+                Button {
+                    BackgroundImage.clear()
+                    isSet = false
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundStyle(.white)
+                        .frame(width: 50, height: 50)
+                        .background(.black.opacity(0.72), in: Circle())
+                        .overlay(Circle().strokeBorder(.white.opacity(0.16), lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("display.editor.removeBackground")
+                .offset(x: 58)
+            }
+        }
+        .onChange(of: selection) { item in
+            guard let item else { return }
+            selection = nil
+            load(item)
+        }
+    }
+
+    private func load(_ item: PhotosPickerItem) {
+        loading = true
+        Task {
+            var saved = false
+            if let data = try? await item.loadTransferable(type: Data.self) {
+                saved = await Task.detached(priority: .userInitiated) {
+                    BackgroundImage.writeUprightCopy(of: data)
+                }.value
+            }
+            if saved && BackgroundImage.apply() {
+                isSet = true
+            }
+            loading = false
+        }
     }
 }
