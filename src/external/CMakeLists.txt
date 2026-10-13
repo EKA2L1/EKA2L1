@@ -433,6 +433,9 @@ endif()
 add_library(thread-pool INTERFACE)
 target_include_directories(thread-pool INTERFACE thread-pool/include)
 
+add_library(rapidjson INTERFACE)
+target_include_directories(rapidjson INTERFACE rapidjson/include)
+
 add_definitions(-DFT_CONFIG_OPTION_SUBPIXEL_RENDERING)
 
 set(FT_DISABLE_HARFBUZZ ON CACHE BOOL "" FORCE)

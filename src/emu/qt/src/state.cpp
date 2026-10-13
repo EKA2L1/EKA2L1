@@ -39,6 +39,9 @@
 #include <qt/state.h>
 #include <qt/utils.h>
 
+#include <control/server.h>
+#include <qt/control_frontend.h>
+
 #include <QSettings>
 
 namespace eka2l1::desktop {
@@ -59,6 +62,8 @@ namespace eka2l1::desktop {
         , sys_reset_cbh(0)
         , present_status(0) {
     }
+
+    emulator::~emulator() = default;
 
     void emulator::stage_one() {
         // Initialize the logger
