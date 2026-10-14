@@ -15,6 +15,15 @@
 
 using namespace eka2l1::dispatch;
 
+namespace {
+    struct point_buffer_context : egl_context_es1 {
+        ~point_buffer_context() {
+            // Synthetic contexts bypass the controller's object teardown.
+            objects_.clear();
+        }
+    };
+}
+
 // Initial state and query types follow OES_point_size_array and OES_point_sprite.
 TEST_CASE("GLES1 point extensions start disabled with a float size array", "[gles1]") {
     egl_context_es1 context;
@@ -177,7 +186,7 @@ TEST_CASE("GLES1 large point sizes saturate integer query results", "[gles1]") {
 }
 
 TEST_CASE("GLES1 rejects unavailable point size buffers before preparing a draw", "[gles1]") {
-    egl_context_es1 context;
+    point_buffer_context context;
     egl_controller controller(nullptr);
     context.associated_thread_uid_ = 7;
     gles_driver_object_instance vertex_buffer = std::make_unique<gles_driver_buffer>(context);
@@ -248,7 +257,7 @@ TEST_CASE("GLES1 point arrays retain VBO offsets and are ignored for triangle dr
     for (const auto type : { GL_FLOAT_EMU, GL_FIXED_EMU }) {
         point_draw_driver driver;
         egl_controller controller(&driver);
-        egl_context_es1 context;
+        point_buffer_context context;
         context.associated_thread_uid_ = 9;
         gles_driver_object_instance buffer = std::make_unique<gles_driver_buffer>(context);
         buffer->assign_handle(42);
