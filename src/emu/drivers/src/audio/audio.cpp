@@ -98,10 +98,13 @@ namespace eka2l1::drivers {
             return;
         }
 
-        midi_banks_[static_cast<int>(type)] = path;
+        // The default banks ship with the emulator, so a relative path names one of those.
+        const std::string resolved_path = eka2l1::runtime_resource_path(path);
+
+        midi_banks_[static_cast<int>(type)] = resolved_path;
         for (auto &cb: bank_change_callbacks_) {
             if (cb) {
-                cb(type, path);
+                cb(type, resolved_path);
             }
         }
     }

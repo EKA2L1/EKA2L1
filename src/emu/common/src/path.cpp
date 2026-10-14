@@ -23,6 +23,7 @@
 #include <common/platform.h>
 
 #include <cstring>
+#include <string_view>
 
 #include <common/log.h>
 #include <common/android/contenturi.h>
@@ -425,13 +426,53 @@ namespace eka2l1 {
     }
 
     static std::string runtime_resource_root;
+    static std::string data_root;
+
+    // Some of these paths are written as "./<name>" for the working directory
+    // case; drop the dot so the joined path stays readable. Only a "." followed by
+    // one of the given separators names that directory.
+    static std::string strip_current_directory_prefix(std::string path, const std::string_view separators) {
+        while ((path.length() >= 2) && (path[0] == '.') && (separators.find(path[1]) != std::string::npos)) {
+            path.erase(0, path.find_first_not_of(separators, 1));
+        }
+
+        return path;
+    }
+
+    // The separators the host itself reads: outside Windows "\" is part of a name.
+#if EKA2L1_PLATFORM(WIN32)
+    static constexpr std::string_view HOST_SEPARATORS = "/\\";
+#else
+    static constexpr std::string_view HOST_SEPARATORS = "/";
+#endif
+
+    // Whether the host opens this path without the working directory. On Windows
+    // "\x" and "/x" start at the drive's root and "C:x" names a drive; elsewhere
+    // only "/x" does, and "\x" or "C:x" are names relative to the working directory.
+    static bool is_rooted_on_this_host(const std::string &path) {
+#if EKA2L1_PLATFORM(ANDROID)
+        if (is_content_uri(path)) {
+            return true;
+        }
+#endif
+
+#if EKA2L1_PLATFORM(WIN32)
+        return is_separator(path[0]) || ((path.length() >= 2) && (path[1] == ':'));
+#else
+        return path[0] == '/';
+#endif
+    }
 
     void set_runtime_resource_root(const std::string &root) {
         runtime_resource_root = root;
     }
 
     std::string runtime_resource_path(const std::string &path) {
-        if (runtime_resource_root.empty() || path.empty()) {
+        if (runtime_resource_root.empty()) {
+            return data_path(path);
+        }
+
+        if (path.empty()) {
             return path;
         }
 
@@ -439,13 +480,27 @@ namespace eka2l1 {
             return path;
         }
 
-        // Some of these paths are written as "./<name>" for the working
-        // directory case; drop the dot so the joined path stays readable.
-        std::string relative = path;
-        while ((relative.length() >= 2) && (relative[0] == '.') && is_separator(relative[1])) {
-            relative.erase(0, relative.find_first_not_of("/\\", 1));
+        return add_path(runtime_resource_root, strip_current_directory_prefix(path, "/\\"));
+    }
+
+    void set_data_root(const std::string &root) {
+        data_root = root;
+    }
+
+    std::string data_path(const std::string &path) {
+        if (data_root.empty() || (!path.empty() && is_rooted_on_this_host(path))) {
+            return path;
         }
 
-        return add_path(runtime_resource_root, relative);
+        // The root stands in for the working directory, so the path is appended as
+        // written: it names the same file it named relative to that directory, and
+        // an empty path names the folder itself.
+        const std::string relative = strip_current_directory_prefix(path, HOST_SEPARATORS);
+
+        if (relative.empty() || is_separator(data_root.back())) {
+            return data_root + relative;
+        }
+
+        return data_root + get_separator() + relative;
     }
 }

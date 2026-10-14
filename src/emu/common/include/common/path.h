@@ -270,8 +270,34 @@ namespace eka2l1 {
 
     /*! \brief Resolve a shipped-resource path against the runtime resource root.
      *
-     * Returns the path unchanged when no root is set or when it is already
+     * Without a runtime resource root the data root is used instead: the
+     * desktop frontend copies the shipped resources into the data folder.
+     *
+     * Returns the path unchanged when neither root is set or when it is already
      * absolute (a user-picked MIDI bank, for instance).
      */
     std::string runtime_resource_path(const std::string &path);
+
+    /*! \brief Set the folder the emulator keeps its own data in.
+     *
+     * The configuration, the log, key bindings, compatibility settings, caches
+     * and, through the configured storage path, devices and drives are opened
+     * relative to this folder, so emulator processes given different roots
+     * never touch each other's files.
+     *
+     * An empty root - the default - leaves those paths relative to the working
+     * directory, as they always were. Set it once at startup, before the
+     * logger and the configuration are set up; it is not meant to change
+     * afterwards.
+     */
+    void set_data_root(const std::string &root);
+
+    /*! \brief Resolve a path inside the data folder against the data root.
+     *
+     * The path is appended to the root as written, so it names the same file it
+     * named relative to the working directory; an empty path names the root
+     * itself. Returns the path unchanged when no root is set or when the host
+     * opens it without the working directory (an absolute path).
+     */
+    std::string data_path(const std::string &path);
 }

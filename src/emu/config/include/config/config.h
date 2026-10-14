@@ -189,6 +189,13 @@ namespace eka2l1::config {
 
         std::string current_mmc_id;
 
+        /*! \brief The storage folder (devices, ROMs, drives), resolved against the data root.
+         *
+         * `storage` keeps the value as written in config.yml, so a relative storage
+         * folder stays relative to the data folder it was saved in.
+         */
+        std::string storage_path() const;
+
         void serialize(const bool with_bindings = true);
         void deserialize(const bool with_bindings = true);
         std::optional<host_target> host_override(const std::string &hostname) const;

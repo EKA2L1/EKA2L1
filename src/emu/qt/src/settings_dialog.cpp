@@ -240,7 +240,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     std::string current_dir;
     eka2l1::common::get_current_directory(current_dir);
 
-    const std::string storage_abs = eka2l1::absolute_path(configuration_.storage, current_dir);
+    const std::string storage_abs = eka2l1::absolute_path(configuration_.storage_path(), current_dir);
 
     // Setup existing attributes in the configuration
     ui_->data_storage_path_edit->setText(QString::fromUtf8(storage_abs.c_str()));
@@ -268,8 +268,8 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     ui_->system_screen_buffer_sync_combo->setCurrentIndex(static_cast<int>(configuration_.screen_buffer_sync));
     ui_->system_friendly_phone_name_edit->setText(QString::fromStdString(configuration_.device_display_name));
     ui_->system_audio_midi_backend_combo->setCurrentIndex(static_cast<int>(configuration.midi_backend));
-    ui_->system_audio_midi_hsb_bank_edit->setText(QString::fromStdString(eka2l1::absolute_path(configuration.hsb_bank_path, current_dir)));
-    ui_->system_audio_midi_sf2_bank_edit->setText(QString::fromStdString(eka2l1::absolute_path(configuration.sf2_bank_path, current_dir)));
+    ui_->system_audio_midi_hsb_bank_edit->setText(QString::fromStdString(eka2l1::absolute_path(eka2l1::runtime_resource_path(configuration.hsb_bank_path), current_dir)));
+    ui_->system_audio_midi_sf2_bank_edit->setText(QString::fromStdString(eka2l1::absolute_path(eka2l1::runtime_resource_path(configuration.sf2_bank_path), current_dir)));
     ui_->system_enable_hw_gles1_checkbox->setChecked(configuration.enable_hw_gles1);
     ui_->app_config_hide_system_apps_checkbox->setChecked(configuration.hide_system_apps);
     ui_->log_filter_edit->setText(QString::fromStdString(configuration.log_filter));
@@ -315,7 +315,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
         }
     }
     
-    QDir upscale_shader_dir("resources/upscale/");
+    QDir upscale_shader_dir(QString::fromStdString(eka2l1::runtime_resource_path("resources/upscale/")));
     upscale_shader_dir.setNameFilters({ "*.frag" });
 
     ui_->app_config_list_shaders_upscale->addItem(tr("Default"));
@@ -458,7 +458,7 @@ void settings_dialog::on_status_bar_visibility_change(bool toggled) {
 }
 
 void settings_dialog::on_data_path_browse_clicked() {
-    QString path = QFileDialog::getExistingDirectory(this, tr("Choose the data folder"), QString::fromStdString(configuration_.storage));
+    QString path = QFileDialog::getExistingDirectory(this, tr("Choose the data folder"), QString::fromStdString(configuration_.storage_path()));
     if (!path.isEmpty()) {
         if (QMessageBox::question(this, tr("Relaunch needed"), tr("This change requires relaunching the emulator.<br>Do you want to continue?")) == QMessageBox::Yes) {
             ui_->data_storage_path_edit->setText(path);
@@ -723,7 +723,7 @@ void settings_dialog::refresh_keybind_buttons() {
 void settings_dialog::refresh_keybind_profiles() {
     ui_->control_profile_combobox->clear();
 
-    auto ite = eka2l1::common::make_directory_iterator("bindings\\", "");
+    auto ite = eka2l1::common::make_directory_iterator(eka2l1::data_path("bindings\\"), "");
     if (!ite) {
         return;
     }
@@ -882,7 +882,7 @@ void settings_dialog::on_control_profile_add_clicked() {
         return;
     }
 
-    std::string path_to_file = eka2l1::add_path("bindings\\", fmt::format("{}.yml", result.toStdString()));
+    std::string path_to_file = eka2l1::data_path(eka2l1::add_path("bindings\\", fmt::format("{}.yml", result.toStdString())));
     if (eka2l1::common::exists(path_to_file)) {
         QMessageBox::critical(this, tr("Profile creation failed"), tr("A profile with that name already exists!"));
     } else {
@@ -906,11 +906,11 @@ void settings_dialog::on_control_profile_rename_clicked() {
         return;
     }
 
-    std::string path_to_file = eka2l1::add_path("bindings\\", fmt::format("{}.yml", result.toStdString()));
+    std::string path_to_file = eka2l1::data_path(eka2l1::add_path("bindings\\", fmt::format("{}.yml", result.toStdString())));
     if (eka2l1::common::exists(path_to_file)) {
         QMessageBox::critical(this, tr("Profile rename failed"), tr("A profile with that name already exists!"));
     } else {
-        eka2l1::common::move_file(eka2l1::add_path("bindings\\", fmt::format("{}.yml", configuration_.current_keybind_profile)), path_to_file);
+        eka2l1::common::move_file(eka2l1::data_path(eka2l1::add_path("bindings\\", fmt::format("{}.yml", configuration_.current_keybind_profile))), path_to_file);
 
         configuration_.current_keybind_profile = result.toStdString();
         configuration_.serialize();
@@ -925,7 +925,7 @@ void settings_dialog::on_control_profile_delete_clicked() {
     if (ui_->control_profile_combobox->count() <= 1) {
         QMessageBox::critical(this, tr("Profile deletion failed"), tr("This is the only profile left!"));
     } else {
-        std::string path_to_file = eka2l1::add_path("bindings\\", fmt::format("{}.yml", configuration_.current_keybind_profile));
+        std::string path_to_file = eka2l1::data_path(eka2l1::add_path("bindings\\", fmt::format("{}.yml", configuration_.current_keybind_profile)));
         eka2l1::common::remove(path_to_file);
 
         ui_->control_profile_combobox->removeItem(ui_->control_profile_combobox->currentIndex());

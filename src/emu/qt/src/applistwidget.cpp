@@ -546,7 +546,7 @@ bool applist_widget::launch_from_widget_item(applist_widget_item *item, std::fun
 
 void applist_widget::add_registeration_item_j2me(const eka2l1::j2me::app_entry &entry) {
     QIcon display_icon;
-    QString icon_path_relocalized = QString::fromStdString(eka2l1::add_path(conf_.storage, entry.icon_path_));
+    QString icon_path_relocalized = QString::fromStdString(eka2l1::add_path(conf_.storage_path(), entry.icon_path_));
 
     if (entry.icon_path_.empty() || !QDir().exists(icon_path_relocalized)) {
         display_icon = QIcon(":/assets/duck_tank.png");
@@ -576,11 +576,11 @@ void applist_widget::add_registeration_item_native(eka2l1::apa_app_registry &reg
 
     if (path_ext == u".mif") {
         eka2l1::symfile file_route = io_->open_file(reg.icon_file_path, READ_MODE | BIN_MODE);
-        eka2l1::common::create_directories("cache");
+        eka2l1::common::create_directories(eka2l1::data_path("cache"));
 
         if (file_route) {
             const std::uint64_t mif_last_modified = file_route->last_modify_since_0ad();
-            const std::string cached_path = fmt::format("cache/debinarized_{}.svg", eka2l1::common::pystr(app_name.toStdString()).strip_reserverd().strip().std_str());
+            const std::string cached_path = eka2l1::data_path(fmt::format("cache/debinarized_{}.svg", eka2l1::common::pystr(app_name.toStdString()).strip_reserverd().strip().std_str()));
 
             std::unique_ptr<QSvgRenderer> renderer = nullptr;
 
