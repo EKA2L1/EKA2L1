@@ -394,7 +394,7 @@ namespace eka2l1::dispatch {
         virtual void flush_to_driver(egl_controller &controller, drivers::graphics_driver *driver, const bool is_frame_swap_flush = false) override;
         virtual void destroy(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) override;
         virtual bool prepare_for_draw(drivers::graphics_driver *driver, egl_controller &controller, kernel::process *crr_process,
-            const std::int32_t first_index, const std::uint32_t vcount) = 0;
+            const std::int32_t first_index, const std::uint32_t vcount, const drivers::graphics_primitive_mode primitive_mode) = 0;
         virtual bool prepare_for_clear(drivers::graphics_driver *driver, egl_controller &controller);
         virtual bool enable(const std::uint32_t feature);
         virtual bool disable(const std::uint32_t feature);

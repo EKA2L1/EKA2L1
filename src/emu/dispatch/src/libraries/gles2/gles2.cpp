@@ -1213,7 +1213,7 @@ APPLY_PENDING_ROUTES:
     }
 
     bool egl_context_es2::prepare_for_draw(drivers::graphics_driver *driver, egl_controller &controller, kernel::process *crr_process,
-        const std::int32_t first_index, const std::uint32_t vcount) {
+        const std::int32_t first_index, const std::uint32_t vcount, const drivers::graphics_primitive_mode ) {
         if (!using_program_) {
             // What are you going to see?
             controller.push_error(this, GL_INVALID_OPERATION);

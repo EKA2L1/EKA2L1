@@ -10,7 +10,10 @@ namespace eka2l1::dispatch {
         GLES1_EMU_MAX_LIGHT = 8,
         GLES1_EMU_MAX_CLIP_PLANE = 6,
         GLES1_EMU_MAX_WEIGHTS_PER_VERTEX = 4,
-        GLES1_EMU_MAX_PALETTE_MATRICES = 16
+        GLES1_EMU_MAX_PALETTE_MATRICES = 16,
+        GLES1_EMU_MATRIX_INDEX_ATTRIBUTE = 3 + GLES1_EMU_MAX_TEXTURE_COUNT,
+        GLES1_EMU_WEIGHT_ATTRIBUTE = GLES1_EMU_MATRIX_INDEX_ATTRIBUTE + 1,
+        GLES1_EMU_POINT_SIZE_ATTRIBUTE = GLES1_EMU_WEIGHT_ATTRIBUTE + GLES1_EMU_MAX_WEIGHTS_PER_VERTEX
     };
 
     static constexpr const char *GLES1_STATIC_STRING_VENDOR = "IMAGINATION TECHNOLOGIES EKA2L1";
@@ -25,7 +28,9 @@ namespace eka2l1::dispatch {
         "GL_EXT_texture_format_BGRA8888 "
         "GL_OES_vertex_buffer_object "
         "GL_EXT_texture_lod_bias "
-        "GL_OES_matrix_palette ";
+        "GL_OES_matrix_palette "
+        "GL_OES_point_sprite "
+        "GL_OES_point_size_array ";
         /**
          * "GL_OES_framebuffer_object "
          * "GL_EXT_texture_compression_s3tc "

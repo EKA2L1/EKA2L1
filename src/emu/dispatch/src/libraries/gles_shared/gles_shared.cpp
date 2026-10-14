@@ -3044,14 +3044,6 @@ namespace eka2l1::dispatch {
         *param = static_cast<gl_fixed>(value_real);
     }
     
-    BRIDGE_FUNC_LIBRARY(void, gl_point_size_emu, float size) {
-        // Empty
-    }
-
-    BRIDGE_FUNC_LIBRARY(void, gl_point_sizex_emu, gl_fixed size) {
-        // Empty
-    }
-    
     BRIDGE_FUNC_LIBRARY(void, gl_point_parameter_f_emu, std::uint32_t pname, float param) {
         // Empty
     }
@@ -3081,7 +3073,7 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        if (!ctx->prepare_for_draw(drv, controller, sys->get_kernel_system()->crr_process(), first_index, count)) {
+        if (!ctx->prepare_for_draw(drv, controller, sys->get_kernel_system()->crr_process(), first_index, count, prim_mode_drv)) {
             LOG_ERROR(HLE_DISPATCHER, "Error while preparing GLES draw. This should not happen!");
             return;
         }
@@ -3214,7 +3206,7 @@ namespace eka2l1::dispatch {
             ctx->cmd_builder_.set_index_buffer(binded_elem_buffer_managed->handle_value());
         }
 
-        if (!ctx->prepare_for_draw(drv, controller, sys->get_kernel_system()->crr_process(), min_vert_index, total_vert)) {
+        if (!ctx->prepare_for_draw(drv, controller, sys->get_kernel_system()->crr_process(), min_vert_index, total_vert, prim_mode_drv)) {
             LOG_ERROR(HLE_DISPATCHER, "Error while preparing GLES draw. This should not happen!");
             return;
         }

@@ -105,6 +105,11 @@ namespace eka2l1::drivers {
         context_->set_swap_interval(1);
 
         is_gles = (context_->gl_mode() == graphics::gl_context::mode::opengl_es);
+#ifdef GL_PROGRAM_POINT_SIZE
+        if (!is_gles) {
+            glEnable(GL_PROGRAM_POINT_SIZE);
+        }
+#endif
 
         {
             GLint max_tex = 0;
