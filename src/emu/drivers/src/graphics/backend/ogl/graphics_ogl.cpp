@@ -105,6 +105,14 @@ namespace eka2l1::drivers {
         context_->set_swap_interval(1);
 
         is_gles = (context_->gl_mode() == graphics::gl_context::mode::opengl_es);
+#ifdef GL_POINT_SIZE_RANGE
+        if (!is_gles) {
+            glGetFloatv(GL_POINT_SIZE_RANGE, point_size_range_);
+        } else
+#endif
+        {
+            glGetFloatv(GL_ALIASED_POINT_SIZE_RANGE, point_size_range_);
+        }
 #ifdef GL_PROGRAM_POINT_SIZE
         if (!is_gles) {
             glEnable(GL_PROGRAM_POINT_SIZE);
@@ -250,6 +258,10 @@ namespace eka2l1::drivers {
         }
 
         switch (query) {
+        case graphics_driver_extension_query_point_size_range:
+            std::copy(point_size_range_, point_size_range_ + 2, reinterpret_cast<float*>(data_ptr));
+            break;
+
         case graphics_driver_extension_query_max_texture_max_anisotrophy:
             if ((feature_flags_ & OGL_FEATURE_SUPPORT_ANISOTROPHY) == 0) {
                 return false;

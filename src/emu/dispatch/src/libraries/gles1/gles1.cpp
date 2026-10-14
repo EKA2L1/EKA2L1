@@ -873,22 +873,54 @@ namespace eka2l1::dispatch {
     }
 
     bool egl_context_es1::get_data(drivers::graphics_driver *drv, const std::uint32_t feature, void *data, gles_get_data_type data_type) {
-        if (feature == GL_POINT_SIZE_EMU) {
-            switch (data_type) {
-            case GLES_GET_DATA_TYPE_BOOLEAN:
-                *reinterpret_cast<std::int32_t*>(data) = point_size_ != 0.0f;
-                break;
-            case GLES_GET_DATA_TYPE_INTEGER:
-                *reinterpret_cast<std::int32_t*>(data) = saturated_gl_integer(std::round(static_cast<double>(point_size_)));
-                break;
-            case GLES_GET_DATA_TYPE_FIXED:
-                *reinterpret_cast<gl_fixed*>(data) = saturated_gl_integer(static_cast<double>(point_size_) * 65536.0);
-                break;
-            case GLES_GET_DATA_TYPE_FLOAT:
-                *reinterpret_cast<float*>(data) = point_size_;
-                break;
-            default:
-                return false;
+        float values[3];
+        std::uint32_t count = 1;
+        switch (feature) {
+        case GL_POINT_SIZE_EMU:
+            values[0] = point_size_;
+            break;
+        case GL_POINT_SIZE_MIN_EMU:
+            values[0] = point_size_min_;
+            break;
+        case GL_POINT_SIZE_MAX_EMU:
+            values[0] = point_size_max(drv);
+            break;
+        case GL_POINT_FADE_THRESHOLD_SIZE_EMU:
+            values[0] = point_fade_threshold_size_;
+            break;
+        case GL_POINT_DISTANCE_ATTENUATION_EMU:
+            std::copy(point_distance_attenuation_, point_distance_attenuation_ + 3, values);
+            count = 3;
+            break;
+        case GL_ALIASED_POINT_SIZE_RANGE_EMU:
+            values[0] = values[1] = 1.0f;
+            if (drv) {
+                drv->query_extension_value(drivers::graphics_driver_extension_query_point_size_range, values);
+            }
+            count = 2;
+            break;
+        default:
+            count = 0;
+            break;
+        }
+        if (count) {
+            for (std::uint32_t i = 0; i < count; ++i) {
+                switch (data_type) {
+                case GLES_GET_DATA_TYPE_BOOLEAN:
+                    reinterpret_cast<std::int32_t*>(data)[i] = values[i] != 0.0f;
+                    break;
+                case GLES_GET_DATA_TYPE_INTEGER:
+                    reinterpret_cast<std::int32_t*>(data)[i] = saturated_gl_integer(std::round(static_cast<double>(values[i])));
+                    break;
+                case GLES_GET_DATA_TYPE_FIXED:
+                    reinterpret_cast<gl_fixed*>(data)[i] = saturated_gl_integer(static_cast<double>(values[i]) * 65536.0);
+                    break;
+                case GLES_GET_DATA_TYPE_FLOAT:
+                    reinterpret_cast<float*>(data)[i] = values[i];
+                    break;
+                default:
+                    return false;
+                }
             }
             return true;
         }
@@ -1605,6 +1637,77 @@ namespace eka2l1::dispatch {
         }
 
         ctx->attrib_changed_ = true;
+    }
+
+    float egl_context_es1::point_size_max(drivers::graphics_driver *driver) const {
+        if (point_size_max_) {
+            return *point_size_max_;
+        }
+        float range[2] = { 1.0f, 1.0f };
+        if (driver) {
+            driver->query_extension_value(drivers::graphics_driver_extension_query_point_size_range, range);
+        }
+        return range[1];
+    }
+
+    std::uint32_t egl_context_es1::set_point_parameter(const std::uint32_t pname, const float *params) {
+        if (pname == GL_POINT_DISTANCE_ATTENUATION_EMU) {
+            std::copy(params, params + 3, point_distance_attenuation_);
+            return 0;
+        }
+        if (pname != GL_POINT_SIZE_MIN_EMU && pname != GL_POINT_SIZE_MAX_EMU && pname != GL_POINT_FADE_THRESHOLD_SIZE_EMU) {
+            return GL_INVALID_ENUM;
+        }
+        if (*params < 0.0f) {
+            return GL_INVALID_VALUE;
+        }
+        switch (pname) {
+        case GL_POINT_SIZE_MIN_EMU:
+            point_size_min_ = *params;
+            break;
+        case GL_POINT_SIZE_MAX_EMU:
+            point_size_max_ = *params;
+            break;
+        case GL_POINT_FADE_THRESHOLD_SIZE_EMU:
+            point_fade_threshold_size_ = *params;
+            break;
+        }
+        return 0;
+    }
+
+    BRIDGE_FUNC_LIBRARY(void, gl_point_parameter_fv_emu, std::uint32_t pname, const float *params) {
+        egl_context_es1 *ctx = get_es1_active_context(sys);
+        if (!ctx) {
+            return;
+        }
+        const auto error = ctx->set_point_parameter(pname, params);
+        if (error) {
+            sys->get_dispatcher()->get_egl_controller().push_error(ctx, error);
+        }
+    }
+
+    BRIDGE_FUNC_LIBRARY(void, gl_point_parameter_f_emu, std::uint32_t pname, float param) {
+        if (pname == GL_POINT_DISTANCE_ATTENUATION_EMU) {
+            egl_context_es1 *ctx = get_es1_active_context(sys);
+            if (ctx) {
+                sys->get_dispatcher()->get_egl_controller().push_error(ctx, GL_INVALID_ENUM);
+            }
+            return;
+        }
+        gl_point_parameter_fv_emu(sys, pname, &param);
+    }
+
+    BRIDGE_FUNC_LIBRARY(void, gl_point_parameter_x_emu, std::uint32_t pname, gl_fixed param) {
+        gl_point_parameter_f_emu(sys, pname, FIXED_32_TO_FLOAT(param));
+    }
+
+    BRIDGE_FUNC_LIBRARY(void, gl_point_parameter_xv_emu, std::uint32_t pname, const gl_fixed *params) {
+        float converted[3] = { FIXED_32_TO_FLOAT(params[0]), 0.0f, 0.0f };
+        if (pname == GL_POINT_DISTANCE_ATTENUATION_EMU) {
+            converted[1] = FIXED_32_TO_FLOAT(params[1]);
+            converted[2] = FIXED_32_TO_FLOAT(params[2]);
+        }
+        gl_point_parameter_fv_emu(sys, pname, converted);
     }
 
     BRIDGE_FUNC_LIBRARY(void, gl_point_size_emu, float size) {
@@ -2829,7 +2932,7 @@ namespace eka2l1::dispatch {
         ctx->clip_planes_transformed_[plane - GL_CLIP_PLANE0_EMU][3] = transformed.w;
     }
 
-    bool egl_context_es1::prepare_shader_program_for_draw(dispatch::egl_controller &controller, const std::uint32_t active_texs) {
+    bool egl_context_es1::prepare_shader_program_for_draw(drivers::graphics_driver *drv, dispatch::egl_controller &controller, const std::uint32_t active_texs) {
         dispatch::gles_texture_env_info info_arr[GLES1_EMU_MAX_TEXTURE_COUNT];
         for (std::int32_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
             info_arr[i] = texture_units_[i].env_info_;
@@ -2877,11 +2980,16 @@ namespace eka2l1::dispatch {
 
             if (drawing_points) {
                 float point_scale = draw_surface_->current_scale_;
+                float point_size_factor = 1.0f;
                 if ((vertex_statuses_ & VERTEX_STATE_CLIENT_POINT_SIZE_ARRAY) && (point_size_attrib_.data_type_ == GL_FIXED_EMU)) {
-                    point_scale /= 65536.0f;
+                    point_size_factor /= 65536.0f;
                 }
                 cmd_builder_.set_dynamic_uniform(var_info->point_size_loc_, drivers::shader_var_type::real, &point_size_, sizeof(float));
                 cmd_builder_.set_dynamic_uniform(var_info->point_scale_loc_, drivers::shader_var_type::real, &point_scale, sizeof(float));
+                const float point_range[2] = { point_size_min_, point_size_max(drv) };
+                cmd_builder_.set_dynamic_uniform(var_info->point_size_factor_loc_, drivers::shader_var_type::real, &point_size_factor, sizeof(float));
+                cmd_builder_.set_dynamic_uniform(var_info->point_attenuation_loc_, drivers::shader_var_type::vec3, point_distance_attenuation_, sizeof(point_distance_attenuation_));
+                cmd_builder_.set_dynamic_uniform(var_info->point_range_loc_, drivers::shader_var_type::vec2, point_range, sizeof(point_range));
             }
 
             if ((vertex_statuses_ & egl_context_es1::VERTEX_STATE_CLIENT_COLOR_ARRAY) == 0) {
@@ -3201,7 +3309,7 @@ namespace eka2l1::dispatch {
         }
 
         active_textures_bitarr = retrieve_active_textures_bitarr_for_shader(this);
-        if (!prepare_shader_program_for_draw(controller, active_textures_bitarr)) {
+        if (!prepare_shader_program_for_draw(drv, controller, active_textures_bitarr)) {
             return false;
         }
 

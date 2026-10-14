@@ -86,6 +86,10 @@ namespace eka2l1::dispatch {
     BRIDGE_FUNC_LIBRARY(void, gl_light_model_x_emu, std::uint32_t pname, gl_fixed param);
     BRIDGE_FUNC_LIBRARY(void, gl_light_model_fv_emu, std::uint32_t pname, float *param);
     BRIDGE_FUNC_LIBRARY(void, gl_light_model_xv_emu, std::uint32_t pname, gl_fixed *param);
+    BRIDGE_FUNC_LIBRARY(void, gl_point_parameter_f_emu, std::uint32_t pname, float param);
+    BRIDGE_FUNC_LIBRARY(void, gl_point_parameter_fv_emu, std::uint32_t pname, const float *params);
+    BRIDGE_FUNC_LIBRARY(void, gl_point_parameter_x_emu, std::uint32_t pname, gl_fixed param);
+    BRIDGE_FUNC_LIBRARY(void, gl_point_parameter_xv_emu, std::uint32_t pname, const gl_fixed *params);
     BRIDGE_FUNC_LIBRARY(void, gl_hint_emu);
     BRIDGE_FUNC_LIBRARY(void, gl_load_palette_from_model_view_matrix_oes_emu);
     BRIDGE_FUNC_LIBRARY(void, gl_current_palette_matrix_oes_emu, std::uint32_t index);

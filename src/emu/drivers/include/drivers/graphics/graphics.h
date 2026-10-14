@@ -115,7 +115,8 @@ namespace eka2l1::drivers {
     };
 
     enum graphics_driver_extension_query {
-        graphics_driver_extension_query_max_texture_max_anisotrophy
+        graphics_driver_extension_query_max_texture_max_anisotrophy,
+        graphics_driver_extension_query_point_size_range
     };
 
     using display_hook = std::function<void()>;
