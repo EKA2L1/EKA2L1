@@ -62,23 +62,15 @@ namespace eka2l1::dispatch {
         }
     }
     
-    drivers::handle gles1_shaderman::retrieve_program(const std::uint64_t vertex_statuses, const std::uint64_t fragment_statuses,
-        const std::uint32_t active_texs, gles_texture_env_info *tex_env_infos, gles1_shader_variables_info *&info) {
-        // Turn off states that are not used (for hashing)
-        std::uint64_t cleansed_fragment_statuses = fragment_statuses;
-        if ((fragment_statuses & egl_context_es1::FRAGMENT_STATE_ALPHA_TEST) == 0) {
-            cleansed_fragment_statuses &= ~egl_context_es1::FRAGMENT_STATE_ALPHA_FUNC_MASK;
-        }
-
-        if ((fragment_statuses & egl_context_es1::FRAGMENT_STATE_FOG_ENABLE) == 0) {
-            cleansed_fragment_statuses &= ~egl_context_es1::FRAGMENT_STATE_FOG_MODE_MASK;
-        }
-
-        drivers::handle vert_module = 0;
+    std::uint64_t gles1_vertex_shader_key(const std::uint64_t vertex_statuses, const std::uint32_t active_texs) {
         std::uint64_t vertex_hash = vertex_statuses | (static_cast<std::uint64_t>(active_texs) << egl_context_es1::VERTEX_STATE_REVERSED_BITS_POS);
         
         // These are only used for state tracking really!
         vertex_hash &= ~(egl_context_es1::VERTEX_STATE_CLIENT_WEIGHT_ARRAY | egl_context_es1::VERTEX_STATE_CLIENT_MATRIX_INDEX_ARRAY);
+
+        if ((vertex_hash & egl_context_es1::VERTEX_STATE_DRAW_POINTS) == 0) {
+            vertex_hash &= ~egl_context_es1::VERTEX_STATE_CLIENT_POINT_SIZE_ARRAY;
+        }
 
         if ((vertex_hash & egl_context_es1::VERTEX_STATE_SKINNING_ENABLE) == 0) {
             vertex_hash &= ~egl_context_es1::VERTEX_STATE_SKIN_WEIGHTS_PER_VERTEX_MASK;
@@ -96,6 +88,24 @@ namespace eka2l1::dispatch {
                 }
             }
         }
+
+        return vertex_hash;
+    }
+
+    drivers::handle gles1_shaderman::retrieve_program(const std::uint64_t vertex_statuses, const std::uint64_t fragment_statuses,
+        const std::uint32_t active_texs, gles_texture_env_info *tex_env_infos, gles1_shader_variables_info *&info) {
+        // Turn off states that are not used (for hashing)
+        std::uint64_t cleansed_fragment_statuses = fragment_statuses;
+        if ((fragment_statuses & egl_context_es1::FRAGMENT_STATE_ALPHA_TEST) == 0) {
+            cleansed_fragment_statuses &= ~egl_context_es1::FRAGMENT_STATE_ALPHA_FUNC_MASK;
+        }
+
+        if ((fragment_statuses & egl_context_es1::FRAGMENT_STATE_FOG_ENABLE) == 0) {
+            cleansed_fragment_statuses &= ~egl_context_es1::FRAGMENT_STATE_FOG_MODE_MASK;
+        }
+
+        drivers::handle vert_module = 0;
+        const std::uint64_t vertex_hash = gles1_vertex_shader_key(vertex_statuses, active_texs);
 
         auto vert_cache_ite = vertex_cache_.find(vertex_hash);
         if (vert_cache_ite == vertex_cache_.end()) {
@@ -201,6 +211,8 @@ namespace eka2l1::dispatch {
                 info_inst->palette_mat_loc_ = metadata.get_uniform_binding("uPaletteMat");
             }
 
+            info_inst->point_size_loc_ = metadata.get_uniform_binding("uPointSize");
+            info_inst->point_scale_loc_ = metadata.get_uniform_binding("uPointScale");
             info_inst->proj_mat_loc_ = metadata.get_uniform_binding("uProjMat");
 
             if ((vertex_statuses & egl_context_es1::VERTEX_STATE_CLIENT_COLOR_ARRAY) == 0)

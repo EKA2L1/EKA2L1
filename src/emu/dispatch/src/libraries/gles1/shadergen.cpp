@@ -94,8 +94,8 @@ namespace eka2l1::dispatch {
 
         main_body += "void main() {\n";
         if (skinning) {
-            input_decl += fmt::format("layout (location = {}) in uint uMatrixIndices[{}];\n", static_cast<int>(3 + GLES1_EMU_MAX_TEXTURE_COUNT), static_cast<int>(GLES1_EMU_MAX_WEIGHTS_PER_VERTEX));
-            input_decl += fmt::format("layout (location = {}) in float uWeights[{}];\n", static_cast<int>(4 + GLES1_EMU_MAX_TEXTURE_COUNT), static_cast<int>(GLES1_EMU_MAX_WEIGHTS_PER_VERTEX));
+            input_decl += fmt::format("layout (location = {}) in uint uMatrixIndices[{}];\n", static_cast<int>(GLES1_EMU_MATRIX_INDEX_ATTRIBUTE), static_cast<int>(GLES1_EMU_MAX_WEIGHTS_PER_VERTEX));
+            input_decl += fmt::format("layout (location = {}) in float uWeights[{}];\n", static_cast<int>(GLES1_EMU_WEIGHT_ATTRIBUTE), static_cast<int>(GLES1_EMU_MAX_WEIGHTS_PER_VERTEX));
 
             std::uint32_t weights_per_vertex_count = (vertex_statuses & egl_context_es1::VERTEX_STATE_SKIN_WEIGHTS_PER_VERTEX_MASK) 
                 >> egl_context_es1::VERTEX_STATE_SKIN_WEIGHTS_PER_VERTEX_BITS_POS;
@@ -112,6 +112,17 @@ namespace eka2l1::dispatch {
 
         main_body += "\tgl_Position = uProjMat * uViewModelMat * inPosition;\n"
                      "\tmMyPos = uViewModelMat * inPosition;\n";
+
+        if (vertex_statuses & egl_context_es1::VERTEX_STATE_DRAW_POINTS) {
+            uni_decl += "uniform float uPointScale;\n";
+            if (vertex_statuses & egl_context_es1::VERTEX_STATE_CLIENT_POINT_SIZE_ARRAY) {
+                input_decl += fmt::format("layout (location = {}) in float inPointSize;\n", static_cast<int>(GLES1_EMU_POINT_SIZE_ATTRIBUTE));
+                main_body += "\tgl_PointSize = inPointSize * uPointScale;\n";
+            } else {
+                uni_decl += "uniform float uPointSize;\n";
+                main_body += "\tgl_PointSize = uPointSize * uPointScale;\n";
+            }
+        }
 
         if (vertex_statuses & egl_context_es1::VERTEX_STATE_CLIENT_COLOR_ARRAY) {
             input_decl += "layout (location = 1) in vec4 inColor;\n";
@@ -402,12 +413,29 @@ namespace eka2l1::dispatch {
 
         if (active_texs != 0) {
             for (std::size_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
+                if ((active_texs & (0b11 << (i * 2))) == 0) {
+                    continue;
+                }
+                uni_decl += fmt::format("uniform sampler2D uTexture{};\n", i);
+                uni_decl += fmt::format("uniform vec4 uTextureEnvColor{};\n", i);
+                std::string coord;
+                if (fragment_statuses & (1ULL << (egl_context_es1::FRAGMENT_STATE_POINT_COORD_REPLACE_POS + i))) {
+                    // OES point coordinates run top to bottom and bypass the texture matrix.
+                    coord = "gl_PointCoord";
+                } else {
+                    input_decl += fmt::format("in vec4 mTexCoord{};\n", i);
+                    coord = fmt::format("mTexCoord{}.xy", i);
+                    if (fragment_statuses & egl_context_es1::FRAGMENT_STATE_POINT_SPRITE) {
+                        coord += fmt::format(" / mTexCoord{}.w", i);
+                    }
+                }
+                // Crossbar combiners may reference a texture unit processed later.
+                main_body += fmt::format("\tvec4 pixelTex{} = texture(uTexture{}, {});\n", i, i, coord);
+            }
+
+            for (std::size_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
                 if (active_texs & (0b11 << (i * 2))) {
                     std::uint32_t mode_texture = (active_texs >> (i * 2)) & 0b11;
-
-                    uni_decl += fmt::format("uniform sampler2D uTexture{};\n", i);
-                    uni_decl += fmt::format("uniform vec4 uTextureEnvColor{};\n", i);
-                    input_decl += fmt::format("in vec4 mTexCoord{};\n", i);
 
                     std::string swizz_postfix = "";
                     if (mode_texture == 0b10) {
@@ -419,11 +447,10 @@ namespace eka2l1::dispatch {
                     if (tex_env_infos[i].env_mode_ != gles_texture_env_info::ENV_MODE_COMBINE) {
                         switch (tex_env_infos[i].env_mode_) {
                         case gles_texture_env_info::ENV_MODE_REPLACE:
-                            main_body += fmt::format("\toColor{} = texture(uTexture{}, mTexCoord{}.xy){};\n", swizz_postfix, i, i, swizz_postfix);
+                            main_body += fmt::format("\toColor{} = pixelTex{}{};\n", swizz_postfix, i, swizz_postfix);
                             break;
 
                         case gles_texture_env_info::ENV_MODE_ADD:
-                            main_body += fmt::format("\tvec4 pixelTex{} = texture(uTexture{}, mTexCoord{}.xy);\n", i, i, i);
                             if (mode_texture != 0b10)
                                 main_body += fmt::format("\toColor.rgb += pixelTex{}.rgb;\n", i);
 
@@ -433,11 +460,10 @@ namespace eka2l1::dispatch {
                             break;
 
                         case gles_texture_env_info::ENV_MODE_MODULATE:
-                            main_body += fmt::format("\toColor{} *= texture(uTexture{}, mTexCoord{}.xy){};\n", swizz_postfix, i, i, swizz_postfix);
+                            main_body += fmt::format("\toColor{} *= pixelTex{}{};\n", swizz_postfix, i, swizz_postfix);
                             break;
 
                         case gles_texture_env_info::ENV_MODE_BLEND:
-                            main_body += fmt::format("\tvec4 pixelTex{} = texture(uTexture{}, mTexCoord{}.xy);\n", i, i, i);
                             if (mode_texture != 0b10)
                                 main_body += fmt::format("\toColor.rgb = oColor.rgb * (vec3(1.0) - pixelTex{}.rgb) + uTextureEnvColor{}.rgb * pixelTex{}.rgb;\n", i, i, i);
                             if (mode_texture != 0b11)
@@ -445,7 +471,6 @@ namespace eka2l1::dispatch {
                             break;
 
                         case gles_texture_env_info::ENV_MODE_DECAL:
-                            main_body += fmt::format("\tvec4 pixelTex{} = texture(uTexture{}, mTexCoord{}.xy);\n", i, i, i);
                             
                             if (mode_texture != 0b10)
                                 main_body += fmt::format("\toColor.rgb = oColor.rgb * (vec3(1.0) - pixelTex{}.a) + pixelTex{}.rgb * pixelTex{}.a;\n", i, i, i);
@@ -457,9 +482,6 @@ namespace eka2l1::dispatch {
                             break;
                         }
                     } else {
-                        // Get the pixel sample first...
-                        main_body += fmt::format("\tvec4 pixelTex{} = texture(uTexture{}, mTexCoord{}.xy);\n", i, i, i);
-
                         main_body += generate_tex_env_combine_statement(generate_tex_env_source(i, tex_env_infos[i].src0_rgb_, tex_env_infos[i].src0_rgb_op_, true),
                             generate_tex_env_source(i, tex_env_infos[i].src1_rgb_, tex_env_infos[i].src1_rgb_op_, true),
                             generate_tex_env_source(i, tex_env_infos[i].src2_rgb_, tex_env_infos[i].src2_rgb_op_, true),

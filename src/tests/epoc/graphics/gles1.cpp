@@ -1,0 +1,287 @@
+/*
+ * Copyright (c) 2026 EKA2L1 Team.
+ *
+ * This file is part of EKA2L1 project.
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ */
+
+#include <catch2/catch.hpp>
+#include <limits>
+#include <dispatch/libraries/gles1/def.h>
+#include <dispatch/libraries/gles1/shaderman.h>
+
+using namespace eka2l1::dispatch;
+
+namespace {
+    struct point_buffer_context : egl_context_es1 {
+        ~point_buffer_context() {
+            // Synthetic contexts bypass the controller's object teardown.
+            objects_.clear();
+        }
+    };
+}
+
+// Initial state and query types follow OES_point_size_array and OES_point_sprite.
+TEST_CASE("GLES1 point extensions start disabled with a float size array", "[gles1]") {
+    egl_context_es1 context;
+    bool enabled = true;
+    REQUIRE(context.is_enabled(GL_POINT_SPRITE_OES, enabled));
+    REQUIRE_FALSE(enabled);
+    REQUIRE(context.is_enabled(GL_POINT_SIZE_ARRAY_OES, enabled));
+    REQUIRE_FALSE(enabled);
+
+    for (const auto query : { GL_POINT_SIZE_ARRAY_TYPE_OES, GL_POINT_SIZE_ARRAY_STRIDE_OES,
+             GL_POINT_SIZE_ARRAY_BUFFER_BINDING_OES }) {
+        std::int32_t result = -1;
+        REQUIRE(context.get_data(nullptr, query, &result, GLES_GET_DATA_TYPE_INTEGER));
+        REQUIRE(result == (query == GL_POINT_SIZE_ARRAY_TYPE_OES ? GL_FLOAT_EMU : 0));
+    }
+    REQUIRE(context.point_size_attrib_.offset_ == 0);
+    for (const auto &unit : context.texture_units_) {
+        REQUIRE_FALSE(unit.point_coord_replace_);
+    }
+
+    for (std::uint32_t unit = 0; unit < GLES1_EMU_MAX_TEXTURE_COUNT; ++unit) {
+        context.active_texture_unit_ = unit;
+        float coords[4]{};
+        REQUIRE(context.get_data(nullptr, GL_CURRENT_TEXTURE_COORDS_EMU, coords, GLES_GET_DATA_TYPE_FLOAT));
+        REQUIRE(coords[0] == 0.0f);
+        REQUIRE(coords[1] == 0.0f);
+        REQUIRE(coords[2] == 0.0f);
+        REQUIRE(coords[3] == 1.0f);
+    }
+
+    REQUIRE(context.enable(GL_POINT_SPRITE_OES));
+    REQUIRE(context.is_enabled(GL_POINT_SPRITE_OES, enabled));
+    REQUIRE(enabled);
+    REQUIRE(context.disable(GL_POINT_SPRITE_OES));
+    REQUIRE(context.is_enabled(GL_POINT_SPRITE_OES, enabled));
+    REQUIRE_FALSE(enabled);
+}
+
+TEST_CASE("GLES1 point size queries preserve pixel units and fixed point precision", "[gles1]") {
+    egl_context_es1 context;
+    float floating = 0.0f;
+    std::int32_t fixed = 0;
+    std::int32_t integer = 0;
+    REQUIRE(context.get_data(nullptr, GL_POINT_SIZE_EMU, &floating, GLES_GET_DATA_TYPE_FLOAT));
+    REQUIRE(floating == 1.0f);
+    context.point_size_ = 2.5f;
+    REQUIRE(context.get_data(nullptr, GL_POINT_SIZE_EMU, &floating, GLES_GET_DATA_TYPE_FLOAT));
+    REQUIRE(floating == 2.5f);
+    REQUIRE(context.get_data(nullptr, GL_POINT_SIZE_EMU, &fixed, GLES_GET_DATA_TYPE_FIXED));
+    REQUIRE(fixed == 163840);
+    REQUIRE(context.get_data(nullptr, GL_POINT_SIZE_EMU, &integer, GLES_GET_DATA_TYPE_INTEGER));
+    REQUIRE(integer == 3);
+    REQUIRE(context.get_data(nullptr, GL_POINT_SIZE_EMU, &integer, GLES_GET_DATA_TYPE_BOOLEAN));
+    REQUIRE(integer == 1);
+    context.point_size_ = 7.0f;
+    REQUIRE(context.get_data(nullptr, GL_POINT_SIZE_EMU, &integer, GLES_GET_DATA_TYPE_INTEGER));
+    REQUIRE(integer == 7);
+}
+
+TEST_CASE("GLES1 shader keys distinguish texture units across point and triangle draws", "[gles1]") {
+    for (const std::uint64_t state : { std::uint64_t(0),
+             std::uint64_t(egl_context_es1::VERTEX_STATE_DRAW_POINTS),
+             std::uint64_t(egl_context_es1::VERTEX_STATE_DRAW_POINTS | egl_context_es1::VERTEX_STATE_CLIENT_POINT_SIZE_ARRAY) }) {
+        const auto no_texture = gles1_vertex_shader_key(state, 0);
+        const auto first_texture = gles1_vertex_shader_key(state, 1);
+        const auto two_textures = gles1_vertex_shader_key(state, 5);
+        REQUIRE(no_texture != first_texture);
+        REQUIRE(first_texture != two_textures);
+        REQUIRE(two_textures != no_texture);
+    }
+    REQUIRE(gles1_vertex_shader_key(0, 1) == gles1_vertex_shader_key(egl_context_es1::VERTEX_STATE_CLIENT_POINT_SIZE_ARRAY, 1));
+    REQUIRE(gles1_vertex_shader_key(0, 1) != gles1_vertex_shader_key(egl_context_es1::VERTEX_STATE_DRAW_POINTS, 1));
+    REQUIRE(gles1_vertex_shader_key(egl_context_es1::VERTEX_STATE_DRAW_POINTS, 1)
+        != gles1_vertex_shader_key(egl_context_es1::VERTEX_STATE_DRAW_POINTS | egl_context_es1::VERTEX_STATE_CLIENT_POINT_SIZE_ARRAY, 1));
+}
+
+TEST_CASE("GLES1 sprite coordinate replacement is queried per texture unit", "[gles1]") {
+    egl_context_es1 context;
+    context.active_texture_unit_ = 1;
+    context.active_client_texture_unit_ = 2;
+    REQUIRE(context.texture_units_[1].set_point_coord_replace(1.0) == 0);
+    for (std::size_t unit = 0; unit < GLES1_EMU_MAX_TEXTURE_COUNT; ++unit) {
+        std::int32_t result = -1;
+        REQUIRE(context.texture_units_[unit].get_env(GL_POINT_SPRITE_OES, GL_COORD_REPLACE_OES,
+            &result, GLES_GET_DATA_TYPE_INTEGER) == 0);
+        REQUIRE(result == (unit == 1));
+        float floating = -1.0f;
+        REQUIRE(context.texture_units_[unit].get_env(GL_POINT_SPRITE_OES, GL_COORD_REPLACE_OES,
+            &floating, GLES_GET_DATA_TYPE_FLOAT) == 0);
+        REQUIRE(floating == (unit == 1 ? 1.0f : 0.0f));
+        gl_fixed fixed = -1;
+        REQUIRE(context.texture_units_[unit].get_env(GL_POINT_SPRITE_OES, GL_COORD_REPLACE_OES,
+            &fixed, GLES_GET_DATA_TYPE_FIXED) == 0);
+        REQUIRE(fixed == (unit == 1));
+    }
+    std::int32_t unchanged = 123;
+    REQUIRE(context.texture_units_[1].get_env(GL_POINT_SPRITE_OES, GL_TEX_ENV_MODE_EMU,
+        &unchanged, GLES_GET_DATA_TYPE_INTEGER) == GL_INVALID_ENUM);
+    REQUIRE(unchanged == 123);
+    REQUIRE(context.texture_units_[1].get_env(GL_TEX_ENV_EMU, GL_COORD_REPLACE_OES,
+        &unchanged, GLES_GET_DATA_TYPE_INTEGER) == GL_INVALID_ENUM);
+    REQUIRE(unchanged == 123);
+}
+
+TEST_CASE("GLES1 texture environment getters preserve core enum and numeric conversions", "[gles1]") {
+    gles1_texture_unit unit;
+    const std::pair<std::uint32_t, std::int32_t> defaults[] = {
+        { GL_TEX_ENV_MODE_EMU, GL_MODULATE_EMU },
+        { GL_COMBINE_RGB_EMU, GL_MODULATE_EMU },
+        { GL_COMBINE_ALPHA_EMU, GL_MODULATE_EMU },
+        { GL_SRC0_RGB_EMU, GL_TEXTURE_EMU },
+        { GL_SRC1_RGB_EMU, GL_PREVIOUS_EMU },
+        { GL_SRC2_RGB_EMU, GL_CONSTANT_EMU },
+        { GL_SRC0_ALPHA_EMU, GL_TEXTURE_EMU },
+        { GL_SRC1_ALPHA_EMU, GL_PREVIOUS_EMU },
+        { GL_SRC2_ALPHA_EMU, GL_CONSTANT_EMU },
+        { GL_OPERAND0_RGB_EMU, GL_SRC_COLOR_EMU },
+        { GL_OPERAND1_RGB_EMU, GL_SRC_COLOR_EMU },
+        { GL_OPERAND2_RGB_EMU, GL_SRC_ALPHA_EMU },
+        { GL_OPERAND0_ALPHA_EMU, GL_SRC_ALPHA_EMU },
+        { GL_OPERAND1_ALPHA_EMU, GL_SRC_ALPHA_EMU },
+        { GL_OPERAND2_ALPHA_EMU, GL_SRC_ALPHA_EMU },
+        { GL_RGB_SCALE_EMU, 1 },
+        { GL_ALPHA_SCALE_EMU, 1 }
+    };
+    for (const auto &[pname, expected] : defaults) {
+        std::int32_t result = -1;
+        REQUIRE(unit.get_env(GL_TEX_ENV_EMU, pname, &result, GLES_GET_DATA_TYPE_INTEGER) == 0);
+        REQUIRE(result == expected);
+    }
+    gl_fixed fixed = 0;
+    REQUIRE(unit.get_env(GL_TEX_ENV_EMU, GL_RGB_SCALE_EMU, &fixed, GLES_GET_DATA_TYPE_FIXED) == 0);
+    REQUIRE(fixed == 65536);
+    REQUIRE(unit.get_env(GL_TEX_ENV_EMU, GL_TEX_ENV_MODE_EMU, &fixed, GLES_GET_DATA_TYPE_FIXED) == 0);
+    REQUIRE(fixed == GL_MODULATE_EMU);
+    unit.env_colors_[0] = -1.0f;
+    unit.env_colors_[1] = 0.0f;
+    unit.env_colors_[2] = 1.0f;
+    unit.env_colors_[3] = 0.5f;
+    std::int32_t colors[4]{};
+    REQUIRE(unit.get_env(GL_TEX_ENV_EMU, GL_TEX_ENV_COLOR_EMU, colors, GLES_GET_DATA_TYPE_INTEGER) == 0);
+    REQUIRE(colors[0] == std::numeric_limits<std::int32_t>::min());
+    REQUIRE(colors[1] == 0);
+    REQUIRE(colors[2] == std::numeric_limits<std::int32_t>::max());
+    REQUIRE(unit.get_env(GL_TEX_ENV_EMU, GL_TEX_ENV_COLOR_EMU, colors, GLES_GET_DATA_TYPE_FIXED) == 0);
+    REQUIRE(colors[0] == -65536);
+    REQUIRE(colors[1] == 0);
+    REQUIRE(colors[2] == 65536);
+    REQUIRE(colors[3] == 32768);
+}
+
+TEST_CASE("GLES1 large point sizes saturate integer query results", "[gles1]") {
+    egl_context_es1 context;
+    context.point_size_ = std::numeric_limits<float>::max();
+    std::int32_t result = 0;
+    REQUIRE(context.get_data(nullptr, GL_POINT_SIZE_EMU, &result, GLES_GET_DATA_TYPE_INTEGER));
+    REQUIRE(result == std::numeric_limits<std::int32_t>::max());
+    REQUIRE(context.get_data(nullptr, GL_POINT_SIZE_EMU, &result, GLES_GET_DATA_TYPE_FIXED));
+    REQUIRE(result == std::numeric_limits<std::int32_t>::max());
+}
+
+TEST_CASE("GLES1 rejects unavailable point size buffers before preparing a draw", "[gles1]") {
+    point_buffer_context context;
+    egl_controller controller(nullptr);
+    context.associated_thread_uid_ = 7;
+    gles_driver_object_instance vertex_buffer = std::make_unique<gles_driver_buffer>(context);
+    vertex_buffer->assign_handle(1);
+    context.vertex_attrib_.buffer_obj_ = static_cast<std::uint32_t>(context.objects_.add(vertex_buffer));
+    context.point_size_attrib_.buffer_obj_ = 999;
+    context.vertex_statuses_ |= egl_context_es1::VERTEX_STATE_CLIENT_VERTEX_ARRAY
+        | egl_context_es1::VERTEX_STATE_CLIENT_POINT_SIZE_ARRAY;
+    REQUIRE_FALSE(context.prepare_for_draw(nullptr, controller, nullptr, 0, 1, eka2l1::drivers::graphics_primitive_mode::points));
+    REQUIRE(controller.pop_error(7) == GL_INVALID_OPERATION);
+    REQUIRE(context.input_desc_ == 0);
+}
+
+TEST_CASE("GLES1 coordinate replacement rejects invalid booleans without changing state", "[gles1]") {
+    gles1_texture_unit unit;
+    REQUIRE(unit.set_point_coord_replace(1.0) == 0);
+    for (const double invalid : { -1.0, 0.5, 2.0, std::numeric_limits<double>::infinity(), std::numeric_limits<double>::quiet_NaN() }) {
+        REQUIRE(unit.set_point_coord_replace(invalid) == GL_INVALID_ENUM);
+        REQUIRE(unit.point_coord_replace_);
+    }
+    REQUIRE(unit.set_point_coord_replace(0.0) == 0);
+    REQUIRE_FALSE(unit.point_coord_replace_);
+}
+
+namespace {
+    class point_draw_driver : public eka2l1::drivers::graphics_driver {
+        eka2l1::drivers::handle next_ = 1;
+
+    public:
+        std::vector<eka2l1::drivers::input_descriptor> inputs;
+        point_draw_driver() : graphics_driver(eka2l1::drivers::graphic_api::opengl) {}
+        void run() override {}
+        void abort() override {}
+        void update_bitmap(eka2l1::drivers::handle, std::size_t, const eka2l1::vec2 &, const eka2l1::vec2 &, const void *, std::size_t) override {}
+        void set_viewport(const eka2l1::rect &) override {}
+        void update_surface(void *) override {}
+        void update_surface_size(const eka2l1::vec2 &) override {}
+        void set_upscale_shader(const std::string &) override {}
+        std::string get_active_upscale_shader() const override { return {}; }
+        bool support_extension(eka2l1::drivers::graphics_driver_extension) override { return false; }
+        bool query_extension_value(eka2l1::drivers::graphics_driver_extension_query, void *) override { return false; }
+        void submit_command_list(eka2l1::drivers::command_list &commands) override {
+            using namespace eka2l1::drivers;
+            for (std::size_t i = 0; i < commands.size_; ++i) {
+                auto &command = commands.base_[i];
+                if (command.opcode_ == graphics_driver_create_input_descriptor) {
+                    auto *data = reinterpret_cast<input_descriptor*>(command.data_[0]);
+                    inputs.assign(data, data + command.data_[1]);
+                    if (command.data_[2]) {
+                        delete[] reinterpret_cast<std::uint8_t*>(data);
+                    } else {
+                        *reinterpret_cast<handle*>(command.data_[3]) = next_++;
+                    }
+                } else if (command.opcode_ == graphics_driver_create_shader_module || command.opcode_ == graphics_driver_create_shader_program) {
+                    *reinterpret_cast<handle*>(command.data_[3]) = next_++;
+                }
+                if (command.status_) {
+                    *command.status_ = 0;
+                }
+            }
+            delete[] commands.base_;
+        }
+    };
+}
+
+TEST_CASE("GLES1 point arrays retain VBO offsets and are ignored for triangle draws", "[gles1]") {
+    using namespace eka2l1::drivers;
+    for (const auto type : { GL_FLOAT_EMU, GL_FIXED_EMU }) {
+        point_draw_driver driver;
+        egl_controller controller(&driver);
+        point_buffer_context context;
+        context.associated_thread_uid_ = 9;
+        gles_driver_object_instance buffer = std::make_unique<gles_driver_buffer>(context);
+        buffer->assign_handle(42);
+        const auto name = static_cast<std::uint32_t>(context.objects_.add(buffer));
+        context.vertex_attrib_ = { 3, GL_FLOAT_EMU, 16, 0, name };
+        context.point_size_attrib_ = { 1, static_cast<std::uint32_t>(type), 16, 12, name };
+        context.vertex_statuses_ |= egl_context_es1::VERTEX_STATE_CLIENT_VERTEX_ARRAY | egl_context_es1::VERTEX_STATE_CLIENT_POINT_SIZE_ARRAY;
+        REQUIRE(context.prepare_for_draw(&driver, controller, nullptr, 3, 5, graphics_primitive_mode::points));
+        REQUIRE(driver.inputs.size() == 2);
+        REQUIRE(driver.inputs[1].location == GLES1_EMU_POINT_SIZE_ATTRIBUTE);
+        REQUIRE(driver.inputs[1].offset == 60);
+        REQUIRE(driver.inputs[1].stride == 16);
+        REQUIRE(driver.inputs[1].buffer_slot == driver.inputs[0].buffer_slot);
+        REQUIRE_FALSE(driver.inputs[1].is_normalized());
+        input_descriptor expected;
+        expected.set_format(1, type == GL_FIXED_EMU ? data_format::sint : data_format::sfloat);
+        REQUIRE(driver.inputs[1].format == expected.format);
+
+        context.point_size_attrib_.buffer_obj_ = 999;
+        REQUIRE(context.prepare_for_draw(&driver, controller, nullptr, 3, 5, graphics_primitive_mode::triangles));
+        auto commands = context.cmd_builder_.retrieve_command_list();
+        driver.submit_command_list(commands);
+        REQUIRE(driver.inputs.size() == 1);
+        REQUIRE_FALSE(context.prepare_for_draw(&driver, controller, nullptr, 3, 5, graphics_primitive_mode::points));
+        REQUIRE(controller.pop_error(9) == GL_INVALID_OPERATION);
+    }
+}

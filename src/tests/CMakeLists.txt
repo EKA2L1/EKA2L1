@@ -12,6 +12,7 @@ add_executable(ekatests
 
 target_link_libraries(ekatests PRIVATE
     Catch2
+    glm
     common
     config
     epoc
