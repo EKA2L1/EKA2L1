@@ -114,14 +114,20 @@ namespace eka2l1::dispatch {
                      "\tmMyPos = uViewModelMat * inPosition;\n";
 
         if (vertex_statuses & egl_context_es1::VERTEX_STATE_DRAW_POINTS) {
-            uni_decl += "uniform float uPointScale;\n";
+            uni_decl += "uniform float uPointScale;\n"
+                        "uniform float uPointSizeFactor;\n"
+                        "uniform vec3 uPointAttenuation;\n"
+                        "uniform vec2 uPointRange;\n";
             if (vertex_statuses & egl_context_es1::VERTEX_STATE_CLIENT_POINT_SIZE_ARRAY) {
                 input_decl += fmt::format("layout (location = {}) in float inPointSize;\n", static_cast<int>(GLES1_EMU_POINT_SIZE_ATTRIBUTE));
-                main_body += "\tgl_PointSize = inPointSize * uPointScale;\n";
+                main_body += "\tfloat pointSize = inPointSize * uPointSizeFactor;\n";
             } else {
                 uni_decl += "uniform float uPointSize;\n";
-                main_body += "\tgl_PointSize = uPointSize * uPointScale;\n";
+                main_body += "\tfloat pointSize = uPointSize;\n";
             }
+            main_body += "\tfloat pointDistance = length(mMyPos.xyz);\n"
+                         "\tpointSize *= inversesqrt(dot(uPointAttenuation, vec3(1.0, pointDistance, pointDistance * pointDistance)));\n"
+                         "\tgl_PointSize = clamp(pointSize, uPointRange.x, uPointRange.y) * uPointScale;\n";
         }
 
         if (vertex_statuses & egl_context_es1::VERTEX_STATE_CLIENT_COLOR_ARRAY) {

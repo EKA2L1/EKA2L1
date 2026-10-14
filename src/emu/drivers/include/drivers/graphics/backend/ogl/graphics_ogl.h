@@ -155,6 +155,7 @@ namespace eka2l1::drivers {
         std::string active_upscale_shader_;
 
         float anisotrophy_max_;
+        float point_size_range_[2] = { 1.0f, 1.0f };
 
         void do_init();
         void prepare_draw_lines_shared();

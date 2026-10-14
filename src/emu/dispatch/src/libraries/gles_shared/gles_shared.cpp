@@ -1602,11 +1602,6 @@ namespace eka2l1::dispatch {
             params[1] = static_cast<T>(1);
             break;
 
-        case GL_POINT_SIZE_MIN_EMU:
-        case GL_POINT_SIZE_MAX_EMU:
-            *params = static_cast<T>(1);
-            break;
-
         case GL_MAX_TEXTURE_MAX_ANISOTROPHY_EMU: {
             float query_val = 1.0f;
             if (!drv->support_extension(drivers::graphics_driver_extension_anisotrophy_filtering)) {
@@ -3044,14 +3039,6 @@ namespace eka2l1::dispatch {
         *param = static_cast<gl_fixed>(value_real);
     }
     
-    BRIDGE_FUNC_LIBRARY(void, gl_point_parameter_f_emu, std::uint32_t pname, float param) {
-        // Empty
-    }
-
-    BRIDGE_FUNC_LIBRARY(void, gl_point_parameter_fv_emu, std::uint32_t pname, const float *param) {
-        // Empty
-    }
-
     BRIDGE_FUNC_LIBRARY(void, gl_draw_arrays_emu, std::uint32_t mode, std::int32_t first_index, std::int32_t count) {
         egl_context_es_shared *ctx = get_es_shared_active_context(sys);
         if (!ctx) {

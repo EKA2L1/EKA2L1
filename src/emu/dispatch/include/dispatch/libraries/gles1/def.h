@@ -140,7 +140,7 @@ namespace eka2l1::dispatch {
     struct egl_context_es1 : public egl_context_es_shared {
     private:
         bool prepare_vertex_buffer_and_descriptors(drivers::graphics_driver *drv, kernel::process *crr_process, const std::int32_t first_index, const std::uint32_t vcount, const std::uint32_t active_texs);
-        bool prepare_shader_program_for_draw(dispatch::egl_controller &controller, const std::uint32_t active_texs);
+        bool prepare_shader_program_for_draw(drivers::graphics_driver *drv, dispatch::egl_controller &controller, const std::uint32_t active_texs);
 
     public:
         std::stack<glm::mat4> model_view_mat_stack_;
@@ -219,6 +219,10 @@ namespace eka2l1::dispatch {
         gles_vertex_attrib weight_attrib_;
         gles_vertex_attrib point_size_attrib_;
         float point_size_;
+        float point_size_min_ = 0.0f;
+        std::optional<float> point_size_max_;
+        float point_fade_threshold_size_ = 1.0f;
+        float point_distance_attenuation_[3] = { 1.0f, 0.0f, 0.0f };
         bool point_sprite_enabled_;
         drivers::handle input_desc_;
 
@@ -255,6 +259,8 @@ namespace eka2l1::dispatch {
 
         explicit egl_context_es1();
         glm::mat4 &active_matrix();
+        std::uint32_t set_point_parameter(std::uint32_t pname, const float *params);
+        float point_size_max(drivers::graphics_driver *driver) const;
 
         gles_driver_texture *binded_texture() override;
         egl_context_type context_type() const override {

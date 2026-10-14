@@ -227,7 +227,15 @@ namespace {
         void set_upscale_shader(const std::string &) override {}
         std::string get_active_upscale_shader() const override { return {}; }
         bool support_extension(eka2l1::drivers::graphics_driver_extension) override { return false; }
-        bool query_extension_value(eka2l1::drivers::graphics_driver_extension_query, void *) override { return false; }
+        bool query_extension_value(eka2l1::drivers::graphics_driver_extension_query query, void *data) override {
+            if (query != eka2l1::drivers::graphics_driver_extension_query_point_size_range) {
+                return false;
+            }
+            auto *range = static_cast<float*>(data);
+            range[0] = 1.0f;
+            range[1] = 64.0f;
+            return true;
+        }
         void submit_command_list(eka2l1::drivers::command_list &commands) override {
             using namespace eka2l1::drivers;
             for (std::size_t i = 0; i < commands.size_; ++i) {
@@ -284,4 +292,55 @@ TEST_CASE("GLES1 point arrays retain VBO offsets and are ignored for triangle dr
         REQUIRE_FALSE(context.prepare_for_draw(&driver, controller, nullptr, 3, 5, graphics_primitive_mode::points));
         REQUIRE(controller.pop_error(9) == GL_INVALID_OPERATION);
     }
+}
+
+TEST_CASE("GLES1 point parameter state follows the ES 1.1 defaults and conversions", "[gles1]") {
+    point_draw_driver driver;
+    egl_context_es1 context;
+    float result[3]{};
+    REQUIRE(context.get_data(&driver, GL_POINT_DISTANCE_ATTENUATION_EMU, result, GLES_GET_DATA_TYPE_FLOAT));
+    REQUIRE(result[0] == 1.0f);
+    REQUIRE(result[1] == 0.0f);
+    REQUIRE(result[2] == 0.0f);
+    REQUIRE(context.get_data(&driver, GL_POINT_SIZE_MIN_EMU, result, GLES_GET_DATA_TYPE_FLOAT));
+    REQUIRE(result[0] == 0.0f);
+    REQUIRE(context.get_data(&driver, GL_POINT_SIZE_MAX_EMU, result, GLES_GET_DATA_TYPE_FLOAT));
+    REQUIRE(result[0] == 64.0f);
+    REQUIRE(context.get_data(&driver, GL_POINT_FADE_THRESHOLD_SIZE_EMU, result, GLES_GET_DATA_TYPE_FLOAT));
+    REQUIRE(result[0] == 1.0f);
+
+    const float attenuation[3] = { 0.5f, 0.25f, 0.125f };
+    REQUIRE(context.set_point_parameter(GL_POINT_DISTANCE_ATTENUATION_EMU, attenuation) == 0);
+    gl_fixed fixed[3]{};
+    REQUIRE(context.get_data(&driver, GL_POINT_DISTANCE_ATTENUATION_EMU, fixed, GLES_GET_DATA_TYPE_FIXED));
+    REQUIRE(fixed[0] == 32768);
+    REQUIRE(fixed[1] == 16384);
+    REQUIRE(fixed[2] == 8192);
+    REQUIRE(context.get_data(&driver, GL_POINT_DISTANCE_ATTENUATION_EMU, fixed, GLES_GET_DATA_TYPE_BOOLEAN));
+    REQUIRE(fixed[0] == 1);
+    REQUIRE(fixed[1] == 1);
+    REQUIRE(fixed[2] == 1);
+}
+
+TEST_CASE("GLES1 point limits reject negative values and preserve the native size range", "[gles1]") {
+    point_draw_driver driver;
+    egl_context_es1 context;
+    for (const auto pname : { GL_POINT_SIZE_MIN_EMU, GL_POINT_SIZE_MAX_EMU, GL_POINT_FADE_THRESHOLD_SIZE_EMU }) {
+        const float value = 2.5f;
+        REQUIRE(context.set_point_parameter(pname, &value) == 0);
+        const float invalid = -0.5f;
+        REQUIRE(context.set_point_parameter(pname, &invalid) == GL_INVALID_VALUE);
+        float result = 0.0f;
+        REQUIRE(context.get_data(&driver, pname, &result, GLES_GET_DATA_TYPE_FLOAT));
+        REQUIRE(result == value);
+        gl_fixed fixed = 0;
+        REQUIRE(context.get_data(&driver, pname, &fixed, GLES_GET_DATA_TYPE_FIXED));
+        REQUIRE(fixed == 163840);
+    }
+    float range[2]{};
+    REQUIRE(context.get_data(&driver, GL_ALIASED_POINT_SIZE_RANGE_EMU, range, GLES_GET_DATA_TYPE_FLOAT));
+    REQUIRE(range[0] == 1.0f);
+    REQUIRE(range[1] == 64.0f);
+    const float unused = 1.0f;
+    REQUIRE(context.set_point_parameter(GL_POINT_SIZE_EMU, &unused) == GL_INVALID_ENUM);
 }
