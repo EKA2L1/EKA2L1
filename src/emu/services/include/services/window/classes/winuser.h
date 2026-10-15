@@ -108,6 +108,8 @@ namespace eka2l1::epoc {
 
         drivers::graphics_command_builder driver_builder_;
         std::unique_ptr<epoc::gdi_store_command_segment> pending_segment_;
+        // A draw may consume pending_segment_ mid-sequence; the next one must start under the same clip.
+        epoc::gdi_store_command last_clip_command_;
         std::vector<canvas_observer*> observers_;
 
         window_surface_attachment background_surface_;

@@ -222,3 +222,64 @@ TEST_CASE("nvg_relative_segment_is_dispatched_by_its_base_command", "nvg_file") 
 
     REQUIRE(svg.find("m 1 2") != std::string::npos);
 }
+
+TEST_CASE("nvg_paint_alpha_scales_the_color_ramp_stop_alpha", "nvg_file") {
+    // CNvgEngine::SetColorRampL multiplies each stop's own alpha by the paint
+    // alpha. Replacing it instead turned translucent skin gradients opaque,
+    // e.g. the progress bar frame that is drawn over the bar's fill.
+    std::vector<std::uint8_t> buf(NVG_HEADER_SIZE, 0);
+    std::memcpy(buf.data(), "nvg", 3);
+    buf[OFF_VERSION] = 1;
+    put16(buf, OFF_HEADER_SIZE, NVG_HEADER_SIZE);
+    put16(buf, OFF_PATH_DATATYPE, PATH_SIXTEEN_BIT);
+
+    const float viewport[4] = { 0.0f, 0.0f, 96.0f, 96.0f };
+    std::memcpy(buf.data() + OFF_VIEWPORT, viewport, sizeof(viewport));
+
+    // Offset vector: paint, colour ramp, path.
+    buf.resize(NVG_HEADER_SIZE + 2 + 3 * 2, 0);
+    put16(buf, NVG_HEADER_SIZE, 3);
+
+    const std::uint32_t commands[3] = {
+        (4u << 24) | (0x80u << 16) | 0u, // SET_FILL_PAINT, paint alpha 0x80
+        (6u << 24) | 1u, // SET_COLOR_RAMP
+        (7u << 24) | 0x00020000u | 2u // DRAW_PATH, fill
+    };
+
+    append16(buf, 3);
+    for (const std::uint32_t command : commands) {
+        append32(buf, static_cast<std::int32_t>(command));
+    }
+
+    auto append_float = [&buf](const float value) {
+        std::int32_t raw = 0;
+        std::memcpy(&raw, &value, sizeof(raw));
+        append32(buf, raw);
+    };
+
+    // Linear gradient paint: type, then x0, y0, x1, y1.
+    put16(buf, NVG_HEADER_SIZE + 2, static_cast<std::uint16_t>(buf.size()));
+    append32(buf, 2);
+    for (const float value : { 0.0f, 0.0f, 0.0f, 96.0f }) {
+        append_float(value);
+    }
+
+    // Two stops (offset, r, g, b, a) with alpha 1.0 and 0.5.
+    put16(buf, NVG_HEADER_SIZE + 4, static_cast<std::uint16_t>(buf.size()));
+    append32(buf, 2 << 16);
+    for (const float value : { 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.5f }) {
+        append_float(value);
+    }
+
+    put16(buf, NVG_HEADER_SIZE + 6, static_cast<std::uint16_t>(buf.size()));
+    append16(buf, 1);
+    buf.push_back(SEG_MOVE_TO);
+    buf.push_back(0);
+    append16(buf, 16);
+    append16(buf, 32);
+
+    const std::string svg = convert(buf);
+
+    REQUIRE(svg.find("stop-opacity=\"0.50196") != std::string::npos);
+    REQUIRE(svg.find("stop-opacity=\"0.25098") != std::string::npos);
+}

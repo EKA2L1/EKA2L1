@@ -28,6 +28,24 @@
 #include "impl.h"
 
 #include <e32std.h>
+#include <f32file.h>
+
+// A missing file is created by the recorder, so it opens like an empty one.
+static TInt ClipSize(const TDesC &aFileName) {
+    RFs fs;
+    TInt size = 0;
+
+    if (fs.Connect() == KErrNone) {
+        TEntry entry;
+        if (fs.Entry(aFileName, entry) == KErrNone) {
+            size = entry.iSize;
+        }
+
+        fs.Close();
+    }
+
+    return size;
+}
 
 ///============ RECORDER MAIN =================
 EXPORT_C CMdaAudioRecorderUtility *CMdaAudioRecorderUtility::NewL(MMdaObjectStateChangeObserver &aObserver, CMdaServer *aServer, TInt aPriority, TMdaPriorityPreference aPref) {
@@ -44,7 +62,7 @@ CMdaAudioRecorderUtility::~CMdaAudioRecorderUtility() {
 }
 
 void CMdaAudioRecorderUtility::OpenFileL(const TDesC &aFileName) {
-    iProperties->SupplyUrlL(aFileName);
+    iProperties->OpenClip(aFileName, ClipSize(aFileName));
 }
 
 void CMdaAudioRecorderUtility::OpenDesL(const TDesC8 &aDescriptor) {
@@ -83,7 +101,7 @@ void CMdaAudioRecorderUtility::OpenL(TMdaClipLocation *aLocation, TMdaClipFormat
 
     if (supplyUrl) {
         TMdaFileClipLocation *urlLocation = reinterpret_cast<TMdaFileClipLocation *>(aLocation);
-        iProperties->SupplyUrlL(urlLocation->iName); // TODO mimetype tap
+        iProperties->OpenClip(urlLocation->iName, ClipSize(urlLocation->iName));
     } else {
         TMdaDesClipLocation *desLocation = reinterpret_cast<TMdaDesClipLocation *>(aLocation);
         iProperties->SupplyDataL(*desLocation->iDes);
@@ -221,7 +239,7 @@ void CMdaAudioRecorderUtility::PlayL() {
 }
 
 void CMdaAudioRecorderUtility::RecordL() {
-    LogOut(KMcaCat, _L("Unimplemented feature recording!"));
+    iProperties->Record();
 }
 
 void CMdaAudioRecorderUtility::Stop() {
@@ -241,14 +259,7 @@ const TTimeIntervalMicroSeconds &CMdaAudioRecorderUtility::Position() {
 }
 
 const TTimeIntervalMicroSeconds &CMdaAudioRecorderUtility::RecordTimeAvailable() {
-    LogOut(KMcaCat, _L("Unimplemented feature get available record time"));
-
-#ifdef EKA2
-    return 0;
-#else
-    TInt64 returnVal(0);
-    return TTimeIntervalMicroSeconds(returnVal);
-#endif
+    return iProperties->RecordTimeAvailable();
 }
 
 const TTimeIntervalMicroSeconds &CMdaAudioRecorderUtility::Duration() {
@@ -283,9 +294,12 @@ void CMdaAudioRecorderUtility::CropFromBeginningL() {
 #if (MCA_NEW >= 3)
 EXPORT_C void CMdaAudioRecorderUtility::OpenFileL(const RFile &aFile) {
     TFullName filePath;
-    aFile.FullName(filePath);
+    User::LeaveIfError(aFile.FullName(filePath));
 
-    iProperties->SupplyUrlL(filePath);
+    TInt size = 0;
+    User::LeaveIfError(aFile.Size(size));
+
+    iProperties->OpenClip(filePath, size);
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::OpenFileL(const TMMSource &aSource) {

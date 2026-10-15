@@ -82,8 +82,12 @@ HLE_DISPATCH_FUNC(TInt, EAudioPlayerGetDestinationEncoding, TAny *aInstance, TUi
 
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetContainerFormat, TAny *aInstance, const TUint32 aFourCC);
 
+// Capture the input device into the clip at aUrl until EAudioPlayerStop.
+HLE_DISPATCH_FUNC(TInt, EAudioPlayerRecord, TAny *aInstance, const TUint16 *aUrl, const TUint aUrlLength);
+
 /// TONE PLAYER
 HLE_DISPATCH_FUNC(TAny *, ETonePlayerNewInstance);
+HLE_DISPATCH_FUNC(TInt, ETonePlayerDestroy, TAny *aInstance);
 HLE_DISPATCH_FUNC(TInt, ETonePlayerNotifyAnyDone, TAny *aInstance, TRequestStatus &aStatus);
 
 HLE_DISPATCH_FUNC(TInt, ETonePlayerSetVolume, TAny *aInstance, const TInt aVolume);
@@ -95,6 +99,9 @@ HLE_DISPATCH_FUNC(TInt, ETonePlayerSetBufferToneSequence, TAny *aInstance, const
 HLE_DISPATCH_FUNC(TInt, ETonePlayerSetFileToneSequence, TAny *aInstance, const TDesC16 &aSequence);
 HLE_DISPATCH_FUNC(TInt, ETonePlayerSetFixedToneSequence, TAny *aInstance, const TInt aSequenceIndex);
 HLE_DISPATCH_FUNC(TInt, ETonePlayerSetSingleTone, TAny *aInstance, TInt aFrequency, TInt aDurationMicrosLow, TInt aDurationMicrosHigh);
+HLE_DISPATCH_FUNC(TInt, ETonePlayerSetDualTone, TAny *aInstance, TInt aFrequencyOne, TInt aFrequencyTwo, TInt aDurationMicrosLow, TInt aDurationMicrosHigh);
+HLE_DISPATCH_FUNC(TInt, ETonePlayerSetDTMFString, TAny *aInstance, const TDesC16 &aDTMF);
+HLE_DISPATCH_FUNC(TInt, ETonePlayerSetDTMFLengths, TAny *aInstance, TInt aToneOnMicros, TInt aToneOffMicros, TInt aPauseMicros);
 HLE_DISPATCH_FUNC(TInt, ETonePlayerGetFixedSequenceCount, TAny *aInstance);
 
 HLE_DISPATCH_FUNC(TInt, ETonePlayerSetBalance, TAny *aInstance, TInt aBalance);

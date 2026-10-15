@@ -195,7 +195,8 @@ namespace eka2l1::loader {
                 return false;
             }
 
-            info.color_[3] = alpha / 255.0f;
+            // The paint alpha scales each stop's own alpha (CNvgEngine::SetColorRampL).
+            info.color_[3] *= alpha / 255.0f;
             target_brush.ramps_.push_back(info);
         }
 

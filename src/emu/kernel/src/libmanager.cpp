@@ -248,6 +248,11 @@ namespace eka2l1::hle {
 
         if (force_code_addr != 0) {
             info.code_load_addr = force_code_addr;
+
+            // Fixed-address segments report the descriptor as-is, so it must be absolute like a ROM image's.
+            if (info.exception_descriptor != 0) {
+                info.exception_descriptor += force_code_addr;
+            }
         }
 
         codeseg_ptr cs = kern->create<kernel::codeseg>(get_e32_codeseg_name_from_path(path), info);

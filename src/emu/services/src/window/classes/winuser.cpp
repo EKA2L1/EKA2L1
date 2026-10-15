@@ -244,6 +244,20 @@ namespace eka2l1::epoc {
 
         if (!pending_segment_) {
             pending_segment_ = std::make_unique<gdi_store_command_segment>();
+            if (last_clip_command_.opcode_ != gdi_store_command_invalid) {
+                pending_segment_->add_command(last_clip_command_);
+            }
+        }
+
+        switch (command.opcode_) {
+        case gdi_store_command_set_clip_rect_single:
+        case gdi_store_command_set_clip_rect_multiple:
+        case gdi_store_command_disable_clip:
+            last_clip_command_ = command;
+            break;
+
+        default:
+            break;
         }
 
         if (command.opcode_ == gdi_store_command_draw_bitmap) {
