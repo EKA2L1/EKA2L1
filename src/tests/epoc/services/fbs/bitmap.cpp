@@ -379,3 +379,27 @@ TEST_CASE("bitmap_header_colour_field_round_trips_the_display_mode", "bitmap_hea
     REQUIRE(epoc::get_bitmap_color_from_display_mode(epoc::display_mode::color16ma) == epoc::color_bitmap_with_alpha);
     REQUIRE(epoc::get_bitmap_color_from_display_mode(epoc::display_mode::color16map) == epoc::color_bitmap_with_alpha_pm);
 }
+
+TEST_CASE("ALF icon masks convert RGB to Gray256 alpha without inspecting their shape", "icon_mask") {
+    const std::vector<std::uint8_t> bgr{
+        0, 0, 0, 64, 64, 64, 255, 255, 255, 0, 0, 0,
+        0, 0, 255, 0, 255, 0, 255, 0, 0, 0, 0, 0
+    };
+    loader::sbm_header header{};
+    header.size_pixels = eka2l1::vec2(3, 2);
+    header.bit_per_pixels = 24;
+    header.color = 1;
+    auto source = bgr;
+    common::ro_buf_stream input(source.data(), source.size());
+    std::vector<std::uint8_t> rgba(3 * 2 * 4);
+    common::wo_buf_stream output(rgba.data(), rgba.size());
+    REQUIRE(epoc::convert_to_rgba8888(nullptr, input, output, header, -1,
+        epoc::bitmap_file_no_compression, true));
+    const std::vector<std::uint8_t> expected{ 0, 64, 255, 63, 159, 31 };
+    auto icon = make_icon();
+    epoc::apply_icon_mask_alpha(icon.data(), rgba.data(), 3, 2, epoc::display_mode::color16m,
+        epoc::icon_mask_composition::alf_texture);
+    for (std::size_t i = 0; i < expected.size(); ++i) {
+        REQUIRE(alpha_at(icon, i) == expected[i]);
+    }
+}

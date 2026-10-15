@@ -29,7 +29,7 @@
 #include <kernel/kernel.h>
 
 namespace eka2l1::dispatch {
-    static bool decompress_palette_data(std::vector<std::uint8_t> &dest, std::vector<std::size_t> &out_size, std::uint8_t *source, std::int32_t width,
+    bool decompress_palette_data(std::vector<std::uint8_t> &dest, std::vector<std::size_t> &out_size, const std::uint8_t *source, std::size_t source_size, std::int32_t width,
         std::int32_t height, std::uint32_t source_format, std::int32_t mip_count, drivers::texture_format &dest_format,
         drivers::texture_data_type &dest_data_type, std::uint32_t &dest_format_gl) {
         std::uint8_t bytes_per_pixel = 0;
@@ -88,34 +88,52 @@ namespace eka2l1::dispatch {
             palette_bits = 4;
         }
 
-        while ((mip_count > 0) && (height > 0) && (width > 0)) {
+        if (!source || width < 0 || height < 0 || width > GLES_EMU_MAX_TEXTURE_SIZE
+            || height > GLES_EMU_MAX_TEXTURE_SIZE || mip_count <= 0) {
+            return false;
+        }
+        std::int32_t max_mips = 1;
+        for (std::int32_t size = GLES_EMU_MAX_TEXTURE_SIZE; size > 1; size /= 2) {
+            ++max_mips;
+        }
+        if (mip_count > max_mips) {
+            return false;
+        }
+
+        const std::size_t palette_size = (1 << palette_bits) * bytes_per_pixel;
+        std::size_t required_size = palette_size;
+        auto mip_width = width;
+        auto mip_height = height;
+        for (std::int32_t mip = 0; mip < mip_count; ++mip) {
+            required_size += (static_cast<std::size_t>(mip_width) * mip_height * palette_bits + 7) / 8;
+            mip_width = mip_width ? std::max(1, mip_width / 2) : 0;
+            mip_height = mip_height ? std::max(1, mip_height / 2) : 0;
+        }
+        if (source_size != required_size) {
+            return false;
+        }
+
+        const std::uint8_t *indices = source + palette_size;
+        while (mip_count > 0) {
+            const std::size_t pixel_count = static_cast<std::size_t>(width) * height;
             const std::size_t prev_size = dest.size();
-            const std::size_t calculated_size = width * height * bytes_per_pixel;
+            const std::size_t calculated_size = pixel_count * bytes_per_pixel;
 
             out_size.push_back(calculated_size);
-            dest.resize(dest.size() + calculated_size);
-            
-            std::uint8_t *current_dest = dest.data() + prev_size;
+            dest.resize(prev_size + calculated_size);
 
-            std::uint8_t *source_start = source + (1 << palette_bits) * bytes_per_pixel;
-            for (std::int32_t y = 0; y < height; y++) {
-                for (std::int32_t x = 0; x < width / (8 / palette_bits); x++) {
-                    const std::int32_t current_pixel_idx = y * width + x;
-                    const std::int32_t current_ptr_pixel_idx = current_pixel_idx * bytes_per_pixel;
-                    const std::uint8_t indicies = source_start[current_pixel_idx];
-
-                    if (palette_bits == 8) {
-                        std::memcpy(current_dest + current_ptr_pixel_idx, source + indicies * bytes_per_pixel, bytes_per_pixel);
-                    } else {
-                        std::memcpy(current_dest + current_ptr_pixel_idx * 2, source + (indicies & 0xF) * bytes_per_pixel, bytes_per_pixel);
-                        std::memcpy(current_dest + current_ptr_pixel_idx * 2 + bytes_per_pixel, source + ((indicies & 0xF0) >> 4) * bytes_per_pixel, bytes_per_pixel);
-                    }
-                }
+            for (std::size_t pixel = 0; pixel < pixel_count; ++pixel) {
+                const std::uint8_t index = palette_bits == 8
+                    ? indices[pixel]
+                    : (indices[pixel / 2] >> ((pixel % 2 == 0) ? 4 : 0)) & 0xF;
+                std::memcpy(dest.data() + prev_size + pixel * bytes_per_pixel,
+                    source + index * bytes_per_pixel, bytes_per_pixel);
             }
 
-            mip_count--;
-            width /= 2;
-            height /= 2;
+            indices += (pixel_count * palette_bits + 7) / 8;
+            --mip_count;
+            width = width ? std::max(1, width / 2) : 0;
+            height = height ? std::max(1, height / 2) : 0;
         }
 
         return true;
@@ -2016,6 +2034,7 @@ namespace eka2l1::dispatch {
 
         if ((width < 0) || (height < 0) || (width > GLES_EMU_MAX_TEXTURE_SIZE) || (height > GLES_EMU_MAX_TEXTURE_SIZE) || !data_pixels) {
             controller.push_error(ctx, GL_INVALID_VALUE);
+            return;
         }
 
         gles_driver_texture *tex = ctx->binded_texture();
@@ -2044,16 +2063,20 @@ namespace eka2l1::dispatch {
         std::uint8_t dimension = (target == GL_TEXTURE_2D_EMU) ? 2 : static_cast<std::uint8_t>(target - GL_TEXTURE_CUBE_MAP_POSITIVE_X_EMU + 4);
         drivers::channel_swizzles swizz = { drivers::channel_swizzle::red, drivers::channel_swizzle::green, drivers::channel_swizzle::blue, drivers::channel_swizzle::alpha };
 
-        if ((internal_format >= GL_PALETTE4_RGBA8_OES_EMU) && (internal_format <= GL_PALETTE8_RGB5_A1_OES_EMU)) {
-            if (level > 0) {
-                controller.push_error(ctx, GL_INVALID_ENUM);
-            } else {
-                level = (-level) + 1;
-
-                if (level > GLES_EMU_MAX_TEXTURE_MIP_LEVEL) {
-                    controller.push_error(ctx, GL_INVALID_VALUE);
-                }
+        if ((internal_format >= GL_PALETTE4_RGB8_OES_EMU) && (internal_format <= GL_PALETTE8_RGB5_A1_OES_EMU)) {
+            std::int32_t max_mips = 1;
+            for (std::int32_t size = GLES_EMU_MAX_TEXTURE_SIZE; size > 1; size /= 2) {
+                ++max_mips;
             }
+            if (level > 0 || level <= -max_mips) {
+                controller.push_error(ctx, GL_INVALID_VALUE);
+                return;
+            }
+            if (border != 0) {
+                controller.push_error(ctx, GL_INVALID_OPERATION);
+                return;
+            }
+            level = 1 - level;
 
             std::vector<std::uint8_t> decompressed_data;
             std::vector<std::size_t> out_size;
@@ -2061,15 +2084,14 @@ namespace eka2l1::dispatch {
             std::uint32_t format_gl = 0;
             drivers::texture_data_type dtype;
 
-            if (!decompress_palette_data(decompressed_data, out_size, reinterpret_cast<std::uint8_t*>(data_pixels), width, height, internal_format,
+            if (!decompress_palette_data(decompressed_data, out_size, reinterpret_cast<const std::uint8_t*>(data_pixels), image_size, width, height, internal_format,
                 level, internal_format_driver, dtype, format_gl)) {
-                controller.push_error(ctx, GL_INVALID_ENUM);
+                controller.push_error(ctx, GL_INVALID_VALUE);
                 return;
             }
 
             std::uint8_t *data_to_pass = decompressed_data.data();
 
-            // TODO: border is ignored!
             if (!tex->handle_value()) {
                 need_set_params = true;
 
@@ -2083,7 +2105,7 @@ namespace eka2l1::dispatch {
                     drivers::graphics_driver *drv = sys->get_graphics_driver();
                     drivers::handle new_h = drivers::create_texture(drv, dimension, 0, internal_format_driver,
                         internal_format_driver, dtype, data_to_pass, out_size[0], eka2l1::vec3(width, height, 0),
-                        0, ctx->unpack_alignment_);
+                        0, 1);
 
                     if (!new_h) {
                         controller.push_error(ctx, GL_INVALID_OPERATION);
@@ -2098,21 +2120,22 @@ namespace eka2l1::dispatch {
             if (need_reinstantiate) {
                 ctx->cmd_builder_.recreate_texture(tex->handle_value(), dimension, 0, internal_format_driver,
                     internal_format_driver, dtype, data_to_pass, out_size[0], eka2l1::vec3(width, height, 0),
-                    0, ctx->unpack_alignment_);
+                    0, 1);
             }
 
             if (need_set_params) {
                 tex->sync_parameters_with_driver();
             }
 
-            data_to_pass += out_size[0];
+            if (out_size[0]) data_to_pass += out_size[0];
 
             for (std::size_t i = 1; i < out_size.size(); i++) {
-                width /= 2;
-                height /= 2;
+                width = width ? std::max(1, width / 2) : 0;
+                height = height ? std::max(1, height / 2) : 0;
 
                 ctx->cmd_builder_.recreate_texture(tex->handle_value(), dimension, static_cast<std::uint8_t>(i), internal_format_driver,
-                    internal_format_driver, dtype, data_to_pass, out_size[i], eka2l1::vec3(width, height, 0), 0, ctx->unpack_alignment_);            
+                    internal_format_driver, dtype, data_to_pass, out_size[i], eka2l1::vec3(width, height, 0), 0, 1);
+                if (out_size[i]) data_to_pass += out_size[i];
             }
         } else {
             // Pass to driver as normal

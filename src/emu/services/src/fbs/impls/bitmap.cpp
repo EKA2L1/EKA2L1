@@ -1892,10 +1892,9 @@ namespace eka2l1 {
             return convert_to_rgba8888(serv, buf_stream, dest, file.sbm_headers[index], -1, static_cast<bitmap_file_compression>(file.sbm_headers[index].compression), make_standard_mask);
         }
 
-        // BITGDI treats only EGray256 as alpha; Avkon uses inverted stencils otherwise
-        // (BITBLT.CPP, EIKCLBD.CPP), so a stencil's white preserves the destination.
         void apply_icon_mask_alpha(std::uint8_t *icon_rgba, const std::uint8_t *mask_rgba,
-            const std::size_t width, const std::size_t height, const epoc::display_mode mask_mode) {
+            const std::size_t width, const std::size_t height, const epoc::display_mode mask_mode,
+            const icon_mask_composition composition) {
             if (!icon_rgba || !mask_rgba) {
                 return;
             }
@@ -1903,9 +1902,13 @@ namespace eka2l1 {
             const bool soft = (mask_mode == epoc::display_mode::gray256);
 
             for (std::size_t i = 0; i < width * height; i++) {
-                icon_rgba[i * 4 + 3] = soft
-                    ? mask_rgba[i * 4]
-                    : static_cast<std::uint8_t>(255 - mask_rgba[i * 4 + 3]);
+                const auto *pixel = mask_rgba + i * 4;
+                if (composition == icon_mask_composition::alf_texture) {
+                    // HuiVg10Texture::ReplaceAlphaChannelL converts through TRgb::Gray256().
+                    icon_rgba[i * 4 + 3] = (2 * pixel[0] + 5 * pixel[1] + pixel[2]) >> 3;
+                } else {
+                    icon_rgba[i * 4 + 3] = soft ? pixel[0] : static_cast<std::uint8_t>(255 - pixel[3]);
+                }
             }
         }
     }
