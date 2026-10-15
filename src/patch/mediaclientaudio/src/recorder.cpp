@@ -491,8 +491,14 @@ EXPORT_C TUint CMdaAudioRecorderUtility::DestinationSampleRateL() {
     return static_cast<TUint>(result);
 }
 
+// Recording uses a fixed format, so only the current destination rate is reported.
 EXPORT_C void CMdaAudioRecorderUtility::GetSupportedSampleRatesL(RArray<TUint> &aSupportedSampleRates) {
-    LogOut(KMcaCat, _L("Get supported sample rate unimplemented!"));
+    aSupportedSampleRates.Reset();
+
+    const TInt sampleRate = iProperties->GetDestSampleRate();
+    if (sampleRate > 0) {
+        User::LeaveIfError(aSupportedSampleRates.Append(static_cast<TUint>(sampleRate)));
+    }
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::SetDestinationFormatL(TUid aFormatUid) {

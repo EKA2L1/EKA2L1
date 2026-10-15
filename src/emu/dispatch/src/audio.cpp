@@ -474,6 +474,10 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
+        if (!eplayer->impl_) {
+            return epoc::error_not_ready;
+        }
+
         if (!eplayer->impl_->play()) {
             return epoc::error_general;
         }
@@ -742,6 +746,10 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
+        if (!eplayer->impl_) {
+            return static_cast<std::int32_t>(RECORD_SAMPLE_RATE);
+        }
+
         return static_cast<std::int32_t>(eplayer->impl_->get_dest_freq());
     }
 
@@ -752,6 +760,11 @@ namespace eka2l1::dispatch {
 
         if (!eplayer) {
             return epoc::error_bad_handle;
+        }
+
+        // Without a decoder the clip is a recording destination, whose format is fixed.
+        if (!eplayer->impl_) {
+            return (static_cast<std::uint32_t>(sample_rate) == RECORD_SAMPLE_RATE) ? epoc::error_none : epoc::error_not_supported;
         }
 
         if (!eplayer->impl_->set_dest_freq(sample_rate)) {
@@ -770,6 +783,10 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
+        if (!eplayer->impl_) {
+            return static_cast<std::int32_t>(RECORD_CHANNELS);
+        }
+
         return static_cast<std::int32_t>(eplayer->impl_->get_dest_channel_count());
     }
 
@@ -780,6 +797,10 @@ namespace eka2l1::dispatch {
 
         if (!eplayer) {
             return epoc::error_bad_handle;
+        }
+
+        if (!eplayer->impl_) {
+            return (channel_count == static_cast<std::int32_t>(RECORD_CHANNELS)) ? epoc::error_none : epoc::error_not_supported;
         }
 
         if (!eplayer->impl_->set_dest_channel_count(channel_count)) {
@@ -802,7 +823,7 @@ namespace eka2l1::dispatch {
             return epoc::error_argument;
         }
 
-        *encoding = eplayer->impl_->get_dest_encoding();
+        *encoding = eplayer->impl_ ? eplayer->impl_->get_dest_encoding() : drivers::AUDIO_PCM16_CODEC_4CC;
         return epoc::error_none;
     }
 
@@ -813,6 +834,10 @@ namespace eka2l1::dispatch {
 
         if (!eplayer) {
             return epoc::error_bad_handle;
+        }
+
+        if (!eplayer->impl_) {
+            return (encoding == drivers::AUDIO_PCM16_CODEC_4CC) ? epoc::error_none : epoc::error_not_supported;
         }
 
         if (!eplayer->impl_->set_dest_encoding(encoding)) {
@@ -831,7 +856,9 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
-        eplayer->impl_->set_dest_container_format(container_format);
+        if (eplayer->impl_) {
+            eplayer->impl_->set_dest_container_format(container_format);
+        }
         return epoc::error_none;
     }
 
