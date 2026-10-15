@@ -27,6 +27,7 @@
 #include <utils/consts.h>
 
 #include <algorithm>
+#include <unordered_set>
 
 namespace eka2l1::kernel {
     codeseg::codeseg(kernel_system *kern, const std::string &name, codeseg_create_info &info)
@@ -83,20 +84,27 @@ namespace eka2l1::kernel {
         return 0;
     }
 
+    // Shared code keeps the import addresses patched for the first process, so every
+    // codeseg it reaches must also be shared. The walk ignores mark, which attach() reuses.
     bool codeseg::eligible_for_codeseg_reuse() {
-        mark = true;
-
         memory_system *mem = kern->get_memory_system();
-        const auto data_size_align = common::align(data_size + bss_size, mem->get_page_size());
 
-        if ((data_size_align != 0) && !is_rom()) {
-            return false;
-        }
+        std::vector<codeseg *> pending{ this };
+        std::unordered_set<codeseg *> visited{ this };
 
-        for (auto &dep : dependencies) {
-            if (!dep.dep_->mark && !dep.dep_->eligible_for_codeseg_reuse()) {
-                dep.dep_->mark = true;
+        while (!pending.empty()) {
+            codeseg *seg = pending.back();
+            pending.pop_back();
+
+            const auto data_size_align = common::align(seg->data_size + seg->bss_size, mem->get_page_size());
+            if ((data_size_align != 0) && !seg->is_rom()) {
                 return false;
+            }
+
+            for (auto &dep : seg->dependencies) {
+                if (visited.insert(dep.dep_).second) {
+                    pending.push_back(dep.dep_);
+                }
             }
         }
 
