@@ -272,6 +272,11 @@ void CMMFMdaAudioUtility::OpenClip(const TDesC &aFilename, const TInt aSize) {
     iOpener.FixupActiveStatus();
     iClipName.Copy(aFilename.Left(iClipName.MaxLength()));
 
+    // A clip the host cannot record into may still be played back.
+    if (EAudioPlayerOpenRecordClip(0, iDispatchInstance, iClipName.Ptr(), iClipName.Length()) != KErrNone) {
+        LogOut(KMcaCat, _L("Clip %S can not be recorded into"), &iClipName);
+    }
+
     if (aSize == 0) {
         iDuration = TTimeIntervalMicroSeconds(0);
         iPlayType = EMdaPlayTypeFile;
@@ -287,9 +292,6 @@ void CMMFMdaAudioUtility::OpenClip(const TDesC &aFilename, const TInt aSize) {
     }
 }
 
-// The emulator records 16-bit mono PCM at 8 kHz.
-static const TInt KRecordBytesPerSecond = 16000;
-
 const TTimeIntervalMicroSeconds &CMMFMdaAudioUtility::RecordTimeAvailable() {
     iRecordTimeAvailable = TTimeIntervalMicroSeconds(0);
 
@@ -301,9 +303,11 @@ const TTimeIntervalMicroSeconds &CMMFMdaAudioUtility::RecordTimeAvailable() {
         return iRecordTimeAvailable;
     }
 
+    const TInt bitRate = EAudioPlayerGetDestinationBitRate(0, iDispatchInstance);
+
     TVolumeInfo info;
-    if (fs.Volume(info, drive) == KErrNone) {
-        iRecordTimeAvailable = TTimeIntervalMicroSeconds(info.iFree * TInt64(1000000) / TInt64(KRecordBytesPerSecond));
+    if ((bitRate > 0) && (fs.Volume(info, drive) == KErrNone)) {
+        iRecordTimeAvailable = TTimeIntervalMicroSeconds(info.iFree * TInt64(8000000) / TInt64(bitRate));
     }
 
     fs.Close();
@@ -595,6 +599,27 @@ TInt CMMFMdaAudioRecorderUtility::GetDestChannelCount() {
 
 TInt CMMFMdaAudioRecorderUtility::GetDestSampleRate() {
     return EAudioPlayerGetDestinationSampleRate(0, iDispatchInstance);
+}
+
+TInt CMMFMdaAudioRecorderUtility::SetDestBitRate(const TUint aBitRate) {
+    return EAudioPlayerSetDestinationBitRate(0, iDispatchInstance, aBitRate);
+}
+
+TInt CMMFMdaAudioRecorderUtility::GetDestBitRate() {
+    return EAudioPlayerGetDestinationBitRate(0, iDispatchInstance);
+}
+
+void CMMFMdaAudioRecorderUtility::GetSupportedDestValuesL(const TInt aKind, RArray<TUint> &aValues) {
+    aValues.Reset();
+
+    TUint32 values[16];
+    const TInt count = EAudioPlayerGetSupportedDestinationValues(0, iDispatchInstance, aKind, values, 16);
+
+    User::LeaveIfError(count);
+
+    for (TInt i = 0; i < Min(count, 16); i++) {
+        User::LeaveIfError(aValues.Append(values[i]));
+    }
 }
 
 TInt CMMFMdaAudioRecorderUtility::SetDestContainerFormat(const TUint32 aUid) {

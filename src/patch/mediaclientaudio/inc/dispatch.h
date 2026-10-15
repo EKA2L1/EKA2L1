@@ -85,6 +85,22 @@ HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetContainerFormat, TAny *aInstance, const T
 // Capture the input device into the clip at aUrl until EAudioPlayerStop.
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerRecord, TAny *aInstance, const TUint16 *aUrl, const TUint aUrlLength);
 
+// Name the clip a recorder utility opened; its format decides the destination settings below.
+HLE_DISPATCH_FUNC(TInt, EAudioPlayerOpenRecordClip, TAny *aInstance, const TUint16 *aUrl, const TUint aUrlLength);
+
+HLE_DISPATCH_FUNC(TInt, EAudioPlayerGetDestinationBitRate, TAny *aInstance);
+HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetDestinationBitRate, TAny *aInstance, const TUint aBitRate);
+
+enum TAudioPlayerDestinationValueKind {
+    EAudioPlayerDestinationSampleRates = 0,
+    EAudioPlayerDestinationChannelCounts = 1,
+    EAudioPlayerDestinationBitRates = 2,
+    EAudioPlayerDestinationDataTypes = 3
+};
+
+// Fill up to aMaxCount supported values; returns their total count, or an error.
+HLE_DISPATCH_FUNC(TInt, EAudioPlayerGetSupportedDestinationValues, TAny *aInstance, const TInt aKind, TUint32 *aValues, const TInt aMaxCount);
+
 /// TONE PLAYER
 HLE_DISPATCH_FUNC(TAny *, ETonePlayerNewInstance);
 HLE_DISPATCH_FUNC(TInt, ETonePlayerDestroy, TAny *aInstance);

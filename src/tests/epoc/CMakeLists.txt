@@ -4,6 +4,7 @@ set(CORE_TEST_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/devices.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/dispatch/tone.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/drivers/audio.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/clip_writer.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gdbstub.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/graphics/openvg.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/graphics/gles1.cpp

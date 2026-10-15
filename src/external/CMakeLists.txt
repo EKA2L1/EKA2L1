@@ -261,6 +261,43 @@ target_compile_definitions(microprofile PUBLIC MICROPROFILE_ENABLED=0 MICROPROFI
 add_library(xxHash STATIC xxHash/xxhash.c)
 target_include_directories(xxHash PUBLIC xxHash)
 
+## opencore-amr: backs FFmpeg's libopencore_amrnb encoder.
+set(OPENCORE_AMRNB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/opencore-amr/opencore/codecs_v2/audio/gsm_amr/amr_nb")
+file(GLOB OPENCORE_AMRNB_SOURCES
+    "${OPENCORE_AMRNB_DIR}/dec/src/*.cpp" "${OPENCORE_AMRNB_DIR}/enc/src/*.cpp" "${OPENCORE_AMRNB_DIR}/common/src/*.cpp")
+# Same exclusions as upstream amrnb/Makefile.am: wrappers we do not use and duplicates of encoder files.
+list(REMOVE_ITEM OPENCORE_AMRNB_SOURCES
+    "${OPENCORE_AMRNB_DIR}/dec/src/decoder_gsm_amr.cpp"
+    "${OPENCORE_AMRNB_DIR}/dec/src/pvgsmamrdecoder.cpp"
+    "${OPENCORE_AMRNB_DIR}/enc/src/gsmamr_encoder_wrapper.cpp"
+    "${OPENCORE_AMRNB_DIR}/common/src/bits2prm.cpp"
+    "${OPENCORE_AMRNB_DIR}/common/src/copy.cpp"
+    "${OPENCORE_AMRNB_DIR}/common/src/div_32.cpp"
+    "${OPENCORE_AMRNB_DIR}/common/src/l_abs.cpp"
+    "${OPENCORE_AMRNB_DIR}/common/src/r_fft.cpp"
+    "${OPENCORE_AMRNB_DIR}/common/src/vad1.cpp"
+    "${OPENCORE_AMRNB_DIR}/common/src/vad2.cpp")
+list(APPEND OPENCORE_AMRNB_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/opencore-amr/amrnb/wrapper.cpp")
+
+add_library(opencore-amrnb STATIC ${OPENCORE_AMRNB_SOURCES})
+# Compiled as C like upstream's --enable-compile-c, so FFmpeg's configure links it without a C++ runtime.
+set_source_files_properties(${OPENCORE_AMRNB_SOURCES} PROPERTIES LANGUAGE C)
+set_property(TARGET opencore-amrnb PROPERTY C_STANDARD 99)
+target_include_directories(opencore-amrnb
+    PUBLIC opencore-amr/amrnb
+    PRIVATE opencore-amr/oscl
+        "${OPENCORE_AMRNB_DIR}/common/include"
+        "${OPENCORE_AMRNB_DIR}/dec/include"
+        "${OPENCORE_AMRNB_DIR}/dec/src"
+        "${OPENCORE_AMRNB_DIR}/enc/src"
+        opencore-amr/opencore/codecs_v2/audio/gsm_amr/common/dec/include)
+if (MSVC)
+    target_compile_options(opencore-amrnb PRIVATE /TC /W0)
+else()
+    # The fixed-point codec shifts negative values by design; keep UBSan reports to code we maintain.
+    target_compile_options(opencore-amrnb PRIVATE -x c -w -fno-sanitize=undefined)
+endif()
+
 if (BUILD_TOOLS)
     find_package(LibClang QUIET)
 

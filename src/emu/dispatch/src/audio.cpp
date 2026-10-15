@@ -31,7 +31,6 @@
 #include <utils/reqsts.h>
 
 #include <common/cvt.h>
-#include <common/fileutils.h>
 #include <common/log.h>
 #include <common/path.h>
 
@@ -41,8 +40,6 @@
 
 #include <algorithm>
 #include <chrono>
-#include <cstdio>
-#include <cstring>
 #include <thread>
 
 using namespace std::literals::chrono_literals;
@@ -144,76 +141,15 @@ namespace eka2l1::dispatch {
         return 0;
     }
 
-    static constexpr std::uint32_t RECORD_SAMPLE_RATE = 8000;
-    static constexpr std::uint16_t RECORD_CHANNELS = 1;
-
-    static constexpr std::size_t WAV_HEADER_SIZE = 44;
-
-    static std::uint32_t read_le32(const std::uint8_t *data) {
-        return data[0] | (data[1] << 8) | (data[2] << 16) | (static_cast<std::uint32_t>(data[3]) << 24);
-    }
-
-    static void write_le32(std::vector<std::uint8_t> &out, const std::uint32_t value) {
-        for (int i = 0; i < 4; i++) {
-            out.push_back(static_cast<std::uint8_t>(value >> (i * 8)));
-        }
-    }
-
-    static void write_le16(std::vector<std::uint8_t> &out, const std::uint16_t value) {
-        out.push_back(static_cast<std::uint8_t>(value));
-        out.push_back(static_cast<std::uint8_t>(value >> 8));
-    }
-
-    static std::vector<std::uint8_t> make_wav_header(const std::uint32_t data_size) {
-        std::vector<std::uint8_t> out;
-
-        out.insert(out.end(), { 'R', 'I', 'F', 'F' });
-        write_le32(out, 36 + data_size);
-        out.insert(out.end(), { 'W', 'A', 'V', 'E', 'f', 'm', 't', ' ' });
-        write_le32(out, 16);
-        write_le16(out, 1);
-        write_le16(out, RECORD_CHANNELS);
-        write_le32(out, RECORD_SAMPLE_RATE);
-        write_le32(out, RECORD_SAMPLE_RATE * RECORD_CHANNELS * sizeof(std::int16_t));
-        write_le16(out, RECORD_CHANNELS * sizeof(std::int16_t));
-        write_le16(out, 16);
-        out.insert(out.end(), { 'd', 'a', 't', 'a' });
-        write_le32(out, data_size);
-
-        return out;
-    }
-
-    // Recording appends to the clip (CMdaAudioRecorderUtility::RecordL), so only an empty clip or one in
-    // the format written here, data chunk last, can be recorded into without destroying it.
-    static bool get_recordable_sample_count(std::FILE *file, std::uint64_t &sample_count) {
-        sample_count = 0;
-
-        if (std::fseek(file, 0, SEEK_END) != 0) {
+    bool dsp_epoc_player::open_record_clip(const std::string &host_path) {
+        if (is_recording()) {
             return false;
         }
 
-        const long size = std::ftell(file);
-        if (size == 0) {
-            return true;
-        }
+        record_clip_ = drivers::new_clip_writer(host_path);
+        record_clip_path_ = host_path;
 
-        std::uint8_t header[WAV_HEADER_SIZE];
-
-        if ((size < static_cast<long>(WAV_HEADER_SIZE)) || (std::fseek(file, 0, SEEK_SET) != 0) ||
-            (std::fread(header, 1, sizeof(header), file) != sizeof(header))) {
-            return false;
-        }
-
-        const std::vector<std::uint8_t> expected = make_wav_header(0);
-        const std::uint32_t data_size = read_le32(header + 40);
-
-        if ((std::memcmp(header, expected.data(), 4) != 0) || (std::memcmp(header + 8, expected.data() + 8, 32) != 0) ||
-            (WAV_HEADER_SIZE + data_size != static_cast<std::uint64_t>(size))) {
-            return false;
-        }
-
-        sample_count = data_size / sizeof(std::int16_t);
-        return true;
+        return record_clip_ != nullptr;
     }
 
     bool dsp_epoc_player::start_recording(drivers::audio_driver *driver, const std::string &host_path) {
@@ -221,73 +157,61 @@ namespace eka2l1::dispatch {
             return false;
         }
 
-        std::FILE *file = common::open_c_file(host_path, "r+b");
-        if (!file) {
-            file = common::open_c_file(host_path, "w+b");
-        }
-
-        std::uint64_t existing_samples = 0;
-
-        if (!file || !get_recordable_sample_count(file, existing_samples)) {
-            LOG_ERROR(HLE_AUD, "Unable to record into {}: the clip cannot be opened or is not 16-bit PCM WAV", host_path);
-
-            if (file) {
-                std::fclose(file);
-            }
-
+        if ((!record_clip_ || (record_clip_path_ != host_path)) && !open_record_clip(host_path)) {
+            LOG_ERROR(HLE_AUD, "Unable to record into {}: its format cannot be written or appended to", host_path);
             return false;
         }
+
+        if (!record_clip_->begin()) {
+            LOG_ERROR(HLE_AUD, "Unable to open {} for recording", host_path);
+            return false;
+        }
+
+        const drivers::clip_record_format format = record_clip_->format();
 
         {
             const std::lock_guard<std::mutex> guard(record_lock_);
             pending_samples_.clear();
-            recorded_sample_count_ = existing_samples;
+            recorded_frame_count_ = record_clip_->total_frames();
         }
 
-        record_stream_ = driver->new_input_stream(RECORD_SAMPLE_RATE, RECORD_CHANNELS, [this](std::int16_t *buffer, std::size_t frames) {
-            const std::lock_guard<std::mutex> guard(record_lock_);
-            pending_samples_.insert(pending_samples_.end(), buffer, buffer + frames * RECORD_CHANNELS);
-            recorded_sample_count_ += frames * RECORD_CHANNELS;
+        record_stream_ = driver->new_input_stream(format.sample_rate, static_cast<std::uint8_t>(format.channels),
+            [this, channels = format.channels](std::int16_t *buffer, std::size_t frames) {
+                const std::lock_guard<std::mutex> guard(record_lock_);
+                pending_samples_.insert(pending_samples_.end(), buffer, buffer + frames * channels);
+                recorded_frame_count_ += frames;
 
-            return frames;
-        });
+                return frames;
+            });
 
         if (!record_stream_ || !record_stream_->start()) {
             LOG_ERROR(HLE_AUD, "Unable to start the audio input stream for recording");
             record_stream_.reset();
-            std::fclose(file);
+            record_clip_->end();
 
             return false;
         }
 
-        record_file_ = file;
-        return flush_recording();
+        return true;
     }
 
     bool dsp_epoc_player::flush_recording() {
-        if (!record_file_) {
+        if (!record_stream_) {
             return false;
         }
 
         std::vector<std::int16_t> pending;
-        std::uint64_t total_samples = 0;
 
         {
             const std::lock_guard<std::mutex> guard(record_lock_);
             pending.swap(pending_samples_);
-            total_samples = recorded_sample_count_;
         }
 
-        const std::uint32_t data_size = static_cast<std::uint32_t>(total_samples * sizeof(std::int16_t));
-        const std::vector<std::uint8_t> header = make_wav_header(data_size);
+        if (pending.empty()) {
+            return true;
+        }
 
-        bool written = (std::fseek(record_file_, 0, SEEK_END) == 0);
-        written = written && (std::fwrite(pending.data(), sizeof(std::int16_t), pending.size(), record_file_) == pending.size());
-        written = written && (std::fseek(record_file_, 0, SEEK_SET) == 0);
-        written = written && (std::fwrite(header.data(), 1, header.size(), record_file_) == header.size());
-
-        std::fflush(record_file_);
-        return written;
+        return record_clip_->write(pending.data(), pending.size() / record_clip_->format().channels);
     }
 
     bool dsp_epoc_player::stop_recording() {
@@ -296,19 +220,16 @@ namespace eka2l1::dispatch {
         }
 
         record_stream_->stop();
-        record_stream_.reset();
 
         const bool written = flush_recording();
+        record_stream_.reset();
 
-        std::fclose(record_file_);
-        record_file_ = nullptr;
-
-        return written;
+        return record_clip_->end() && written;
     }
 
     std::uint64_t dsp_epoc_player::recorded_duration_us() {
         const std::lock_guard<std::mutex> guard(record_lock_);
-        return (recorded_sample_count_ / RECORD_CHANNELS) * 1000000ULL / RECORD_SAMPLE_RATE;
+        return recorded_frame_count_ * 1000000ULL / record_clip_->format().sample_rate;
     }
 
     BRIDGE_FUNC_DISPATCHER(eka2l1::ptr<void>, eaudio_player_inst, const std::uint32_t init_flags) {
@@ -746,8 +667,12 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
+        if (eplayer->record_clip_) {
+            return static_cast<std::int32_t>(eplayer->record_clip_->format().sample_rate);
+        }
+
         if (!eplayer->impl_) {
-            return static_cast<std::int32_t>(RECORD_SAMPLE_RATE);
+            return epoc::error_not_ready;
         }
 
         return static_cast<std::int32_t>(eplayer->impl_->get_dest_freq());
@@ -762,9 +687,17 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
-        // Without a decoder the clip is a recording destination, whose format is fixed.
+        if (eplayer->record_clip_) {
+            return eplayer->record_clip_->set_sample_rate(sample_rate) ? epoc::error_none : epoc::error_not_supported;
+        }
+
         if (!eplayer->impl_) {
-            return (static_cast<std::uint32_t>(sample_rate) == RECORD_SAMPLE_RATE) ? epoc::error_none : epoc::error_not_supported;
+            return epoc::error_not_ready;
+        }
+
+        // Keeping the current format needs no encoder.
+        if (static_cast<std::uint32_t>(sample_rate) == eplayer->impl_->get_dest_freq()) {
+            return epoc::error_none;
         }
 
         if (!eplayer->impl_->set_dest_freq(sample_rate)) {
@@ -783,8 +716,12 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
+        if (eplayer->record_clip_) {
+            return static_cast<std::int32_t>(eplayer->record_clip_->format().channels);
+        }
+
         if (!eplayer->impl_) {
-            return static_cast<std::int32_t>(RECORD_CHANNELS);
+            return epoc::error_not_ready;
         }
 
         return static_cast<std::int32_t>(eplayer->impl_->get_dest_channel_count());
@@ -799,8 +736,16 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
+        if (eplayer->record_clip_) {
+            return eplayer->record_clip_->set_channel_count(channel_count) ? epoc::error_none : epoc::error_not_supported;
+        }
+
         if (!eplayer->impl_) {
-            return (channel_count == static_cast<std::int32_t>(RECORD_CHANNELS)) ? epoc::error_none : epoc::error_not_supported;
+            return epoc::error_not_ready;
+        }
+
+        if (static_cast<std::uint32_t>(channel_count) == eplayer->impl_->get_dest_channel_count()) {
+            return epoc::error_none;
         }
 
         if (!eplayer->impl_->set_dest_channel_count(channel_count)) {
@@ -823,7 +768,14 @@ namespace eka2l1::dispatch {
             return epoc::error_argument;
         }
 
-        *encoding = eplayer->impl_ ? eplayer->impl_->get_dest_encoding() : drivers::AUDIO_PCM16_CODEC_4CC;
+        if (eplayer->record_clip_) {
+            *encoding = eplayer->record_clip_->codec_four_cc();
+        } else if (eplayer->impl_) {
+            *encoding = eplayer->impl_->get_dest_encoding();
+        } else {
+            return epoc::error_not_ready;
+        }
+
         return epoc::error_none;
     }
 
@@ -836,8 +788,13 @@ namespace eka2l1::dispatch {
             return epoc::error_bad_handle;
         }
 
+        // A recorder's data type follows from the clip format.
+        if (eplayer->record_clip_) {
+            return (encoding == eplayer->record_clip_->codec_four_cc()) ? epoc::error_none : epoc::error_not_supported;
+        }
+
         if (!eplayer->impl_) {
-            return (encoding == drivers::AUDIO_PCM16_CODEC_4CC) ? epoc::error_none : epoc::error_not_supported;
+            return epoc::error_not_ready;
         }
 
         if (!eplayer->impl_->set_dest_encoding(encoding)) {
@@ -860,6 +817,122 @@ namespace eka2l1::dispatch {
             eplayer->impl_->set_dest_container_format(container_format);
         }
         return epoc::error_none;
+    }
+
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_open_record_clip, eka2l1::ptr<void> handle, const std::uint16_t *url,
+        const std::uint32_t url_length) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        dispatch::dsp_manager &manager = dispatcher->get_dsp_manager();
+        dsp_epoc_player *eplayer = manager.get_object<dsp_epoc_player>(handle.ptr_address());
+
+        if (!eplayer) {
+            return epoc::error_bad_handle;
+        }
+
+        if (!url || (url_length == 0)) {
+            return epoc::error_argument;
+        }
+
+        if (eplayer->is_recording()) {
+            return epoc::error_in_use;
+        }
+
+        if (!eplayer->open_record_clip(common::ucs2_to_utf8(resolve_audio_url(sys, url, url_length)))) {
+            return epoc::error_not_supported;
+        }
+
+        return epoc::error_none;
+    }
+
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_get_dest_bit_rate, eka2l1::ptr<void> handle) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        dispatch::dsp_manager &manager = dispatcher->get_dsp_manager();
+        dsp_epoc_player *eplayer = manager.get_object<dsp_epoc_player>(handle.ptr_address());
+
+        if (!eplayer) {
+            return epoc::error_bad_handle;
+        }
+
+        if (!eplayer->record_clip_) {
+            return epoc::error_not_ready;
+        }
+
+        return static_cast<std::int32_t>(eplayer->record_clip_->format().bit_rate);
+    }
+
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_set_dest_bit_rate, eka2l1::ptr<void> handle, const std::uint32_t bit_rate) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        dispatch::dsp_manager &manager = dispatcher->get_dsp_manager();
+        dsp_epoc_player *eplayer = manager.get_object<dsp_epoc_player>(handle.ptr_address());
+
+        if (!eplayer) {
+            return epoc::error_bad_handle;
+        }
+
+        if (!eplayer->record_clip_) {
+            return epoc::error_not_ready;
+        }
+
+        if (eplayer->is_recording()) {
+            return epoc::error_in_use;
+        }
+
+        return eplayer->record_clip_->set_bit_rate(bit_rate) ? epoc::error_none : epoc::error_not_supported;
+    }
+
+    enum dest_value_kind {
+        DEST_VALUE_SAMPLE_RATE = 0,
+        DEST_VALUE_CHANNEL_COUNT = 1,
+        DEST_VALUE_BIT_RATE = 2,
+        DEST_VALUE_DATA_TYPE = 3
+    };
+
+    // Fills up to max_count values and returns how many there are in total.
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_get_supported_dest_values, eka2l1::ptr<void> handle, const std::int32_t kind,
+        std::uint32_t *values, const std::int32_t max_count) {
+        dispatch::dispatcher *dispatcher = sys->get_dispatcher();
+        dispatch::dsp_manager &manager = dispatcher->get_dsp_manager();
+        dsp_epoc_player *eplayer = manager.get_object<dsp_epoc_player>(handle.ptr_address());
+
+        if (!eplayer) {
+            return epoc::error_bad_handle;
+        }
+
+        if (!eplayer->record_clip_) {
+            return epoc::error_not_ready;
+        }
+
+        if ((max_count < 0) || (!values && (max_count != 0))) {
+            return epoc::error_argument;
+        }
+
+        std::vector<std::uint32_t> supported;
+
+        switch (kind) {
+        case DEST_VALUE_SAMPLE_RATE:
+            supported = eplayer->record_clip_->supported_sample_rates();
+            break;
+
+        case DEST_VALUE_CHANNEL_COUNT:
+            supported = eplayer->record_clip_->supported_channel_counts();
+            break;
+
+        case DEST_VALUE_BIT_RATE:
+            supported = eplayer->record_clip_->supported_bit_rates();
+            break;
+
+        case DEST_VALUE_DATA_TYPE:
+            supported = { eplayer->record_clip_->codec_four_cc() };
+            break;
+
+        default:
+            return epoc::error_argument;
+        }
+
+        const std::size_t copied = std::min<std::size_t>(supported.size(), static_cast<std::size_t>(max_count));
+        std::copy(supported.begin(), supported.begin() + copied, values);
+
+        return static_cast<std::int32_t>(supported.size());
     }
 
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_set_position, eka2l1::ptr<void> handle, std::uint64_t pos_in_micros) {

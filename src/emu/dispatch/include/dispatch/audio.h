@@ -59,6 +59,13 @@ namespace eka2l1::dispatch {
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_set_dest_encoding, eka2l1::ptr<void> handle, const std::uint32_t encoding);
 
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_set_dest_container_format, eka2l1::ptr<void> handle, const std::uint32_t container_format);
+
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_open_record_clip, eka2l1::ptr<void> handle, const std::uint16_t *url,
+        const std::uint32_t url_length);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_get_dest_bit_rate, eka2l1::ptr<void> handle);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_set_dest_bit_rate, eka2l1::ptr<void> handle, const std::uint32_t bit_rate);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_get_supported_dest_values, eka2l1::ptr<void> handle, const std::int32_t kind,
+        std::uint32_t *values, const std::int32_t max_count);
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_set_position, eka2l1::ptr<void> handle, std::uint64_t pos_in_micros);
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_get_position, eka2l1::ptr<void> handle, std::uint64_t *pos_get);
 

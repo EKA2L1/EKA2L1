@@ -45,6 +45,10 @@
 .global EAudioPlayerSetDestinationEncoding
 .global EAudioPlayerGetDestinationEncoding
 .global EAudioPlayerSetContainerFormat
+.global EAudioPlayerOpenRecordClip
+.global EAudioPlayerGetDestinationBitRate
+.global EAudioPlayerSetDestinationBitRate
+.global EAudioPlayerGetSupportedDestinationValues
 
 .global ETonePlayerNewInstance
 .global ETonePlayerNotifyAnyDone
@@ -144,6 +148,18 @@ EAudioPlayerSetContainerFormat:
 
 EAudioPlayerRecord:
     CallHleDispatch 0x39
+
+EAudioPlayerOpenRecordClip:
+    CallHleDispatch 0x3A
+
+EAudioPlayerGetDestinationBitRate:
+    CallHleDispatch 0x3B
+
+EAudioPlayerSetDestinationBitRate:
+    CallHleDispatch 0x3C
+
+EAudioPlayerGetSupportedDestinationValues:
+    CallHleDispatch 0x3D
 
 ETonePlayerNewInstance:
     CallHleDispatch 0xD0
