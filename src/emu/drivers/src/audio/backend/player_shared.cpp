@@ -77,6 +77,7 @@ namespace eka2l1::drivers {
         if (playback_complete_.exchange(true)) {
             return;
         }
+        start_position_us_ = 0;
         if (callback_) {
             callback_(userdata_.data());
         }
@@ -90,7 +91,13 @@ namespace eka2l1::drivers {
                 return true;
             }
 
-            if (!stop()) {
+            // Restarting a running clip begins at the start, as a stopped one would.
+            if (!playback_complete_) {
+                start_position_us_ = 0;
+            }
+
+            playback_complete_ = true;
+            if (!output_stream_->stop()) {
                 return false;
             }
         }
@@ -102,9 +109,14 @@ namespace eka2l1::drivers {
             return false;
         }
 
+        if ((start_position_us_ != 0) && !set_position_for_custom_format(start_position_us_)) {
+            return false;
+        }
+
         data_pointer_ = 0;
         flags_ = 0;
         data_.clear();
+        start_position_frames_ = 0;
         playback_complete_ = false;
 
         // New stream to restart everything
@@ -124,6 +136,7 @@ namespace eka2l1::drivers {
 
     bool player_shared::stop() {
         playback_complete_ = true;
+        start_position_us_ = 0;
         return !output_stream_ || output_stream_->stop();
     }
 
@@ -151,7 +164,26 @@ namespace eka2l1::drivers {
     }
 
     void player_shared::set_position(const std::uint64_t pos_in_us) {
+        // Query the stream before locking: its render callback runs with lock_ held.
+        std::uint64_t frames = 0;
+        if (output_stream_ && !playback_complete_) {
+            output_stream_->current_frame_position(&frames);
+        }
+
         const std::lock_guard<std::mutex> guard(lock_);
+        start_position_us_ = pos_in_us;
+        start_position_frames_ = frames;
+
+        // A stopped clip only remembers the position; play() seeks there.
+        if (playback_complete_) {
+            return;
+        }
+
+        // Drop PCM decoded before the seek.
+        data_.clear();
+        data_pointer_ = 0;
+        flags_ &= ~1;
+
         set_position_for_custom_format(pos_in_us);
     }
 
@@ -197,17 +229,20 @@ namespace eka2l1::drivers {
     }
 
     std::uint64_t player_shared::position() const {
+        const std::uint64_t start_us = start_position_us_;
         if (playback_complete_) {
-            return 0;
+            return start_us;
         }
         std::uint64_t pos_in_frames = 0;
         if (!output_stream_ || !freq_ || !output_stream_->current_frame_position(&pos_in_frames)) {
-            return 0;
+            return start_us;
         }
+        const std::uint64_t start_frames = start_position_frames_;
+        pos_in_frames = (pos_in_frames > start_frames) ? (pos_in_frames - start_frames) : 0;
         // Audio backends report PCM frames, not interleaved scalar samples. A
         // frame already contains one sample for every channel, so multiplying
         // by channels_ makes stereo media report time at exactly 2x speed.
-        return frames_to_microseconds(pos_in_frames, freq_);
+        return start_us + frames_to_microseconds(pos_in_frames, freq_);
     }
 
     player_shared::player_shared(audio_driver *driver)

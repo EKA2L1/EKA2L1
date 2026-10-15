@@ -51,6 +51,10 @@ namespace eka2l1::drivers {
         std::uint32_t flags_;
         std::atomic<bool> playback_complete_{false};
 
+        // Where the current or next playback starts, and the stream frame count at that point.
+        std::atomic<std::uint64_t> start_position_us_{0};
+        std::atomic<std::uint64_t> start_position_frames_{0};
+
         std::int32_t repeat_left_;
         std::int64_t silence_micros_;
 

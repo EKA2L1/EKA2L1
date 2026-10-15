@@ -45,8 +45,8 @@ namespace eka2l1 {
 		*/
         template <typename T>
         std::enable_if_t<sizeof(T) == 8, T> read_from_gpr(arm::core *cpu, const arg_layout &arg) {
-            const uint64_t low = cpu->get_reg(arg.offset - 1);
-            const uint64_t high = cpu->get_reg(arg.offset);
+            const uint64_t low = cpu->get_reg(arg.offset);
+            const uint64_t high = cpu->get_reg(arg.offset + 1);
 
             const uint64_t all = low | (high << 32);
 

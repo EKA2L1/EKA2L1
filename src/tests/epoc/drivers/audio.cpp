@@ -219,6 +219,48 @@ TEST_CASE("Clip completion follows output drain and resets its position", "[audi
     }
 }
 
+TEST_CASE("Clip position set while stopped is where playback starts", "[audio]") {
+    memory_audio_stream source;
+    const std::uint8_t wav[] = {
+        'R', 'I', 'F', 'F', 44, 0, 0, 0, 'W', 'A', 'V', 'E',
+        'f', 'm', 't', ' ', 16, 0, 0, 0, 1, 0, 1, 0,
+        0x40, 0x1F, 0, 0, 0x40, 0x1F, 0, 0, 1, 0, 8, 0,
+        'd', 'a', 't', 'a', 8, 0, 0, 0, 128, 128, 128, 128, 128, 128, 128, 128
+    };
+    std::copy(std::begin(wav), std::end(wav), source.data.begin());
+    queued_audio_driver driver;
+    eka2l1::drivers::player_ffmpeg player(&driver);
+    REQUIRE(player.open_custom(&source));
+    REQUIRE(player.play());
+    REQUIRE(driver.output->queue(2) == 2);
+    REQUIRE(player.position() == 250);
+
+    SECTION("Stop, seek and play resumes from the new position") {
+        REQUIRE(player.stop());
+        REQUIRE(player.position() == 0);
+        player.set_position(500);
+        REQUIRE(player.position() == 500);
+        REQUIRE(player.play());
+        REQUIRE(player.position() == 500);
+        REQUIRE(driver.output->queue(16) == 4);
+        REQUIRE(player.position() == 1000);
+    }
+
+    SECTION("Seeking while playing continues from the new position") {
+        player.set_position(750);
+        REQUIRE(player.position() == 750);
+        REQUIRE(driver.output->queue(16) == 2);
+        REQUIRE(player.position() == 1000);
+    }
+
+    SECTION("Stop discards a position set before it") {
+        player.set_position(500);
+        REQUIRE(player.stop());
+        REQUIRE(player.play());
+        REQUIRE(driver.output->queue(16) == 8);
+    }
+}
+
 TEST_CASE("Invalid custom audio survives probing and repeated cleanup", "[audio]") {
     memory_audio_stream stream;
     eka2l1::drivers::player_ffmpeg player(nullptr);
