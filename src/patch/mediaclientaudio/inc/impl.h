@@ -50,14 +50,28 @@ protected:
     TBool iIsFixup;
     TAny *iTarget;
     TBool iIsTone;
+    TMdaState iTargetState;
+    TMdaState iPreviousState;
+    TBool iStateApplied;
+    TInt iError;
+
+    TBool IsNotifying() const {
+        return IsActive() && !iIsTone && iStateApplied;
+    }
 
 public:
     CMMFMdaAudioOpenComplete();
     ~CMMFMdaAudioOpenComplete();
 
     void Open(CMMFMdaAudioUtility *aUtil);
+    void Complete(CMMFMdaAudioUtility *aUtil, const TMdaState aTargetState, const TInt aError);
     void Open(CMMFMdaAudioToneUtility *aToneUtility);
     void FixupActiveStatus();
+
+    // Queues the observer callback for a transition already made, as the MMF client reports state changes.
+    void Notify(CMMFMdaAudioUtility *aUtil, const TMdaState aPreviousState, const TMdaState aCurrentState, const TInt aError);
+    void FlushNotify();
+    void DiscardNotify();
 
     virtual void DoCancel();
     void CompleteOpen();
@@ -82,6 +96,11 @@ private:
 protected:
     TAny *iDispatchInstance;
     TTimeIntervalMicroSeconds iDuration;
+    TTimeIntervalMicroSeconds iPosition;
+    TTimeIntervalMicroSeconds iRecordTimeAvailable;
+    TFileName iClipName;
+
+    void ReloadRecordedClip();
 
 public:
     CMMFMdaAudioUtility(const TInt aPriority, const TMdaPriorityPreference aPref);
@@ -98,13 +117,18 @@ public:
     void SupplyUrlL(const TDesC &aUrl);
     void SupplyDataL(const TDesC8 &aData);
 
+    // An empty clip opens as a recording destination instead of being handed to the player.
+    void OpenClip(const TDesC &aFilename, const TInt aSize);
+    void Record();
+
     void Play();
     void Stop();
     void Close();
 
     TInt Pause();
 
-    TTimeIntervalMicroSeconds CurrentPosition();
+    // Clip utility getters hand out references, so the values live in the utility.
+    const TTimeIntervalMicroSeconds &CurrentPosition();
     void SetCurrentPosition(const TTimeIntervalMicroSeconds &aPos);
 
     TInt SetVolume(const TInt aNewVolume);
@@ -118,6 +142,10 @@ public:
 
     const TTimeIntervalMicroSeconds &Duration() {
         return iDuration;
+    }
+
+    const TTimeIntervalMicroSeconds &RecordTimeAvailable() {
+        return iRecordTimeAvailable;
     }
 
     const TMdaState State() const {

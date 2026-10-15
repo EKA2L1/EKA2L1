@@ -43,6 +43,8 @@ namespace eka2l1::dispatch {
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_max_volume, eka2l1::ptr<void> handle);
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_get_volume, eka2l1::ptr<void> handle);
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_set_volume, eka2l1::ptr<void> handle, const std::int32_t volume);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_set_balance, eka2l1::ptr<void> handle, const std::int32_t balance);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_get_balance, eka2l1::ptr<void> handle);
 
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_set_repeats, eka2l1::ptr<void> handle, const std::int32_t times, const std::uint32_t silence_interval_micros_low,
         const std::int32_t silence_micros_high);
@@ -79,4 +81,21 @@ namespace eka2l1::dispatch {
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_stream_set_format, eka2l1::ptr<void> handle, const std::int32_t four_cc);
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_stream_get_format, eka2l1::ptr<void> handle, std::int32_t *four_cc);
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_out_stream_set_balance, eka2l1::ptr<void> handle, std::uint32_t balance);
+
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_record, eka2l1::ptr<void> handle, const std::uint16_t *url,
+        const std::uint32_t url_length);
+
+    BRIDGE_FUNC_DISPATCHER(eka2l1::ptr<void>, etone_player_inst);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, etone_player_notify_any_done, eka2l1::ptr<void> handle, eka2l1::ptr<epoc::request_status> sts);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, etone_player_get_fixed_sequence_count, eka2l1::ptr<void> handle);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, etone_player_set_volume, eka2l1::ptr<void> handle, const std::int32_t volume);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, etone_player_get_volume, eka2l1::ptr<void> handle);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, etone_player_max_volume, eka2l1::ptr<void> handle);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, etone_player_prepare, eka2l1::ptr<void> handle);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, etone_player_set_repeats, eka2l1::ptr<void> handle);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, etone_player_set_balance, eka2l1::ptr<void> handle);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, etone_player_play, eka2l1::ptr<void> handle);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, etone_player_stop, eka2l1::ptr<void> handle);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, etone_player_get_balance, eka2l1::ptr<void> handle);
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, etone_player_get_fixed_sequence_name);
 }

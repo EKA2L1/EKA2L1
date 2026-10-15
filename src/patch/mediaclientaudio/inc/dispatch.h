@@ -82,6 +82,9 @@ HLE_DISPATCH_FUNC(TInt, EAudioPlayerGetDestinationEncoding, TAny *aInstance, TUi
 
 HLE_DISPATCH_FUNC(TInt, EAudioPlayerSetContainerFormat, TAny *aInstance, const TUint32 aFourCC);
 
+// Capture the input device into the clip at aUrl until EAudioPlayerStop.
+HLE_DISPATCH_FUNC(TInt, EAudioPlayerRecord, TAny *aInstance, const TUint16 *aUrl, const TUint aUrlLength);
+
 /// TONE PLAYER
 HLE_DISPATCH_FUNC(TAny *, ETonePlayerNewInstance);
 HLE_DISPATCH_FUNC(TInt, ETonePlayerNotifyAnyDone, TAny *aInstance, TRequestStatus &aStatus);

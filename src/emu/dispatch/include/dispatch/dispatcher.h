@@ -20,12 +20,14 @@
 #pragma once
 
 #include <cstdint>
+#include <cstdio>
 
 #include <dispatch/management.h>
 #include <dispatch/libraries/egl/def.h>
 
 #include <drivers/audio/dsp.h>
 #include <drivers/audio/player.h>
+#include <drivers/audio/stream.h>
 #include <drivers/camera/camera.h>
 #include <dispatch/video.h>
 #include <dispatch/hui.h>
@@ -72,7 +74,8 @@ namespace eka2l1::dispatch {
 
     enum dsp_medium_type {
         DSP_MEDIUM_TYPE_EPOC_STREAM = 0,
-        DSP_MEDIUM_TYPE_EPOC_PLAYER = 1
+        DSP_MEDIUM_TYPE_EPOC_PLAYER = 1,
+        DSP_MEDIUM_TYPE_EPOC_TONE = 2
     };
 
     enum camera_image_stack_type {
@@ -149,11 +152,48 @@ namespace eka2l1::dispatch {
 
         std::uint64_t last_position_query_us_ = 0;
 
+        std::unique_ptr<drivers::audio_input_stream> record_stream_;
+        std::mutex record_lock_;
+        std::vector<std::int16_t> pending_samples_;
+        std::uint64_t recorded_sample_count_ = 0;
+        std::FILE *record_file_ = nullptr;
+
         explicit dsp_epoc_player(dsp_manager *manager, const std::uint32_t init_flags);
         ~dsp_epoc_player() override;
 
+        // Captured audio is written as a PCM WAV clip; the guest watches its size grow to estimate free space.
+        bool start_recording(drivers::audio_driver *driver, const std::string &host_path);
+        bool flush_recording();
+        bool stop_recording();
+        bool is_recording() const {
+            return record_stream_ != nullptr;
+        }
+
+        std::uint64_t recorded_duration_us();
+
         void volume(const std::uint32_t volume) override;
         std::uint32_t max_volume() const override;
+
+        std::uint32_t volume() const override {
+            return dsp_medium::volume();
+        }
+    };
+
+    // Tone sequences are accepted but not synthesised: playback completes at once, silently.
+    struct dsp_epoc_tone : public dsp_medium {
+        epoc::notify_info done_info_;
+
+        explicit dsp_epoc_tone(dsp_manager *manager)
+            : dsp_medium(manager, DSP_MEDIUM_TYPE_EPOC_TONE) {
+        }
+
+        void volume(const std::uint32_t volume) override {
+            logical_volume_ = volume;
+        }
+
+        std::uint32_t max_volume() const override {
+            return 10;
+        }
 
         std::uint32_t volume() const override {
             return dsp_medium::volume();
@@ -200,6 +240,12 @@ namespace eka2l1::dispatch {
 
             if constexpr (std::is_same_v<T, dsp_epoc_player>) {
                 if (medium->type() != DSP_MEDIUM_TYPE_EPOC_PLAYER) {
+                    return nullptr;
+                }
+            }
+
+            if constexpr (std::is_same_v<T, dsp_epoc_tone>) {
+                if (medium->type() != DSP_MEDIUM_TYPE_EPOC_TONE) {
                     return nullptr;
                 }
             }
