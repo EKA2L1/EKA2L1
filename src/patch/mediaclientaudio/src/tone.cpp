@@ -78,7 +78,7 @@ void CMdaAudioToneUtility::SetPriority(TInt aPriority, TMdaPriorityPreference aP
 
 void CMdaAudioToneUtility::SetDTMFLengths(TTimeIntervalMicroSeconds32 aToneLength, TTimeIntervalMicroSeconds32 aToneOffLength,
     TTimeIntervalMicroSeconds32 aPauseLength) {
-    LogOut(KMcaCat, _L("CMdaAudioToneUtility::SetDTMFLengths unimplemented!"));
+    iProperties->SetDTMFLengths(aToneLength.Int(), aToneOffLength.Int(), aPauseLength.Int());
 }
 
 void CMdaAudioToneUtility::SetRepeats(TInt aRepeatNumberOfTimes, const TTimeIntervalMicroSeconds& aTrailingSilence) {
@@ -108,7 +108,7 @@ void CMdaAudioToneUtility::PrepareToPlayTone(TInt aFrequency, const TTimeInterva
 }
 
 void CMdaAudioToneUtility::PrepareToPlayDTMFString(const TDesC& aDTMF) {
-    LogOut(KMcaCat, _L("CMdaAudioToneUtility::PrepareToPlayDTMFString unimplemented!"));
+    iProperties->PrepareToPlayDTMFString(aDTMF);
 }
 
 void CMdaAudioToneUtility::PrepareToPlayDesSequence(const TDesC8& aSequence) {
@@ -147,7 +147,7 @@ EXPORT_C TInt CMdaAudioToneUtility::GetBalanceL() {
 }
 
 EXPORT_C void CMdaAudioToneUtility::PrepareToPlayDualTone(TInt aFrequencyOne, TInt aFrequencyTwo, const TTimeIntervalMicroSeconds& aDuration) {
-    LogOut(KMcaCat, _L("CMdaAudioToneUtility::PrepareToPlayDualTone unimplemented!"));
+    iProperties->PrepareToPlayDualTone(aFrequencyOne, aFrequencyTwo, aDuration);
 }
 
 #if (MCA_NEW >= 3)

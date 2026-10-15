@@ -32,6 +32,7 @@
 #include <dispatch/video.h>
 #include <dispatch/hui.h>
 #include <dispatch/tls.h>
+#include <dispatch/tone.h>
 
 #include <drivers/itc.h>
 
@@ -179,17 +180,32 @@ namespace eka2l1::dispatch {
         }
     };
 
-    // Tone sequences are accepted but not synthesised: playback completes at once, silently.
     struct dsp_epoc_tone : public dsp_medium {
+        tone_program program_;
+        std::int32_t repeats_ = 0;
+        std::uint64_t trailing_silence_us_ = 0;
+
+        // DevSound's defaults (CMMFDevSoundSvrImp).
+        std::int32_t dtmf_tone_on_us_ = 250000;
+        std::uint32_t dtmf_tone_off_us_ = 50000;
+        std::uint32_t dtmf_pause_us_ = 250000;
+
+        std::unique_ptr<tone_generator> generator_;
+        std::unique_ptr<drivers::audio_output_stream> stream_;
+
         epoc::notify_info done_info_;
 
-        explicit dsp_epoc_tone(dsp_manager *manager)
-            : dsp_medium(manager, DSP_MEDIUM_TYPE_EPOC_TONE) {
-        }
+        // Identifies the play a scheduled completion belongs to.
+        std::uint32_t play_generation_ = 0;
 
-        void volume(const std::uint32_t volume) override {
-            logical_volume_ = volume;
-        }
+        explicit dsp_epoc_tone(dsp_manager *manager);
+        ~dsp_epoc_tone() override;
+
+        // Sound is best effort: without an output stream the tone still lasts as long, silently.
+        void play(drivers::audio_driver *driver);
+        void stop();
+
+        void volume(const std::uint32_t volume) override;
 
         std::uint32_t max_volume() const override {
             return 10;

@@ -62,6 +62,10 @@
 .global ETonePlayerGetBalance
 .global ETonePlayerGetFixedSequenceCount
 .global ETonePlayerGetFixedSequenceName
+.global ETonePlayerDestroy
+.global ETonePlayerSetDualTone
+.global ETonePlayerSetDTMFString
+.global ETonePlayerSetDTMFLengths
 
 EAudioPlayerNewInstance:
     CallHleDispatch 0x20
@@ -188,3 +192,15 @@ ETonePlayerSetBalance:
 
 ETonePlayerGetFixedSequenceName:
     CallHleDispatch 0xDF
+
+ETonePlayerDestroy:
+    CallHleDispatch 0xE0
+
+ETonePlayerSetDualTone:
+    CallHleDispatch 0xE1
+
+ETonePlayerSetDTMFString:
+    CallHleDispatch 0xE2
+
+ETonePlayerSetDTMFLengths:
+    CallHleDispatch 0xE3

@@ -29,12 +29,16 @@
 
 #include <e32def.h>
 #include <e32std.h>
+#include <f32file.h>
 
 static const TUint32 KBlackListAudioClipFormat[2] = { KUidMdaClipFormatRawAudioDefine, KUidMdaClipFormatAuDefine };
 static const TUint32 KBlackListAudioClipFormatCount = sizeof(KBlackListAudioClipFormat) / sizeof(TUint32);
 
+static const TInt KOpenerPriority = 100;
+static const TInt KToneOpenerPriority = KOpenerPriority + 1;
+
 CMMFMdaAudioOpenComplete::CMMFMdaAudioOpenComplete()
-    : CIdle(100)
+    : CIdle(KOpenerPriority)
     , iIsFixup(EFalse)
     , iTarget(NULL)
     , iIsTone(EFalse)
@@ -281,6 +285,29 @@ void CMMFMdaAudioUtility::OpenClip(const TDesC &aFilename, const TInt aSize) {
     if (err != KErrNone) {
         iOpener.Complete(this, EMdaStateIdle, err);
     }
+}
+
+// The emulator records 16-bit mono PCM at 8 kHz.
+static const TInt KRecordBytesPerSecond = 16000;
+
+const TTimeIntervalMicroSeconds &CMMFMdaAudioUtility::RecordTimeAvailable() {
+    iRecordTimeAvailable = TTimeIntervalMicroSeconds(0);
+
+    TInt drive = 0;
+    TParsePtrC parse(iClipName);
+
+    RFs fs;
+    if (!parse.DrivePresent() || (RFs::CharToDrive(parse.Drive()[0], drive) != KErrNone) || (fs.Connect() != KErrNone)) {
+        return iRecordTimeAvailable;
+    }
+
+    TVolumeInfo info;
+    if (fs.Volume(info, drive) == KErrNone) {
+        iRecordTimeAvailable = TTimeIntervalMicroSeconds(info.iFree * TInt64(1000000) / TInt64(KRecordBytesPerSecond));
+    }
+
+    fs.Close();
+    return iRecordTimeAvailable;
 }
 
 void CMMFMdaAudioUtility::Record() {
@@ -621,8 +648,16 @@ void CMMFMdaAudioToneUtility::ConstructL() {
 
     iOpener.FixupActiveStatus();
 
+    // DevSound prepares a tone near-instantly; clients play it right after a pending clip open completes.
+    iOpener.SetPriority(KToneOpenerPriority);
+
     CActiveScheduler::Add(&iOpener);
     CActiveScheduler::Add(this);
+}
+
+CMMFMdaAudioToneUtility::~CMMFMdaAudioToneUtility() {
+    Cancel();
+    ETonePlayerDestroy(0, iDispatchInstance);
 }
 
 CMMFMdaAudioToneUtility *CMMFMdaAudioToneUtility::NewL(MMdaAudioToneObserver &aObserver, const TInt aPriority, const TMdaPriorityPreference aPref) {
@@ -683,6 +718,22 @@ void CMMFMdaAudioToneUtility::PrepareToPlayTone(const TInt aFreq, const TTimeInt
 #endif
 }
 
+void CMMFMdaAudioToneUtility::PrepareToPlayDualTone(const TInt aFreqOne, const TInt aFreqTwo, const TTimeIntervalMicroSeconds &aDuration) {
+#ifdef EKA2
+    CALL_PREARE(ETonePlayerSetDualTone, aFreqOne, aFreqTwo, aDuration.Int64() & 0xFFFFFFFF, (aDuration.Int64() >> 32) & 0xFFFFFFFF)
+#else
+    CALL_PREARE(ETonePlayerSetDualTone, aFreqOne, aFreqTwo, aDuration.Int64().GetTInt(), 0)
+#endif
+}
+
+void CMMFMdaAudioToneUtility::PrepareToPlayDTMFString(const TDesC &aDTMF) {
+    CALL_PREARE(ETonePlayerSetDTMFString, aDTMF)
+}
+
+void CMMFMdaAudioToneUtility::SetDTMFLengths(const TInt aToneOnMicros, const TInt aToneOffMicros, const TInt aPauseMicros) {
+    ETonePlayerSetDTMFLengths(0, iDispatchInstance, aToneOnMicros, aToneOffMicros, aPauseMicros);
+}
+
 void CMMFMdaAudioToneUtility::CancelPrepare() {
     // Not gonna do anything :)
 }
@@ -733,9 +784,10 @@ void CMMFMdaAudioToneUtility::RunL() {
     iObserver.MatoPlayComplete(iStatus.Int());
 }
 
+// CancelPlay reports nothing to the observer (CMMFMdaAudioToneUtility::ToneFinished skips KErrCancel).
 void CMMFMdaAudioToneUtility::DoCancel() {
     ETonePlayerStop(0, iDispatchInstance);
-    iObserver.MatoPlayComplete(KErrCancel);
+    iState = EMdaAudioToneUtilityPrepared;
 }
 
 void CMMFMdaAudioToneUtility::CompletePrepare(TInt aError) {

@@ -259,7 +259,6 @@ const TTimeIntervalMicroSeconds &CMdaAudioRecorderUtility::Position() {
 }
 
 const TTimeIntervalMicroSeconds &CMdaAudioRecorderUtility::RecordTimeAvailable() {
-    LogOut(KMcaCat, _L("Unimplemented feature get available record time"));
     return iProperties->RecordTimeAvailable();
 }
 

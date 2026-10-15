@@ -144,9 +144,7 @@ public:
         return iDuration;
     }
 
-    const TTimeIntervalMicroSeconds &RecordTimeAvailable() {
-        return iRecordTimeAvailable;
-    }
+    const TTimeIntervalMicroSeconds &RecordTimeAvailable();
 
     const TMdaState State() const {
         return iState;
@@ -205,6 +203,8 @@ public:
     CMMFMdaAudioToneUtility(MMdaAudioToneObserver &aObserver, const TInt aPriority, const TMdaPriorityPreference aPref);
     void ConstructL();
 
+    ~CMMFMdaAudioToneUtility();
+
     static CMMFMdaAudioToneUtility *NewL(MMdaAudioToneObserver &aObserver, const TInt aPriority, const TMdaPriorityPreference aPref);
 
     TInt SetVolume(const TInt aNewVolume);
@@ -218,7 +218,11 @@ public:
     void PrepareToPlayBufferSequence(const TDesC8 &aBuf);
     void PrepareToPlayFixedSequence(const TInt aSequenceIndex);
     void PrepareToPlayTone(const TInt aFreq, const TTimeIntervalMicroSeconds &aDuration);
+    void PrepareToPlayDualTone(const TInt aFreqOne, const TInt aFreqTwo, const TTimeIntervalMicroSeconds &aDuration);
+    void PrepareToPlayDTMFString(const TDesC &aDTMF);
     void CancelPrepare();
+
+    void SetDTMFLengths(const TInt aToneOnMicros, const TInt aToneOffMicros, const TInt aPauseMicros);
 
     void Play();
     void CancelPlay();
