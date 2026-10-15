@@ -25,10 +25,10 @@
 #include <common/log.h>
 
 namespace eka2l1::dispatch {
-    static const std::uint32_t RED_SIZE_CONFIG_LOOKUP_TABLE[3] = { 5, 8, 8 };
-    static const std::uint32_t GREEN_SIZE_CONFIG_LOOKUP_TABLE[3] = { 6, 8, 8 };
-    static const std::uint32_t BLUE_SIZE_CONFIG_LOOKUP_TABLE[3] = { 5, 8, 8 };
-    static const std::uint32_t ALPHA_SIZE_CONFIG_LOOKUP_TABLE[3] = { 0, 0, 8 };
+    static const std::uint32_t RED_SIZE_CONFIG_LOOKUP_TABLE[4] = { 0, 5, 8, 8 };
+    static const std::uint32_t GREEN_SIZE_CONFIG_LOOKUP_TABLE[4] = { 0, 6, 8, 8 };
+    static const std::uint32_t BLUE_SIZE_CONFIG_LOOKUP_TABLE[4] = { 0, 5, 8, 8 };
+    static const std::uint32_t ALPHA_SIZE_CONFIG_LOOKUP_TABLE[4] = { 0, 0, 0, 8 };
 
     egl_context::egl_context()
         : draw_surface_(nullptr)

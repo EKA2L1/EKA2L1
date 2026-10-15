@@ -165,8 +165,14 @@ namespace eka2l1::epoc {
     bool convert_to_rgba8888(fbs_server *serv, loader::mbm_file &file, const std::size_t index, common::wo_stream &dest, const bool make_standard_mask = false);
     bitmap_color get_bitmap_color_from_display_mode(const display_mode mode);
 
+    enum class icon_mask_composition {
+        avkon,
+        alf_texture
+    };
+
     // Buffers must be equal-sized RGBA8888; decode the mask with make_standard_mask.
-    // EGray256 supplies opacity; other modes are stencils with white transparent.
+    // Avkon uses inverted stencils except EGray256; ALF converts every mask to EGray256.
     void apply_icon_mask_alpha(std::uint8_t *icon_rgba, const std::uint8_t *mask_rgba,
-        const std::size_t width, const std::size_t height, const epoc::display_mode mask_mode);
+        const std::size_t width, const std::size_t height, const epoc::display_mode mask_mode,
+        const icon_mask_composition composition = icon_mask_composition::avkon);
 }

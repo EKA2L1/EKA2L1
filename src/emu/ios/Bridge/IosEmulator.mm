@@ -300,7 +300,7 @@ namespace eka2l1::ios {
     static NSData *decode_mbm_icon(eka2l1::apa_app_registry *reg,
                                    eka2l1::fbs_server *fbsserv,
                                    eka2l1::io_system *io,
-                                   std::size_t side) {
+                                   std::size_t side, eka2l1::epoc::icon_mask_composition composition) {
         eka2l1::symfile file_route = io->open_file(reg->icon_file_path, READ_MODE | BIN_MODE);
         if (!file_route) return nil;
         eka2l1::ro_file_stream rfs(file_route.get());
@@ -328,7 +328,7 @@ namespace eka2l1::ios {
                 eka2l1::common::wo_buf_stream mask_dst(mask_rgba.data(), mask_rgba.size());
                 if (eka2l1::epoc::convert_to_rgba8888(fbsserv, parser, 1, mask_dst, true)) {
                     eka2l1::epoc::apply_icon_mask_alpha(rgba.data(), mask_rgba.data(), w, h,
-                        eka2l1::epoc::get_display_mode_from_bpp(mask_hdr.bit_per_pixels, mask_hdr.color));
+                        eka2l1::epoc::get_display_mode_from_bpp(mask_hdr.bit_per_pixels, mask_hdr.color), composition);
                 }
             }
         }
@@ -3132,7 +3132,12 @@ static constexpr std::uint8_t k_unlimited_refresh_rate = 240;
     if (ext == u".mif") {
         out = eka2l1::ios::decode_mif_icon(reg, io, cache_dir, side);
     } else if (ext == u".mbm") {
-        if (fbsserv) out = eka2l1::ios::decode_mbm_icon(reg, fbsserv, io, side);
+        if (fbsserv) {
+            const auto composition = _state->symsys->get_symbian_version_use() >= epocver::epoc10
+                ? eka2l1::epoc::icon_mask_composition::alf_texture
+                : eka2l1::epoc::icon_mask_composition::avkon;
+            out = eka2l1::ios::decode_mbm_icon(reg, fbsserv, io, side, composition);
+        }
     } else {
         if (fbsserv) out = eka2l1::ios::decode_bitwise_icon(reg, alserv, fbsserv, side);
     }

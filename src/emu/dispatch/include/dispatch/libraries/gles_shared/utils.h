@@ -21,9 +21,15 @@
 
 #include <drivers/graphics/common.h>
 #include <cstdint>
+#include <vector>
 
 namespace eka2l1::dispatch {
     struct gles_vertex_attrib;
+
+    bool decompress_palette_data(std::vector<std::uint8_t> &dest, std::vector<std::size_t> &out_size,
+        const std::uint8_t *source, std::size_t source_size, std::int32_t width, std::int32_t height, std::uint32_t source_format,
+        std::int32_t mip_count, drivers::texture_format &dest_format,
+        drivers::texture_data_type &dest_data_type, std::uint32_t &dest_format_gl);
 
     bool convert_gl_factor_to_driver_enum(const std::uint32_t value, drivers::blend_factor &dest);
     bool cond_func_from_gl_enum(const std::uint32_t func, drivers::condition_func &drv_func);

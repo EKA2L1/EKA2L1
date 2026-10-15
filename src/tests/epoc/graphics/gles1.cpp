@@ -11,6 +11,7 @@
 #include <catch2/catch.hpp>
 #include <limits>
 #include <dispatch/libraries/gles1/def.h>
+#include <dispatch/libraries/gles_shared/utils.h>
 #include <dispatch/libraries/gles1/shaderman.h>
 
 using namespace eka2l1::dispatch;
@@ -343,4 +344,69 @@ TEST_CASE("GLES1 point limits reject negative values and preserve the native siz
     REQUIRE(range[1] == 64.0f);
     const float unused = 1.0f;
     REQUIRE(context.set_point_parameter(GL_POINT_SIZE_EMU, &unused) == GL_INVALID_ENUM);
+}
+
+TEST_CASE("Paletted textures decode rows, high nibbles and successive mip levels", "[gles1][palette]") {
+    for (const auto format : { GL_PALETTE4_RGB8_OES_EMU, GL_PALETTE4_RGBA8_OES_EMU,
+             GL_PALETTE4_R5_G6_B5_OES_EMU, GL_PALETTE4_RGBA4_OES_EMU, GL_PALETTE4_RGB5_A1_OES_EMU,
+             GL_PALETTE8_RGB8_OES_EMU, GL_PALETTE8_RGBA8_OES_EMU,
+             GL_PALETTE8_R5_G6_B5_OES_EMU, GL_PALETTE8_RGBA4_OES_EMU, GL_PALETTE8_RGB5_A1_OES_EMU }) {
+        CAPTURE(format);
+        const bool four_bit = format <= GL_PALETTE4_RGB5_A1_OES_EMU;
+        const auto kind = (format - GL_PALETTE4_RGB8_OES_EMU) % 5;
+        const std::size_t bytes = kind == 0 ? 3 : (kind == 1 ? 4 : 2);
+        std::vector<std::uint8_t> source((four_bit ? 16 : 256) * bytes);
+        for (std::size_t index = 0; index < source.size() / bytes; ++index) {
+            for (std::size_t channel = 0; channel < bytes; ++channel) {
+                source[index * bytes + channel] = static_cast<std::uint8_t>(index * 4 + channel);
+            }
+        }
+        if (four_bit) {
+            source.insert(source.end(), { 0x12, 0x34, 0x56, 0x78, 0x9A, 0xB0 });
+        } else {
+            source.insert(source.end(), { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11 });
+        }
+        std::vector<std::uint8_t> decoded;
+        std::vector<std::size_t> sizes;
+        eka2l1::drivers::texture_format texture_format;
+        eka2l1::drivers::texture_data_type data_type;
+        std::uint32_t gl_format = 0;
+        REQUIRE(decompress_palette_data(decoded, sizes, source.data(), source.size(), 4, 2, format, 3,
+            texture_format, data_type, gl_format));
+        REQUIRE(sizes == std::vector<std::size_t>{ 8 * bytes, 2 * bytes, bytes });
+        std::vector<std::uint8_t> expected;
+        for (std::size_t index = 1; index <= 11; ++index) {
+            expected.insert(expected.end(), source.begin() + index * bytes, source.begin() + (index + 1) * bytes);
+        }
+        REQUIRE(decoded == expected);
+        for (const auto size : { std::size_t(0), source.size() - 1, source.size() + 1 }) {
+            REQUIRE_FALSE(decompress_palette_data(decoded, sizes, source.data(), size, 4, 2, format, 3,
+                texture_format, data_type, gl_format));
+        }
+        REQUIRE_FALSE(decompress_palette_data(decoded, sizes, source.data(), source.size(), 4, 2, format, 14,
+            texture_format, data_type, gl_format));
+        source.resize((four_bit ? 16 : 256) * bytes);
+        source.push_back(four_bit ? 0x10 : 1);
+        source.push_back(four_bit ? 0x20 : 2);
+        REQUIRE(decompress_palette_data(decoded, sizes, source.data(), source.size(), 1, 1, format, 2,
+            texture_format, data_type, gl_format));
+        REQUIRE(sizes == std::vector<std::size_t>{ bytes, bytes });
+        REQUIRE(decoded == std::vector<std::uint8_t>(source.begin() + bytes, source.begin() + 3 * bytes));
+    }
+}
+
+TEST_CASE("EGL colour configuration channel sizes match their buffer sizes", "[egl]") {
+    for (const auto api : { egl_config::EGL_TARGET_CONTEXT_ES11, egl_config::EGL_TARGET_CONTEXT_ES2,
+             egl_config::EGL_TARGET_CONTEXT_VG }) {
+        for (const auto bits : { 16, 24, 32 }) {
+            egl_config config(0);
+            config.set_buffer_size(bits);
+            config.set_target_context_version(api);
+            REQUIRE(config.buffer_size() == bits);
+            REQUIRE(config.red_bits() == (bits == 16 ? 5 : 8));
+            REQUIRE(config.green_bits() == (bits == 16 ? 6 : 8));
+            REQUIRE(config.blue_bits() == (bits == 16 ? 5 : 8));
+            REQUIRE(config.alpha_bits() == (bits == 32 ? 8 : 0));
+        }
+    }
 }
