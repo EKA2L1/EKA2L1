@@ -359,6 +359,11 @@ namespace eka2l1 {
         std::optional<apa_app_masked_icon_bitmap> get_icon_by_size(apa_app_registry &registry, const eka2l1::vec2 &size);
         std::optional<apa_app_masked_icon_bitmap> get_list_icon(apa_app_registry &registry);
 
+        // Guards the registration list while rescans add, drop and reorder its entries. Rescans run
+        // on the emulation thread and on the frontend's UI thread, so code that reads the list while
+        // a rescan may run on another thread copies what it needs under this lock (the IPC handlers
+        // on the emulation thread do not yet). Never call into the I/O system while holding it:
+        // mounting a drive takes the I/O lock first and this one second (on_drive_change).
         std::mutex list_access_mut_;
 
         bool rescan_registries(eka2l1::io_system *io);

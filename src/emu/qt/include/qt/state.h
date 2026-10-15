@@ -51,11 +51,17 @@ namespace eka2l1 {
     }
 
     class window_server;
+
+    namespace control {
+        class server;
+    }
 }
 
 class main_window;
 
 namespace eka2l1::desktop {
+    class control_frontend;
+
     /**
      * \brief State of the emulator on desktop.
      */
@@ -79,7 +85,12 @@ namespace eka2l1::desktop {
         bool inited_graphics;
         bool stretch_to_fill_display;
 
+        // The graphics thread tells the OS thread its driver is ready with graphics_event; the OS
+        // thread tells the graphics thread the system is gone, at shutdown, with
+        // system_released_event. One event for both lets the graphics thread swallow its own
+        // signal when the emulator shuts down before the OS thread took it.
         common::event graphics_event;
+        common::event system_released_event;
 
         // init_event asks the OS thread to (re)attempt the stage two initialisation, init_done_event
         // reports an attempt back. They must stay separate: outside of Win32 common::event auto-resets
@@ -89,6 +100,10 @@ namespace eka2l1::desktop {
 
         common::event pause_event;
         common::event kill_event;
+
+        // Set once the graphics thread has made its driver. Shutting down waits for it: the main
+        // loop can end before then (an exit asked for over the control socket during startup).
+        common::event graphics_driver_ready_event;
 
         config::state conf;
         window_server *winserv;
@@ -101,7 +116,13 @@ namespace eka2l1::desktop {
 
         std::string launched_app_name_;
 
+        // Where --control asked the control server to listen; empty when it was not given.
+        std::string control_endpoint;
+        std::unique_ptr<control_frontend> control_host;
+        std::unique_ptr<control::server> control_server;
+
         explicit emulator();
+        ~emulator();
 
         void stage_one();
         bool stage_two();

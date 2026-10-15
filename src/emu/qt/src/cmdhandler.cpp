@@ -96,6 +96,11 @@ void register_command_line_options(eka2l1::common::arg_parser &parser) {
         keybind_profile_option_handler);
     parser.add("--mmcid, --cid, -cid", "Set the MMC-ID for the mounted card", set_mmcid_option_handler);
     parser.add("--runng, --appng, -rng, -ang", "Run a single N-Gage game inside the E drive", run_ngage_game_option_handler);
+    parser.add("--control", "Let other programs drive the emulator through a JSON-RPC 2.0 server listening on the given\n"
+                            "\t\t\t  local socket path (a pipe name such as \\\\.\\pipe\\eka2l1 on Windows), or on\n"
+                            "\t\t\t  tcp:127.0.0.1:<port> with the token in EKA2L1_CONTROL_TOKEN. See src/emu/control/README.md.\n"
+                            "\t\t\t    eka2l1 --control /tmp/eka2l1.sock\n",
+        control_option_handler);
 
 #if ENABLE_PYTHON_SCRIPTING
     parser.add("--gendocs", "Generate Python documentation", python_docgen_option_handler);
@@ -555,3 +560,17 @@ bool python_docgen_option_handler(eka2l1::common::arg_parser *parser, void *user
     return false;
 }
 #endif
+
+bool control_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
+    const char *endpoint = parser->next_token();
+
+    if (!endpoint) {
+        *err = "--control needs an endpoint: a socket path (a pipe name on Windows), or tcp:127.0.0.1:<port>";
+        return false;
+    }
+
+    desktop::emulator *emu = reinterpret_cast<desktop::emulator *>(userdata);
+    emu->control_endpoint = endpoint;
+
+    return true;
+}
