@@ -438,25 +438,39 @@ EXPORT_C void CMdaAudioRecorderUtility::SetPriority(TInt aPriority, TMdaPriority
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::GetSupportedDestinationDataTypesL(RArray<TFourCC> &aSupportedDataTypes) {
-    LogOut(KMcaCat, _L("Get supported destination data types unimplemented!"));
+    RArray<TUint> dataTypes;
+    CleanupClosePushL(dataTypes);
+
+    iProperties->GetSupportedDestValuesL(EAudioPlayerDestinationDataTypes, dataTypes);
+    aSupportedDataTypes.Reset();
+
+    for (TInt i = 0; i < dataTypes.Count(); i++) {
+        User::LeaveIfError(aSupportedDataTypes.Append(TFourCC(dataTypes[i])));
+    }
+
+    CleanupStack::PopAndDestroy(&dataTypes);
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::SetDestinationDataTypeL(TFourCC aDataType) {
-    LogOut(KMcaCat, _L("Set destination data type unimplemented!"));
+    User::LeaveIfError(iProperties->SetDestCodec(aDataType));
 }
 
 EXPORT_C TFourCC CMdaAudioRecorderUtility::DestinationDataTypeL() {
-    LogOut(KMcaCat, _L("Get destination data type unimplemented!"));
-    return TFourCC(0, 0, 0, 0);
+    TFourCC dataType;
+    User::LeaveIfError(iProperties->GetDestCodec(dataType));
+
+    return dataType;
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::SetDestinationBitRateL(TUint aBitRate) {
-    LogOut(KMcaCat, _L("Set destination bitrate unimplemented!"));
+    User::LeaveIfError(iProperties->SetDestBitRate(aBitRate));
 }
 
 EXPORT_C TUint CMdaAudioRecorderUtility::DestinationBitRateL() {
-    LogOut(KMcaCat, _L("Destination bitrate unimplemented!"));
-    return 0;
+    const TInt result = iProperties->GetDestBitRate();
+    User::LeaveIfError(result);
+
+    return static_cast<TUint>(result);
 }
 
 #if (MCA_NEW >= 3)
@@ -474,7 +488,7 @@ EXPORT_C TUint CMdaAudioRecorderUtility::SourceBitRateL() {
 #endif
 
 EXPORT_C void CMdaAudioRecorderUtility::GetSupportedBitRatesL(RArray<TUint> &aSupportedBitRates) {
-    LogOut(KMcaCat, _L("Get supported bitrate unimplemented!"));
+    iProperties->GetSupportedDestValuesL(EAudioPlayerDestinationBitRates, aSupportedBitRates);
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::SetDestinationSampleRateL(TUint aSampleRate) {
@@ -491,14 +505,8 @@ EXPORT_C TUint CMdaAudioRecorderUtility::DestinationSampleRateL() {
     return static_cast<TUint>(result);
 }
 
-// Recording uses a fixed format, so only the current destination rate is reported.
 EXPORT_C void CMdaAudioRecorderUtility::GetSupportedSampleRatesL(RArray<TUint> &aSupportedSampleRates) {
-    aSupportedSampleRates.Reset();
-
-    const TInt sampleRate = iProperties->GetDestSampleRate();
-    if (sampleRate > 0) {
-        User::LeaveIfError(aSupportedSampleRates.Append(static_cast<TUint>(sampleRate)));
-    }
+    iProperties->GetSupportedDestValuesL(EAudioPlayerDestinationSampleRates, aSupportedSampleRates);
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::SetDestinationFormatL(TUid aFormatUid) {
@@ -516,16 +524,18 @@ EXPORT_C TUid CMdaAudioRecorderUtility::DestinationFormatL() {
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::SetDestinationNumberOfChannelsL(TUint aNumberOfChannels) {
-    LogOut(KMcaCat, _L("Set destination number of channels unimplemented!"));
+    User::LeaveIfError(iProperties->SetDestChannelCount(aNumberOfChannels));
 }
 
 EXPORT_C TUint CMdaAudioRecorderUtility::DestinationNumberOfChannelsL() {
-    LogOut(KMcaCat, _L("Get destination number of channels unimplemented!"));
-    return 0;
+    const TInt result = iProperties->GetDestChannelCount();
+    User::LeaveIfError(result);
+
+    return static_cast<TUint>(result);
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::GetSupportedNumberOfChannelsL(RArray<TUint> &aSupportedNumChannels) {
-    LogOut(KMcaCat, _L("Get supported number of channels unimplemented!"));
+    iProperties->GetSupportedDestValuesL(EAudioPlayerDestinationChannelCounts, aSupportedNumChannels);
 }
 
 EXPORT_C void CMdaAudioRecorderUtility::RegisterForAudioLoadingNotification(MAudioLoadingObserver &aCallback) {

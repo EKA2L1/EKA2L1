@@ -39,7 +39,10 @@ namespace eka2l1::drivers {
                 const std::size_t total_frame_left = (data_.size() - data_pointer_ + 1) / channels_ / sizeof(std::uint16_t);
                 const std::size_t frame_to_copy = std::min<std::size_t>(total_frame_left, size - frame_copied);
 
-                std::memcpy(data + frame_copied * channels_, data_.data() + data_pointer_, frame_to_copy * channels_ * sizeof(std::uint16_t));
+                // The decoder may have produced nothing yet, leaving data_ without storage.
+                if (frame_to_copy != 0) {
+                    std::memcpy(data + frame_copied * channels_, data_.data() + data_pointer_, frame_to_copy * channels_ * sizeof(std::uint16_t));
+                }
 
                 data_pointer_ += frame_to_copy * channels_ * sizeof(std::uint16_t);
                 frame_copied += frame_to_copy;

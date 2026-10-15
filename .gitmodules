@@ -118,3 +118,6 @@
 [submodule "src/external/zlib"]
 	path = src/external/zlib
 	url = https://github.com/madler/zlib
+[submodule "src/external/opencore-amr"]
+	path = src/external/opencore-amr
+	url = https://git.code.sf.net/p/opencore-amr/code

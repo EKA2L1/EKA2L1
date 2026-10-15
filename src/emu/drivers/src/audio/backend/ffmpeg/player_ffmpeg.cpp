@@ -97,10 +97,12 @@ namespace eka2l1::drivers {
         freq_ = codec_->sample_rate;
 
         std::int64_t duration = std::max<std::int64_t>(stream->duration, 0);
-        if ((nice_codec->id == AV_CODEC_ID_MP3) && (stream->start_time > 0)
+        const bool padded_mp3 = (nice_codec->id == AV_CODEC_ID_MP3) && (stream->start_time > 0);
+        const bool guessed = (duration == 0) || (format_context_->duration_estimation_method == AVFMT_DURATION_FROM_BITRATE);
+        if ((padded_mp3 || guessed)
             && format_context_->pb && (format_context_->pb->seekable & AVIO_SEEKABLE_NORMAL)) {
-            // The demuxer's LAME duration excludes padding. Packet durations retain
-            // the full frame timeline without relying on private demuxer fields.
+            // The demuxer's LAME duration excludes padding, and raw streams such as AMR only have a bit rate guess.
+            // Packet durations retain the full frame timeline without relying on private demuxer fields.
             std::int64_t frame_duration = 0;
             int result;
             while ((result = av_read_frame(format_context_, packet_)) >= 0) {
@@ -168,7 +170,11 @@ namespace eka2l1::drivers {
             int err = avcodec_receive_frame(codec_, frame);
 
             if (err < 0) {
-                LOG_ERROR(DRIVER_AUD, "Error while decoding a frame err={}!", err);
+                // Decoders may hold back output, e.g. AAC dropping its priming frame.
+                if (err != AVERROR(EAGAIN)) {
+                    LOG_ERROR(DRIVER_AUD, "Error while decoding a frame err={}!", err);
+                }
+
                 av_frame_free(&frame);
                 return;
             }

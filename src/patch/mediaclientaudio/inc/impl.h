@@ -187,6 +187,12 @@ public:
     TInt GetDestChannelCount();
     TInt GetDestSampleRate();
 
+    TInt SetDestBitRate(const TUint aBitRate);
+    TInt GetDestBitRate();
+
+    // aKind is a TAudioPlayerDestinationValueKind.
+    void GetSupportedDestValuesL(const TInt aKind, RArray<TUint> &aValues);
+
     TInt SetDestContainerFormat(const TUint32 aUid);
     TInt GetDestContainerFormat(TUint32 &aUid);
 };

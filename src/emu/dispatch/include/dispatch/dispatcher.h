@@ -20,11 +20,11 @@
 #pragma once
 
 #include <cstdint>
-#include <cstdio>
 
 #include <dispatch/management.h>
 #include <dispatch/libraries/egl/def.h>
 
+#include <drivers/audio/clip_writer.h>
 #include <drivers/audio/dsp.h>
 #include <drivers/audio/player.h>
 #include <drivers/audio/stream.h>
@@ -153,16 +153,21 @@ namespace eka2l1::dispatch {
 
         std::uint64_t last_position_query_us_ = 0;
 
+        // The clip a recorder utility opened; its format applies to the destination settings.
+        std::unique_ptr<drivers::clip_writer> record_clip_;
+        std::string record_clip_path_;
+
         std::unique_ptr<drivers::audio_input_stream> record_stream_;
         std::mutex record_lock_;
         std::vector<std::int16_t> pending_samples_;
-        std::uint64_t recorded_sample_count_ = 0;
-        std::FILE *record_file_ = nullptr;
+        std::uint64_t recorded_frame_count_ = 0;
 
         explicit dsp_epoc_player(dsp_manager *manager, const std::uint32_t init_flags);
         ~dsp_epoc_player() override;
 
-        // Captured audio is written as a PCM WAV clip; the guest watches its size grow to estimate free space.
+        bool open_record_clip(const std::string &host_path);
+
+        // Captured audio is encoded as it is flushed; the guest watches the clip grow to estimate free space.
         bool start_recording(drivers::audio_driver *driver, const std::string &host_path);
         bool flush_recording();
         bool stop_recording();

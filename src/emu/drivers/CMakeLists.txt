@@ -33,6 +33,7 @@ if (EKA2L1_HAVE_FFMPEG)
             include/drivers/audio/backend/ffmpeg/dsp_ffmpeg.h
             include/drivers/audio/backend/ffmpeg/player_ffmpeg.h
             include/drivers/video/backend/ffmpeg/video_player_ffmpeg.h
+            src/audio/backend/ffmpeg/clip_writer_ffmpeg.cpp
             src/audio/backend/ffmpeg/dsp_ffmpeg.cpp
             src/audio/backend/ffmpeg/player_ffmpeg.cpp
             src/video/backend/ffmpeg/video_player_ffmpeg.cpp)
@@ -70,6 +71,7 @@ add_library(drivers
         include/drivers/itc.h
         include/drivers/driver.h
         include/drivers/audio/audio.h
+        include/drivers/audio/clip_writer.h
         include/drivers/audio/dsp.h
         include/drivers/audio/player.h
         include/drivers/audio/stream.h
@@ -97,6 +99,7 @@ add_library(drivers
         src/driver.cpp
         src/itc.cpp
         src/audio/audio.cpp
+        src/audio/clip_writer.cpp
         src/audio/dsp.cpp
         src/audio/player.cpp
         src/audio/stream.cpp
