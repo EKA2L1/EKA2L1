@@ -13,7 +13,7 @@
 
 using namespace eka2l1;
 
-TEST_CASE("TCP connect survives close before submission and during native completion", "[.inetconnect]") {
+TEST_CASE("TCP connect survives close before and after native submission", "[.inetconnect]") {
     config::state config;
     config::app_settings settings(&config);
     system_create_components components;
@@ -56,16 +56,16 @@ TEST_CASE("TCP connect survives close before submission and during native comple
     std::promise<void> closed;
     uv_idle_t check{};
     void *native_handle = static_cast<epoc::internet::inet_socket *>(socket.get())->get_opaque_handle();
-    bool observed_pending = false;
+    bool observed_submission = false;
 
-    const bool pending = GENERATE(false, true);
+    const bool submitted = GENERATE(false, true);
     const bool cancel = GENERATE(false, true);
     kernel->lock();
     socket->connect(destination, notification);
-    if (cancel && !pending) {
+    if (cancel && !submitted) {
         socket->cancel_connect();
     }
-    if (!pending) {
+    if (!submitted) {
         socket.reset();
     }
     loop->one_shot([&] {
@@ -74,22 +74,30 @@ TEST_CASE("TCP connect survives close before submission and during native comple
             kernel_system *kernel;
             std::unique_ptr<epoc::socket::socket> *socket;
             void *handle;
-            bool *observed_pending;
+            bool *observed_submission;
             bool cancel;
+            std::chrono::steady_clock::time_point deadline;
             std::promise<void> *closed;
         };
-        check.data = new close_check{kernel, &socket, native_handle, &observed_pending, cancel, &closed};
+        check.data = new close_check{kernel, &socket, native_handle, &observed_submission, cancel,
+            std::chrono::steady_clock::now() + std::chrono::seconds(2), &closed};
         uv_idle_start(&check, [](uv_idle_t *check) {
             auto *state = static_cast<close_check *>(check->data);
-            // Observe submission before the next poll can complete the native connect.
-            if (*state->socket && check->loop->active_reqs.count != 0) {
+            if (*state->socket) {
+                sockaddr_in6 peer{};
+                int size = sizeof(peer);
+                *state->observed_submission = check->loop->active_reqs.count != 0
+                    || uv_tcp_getpeername(static_cast<uv_tcp_t *>(state->handle),
+                        reinterpret_cast<sockaddr *>(&peer), &size) == 0;
+                if (!*state->observed_submission && std::chrono::steady_clock::now() < state->deadline) {
+                    return;
+                }
                 state->kernel->lock();
                 if (state->cancel) {
                     (*state->socket)->cancel_connect();
                 }
                 state->socket->reset();
                 state->kernel->unlock();
-                *state->observed_pending = true;
             }
             struct search { void *handle; bool found = false; } search{state->handle};
             uv_walk(check->loop, [](uv_handle_t *handle, void *data) {
@@ -110,7 +118,7 @@ TEST_CASE("TCP connect survives close before submission and during native comple
 
     auto done = closed.get_future();
     REQUIRE(done.wait_for(std::chrono::seconds(5)) == std::future_status::ready);
-    REQUIRE(observed_pending == pending);
+    REQUIRE(observed_submission == submitted);
 
     std::promise<void> server_closed;
     server.data = &server_closed;
