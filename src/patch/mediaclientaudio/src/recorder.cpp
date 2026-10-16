@@ -235,6 +235,12 @@ void CMdaAudioRecorderUtility::Close() {
 
 void CMdaAudioRecorderUtility::PlayL() {
     LogOut(KMcaCat, _L("Try to play bzzz bzzz"));
+
+    // Without an opened clip there is no playback controller, which MMF reports by leaving.
+    if (iProperties->State() == EMdaStateIdle) {
+        User::Leave(KErrNotSupported);
+    }
+
     iProperties->Play();
 }
 

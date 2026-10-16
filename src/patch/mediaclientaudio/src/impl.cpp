@@ -357,7 +357,9 @@ void CMMFMdaAudioUtility::Play() {
         } else {
             LogOut(KMcaCat, _L("Can't play audio due to no data not being yet queued."));
 
-            TransitionState(EMdaStateReady, KErrNotReady);
+            // MMF fails Prime() on an unopened controller and reports it as an async play completion;
+            // observers may call Play() again from that callback.
+            iOpener.Notify(this, EMdaStatePlay, EMdaStateReady, KErrNotReady);
             return;
         }
     }
