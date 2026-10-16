@@ -1932,6 +1932,17 @@ namespace eka2l1::dispatch {
         }
 
         for (std::int32_t i = 0; i < n; i++) {
+            // Deleting a bound buffer reverts that binding to zero, even for a name never generated.
+            if (obj_type == GLES_OBJECT_BUFFER) {
+                if (ctx->binded_array_buffer_handle_ == names[i]) {
+                    ctx->binded_array_buffer_handle_ = 0;
+                }
+
+                if (ctx->binded_element_array_buffer_handle_ == names[i]) {
+                    ctx->binded_element_array_buffer_handle_ = 0;
+                }
+            }
+
             auto *obj = ctx->objects_.get(names[i]);
             if (obj && *obj && ((*obj)->object_type() == obj_type)) {
                 ctx->objects_.remove(names[i]);
