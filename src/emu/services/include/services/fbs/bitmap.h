@@ -167,11 +167,11 @@ namespace eka2l1::epoc {
 
     enum class icon_mask_composition {
         avkon,
-        alf_texture
+        alf_canvas
     };
 
     // Buffers must be equal-sized RGBA8888; decode the mask with make_standard_mask.
-    // Avkon uses inverted stencils except EGray256; ALF converts every mask to EGray256.
+    // Icon callers use aInvertMask=ETrue; ALF Canvas inverts only EGray2 before alpha conversion.
     void apply_icon_mask_alpha(std::uint8_t *icon_rgba, const std::uint8_t *mask_rgba,
         const std::size_t width, const std::size_t height, const epoc::display_mode mask_mode,
         const icon_mask_composition composition = icon_mask_composition::avkon);

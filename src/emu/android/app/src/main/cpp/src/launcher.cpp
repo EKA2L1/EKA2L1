@@ -30,17 +30,15 @@
 #include <common/android/jniutils.h>
 #include <common/language.h>
 #include <common/path.h>
-#include <common/pystr.h>
 #include <common/fileutils.h>
-#include <loader/mif.h>
 #include <services/fbs/fbs.h>
 #include <system/installation/firmware.h>
 #include <system/installation/rpkg.h>
 #include <utils/locale.h>
 #include <utils/system.h>
 
-#include <lunasvg.h>
 #include <jni.h>
+#include <cstring>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
@@ -115,174 +113,28 @@ namespace eka2l1::android {
         return newBitmap;
     }
 
-    jobjectArray launcher::get_app_icon(JNIEnv *env, std::uint32_t uid) {
-        apa_app_registry *reg = alserv->get_registration(uid);
-        if (!reg) {
+    jobject launcher::get_app_icon(JNIEnv *env, std::uint32_t uid) {
+        auto *reg = alserv->get_registration(uid);
+        if (!reg) return nullptr;
+        auto icon = alserv->get_host_icon(*reg, conf ? add_path(conf->storage, "cache/icons") : std::string());
+        if (!icon) return nullptr;
+        jobject bitmap = make_new_bitmap(env, icon->size.x, icon->size.y);
+        if (!bitmap) return nullptr;
+        AndroidBitmapInfo info{};
+        void *pixels = nullptr;
+        if (AndroidBitmap_getInfo(env, bitmap, &info) < 0
+            || info.format != ANDROID_BITMAP_FORMAT_RGBA_8888
+            || AndroidBitmap_lockPixels(env, bitmap, &pixels) < 0) {
+            env->DeleteLocalRef(bitmap);
             return nullptr;
         }
-
-        jobjectArray jicons = env->NewObjectArray(2,
-            env->FindClass("android/graphics/Bitmap"),
-            nullptr);
-
-        std::string app_name = common::ucs2_to_utf8(reg->mandatory_info.long_caption.to_std_string(nullptr));
-        io_system *io = sys->get_io_system();
-
-        const std::u16string path_ext = eka2l1::common::lowercase_ucs2_string(eka2l1::path_extension(reg->icon_file_path));
-
-        if (path_ext == u".mif") {
-            eka2l1::symfile file_route = io->open_file(reg->icon_file_path, READ_MODE | BIN_MODE);
-            eka2l1::common::create_directories("cache");
-
-            if (file_route) {
-                const std::uint64_t mif_last_modified = file_route->last_modify_since_0ad();
-                const std::string cached_path = fmt::format("cache/debinarized_{}.svg",
-                    common::pystr(app_name).strip_reserverd().strip().std_str());
-
-                std::unique_ptr<lunasvg::Document> document;
-
-                if (eka2l1::common::exists(cached_path)) {
-                    if (eka2l1::common::get_last_modifiy_since_ad(eka2l1::common::utf8_to_ucs2(cached_path)) >= mif_last_modified) {
-                        document = lunasvg::Document::loadFromFile(cached_path.c_str());
-                    }
-                }
-                
-                eka2l1::ro_file_stream file_route_stream(file_route.get());
-                eka2l1::loader::mif_file file_mif_parser(reinterpret_cast<eka2l1::common::ro_stream *>(&file_route_stream));
-
-                if (!document && file_mif_parser.do_parse()) {
-                    std::vector<std::uint8_t> data;
-                    int dest_size = 0;
-                    if (file_mif_parser.read_mif_entry(0, nullptr, dest_size)) {
-                        if (dest_size != 0) {
-                            data.resize(dest_size);
-                            file_mif_parser.read_mif_entry(0, data.data(), dest_size);
-
-                            std::unique_ptr<eka2l1::common::wo_std_file_stream> outfile_stream =
-                                    std::make_unique<eka2l1::common::wo_std_file_stream>(cached_path, true);
-
-                            const bool converted = eka2l1::loader::convert_mif_icon_to_svg(data.data(),
-                                    data.size(), *outfile_stream);
-                            outfile_stream.reset();
-
-                            if (converted) {
-                                document = lunasvg::Document::loadFromFile(cached_path.c_str());
-                            } else {
-                                LOG_ERROR(eka2l1::FRONTEND_UI, "Icon for app {} can't be decoded!", app_name);
-                                eka2l1::common::remove(cached_path);
-                            }
-                        }
-                    }
-                }
-                
-                if (document) {
-                    std::uint32_t width = document->width();
-                    std::uint32_t height = document->height();
-                    jobject source_bitmap = make_new_bitmap(env, width, height);
-                    void *data_to_write = nullptr;
-                    int result = AndroidBitmap_lockPixels(env, source_bitmap, &data_to_write);
-                    if (result < 0) {
-                        env->DeleteLocalRef(source_bitmap);
-                        env->DeleteLocalRef(jicons);
-                        return nullptr;
-                    }
-
-                    auto bitmap = lunasvg::Bitmap(reinterpret_cast<std::uint8_t *>(data_to_write),
-                                                  width, height, width * 4);
-                    lunasvg::Matrix matrix{ 1, 0, 0, 1, 0, 0 };
-                    document->render(bitmap, matrix);
-                    bitmap.convertToRGBA();
-
-                    AndroidBitmap_unlockPixels(env, source_bitmap);
-
-                    env->SetObjectArrayElement(jicons, 0, source_bitmap);
-                    return jicons;
-                }
-            }
-        } else if (path_ext == u".mbm") {
-            eka2l1::symfile file_route = io->open_file(reg->icon_file_path, READ_MODE | BIN_MODE);
-            if (file_route) {
-                eka2l1::ro_file_stream file_route_stream(file_route.get());
-                eka2l1::loader::mbm_file file_mbm_parser(reinterpret_cast<eka2l1::common::ro_stream *>(&file_route_stream));
-
-                if (file_mbm_parser.do_read_headers() && !file_mbm_parser.sbm_headers.empty()) {
-                    eka2l1::loader::sbm_header *icon_header = &file_mbm_parser.sbm_headers[0];
-
-                    jobject source_bitmap = make_new_bitmap(env, icon_header->size_pixels.x,
-                        icon_header->size_pixels.y);
-                    void *data_to_write = nullptr;
-                    int result = AndroidBitmap_lockPixels(env, source_bitmap, &data_to_write);
-                    if (result < 0) {
-                        env->DeleteLocalRef(source_bitmap);
-                        env->DeleteLocalRef(jicons);
-                        return nullptr;
-                    }
-
-                    eka2l1::common::wo_buf_stream converted_write_stream(reinterpret_cast<std::uint8_t *>(data_to_write),
-                        icon_header->size_pixels.x * icon_header->size_pixels.y * 4);
-
-                    if (!eka2l1::epoc::convert_to_rgba8888(fbsserv, file_mbm_parser, 0, converted_write_stream)) {
-                        env->DeleteLocalRef(source_bitmap);
-                    } else {
-                        AndroidBitmap_unlockPixels(env, source_bitmap);
-
-                        env->SetObjectArrayElement(jicons, 0, source_bitmap);
-                        return jicons;
-                    }
-                }
-            }
-        } else {
-            std::optional<eka2l1::apa_app_masked_icon_bitmap> icon_pair = alserv->get_list_icon(*reg);
-
-            if (icon_pair.has_value()) {
-                eka2l1::epoc::bitwise_bitmap *main_bitmap = icon_pair->first;
-                jobject source_bitmap = make_new_bitmap(env, main_bitmap->header_.size_pixels.x,
-                    main_bitmap->header_.size_pixels.y);
-                void *data_to_write = nullptr;
-                int result = AndroidBitmap_lockPixels(env, source_bitmap, &data_to_write);
-                if (result < 0) {
-                    env->DeleteLocalRef(source_bitmap);
-                    env->DeleteLocalRef(jicons);
-                    return nullptr;
-                }
-
-                eka2l1::common::wo_buf_stream main_bitmap_buf(reinterpret_cast<std::uint8_t *>(data_to_write),
-                    main_bitmap->header_.size_pixels.x * main_bitmap->header_.size_pixels.y * 4);
-
-                if (!eka2l1::epoc::convert_to_rgba8888(fbsserv, main_bitmap, main_bitmap_buf)) {
-                    LOG_ERROR(eka2l1::FRONTEND_UI, "Unable to load main icon of app {}", app_name);
-                    env->DeleteLocalRef(source_bitmap);
-                } else {
-                    AndroidBitmap_unlockPixels(env, source_bitmap);
-                    env->SetObjectArrayElement(jicons, 0, source_bitmap);
-                    if (icon_pair->second) {
-                        eka2l1::epoc::bitwise_bitmap *second_bitmap = icon_pair->second;
-
-                        jobject mask_bitmap = make_new_bitmap(env, main_bitmap->header_.size_pixels.x,
-                            main_bitmap->header_.size_pixels.y);
-                        result = AndroidBitmap_lockPixels(env, mask_bitmap, &data_to_write);
-                        if (result < 0) {
-                            env->DeleteLocalRef(mask_bitmap);
-                            return jicons;
-                        }
-
-                        eka2l1::common::wo_buf_stream second_bitmap_buf(reinterpret_cast<std::uint8_t *>(data_to_write),
-                            second_bitmap->header_.size_pixels.x * second_bitmap->header_.size_pixels.y * 4);
-
-                        if (!eka2l1::epoc::convert_to_rgba8888(fbsserv, second_bitmap, second_bitmap_buf, true)) {
-                            LOG_ERROR(eka2l1::FRONTEND_UI, "Unable to load mask bitmap icon of app {}", app_name);
-                            env->DeleteLocalRef(mask_bitmap);
-                        } else {
-                            AndroidBitmap_unlockPixels(env, mask_bitmap);
-                            env->SetObjectArrayElement(jicons, 1, mask_bitmap);
-                        }
-                    }
-                    return jicons;
-                }
-            }
+        const std::size_t row_bytes = static_cast<std::size_t>(icon->size.x) * 4;
+        for (std::int32_t y = 0; y < icon->size.y; ++y) {
+            std::memcpy(static_cast<std::uint8_t *>(pixels) + y * info.stride,
+                icon->pixels.data() + y * row_bytes, row_bytes);
         }
-        env->DeleteLocalRef(jicons);
-        return nullptr;
+        AndroidBitmap_unlockPixels(env, bitmap);
+        return bitmap;
     }
 
     void launcher::launch_app(std::uint32_t uid) {

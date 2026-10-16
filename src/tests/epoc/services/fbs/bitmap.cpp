@@ -380,7 +380,7 @@ TEST_CASE("bitmap_header_colour_field_round_trips_the_display_mode", "bitmap_hea
     REQUIRE(epoc::get_bitmap_color_from_display_mode(epoc::display_mode::color16map) == epoc::color_bitmap_with_alpha_pm);
 }
 
-TEST_CASE("ALF icon masks convert RGB to Gray256 alpha without inspecting their shape", "icon_mask") {
+TEST_CASE("ALF Canvas icon masks convert RGB to Gray256 alpha without inspecting their shape", "icon_mask") {
     const std::vector<std::uint8_t> bgr{
         0, 0, 0, 64, 64, 64, 255, 255, 255, 0, 0, 0,
         0, 0, 255, 0, 255, 0, 255, 0, 0, 0, 0, 0
@@ -398,8 +398,69 @@ TEST_CASE("ALF icon masks convert RGB to Gray256 alpha without inspecting their 
     const std::vector<std::uint8_t> expected{ 0, 64, 255, 63, 159, 31 };
     auto icon = make_icon();
     epoc::apply_icon_mask_alpha(icon.data(), rgba.data(), 3, 2, epoc::display_mode::color16m,
-        epoc::icon_mask_composition::alf_texture);
+        epoc::icon_mask_composition::alf_canvas);
     for (std::size_t i = 0; i < expected.size(); ++i) {
         REQUIRE(alpha_at(icon, i) == expected[i]);
+    }
+}
+
+TEST_CASE("Symbian3 MBM monochrome masks retain inverted stencil polarity", "icon_mask") {
+    std::vector<std::uint8_t> packed{ 0xF8, 0xAA, 0, 0, 0, 0x55, 0, 0, 0 };
+    loader::sbm_header header{};
+    header.size_pixels = eka2l1::vec2(8, 2);
+    header.header_len = sizeof(loader::sbm_header);
+    header.bitmap_size = header.header_len + packed.size();
+    header.bit_per_pixels = 1;
+    header.color = 0;
+    common::ro_buf_stream input(packed.data(), packed.size());
+    std::vector<std::uint8_t> mask(8 * 2 * 4);
+    common::wo_buf_stream output(mask.data(), mask.size());
+    REQUIRE(epoc::convert_to_rgba8888(nullptr, input, output, header, -1,
+        epoc::bitmap_file_byte_rle_compression, true));
+    auto icon = make_icon();
+    epoc::apply_icon_mask_alpha(icon.data(), mask.data(), 8, 2,
+        epoc::get_display_mode_from_bpp(header.bit_per_pixels, header.color),
+        epoc::icon_mask_composition::alf_canvas);
+    for (std::size_t pixel = 0; pixel < 16; ++pixel) {
+        const bool white = ((pixel % 8) % 2) != (pixel / 8);
+        REQUIRE(alpha_at(icon, pixel) == (white ? 0 : 255));
+    }
+}
+
+TEST_CASE("Symbian3 MBM Gray256 masks retain soft opacity", "icon_mask") {
+    std::vector<std::uint8_t> samples{ 0, 64, 128, 255 };
+    loader::sbm_header header{};
+    header.size_pixels = eka2l1::vec2(4, 1);
+    header.bit_per_pixels = 8;
+    header.color = 0;
+    common::ro_buf_stream input(samples.data(), samples.size());
+    std::vector<std::uint8_t> mask(4 * 4);
+    common::wo_buf_stream output(mask.data(), mask.size());
+    REQUIRE(epoc::convert_to_rgba8888(nullptr, input, output, header, -1,
+        epoc::bitmap_file_no_compression, true));
+    auto icon = make_icon();
+    epoc::apply_icon_mask_alpha(icon.data(), mask.data(), 4, 1,
+        epoc::get_display_mode_from_bpp(header.bit_per_pixels, header.color),
+        epoc::icon_mask_composition::alf_canvas);
+    for (std::size_t pixel = 0; pixel < samples.size(); ++pixel) {
+        REQUIRE(alpha_at(icon, pixel) == samples[pixel]);
+    }
+}
+
+TEST_CASE("ALF Canvas preserves opacity polarity for non-monochrome masks", "icon_mask") {
+    std::vector<std::uint8_t> levels(ICON_SIDE * ICON_SIDE, 0);
+    levels[1] = 255;
+    const auto mask = make_mask(levels);
+    for (const auto mode : { epoc::display_mode::gray4, epoc::display_mode::gray16, epoc::display_mode::gray256,
+             epoc::display_mode::color16, epoc::display_mode::color256,
+             epoc::display_mode::color4k, epoc::display_mode::color64k,
+             epoc::display_mode::color16m, epoc::display_mode::color16mu,
+             epoc::display_mode::color16ma, epoc::display_mode::color16map }) {
+        CAPTURE(mode);
+        auto icon = make_icon();
+        epoc::apply_icon_mask_alpha(icon.data(), mask.data(), ICON_SIDE, ICON_SIDE, mode,
+            epoc::icon_mask_composition::alf_canvas);
+        REQUIRE(alpha_at(icon, 0) == 0);
+        REQUIRE(alpha_at(icon, 1) == 255);
     }
 }

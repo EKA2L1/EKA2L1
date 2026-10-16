@@ -11,6 +11,7 @@ add_library(epocservs
         include/services/accessory/common.h
         include/services/alarm/alarm.h
         include/services/applist/applist.h
+        include/services/applist/icons.h
         include/services/applist/common.h
         include/services/applist/op.h
         include/services/audio/alf/alf.h
@@ -172,6 +173,7 @@ add_library(epocservs
         src/accessory/common.cpp
         src/alarm/alarm.cpp
         src/applist/applist.cpp
+        src/applist/icons.cpp
         src/applist/common.cpp
         src/applist/registeration.cpp
         src/audio/alf/alf.cpp
