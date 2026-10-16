@@ -13,7 +13,6 @@
 #include <chrono>
 #include <condition_variable>
 #include <exception>
-#include <iomanip>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -59,8 +58,6 @@
 #include <kernel/kernel.h>
 #include <kernel/process.h>
 #include <kernel/thread.h>
-#include <loader/mbm.h>
-#include <loader/mif.h>
 #include <package/manager.h>
 #include <services/applist/applist.h>
 #include <services/bluetooth/btman.h>
@@ -81,7 +78,6 @@
 #include <utils/system.h>
 #include <vfs/vfs.h>
 
-#include <lunasvg.h>
 
 @implementation EKA2L1AppEntry
 @end
@@ -168,14 +164,6 @@ namespace eka2l1::ios {
         return [NSString stringWithUTF8String:message.c_str()];
     }
 
-    // Icon decoder. Mirrors src/emu/android/.../launcher.cpp::get_app_icon
-    // but writes the rendered RGBA buffer straight into a CFData → CGImage →
-    // UIImage → PNG round-trip so SwiftUI can consume it as plain Data.
-    //
-    // Order of attempts matches the Android side:
-    //   .mif → lunasvg (after svgb / nvg debinarization, cached to disk)
-    //   .mbm → epoc::convert_to_rgba8888 against sbm header 0
-    //   anything else → applist_server::get_list_icon -> bitwise_bitmap pair
     static NSData *encode_rgba_to_png(const std::uint8_t *pixels,
                                       std::size_t width, std::size_t height,
                                       std::size_t requested_side) {
@@ -235,135 +223,6 @@ namespace eka2l1::ios {
         return UIImagePNGRepresentation(image);
     }
 
-    static NSData *decode_mif_icon(eka2l1::apa_app_registry *reg,
-                                   eka2l1::io_system *io,
-                                   const std::string &cache_dir,
-                                   std::size_t side) {
-        eka2l1::symfile file_route = io->open_file(reg->icon_file_path, READ_MODE | BIN_MODE);
-        if (!file_route) return nil;
-        eka2l1::common::create_directories(cache_dir);
-
-        std::ostringstream cached_path_builder;
-        cached_path_builder << cache_dir << "/debinarized_"
-                            << std::hex << std::uppercase << std::setfill('0') << std::setw(8)
-                            << reg->mandatory_info.uid << ".svg";
-        const std::string cached_path = cached_path_builder.str();
-        const std::uint64_t mif_last_modified = file_route->last_modify_since_0ad();
-
-        std::unique_ptr<lunasvg::Document> document;
-        if (eka2l1::common::exists(cached_path)) {
-            const std::u16string cached_u16 = eka2l1::common::utf8_to_ucs2(cached_path);
-            if (eka2l1::common::get_last_modifiy_since_ad(cached_u16) >= mif_last_modified) {
-                document = lunasvg::Document::loadFromFile(cached_path.c_str());
-            }
-        }
-
-        if (!document) {
-            eka2l1::ro_file_stream rfs(file_route.get());
-            eka2l1::loader::mif_file parser(reinterpret_cast<eka2l1::common::ro_stream *>(&rfs));
-            if (parser.do_parse()) {
-                int dest_size = 0;
-                if (parser.read_mif_entry(0, nullptr, dest_size) && dest_size > 0) {
-                    std::vector<std::uint8_t> data(dest_size);
-                    parser.read_mif_entry(0, data.data(), dest_size);
-
-                    auto outfile = std::make_unique<eka2l1::common::wo_std_file_stream>(cached_path, true);
-                    const bool converted = eka2l1::loader::convert_mif_icon_to_svg(data.data(),
-                        data.size(), *outfile);
-                    outfile.reset();
-
-                    if (converted) {
-                        document = lunasvg::Document::loadFromFile(cached_path.c_str());
-                    }
-
-                    if (!document) {
-                        // Don't leave a half-written cache entry behind: the mtime check
-                        // would happily serve it back on the next launch.
-                        eka2l1::common::remove(cached_path);
-                    }
-                }
-            }
-        }
-
-        if (!document) return nil;
-        const std::uint32_t w = static_cast<std::uint32_t>(document->width());
-        const std::uint32_t h = static_cast<std::uint32_t>(document->height());
-        if (w == 0 || h == 0) return nil;
-
-        std::vector<std::uint8_t> rgba(w * h * 4);
-        auto bitmap = lunasvg::Bitmap(rgba.data(), w, h, w * 4);
-        document->render(bitmap, lunasvg::Matrix{ 1, 0, 0, 1, 0, 0 });
-        bitmap.convertToRGBA();
-        return encode_rgba_to_png(rgba.data(), w, h, side);
-    }
-
-    static NSData *decode_mbm_icon(eka2l1::apa_app_registry *reg,
-                                   eka2l1::fbs_server *fbsserv,
-                                   eka2l1::io_system *io,
-                                   std::size_t side, eka2l1::epoc::icon_mask_composition composition) {
-        eka2l1::symfile file_route = io->open_file(reg->icon_file_path, READ_MODE | BIN_MODE);
-        if (!file_route) return nil;
-        eka2l1::ro_file_stream rfs(file_route.get());
-        eka2l1::loader::mbm_file parser(reinterpret_cast<eka2l1::common::ro_stream *>(&rfs));
-        if (!parser.do_read_headers() || parser.sbm_headers.empty()) return nil;
-
-        const auto &hdr = parser.sbm_headers[0];
-        const std::size_t w = hdr.size_pixels.x;
-        const std::size_t h = hdr.size_pixels.y;
-        if (w == 0 || h == 0) return nil;
-
-        std::vector<std::uint8_t> rgba(w * h * 4);
-        eka2l1::common::wo_buf_stream dst(rgba.data(), rgba.size());
-        if (!eka2l1::epoc::convert_to_rgba8888(fbsserv, parser, 0, dst)) {
-            return nil;
-        }
-
-        // Symbian app-icon MBMs store the icon at index 0 and its paired mask at
-        // index 1. Apply it when present and dimension-matched.
-        if (parser.sbm_headers.size() > 1) {
-            const auto &mask_hdr = parser.sbm_headers[1];
-            if (static_cast<std::size_t>(mask_hdr.size_pixels.x) == w
-                && static_cast<std::size_t>(mask_hdr.size_pixels.y) == h) {
-                std::vector<std::uint8_t> mask_rgba(w * h * 4);
-                eka2l1::common::wo_buf_stream mask_dst(mask_rgba.data(), mask_rgba.size());
-                if (eka2l1::epoc::convert_to_rgba8888(fbsserv, parser, 1, mask_dst, true)) {
-                    eka2l1::epoc::apply_icon_mask_alpha(rgba.data(), mask_rgba.data(), w, h,
-                        eka2l1::epoc::get_display_mode_from_bpp(mask_hdr.bit_per_pixels, mask_hdr.color), composition);
-                }
-            }
-        }
-        return encode_rgba_to_png(rgba.data(), w, h, side);
-    }
-
-    static NSData *decode_bitwise_icon(eka2l1::apa_app_registry *reg,
-                                       eka2l1::applist_server *alserv,
-                                       eka2l1::fbs_server *fbsserv,
-                                       std::size_t side) {
-        auto icon_pair = alserv->get_list_icon(*reg);
-        if (!icon_pair.has_value() || !icon_pair->first) return nil;
-        auto *bitmap = icon_pair->first;
-        const std::size_t w = bitmap->header_.size_pixels.x;
-        const std::size_t h = bitmap->header_.size_pixels.y;
-        if (w == 0 || h == 0) return nil;
-
-        std::vector<std::uint8_t> rgba(w * h * 4);
-        eka2l1::common::wo_buf_stream dst(rgba.data(), rgba.size());
-        if (!eka2l1::epoc::convert_to_rgba8888(fbsserv, bitmap, dst)) return nil;
-
-        // The applist server hands back the paired mask as the second bitmap.
-        if (auto *mask_bitmap = icon_pair->second) {
-            if (static_cast<std::size_t>(mask_bitmap->header_.size_pixels.x) == w
-                && static_cast<std::size_t>(mask_bitmap->header_.size_pixels.y) == h) {
-                std::vector<std::uint8_t> mask_rgba(w * h * 4);
-                eka2l1::common::wo_buf_stream mask_dst(mask_rgba.data(), mask_rgba.size());
-                if (eka2l1::epoc::convert_to_rgba8888(fbsserv, mask_bitmap, mask_dst, true)) {
-                    eka2l1::epoc::apply_icon_mask_alpha(rgba.data(), mask_rgba.data(), w, h,
-                        mask_bitmap->current_display_mode());
-                }
-            }
-        }
-        return encode_rgba_to_png(rgba.data(), w, h, side);
-    }
 }
 
 namespace eka2l1::ios {
@@ -3107,47 +2966,15 @@ static constexpr std::uint8_t k_unlimited_refresh_rate = 240;
     auto *kern = _state->symsys->get_kernel_system();
     if (!kern) return nil;
     auto *alserv = eka2l1::ios::get_applist_server(kern);
-    auto *fbsserv = eka2l1::ios::get_fbs_server(kern);
     if (!alserv) return nil;
     auto *reg = alserv->get_registration(uid);
     if (!reg) return nil;
-
-    auto *io = _state->symsys->get_io_system();
-    const std::u16string ext = eka2l1::common::lowercase_ucs2_string(
-        eka2l1::path_extension(reg->icon_file_path));
-
-    // Key the debinarized-SVG cache by firmware code and app UID: the same UID
-    // can ship different assets per device, while different apps may share a
-    // caption. Keep these disposable files in the iOS system cache directory.
-    if (_state->caches_root.empty()) return nil;
-    std::string cache_dir = eka2l1::add_path(_state->caches_root, "icons");
-    auto *dvc_mngr = _state->symsys->get_device_manager();
-    if (eka2l1::device *crr_dvc = dvc_mngr ? dvc_mngr->get_current() : nullptr) {
-        cache_dir = eka2l1::add_path(cache_dir,
-            eka2l1::common::lowercase_string(crr_dvc->firmware_code));
-    }
-    const std::size_t side = static_cast<std::size_t>(sizePx);
-
-    NSData *out = nil;
-    if (ext == u".mif") {
-        out = eka2l1::ios::decode_mif_icon(reg, io, cache_dir, side);
-    } else if (ext == u".mbm") {
-        if (fbsserv) {
-            const auto composition = _state->symsys->get_symbian_version_use() >= epocver::epoc10
-                ? eka2l1::epoc::icon_mask_composition::alf_texture
-                : eka2l1::epoc::icon_mask_composition::avkon;
-            out = eka2l1::ios::decode_mbm_icon(reg, fbsserv, io, side, composition);
-        }
-    } else {
-        if (fbsserv) out = eka2l1::ios::decode_bitwise_icon(reg, alserv, fbsserv, side);
-    }
-    // If the registered icon type didn't yield anything, try the bitwise
-    // fallback too — some apps point .mif at corrupt blobs but still expose a
-    // bitwise icon via the applist server.
-    if (!out && fbsserv && (ext == u".mif" || ext == u".mbm")) {
-        out = eka2l1::ios::decode_bitwise_icon(reg, alserv, fbsserv, side);
-    }
-    return out;
+    const std::string cache_root = _state->caches_root.empty() ? std::string()
+        : eka2l1::add_path(_state->caches_root, "icons");
+    auto icon = alserv->get_host_icon(*reg, cache_root);
+    if (!icon) return nil;
+    return eka2l1::ios::encode_rgba_to_png(icon->pixels.data(), icon->size.x, icon->size.y,
+        static_cast<std::size_t>(sizePx));
 }
 
 @end
