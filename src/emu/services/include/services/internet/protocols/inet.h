@@ -180,14 +180,17 @@ namespace eka2l1::epoc::internet {
 
     bool retrieve_local_ip_info(epoc::socket::saddress &broadcast, epoc::socket::saddress *myip = nullptr);
 
+    struct inet_connect_request;
+
     struct inet_socket : public socket::socket {
     private:
+        friend struct inet_connect_request;
         inet_bridged_protocol *papa_;
         inet_socket *accept_socket_ptr_;
         inet_socket *accept_server_;
 
         void *opaque_handle_;
-        void *opaque_connect_;
+        std::shared_ptr<inet_connect_request> connect_request_;
         void *opaque_send_info_;
         void *opaque_write_info_;
 
@@ -266,7 +269,6 @@ namespace eka2l1::epoc::internet {
         void create_frequent_common_tasks();
 
         // Asynchronous operations
-        void tcp_connect_impl_async();
         void tcp_send_impl_async();
         void tcp_recv_impl_async();
         void tcp_cancel_recv_impl_async();

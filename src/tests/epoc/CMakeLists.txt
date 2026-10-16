@@ -45,6 +45,7 @@ set(CORE_TEST_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/services/framework/objects.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/internet/accesspoints.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/internet/address.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/services/internet/connect.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/internet/connmonitor.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/internet/tls.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/loader.cpp
