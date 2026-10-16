@@ -201,7 +201,7 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1129, gl_compressed_tex_image_2d_emu, "glCompressedTexImage2D"),
         //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x112A, gl_compressed_tex_sub_image_2d_emu, "glCompressedTexSubImage2D"),
         //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x112B, gl_copy_tex_image_2d, "glCopyTexImage2D"),
-        //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x112C, gl_copy_tex_sub_image_2d, "glCopyTexSubImage2D"),
+        BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x112C, gl_copy_tex_sub_image_2d_emu, "glCopyTexSubImage2D"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x112D, gl_cull_face_emu, "glCullFace"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x112E, gl_delete_textures_emu, "glDeleteTextures"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x112F, gl_depth_func_emu, "glDepthFunc"),

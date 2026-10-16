@@ -1680,6 +1680,105 @@ namespace eka2l1::drivers {
         glBlendColor(red, green, blue, alpha);
     }
 
+    void ogl_graphics_driver::copy_framebuffer_to_texture(command &cmd) {
+        auto *tex = reinterpret_cast<ogl_texture *>(get_graphics_object(cmd.data_[1]));
+        if (!tex) {
+            return;
+        }
+
+        GLint read_fb, draw_fb;
+        glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &read_fb);
+        glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &draw_fb);
+        const auto source = cmd.data_[0];
+        ogl_framebuffer *fb = nullptr;
+        if (source & HANDLE_BITMAP) {
+            auto *bmp = get_bitmap(source);
+            if (!bmp) {
+                return;
+            }
+            if (!bmp->fb) {
+                bmp->init_fb(this);
+            }
+            fb = static_cast<ogl_framebuffer *>(bmp->fb.get());
+        } else if (source) {
+            fb = reinterpret_cast<ogl_framebuffer *>(get_graphics_object(source));
+            if (!fb) {
+                return;
+            }
+        }
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, fb ? fb->get_fbo() : context_->swapchain_framebuffer());
+
+        std::int32_t dimension, level, x, y, width, height, dx, dy, dw, dh;
+        unpack_u64_to_2u32(cmd.data_[2], dimension, level);
+        unpack_u64_to_2u32(cmd.data_[3], x, y);
+        unpack_u64_to_2u32(cmd.data_[4], width, height);
+        unpack_u64_to_2u32(cmd.data_[5], dx, dy);
+        unpack_u64_to_2u32(cmd.data_[6], dw, dh);
+        const GLenum target = dimension == 2 ? GL_TEXTURE_2D : GL_TEXTURE_CUBE_MAP_POSITIVE_X + dimension - 4;
+        if (width <= 0 || height <= 0 || dw <= 0 || dh <= 0) {
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, read_fb);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, draw_fb);
+            return;
+        }
+        if (cmd.data_[7]) {
+            // Legacy alpha is stored in R, and luminance-alpha in RG on the host.
+            const bool luminance_alpha = tex->get_format() == texture_format::rg8;
+            const std::size_t components = luminance_alpha ? 2 : 1;
+            std::vector<std::uint8_t> pixels(static_cast<std::size_t>(width) * height * 4);
+            std::vector<std::uint8_t> converted(static_cast<std::size_t>(dw) * dh * components);
+            GLint pack_alignment, pack_row_length;
+            glGetIntegerv(GL_PACK_ALIGNMENT, &pack_alignment);
+            glGetIntegerv(GL_PACK_ROW_LENGTH, &pack_row_length);
+            glPixelStorei(GL_PACK_ALIGNMENT, 1);
+            glPixelStorei(GL_PACK_ROW_LENGTH, 0);
+            glReadPixels(x, y, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+            glPixelStorei(GL_PACK_ALIGNMENT, pack_alignment);
+            glPixelStorei(GL_PACK_ROW_LENGTH, pack_row_length);
+            for (int row = 0; row < dh; ++row) {
+                for (int col = 0; col < dw; ++col) {
+                    const auto src = (static_cast<std::size_t>((2 * row + 1) * height / (2 * dh)) * width
+                        + (2 * col + 1) * width / (2 * dw)) * 4;
+                    const auto dest = (static_cast<std::size_t>(row) * dw + col) * components;
+                    if (luminance_alpha) {
+                        converted[dest] = pixels[src];
+                    }
+                    converted[dest + components - 1] = pixels[src + 3];
+                }
+            }
+            const GLenum bind_target = dimension == 2 ? GL_TEXTURE_2D : GL_TEXTURE_CUBE_MAP;
+            GLint binding, unpack_alignment, unpack_row_length;
+            glGetIntegerv(dimension == 2 ? GL_TEXTURE_BINDING_2D : GL_TEXTURE_BINDING_CUBE_MAP, &binding);
+            glGetIntegerv(GL_UNPACK_ALIGNMENT, &unpack_alignment);
+            glGetIntegerv(GL_UNPACK_ROW_LENGTH, &unpack_row_length);
+            glBindTexture(bind_target, static_cast<GLuint>(tex->driver_handle()));
+            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+            glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+            glTexSubImage2D(target, level, dx, dy, dw, dh, luminance_alpha ? GL_RG : GL_RED,
+                GL_UNSIGNED_BYTE, converted.data());
+            glPixelStorei(GL_UNPACK_ALIGNMENT, unpack_alignment);
+            glPixelStorei(GL_UNPACK_ROW_LENGTH, unpack_row_length);
+            glBindTexture(bind_target, binding);
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, read_fb);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, draw_fb);
+            return;
+        }
+
+        GLuint dest_fb = 0;
+        glGenFramebuffers(1, &dest_fb);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, dest_fb);
+        glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, target,
+            static_cast<GLuint>(tex->driver_handle()), level);
+        const GLboolean scissor = glIsEnabled(GL_SCISSOR_TEST);
+        glDisable(GL_SCISSOR_TEST);
+        glBlitFramebuffer(x, y, x + width, y + height, dx, dy, dx + dw, dy + dh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        if (scissor) {
+            glEnable(GL_SCISSOR_TEST);
+        }
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, read_fb);
+        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, draw_fb);
+        glDeleteFramebuffers(1, &dest_fb);
+    }
+
     void ogl_graphics_driver::read_framebuffer(command &cmd) {
         drivers::handle h = cmd.data_[0];
         drivers::ogl_framebuffer *fb = nullptr;
@@ -1952,6 +2051,10 @@ namespace eka2l1::drivers {
 
         case graphics_driver_set_blend_colour:
             set_blend_colour(cmd);
+            break;
+
+        case graphics_driver_copy_framebuffer_to_texture:
+            copy_framebuffer_to_texture(cmd);
             break;
 
         case graphics_driver_read_framebuffer:

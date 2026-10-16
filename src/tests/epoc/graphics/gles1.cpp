@@ -410,3 +410,95 @@ TEST_CASE("EGL colour configuration channel sizes match their buffer sizes", "[e
         }
     }
 }
+
+TEST_CASE("GLES texture copies validate the defined image rather than the last upload", "[gles1][texture-copy]") {
+    egl_context_es1 context;
+    egl_controller controller(nullptr);
+    egl_config config(0);
+    config.set_buffer_size(32);
+    egl_surface surface(nullptr, nullptr, eka2l1::vec2(640, 360), 7, config);
+    context.read_surface_ = context.draw_surface_ = &surface;
+    gles_driver_texture texture(context);
+    REQUIRE(texture.try_bind(GL_TEXTURE_2D_EMU) == 0);
+    texture.assign_handle(42);
+    texture.define_image(GL_TEXTURE_2D_EMU, 0, eka2l1::vec2(64, 32), GL_RGB_EMU);
+    texture.define_image(GL_TEXTURE_2D_EMU, 1, eka2l1::vec2(7, 5), GL_RGB_EMU);
+    auto copy = [&](int level, eka2l1::vec2 offset, eka2l1::vec2 size) {
+        return texture.copy_sub_image(controller, nullptr, GL_TEXTURE_2D_EMU, level, offset, {0, 0}, size);
+    };
+    REQUIRE(copy(0, {32, 16}, {32, 16}) == 0);
+    REQUIRE(copy(1, {6, 4}, {1, 1}) == 0);
+    REQUIRE(copy(1, {6, 4}, {2, 1}) == GL_INVALID_VALUE);
+    REQUIRE(copy(2, {0, 0}, {1, 1}) == GL_INVALID_OPERATION);
+    REQUIRE(copy(-1, {0, 0}, {1, 1}) == GL_INVALID_VALUE);
+    REQUIRE(copy(32, {0, 0}, {1, 1}) == GL_INVALID_VALUE);
+    REQUIRE(copy(0, {-1, 0}, {1, 1}) == GL_INVALID_VALUE);
+    REQUIRE(copy(0, {0, 0}, {-1, 1}) == GL_INVALID_VALUE);
+    REQUIRE(copy(0, {std::numeric_limits<int>::max(), 0}, {1, 1}) == GL_INVALID_VALUE);
+    REQUIRE(copy(0, {64, 32}, {0, 0}) == 0);
+    REQUIRE(texture.copy_sub_image(controller, nullptr, GL_TEXTURE_CUBE_MAP_POSITIVE_X_EMU, 0, {0, 0}, {0, 0}, {1, 1}) == GL_INVALID_ENUM);
+    texture.define_image(GL_TEXTURE_2D_EMU, 0, {64, 32}, GL_ETC1_RGB8_OES_EMU, true);
+    REQUIRE(copy(0, {0, 0}, {1, 1}) == GL_INVALID_OPERATION);
+    auto commands = context.cmd_builder_.retrieve_command_list();
+    REQUIRE(commands.size_ == 2);
+    delete[] commands.base_;
+}
+
+TEST_CASE("GLES copies preserve alpha compatibility and generated mip dimensions", "[gles1][texture-copy]") {
+    egl_context_es1 context;
+    egl_controller controller(nullptr);
+    egl_config config(0);
+    config.set_buffer_size(16);
+    egl_surface surface(nullptr, nullptr, {640, 360}, 7, config);
+    context.read_surface_ = context.draw_surface_ = &surface;
+    gles_driver_texture texture(context);
+    REQUIRE(texture.try_bind(GL_TEXTURE_2D_EMU) == 0);
+    texture.assign_handle(42);
+    auto copy = [&](int level, eka2l1::vec2 size) {
+        return texture.copy_sub_image(controller, nullptr, GL_TEXTURE_2D_EMU, level, {0, 0}, {0, 0}, size);
+    };
+    for (auto format : { GL_RGBA_EMU, GL_ALPHA_EMU, GL_LUMINANCE_ALPHA_EMU }) {
+        texture.define_image(GL_TEXTURE_2D_EMU, 0, {32, 16}, format);
+        REQUIRE(copy(0, {1, 1}) == GL_INVALID_OPERATION);
+    }
+    texture.define_image(GL_TEXTURE_2D_EMU, 0, {4096, 1}, GL_RGB_EMU);
+    texture.set_mipmap_generated(true);
+    REQUIRE(copy(12, {1, 1}) == 0);
+    REQUIRE(copy(12, {2, 1}) == GL_INVALID_VALUE);
+    REQUIRE(copy(13, {1, 1}) == GL_INVALID_VALUE);
+    auto commands = context.cmd_builder_.retrieve_command_list();
+    REQUIRE(commands.size_ == 1);
+    delete[] commands.base_;
+}
+
+TEST_CASE("GLES copies use framebuffer scale without scaling ordinary texture offsets", "[gles1][texture-copy]") {
+    egl_context_es1 context;
+    egl_controller controller(nullptr);
+    egl_config config(0);
+    config.set_buffer_size(32);
+    egl_surface surface(nullptr, nullptr, {640, 360}, 7, config);
+    surface.current_scale_ = 2.0f;
+    context.read_surface_ = context.draw_surface_ = &surface;
+    gles_driver_texture texture(context);
+    REQUIRE(texture.try_bind(GL_TEXTURE_2D_EMU) == 0);
+    texture.assign_handle(42);
+    texture.define_image(GL_TEXTURE_2D_EMU, 0, {64, 32}, GL_RGB_EMU);
+    REQUIRE(texture.copy_sub_image(controller, nullptr, GL_TEXTURE_2D_EMU, 0, {5, 7}, {11, 13}, {4, 6}) == 0);
+    REQUIRE(texture.copy_sub_image(controller, nullptr, GL_TEXTURE_2D_EMU, 0, {0, 0},
+        {std::numeric_limits<int>::max(), 0}, {1, 1}) == 0);
+    REQUIRE(texture.copy_sub_image(controller, nullptr, GL_TEXTURE_2D_EMU, 0, {0, 0},
+        {std::numeric_limits<int>::min(), 0}, {1, 1}) == 0);
+    auto commands = context.cmd_builder_.retrieve_command_list();
+    REQUIRE(commands.size_ == 1);
+    const auto &copy = commands.base_[0];
+    REQUIRE(copy.opcode_ == eka2l1::drivers::graphics_driver_copy_framebuffer_to_texture);
+    REQUIRE(copy.data_[0] == 7);
+    REQUIRE(copy.data_[1] == 42);
+    REQUIRE(copy.data_[2] == 2);
+    REQUIRE(copy.data_[3] == (std::uint64_t(26) << 32 | 22));
+    REQUIRE(copy.data_[4] == (std::uint64_t(12) << 32 | 8));
+    REQUIRE(copy.data_[5] == (std::uint64_t(7) << 32 | 5));
+    REQUIRE(copy.data_[6] == (std::uint64_t(6) << 32 | 4));
+    REQUIRE(copy.data_[7] == 0);
+    delete[] commands.base_;
+}
