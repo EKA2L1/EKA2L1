@@ -99,12 +99,12 @@ TEST_CASE("TCP connect survives close before and after native submission", "[.in
                 state->socket->reset();
                 state->kernel->unlock();
             }
-            struct search { void *handle; bool found = false; } search{state->handle};
+            struct handle_search { void *handle; bool found = false; } result{state->handle};
             uv_walk(check->loop, [](uv_handle_t *handle, void *data) {
-                auto *search = static_cast<struct search *>(data);
+                auto *search = static_cast<handle_search *>(data);
                 search->found |= handle == search->handle;
-            }, &search);
-            if (!search.found) {
+            }, &result);
+            if (!result.found) {
                 uv_idle_stop(check);
                 uv_close(reinterpret_cast<uv_handle_t *>(check), [](uv_handle_t *handle) {
                     auto *state = static_cast<close_check *>(handle->data);
