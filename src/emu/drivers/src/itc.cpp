@@ -327,6 +327,20 @@ namespace eka2l1::drivers {
         cmd->data_[5] = pixels_per_line;
     }
 
+    void graphics_command_builder::copy_framebuffer_to_texture(drivers::handle source, drivers::handle texture,
+        std::uint32_t dimension, std::int32_t level, const eka2l1::rect &source_rect, const eka2l1::rect &dest_rect, bool alpha_as_last_channel) {
+        command *cmd = list_.retrieve_next();
+        cmd->opcode_ = graphics_driver_copy_framebuffer_to_texture;
+        cmd->data_[0] = source;
+        cmd->data_[1] = texture;
+        cmd->data_[2] = PACK_2U32_TO_U64(dimension, level);
+        cmd->data_[3] = PACK_2U32_TO_U64(source_rect.top.x, source_rect.top.y);
+        cmd->data_[4] = PACK_2U32_TO_U64(source_rect.size.x, source_rect.size.y);
+        cmd->data_[5] = PACK_2U32_TO_U64(dest_rect.top.x, dest_rect.top.y);
+        cmd->data_[6] = PACK_2U32_TO_U64(dest_rect.size.x, dest_rect.size.y);
+        cmd->data_[7] = alpha_as_last_channel;
+    }
+
     void graphics_command_builder::update_texture(drivers::handle h, const char *data, const std::size_t size, const std::uint8_t lvl,
         const texture_format data_format, const texture_data_type data_type,
         const eka2l1::vec3 &offset, const eka2l1::vec3 &dim, const std::size_t pixels_per_line, const std::uint32_t unpack_alignment) {
