@@ -47,6 +47,50 @@ extern "C" {
 #include <uvlooper/uvlooper.h>
 
 namespace eka2l1::epoc::internet {
+    struct inet_connect_request : std::enable_shared_from_this<inet_connect_request> {
+        uv_connect_t request{};
+        sockaddr_in6 address{};
+        uv_tcp_t *handle;
+        kernel_system *kernel;
+        // The kernel lock serializes completion with cancellation and socket destruction.
+        inet_socket *owner;
+
+        void finish_locked(int error) {
+            if (owner) {
+                auto *socket = owner;
+                owner = nullptr;
+                socket->connect_request_.reset();
+                socket->handle_connect_done_error_code(error);
+            }
+        }
+
+        void finish(int error) {
+            const std::lock_guard<kernel_system> guard(*kernel);
+            finish_locked(error);
+        }
+
+        void start() {
+            const std::lock_guard<kernel_system> guard(*kernel);
+            if (!owner) {
+                return;
+            }
+
+            // libuv retains the request until its callback, including cancellation by uv_close.
+            auto *pending = new std::shared_ptr<inet_connect_request>(shared_from_this());
+            request.data = pending;
+            const int error = uv_tcp_connect(&request, handle, reinterpret_cast<const sockaddr *>(&address),
+                [](uv_connect_t *request, int error) {
+                    auto pending = std::move(*static_cast<std::shared_ptr<inet_connect_request> *>(request->data));
+                    delete static_cast<std::shared_ptr<inet_connect_request> *>(request->data);
+                    pending->finish(error);
+                });
+            if (error < 0) {
+                delete pending;
+                finish_locked(error);
+            }
+        }
+    };
+
     namespace {
         bool same_host_address(const socket::saddress &left, const socket::saddress &right) {
             if (left.family_ != right.family_) {
@@ -149,7 +193,6 @@ namespace eka2l1::epoc::internet {
         , accept_socket_ptr_(nullptr)
         , accept_server_(nullptr)
         , opaque_handle_(nullptr)
-        , opaque_connect_(nullptr)
         , opaque_send_info_(nullptr)
         , opaque_write_info_(nullptr)
         , protocol_(0)
@@ -167,6 +210,11 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::close_down() {
+        if (connect_request_) {
+            connect_request_->owner = nullptr;
+            connect_request_.reset();
+        }
+
         if (accept_server_) {
             inet_socket *accept_server = accept_server_;
             accept_server_ = nullptr;
@@ -203,13 +251,6 @@ namespace eka2l1::epoc::internet {
 
             opaque_handle_ = nullptr;
             protocol_ = 0;
-        }
-
-        if (opaque_connect_) {
-            uv_connect_t *connect = reinterpret_cast<uv_connect_t*>(opaque_connect_);
-            delete connect;
-
-            opaque_connect_ = nullptr;
         }
 
         if (opaque_send_info_) {
@@ -321,10 +362,6 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::create_frequent_tcp_tasks() {
-        connect_task_ = libuv::create_task([this]() {
-            tcp_connect_impl_async();
-        });
-
         listen_task_ = libuv::create_task([this]() {
             listen_impl_async();
         });
@@ -387,9 +424,6 @@ namespace eka2l1::epoc::internet {
             return;
         }
 
-        kernel_system *kern = connect_done_info_.requester->get_kernel_object_owner();
-        kern->lock();
-
         if (error_code == 0) {
             connect_done_info_.complete(epoc::error_none);
         } else {
@@ -432,33 +466,11 @@ namespace eka2l1::epoc::internet {
 
             connect_done_info_.complete(guest_error_code);
         }
-
-        kern->unlock();
     }
 
     void inet_socket::complete_connect_done_info(const int err) {
-        if (connect_done_info_.empty()) {
-            return;
-        }
-
+        const std::lock_guard<kernel_system> guard(*papa_->get_kernel_system());
         handle_connect_done_error_code(err);
-    }
-
-    void inet_socket::tcp_connect_impl_async() {
-        uv_connect_t *connect = reinterpret_cast<uv_connect_t *>(opaque_connect_);
-        int err = uv_tcp_connect(
-            connect,
-            reinterpret_cast<uv_tcp_t*>(opaque_handle_),
-            reinterpret_cast<const sockaddr*>(&connect_addr_),
-            [](uv_connect_t *connect, const int err) {
-            inet_socket *socket = reinterpret_cast<inet_socket*>(connect->data);
-            socket->complete_connect_done_info(err);
-        });
-
-        if (err < 0) {
-            LOG_ERROR(SERVICE_INTERNET, "Connect socket failed with libuv code {}", err);
-            reinterpret_cast<inet_socket*>(connect->data)->complete_connect_done_info(err);
-        }
     }
 
     void inet_socket::udp_connect_impl_async() {
@@ -475,7 +487,7 @@ namespace eka2l1::epoc::internet {
             return;
         }
 
-        if (!connect_done_info_.empty()) {
+        if (!connect_done_info_.empty() || connect_request_) {
             info.complete(epoc::error_in_use);
             return;
         }
@@ -487,17 +499,27 @@ namespace eka2l1::epoc::internet {
         sockaddr *ip_addr_ptr = nullptr;
         GUEST_TO_BSD_ADDR(target_addr, ip_addr_ptr);
 
+        if (!ip_addr_ptr) {
+            info.complete(epoc::error_argument);
+            return;
+        }
+
         connect_done_info_ = info;
 
         if (protocol_ == INET_TCP_PROTOCOL_ID) {
-            if (!opaque_connect_) {
-                opaque_connect_ = new uv_connect_t;
-                reinterpret_cast<uv_connect_t*>(opaque_connect_)->data = this;
-            }
+            connect_request_ = std::make_shared<inet_connect_request>();
+            connect_request_->owner = this;
+            connect_request_->kernel = papa_->get_kernel_system();
+            connect_request_->handle = reinterpret_cast<uv_tcp_t *>(opaque_handle_);
+            std::memcpy(&connect_request_->address, ip_addr_ptr,
+                ip_addr_ptr->sa_family == AF_INET ? sizeof(sockaddr_in) : sizeof(sockaddr_in6));
+            looper_->one_shot([request = connect_request_] { request->start(); });
+        } else {
+            std::memset(&connect_addr_, 0, sizeof(connect_addr_));
+            std::memcpy(&connect_addr_, ip_addr_ptr,
+                ip_addr_ptr->sa_family == AF_INET ? sizeof(sockaddr_in) : sizeof(sockaddr_in6));
+            looper_->post_task(connect_task_);
         }
-
-        std::memcpy(&connect_addr_, ip_addr_ptr, sizeof(sockaddr_in6));
-        looper_->post_task(connect_task_);
     }
 
     int guest_bind_address_to_host(const epoc::socket::saddress &addr, const std::uint32_t socket_family,
@@ -1253,6 +1275,10 @@ namespace eka2l1::epoc::internet {
     }
 
     void inet_socket::cancel_connect() {
+        if (connect_request_) {
+            connect_request_->owner = nullptr;
+            connect_request_.reset();
+        }
         connect_done_info_.complete(epoc::error_cancel);
     }
 
