@@ -59,7 +59,6 @@ import com.github.eka2l1.R;
 import com.github.eka2l1.applist.AppItem;
 import com.github.eka2l1.settings.AppDataStore;
 import com.github.eka2l1.util.FileUtils;
-import com.github.eka2l1.util.BitmapUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -252,19 +251,7 @@ public class Emulator {
             ArrayList<AppItem> items = new ArrayList<>();
             for (int i = 0; i < apps.length; i += 2) {
                 long appUid = Long.parseLong(apps[i]);
-                Bitmap[] iconAndMask = getAppIcon(appUid);
-
-                Bitmap finalIcon = null;
-                if (iconAndMask != null) {
-                    if ((iconAndMask.length == 1) || (iconAndMask[1] == null)) {
-                        finalIcon = iconAndMask[0];
-                    } else {
-                        finalIcon = BitmapUtils.SourceWithMergedSymbianMask(iconAndMask[0], iconAndMask[1]);
-
-                        iconAndMask[0].recycle();
-                        iconAndMask[1].recycle();
-                    }
-                }
+                Bitmap finalIcon = getAppIcon(appUid);
 
                 AppItem item = new AppItem(appUid, 0, apps[i + 1], finalIcon);
                 items.add(item);
@@ -788,7 +775,7 @@ public class Emulator {
 
     public static native void updateAppSetting(int uid);
 
-    public static native Bitmap[] getAppIcon(long uid);
+    public static native Bitmap getAppIcon(long uid);
 
     public static native String[] getLanguageIds();
 

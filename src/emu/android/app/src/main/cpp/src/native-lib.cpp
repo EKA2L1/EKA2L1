@@ -303,10 +303,9 @@ Java_com_github_eka2l1_emu_Emulator_updateAppSetting(JNIEnv *env, jclass clazz, 
     state->launcher->update_app_setting(uid);
 }
 
-extern "C" JNIEXPORT jobjectArray JNICALL
+extern "C" JNIEXPORT jobject JNICALL
 Java_com_github_eka2l1_emu_Emulator_getAppIcon(JNIEnv *env, jclass clazz, jlong uid) {
-    jobjectArray jicons = state->launcher->get_app_icon(env, uid);
-    return jicons;
+    return state->launcher->get_app_icon(env, uid);
 }
 
 extern "C" JNIEXPORT jobjectArray JNICALL

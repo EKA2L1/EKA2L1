@@ -21,6 +21,7 @@
 #pragma once
 
 #include <services/applist/common.h>
+#include <services/applist/icons.h>
 #include <services/framework.h>
 
 #include <common/vecx.h>
@@ -358,6 +359,8 @@ namespace eka2l1 {
         // Exact dimensions win; otherwise choose the nearest area that does not exceed the request.
         std::optional<apa_app_masked_icon_bitmap> get_icon_by_size(apa_app_registry &registry, const eka2l1::vec2 &size);
         std::optional<apa_app_masked_icon_bitmap> get_list_icon(apa_app_registry &registry);
+
+        std::optional<app_icon_image> get_host_icon(apa_app_registry &registry, const std::string &cache_root);
 
         std::mutex list_access_mut_;
 
