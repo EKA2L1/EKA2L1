@@ -2064,32 +2064,30 @@ namespace eka2l1::dispatch {
         return 0;
     }
 
-    static std::uint32_t calculate_possible_upload_size(const eka2l1::vec2 size, const std::uint32_t format, const std::uint32_t data_type) {
+    static std::uint32_t calculate_possible_upload_size(const eka2l1::vec2 size, const std::uint32_t format, const std::uint32_t data_type,
+        const std::uint32_t unpack_alignment) {
+        std::uint32_t bytes_per_pixel = 0;
+
         if ((format == GL_LUMINANCE_EMU) || (format == GL_ALPHA_EMU)) {
-            return size.x * size.y;
+            bytes_per_pixel = 1;
+        } else if (format == GL_LUMINANCE_ALPHA_EMU) {
+            bytes_per_pixel = 2;
+        } else if (format == GL_RGB_EMU) {
+            bytes_per_pixel = (data_type == GL_UNSIGNED_BYTE_EMU) ? 3 : 2;
+        } else if ((format == GL_RGBA_EMU) || (format == GL_BGRA_EXT_EMU)) {
+            bytes_per_pixel = (data_type == GL_UNSIGNED_BYTE_EMU) ? 4 : 2;
         }
 
-        if (format == GL_LUMINANCE_ALPHA_EMU) {
-            return size.x * size.y * 2;
+        if (!bytes_per_pixel || (size.x <= 0) || (size.y <= 0)) {
+            return 0;
         }
 
-        if (format == GL_RGB_EMU) {
-            if (data_type == GL_UNSIGNED_BYTE_EMU) {
-                return size.x * size.y * 3;
-            } else {
-                return size.x * size.y * 2;
-            }
-        } else {
-            if ((format == GL_RGBA_EMU) || (format == GL_BGRA_EXT_EMU)) {
-                if (data_type == GL_UNSIGNED_BYTE_EMU) {
-                    return size.x * size.y * 4;
-                } else {
-                    return size.x * size.y * 2;
-                }
-            }
-        }
+        // Rows are padded to the unpack alignment, except that the last row is read only up to its pixels.
+        const std::uint32_t row_size = size.x * bytes_per_pixel;
+        const std::uint32_t alignment = unpack_alignment ? unpack_alignment : 1;
+        const std::uint32_t row_stride = (row_size + alignment - 1) / alignment * alignment;
 
-        return 0;
+        return row_stride * (size.y - 1) + row_size;
     }
 
     BRIDGE_FUNC_LIBRARY(void, gl_compressed_tex_image_2d_emu, std::uint32_t target, std::int32_t level, std::int32_t internal_format,
@@ -2382,7 +2380,7 @@ namespace eka2l1::dispatch {
         }
 
         if (need_reinstantiate) {
-            const std::size_t needed_size = calculate_possible_upload_size(eka2l1::vec2(width, height), format, data_type);
+            const std::size_t needed_size = calculate_possible_upload_size(eka2l1::vec2(width, height), format, data_type, ctx->unpack_alignment_);
             ctx->cmd_builder_.recreate_texture(tex->handle_value(), dimension, static_cast<std::uint8_t>(level), internal_format_driver,
                 format_driver, dtype, data_pixels, needed_size, eka2l1::vec3(width, height, 0), 0, ctx->unpack_alignment_);
         }
@@ -2460,7 +2458,7 @@ namespace eka2l1::dispatch {
 
         get_data_type_to_upload(internal_format_driver, format_driver, dtype, swizzles, format, data_type, sys->get_graphics_driver()->is_stricted());
 
-        const std::size_t needed_size = calculate_possible_upload_size(eka2l1::vec2(width, height), format, data_type);
+        const std::size_t needed_size = calculate_possible_upload_size(eka2l1::vec2(width, height), format, data_type, ctx->unpack_alignment_);
         ctx->cmd_builder_.update_texture(tex->handle_value(), reinterpret_cast<const char*>(data_pixels), needed_size,
             static_cast<std::uint8_t>(level), format_driver, dtype, eka2l1::vec3(xoffset, yoffset, 0), eka2l1::vec3(width, height, 0),
             0, ctx->unpack_alignment_);
