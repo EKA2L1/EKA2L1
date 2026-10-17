@@ -12,7 +12,7 @@ namespace eka2l1::dispatch {
     
     static constexpr const char *GLES2_STATIC_STRING_VENDOR = "IMAGINATION TECHNOLOGIES EKA2L1";
     static constexpr const char *GLES2_STATIC_STRING_RENDERER = "POWERVR EKA2L1";
-    static constexpr const char *GLES2_STATIC_STRING_VERSION = "2.0.0 POWERVR (EKA2L1 IMPLEMENTATION)";
+    static constexpr const char *GLES2_STATIC_STRING_VERSION = "OpenGL ES 2.0 POWERVR (EKA2L1 IMPLEMENTATION)";
     static constexpr const char *GLES2_STATIC_STRING_EXTENSIONS = "GL_IMG_texture_compression_pvrtc "
         "GL_OES_compressed_ETC1_RGB8_texture "
         "GL_OES_compressed_paletted_texture "
@@ -27,5 +27,5 @@ namespace eka2l1::dispatch {
         /*
          * "GL_EXT_texture_compression_s3tc "
          */
-    static constexpr const char *GLES2_STATIC_STRING_SHADER_LANGUAGE_VERSION = "1.0 ES";
+    static constexpr const char *GLES2_STATIC_STRING_SHADER_LANGUAGE_VERSION = "OpenGL ES GLSL ES 1.00";
 }

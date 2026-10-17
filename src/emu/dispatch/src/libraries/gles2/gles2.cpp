@@ -1540,10 +1540,10 @@ APPLY_PENDING_ROUTES:
         std::string temp;
 
         for (std::int32_t i = 0; i < count; i++) {
-            if (!length) {
-                temp = strings[i].get(crr_pr);
+            const char *pointer_for_string = strings[i].get(crr_pr);
+            if (!length || (length[i] < 0)) {
+                temp = pointer_for_string;
             } else {
-                const char *pointer_for_string = (*strings).get(crr_pr);
                 temp = std::string(pointer_for_string, pointer_for_string + length[i]);
             }
 
@@ -2086,13 +2086,19 @@ APPLY_PENDING_ROUTES:
             return;
         }
 
-        gles_driver_object_instance *obj = ctx->objects_.get(attachment);
-        if (!obj) {
-            controller.push_error(ctx, GL_INVALID_OPERATION);
-            return;
+        // Name 0 detaches whatever is attached at that point.
+        gles_driver_object *attach_obj = nullptr;
+        if (attachment != 0) {
+            gles_driver_object_instance *obj = ctx->objects_.get(attachment);
+            if (!obj) {
+                controller.push_error(ctx, GL_INVALID_OPERATION);
+                return;
+            }
+
+            attach_obj = obj->get();
         }
 
-        std::uint32_t result = fb_obj->set_attachment(obj->get(), attachment_type, face_index);
+        std::uint32_t result = fb_obj->set_attachment(attach_obj, attachment_type, face_index);
         if (result != 0) {
             controller.push_error(ctx, result);
             return;
@@ -2410,6 +2416,11 @@ APPLY_PENDING_ROUTES:
 
         if (!ctx->using_program_) {
             controller.push_error(ctx, GL_INVALID_OPERATION);
+            return;
+        }
+
+        // Spec: data for location -1 is silently ignored.
+        if (binding == -1) {
             return;
         }
 
