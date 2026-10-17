@@ -554,6 +554,25 @@ namespace eka2l1::dispatch {
         return EGL_TRUE;
     }
     
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_swap_interval_emu, egl_display display, std::int32_t interval) {
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
+
+        egl_context *crr = controller.current_context(sys->get_kernel_system()->crr_thread()->unique_id());
+        if (!crr) {
+            egl_push_error(sys, EGL_BAD_CONTEXT_EMU);
+            return EGL_FALSE;
+        }
+
+        if (!crr->draw_surface_) {
+            egl_push_error(sys, EGL_BAD_SURFACE_EMU);
+            return EGL_FALSE;
+        }
+
+        // The interval is clamped to the config's [min, max] swap interval, which is always [1, 1].
+        return EGL_TRUE;
+    }
+
     BRIDGE_FUNC_LIBRARY(std::int32_t, egl_wait_gl_emu) {
         return EGL_TRUE;
     }

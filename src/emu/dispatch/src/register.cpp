@@ -289,7 +289,7 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1181, gl_translatex_emu, "glTranslatex"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1182, gl_vertex_pointer_emu, "glVertexPointer"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1183, gl_viewport_emu, "glViewport"),
-        //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1184, egl_swap_interval_emu, "eglSwapInterval"),
+        BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1184, egl_swap_interval_emu, "eglSwapInterval"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1185, gl_bind_buffer_emu, "glBindBuffer"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1186, gl_buffer_data_emu, "glBufferData"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1187, gl_buffer_sub_data_emu, "glBufferSubData"),
