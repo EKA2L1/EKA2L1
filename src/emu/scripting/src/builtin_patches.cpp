@@ -119,6 +119,14 @@ namespace eka2l1::manager {
         }
     }
 
+    // Only type-0 enemy waves set their fire period, but every live wave is taken modulo it
+    // before the type check. Take the path that check picks anyway instead of dividing by zero.
+    static void wave_skip_zero_fire_period() {
+        if (scripting::cpu::get_register(1) == 0) {
+            scripting::cpu::set_register(15, scripting::cpu::get_pc() - 0x28);
+        }
+    }
+
     void scripts::register_builtin_patches() {
         // The kernel-level hooks must be live for breakpoints to fire.
         register_kernel_hooks();
@@ -186,6 +194,7 @@ namespace eka2l1::manager {
         }
 
         register_breakpoint("cboxapp_0x20041fae.exe", 0x956B, 0, 0x20041FAE, 0xCB7985E9, wave_skip_unstarted_animation_refresh);
+        register_breakpoint("cboxapp_0x20041fae.exe", 0x1D44F, 0, 0x20041FAE, 0xCB7985E9, wave_skip_zero_fire_period);
 
         current_module = nullptr;
 
