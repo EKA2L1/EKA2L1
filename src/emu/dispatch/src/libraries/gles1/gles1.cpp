@@ -577,6 +577,11 @@ namespace eka2l1::dispatch {
     template <typename T>
     bool get_data_impl_es1(egl_context_es1 *ctx, drivers::graphics_driver *drv, std::uint32_t pname, T *params, std::uint32_t scale_factor) {
         switch (pname) {
+        case GL_SHADE_MODEL_EMU:
+            *params = static_cast<T>((ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_SHADE_MODEL_FLAT)
+                ? GL_FLAT_EMU : GL_SMOOTH_EMU);
+            break;
+
         case GL_POINT_SPRITE_OES:
             *params = static_cast<T>(ctx->point_sprite_enabled_);
             break;
@@ -907,7 +912,7 @@ namespace eka2l1::dispatch {
             for (std::uint32_t i = 0; i < count; ++i) {
                 switch (data_type) {
                 case GLES_GET_DATA_TYPE_BOOLEAN:
-                    reinterpret_cast<std::int32_t*>(data)[i] = values[i] != 0.0f;
+                    reinterpret_cast<bool*>(data)[i] = values[i] != 0.0f;
                     break;
                 case GLES_GET_DATA_TYPE_INTEGER:
                     reinterpret_cast<std::int32_t*>(data)[i] = saturated_gl_integer(std::round(static_cast<double>(values[i])));
@@ -929,7 +934,7 @@ namespace eka2l1::dispatch {
         }
         switch (data_type) {
         case GLES_GET_DATA_TYPE_BOOLEAN:
-            return get_data_impl_es1<std::int32_t>(this, drv, feature, reinterpret_cast<std::int32_t*>(data), 255);
+            return get_data_impl_es1<bool>(this, drv, feature, reinterpret_cast<bool*>(data), 1);
 
         case GLES_GET_DATA_TYPE_FIXED:
             return get_data_impl_es1<gl_fixed>(this, drv, feature, reinterpret_cast<gl_fixed*>(data), 65536);

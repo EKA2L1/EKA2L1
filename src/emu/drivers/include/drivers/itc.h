@@ -233,7 +233,7 @@ namespace eka2l1::drivers {
 
         ~graphics_command_builder() {
             if (list_.base_) {
-                delete list_.base_;
+                delete[] list_.base_;
             }
         }
 

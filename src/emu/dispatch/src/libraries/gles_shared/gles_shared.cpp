@@ -28,6 +28,10 @@
 #include <drivers/graphics/graphics.h>
 #include <system/epoc.h>
 #include <kernel/kernel.h>
+#include <algorithm>
+#include <cmath>
+#include <limits>
+#include <type_traits>
 
 namespace eka2l1::dispatch {
     bool decompress_palette_data(std::vector<std::uint8_t> &dest, std::vector<std::size_t> &out_size, const std::uint8_t *source, std::size_t source_size, std::int32_t width,
@@ -1558,23 +1562,77 @@ namespace eka2l1::dispatch {
         return true;
     }
     
+    template <typename T, typename U>
+    static T convert_query_value(U value, bool normalized = false) {
+        if constexpr (std::is_same_v<T, bool> || std::is_same_v<T, float>) {
+            return static_cast<T>(value);
+        } else {
+            double converted = static_cast<double>(value);
+            if constexpr (std::is_same_v<T, gl_fixed>) {
+                converted *= 65536.0;
+            } else if constexpr (std::is_floating_point_v<U>) {
+                if (normalized) {
+                    converted *= std::numeric_limits<std::int32_t>::max();
+                }
+                converted = std::round(converted);
+            }
+            return static_cast<T>(static_cast<std::int32_t>(std::clamp(converted,
+                static_cast<double>(std::numeric_limits<std::int32_t>::min()),
+                static_cast<double>(std::numeric_limits<std::int32_t>::max()))));
+        }
+    }
+
     template <typename T>
     bool get_data_impl(egl_context_es_shared *ctx, drivers::graphics_driver *drv, std::uint32_t pname, T *params, std::uint32_t scale_factor) {
+        bool enabled = false;
+        if (ctx->is_enabled(pname, enabled)) {
+            *params = convert_query_value<T>(enabled);
+            return true;
+        }
+
         switch (pname) {
+        case GL_DEPTH_WRITEMASK_EMU:
+            *params = convert_query_value<T>(ctx->depth_mask_ != 0);
+            break;
+
+        case GL_DEPTH_FUNC_EMU:
+            *params = static_cast<T>(ctx->depth_func_);
+            break;
+
+        case GL_DEPTH_RANGE_EMU:
+            params[0] = convert_query_value<T>(ctx->depth_range_min_, true);
+            params[1] = convert_query_value<T>(ctx->depth_range_max_, true);
+            break;
+
+        case GL_FRONT_FACE_EMU:
+            *params = static_cast<T>(ctx->active_front_face_rule_ == drivers::rendering_face_determine_rule::vertices_clockwise
+                ? GL_CLOCKWISE_EMU : GL_COUNTER_CLOCKWISE_EMU);
+            break;
+
+        case GL_SCISSOR_BOX_EMU: {
+            const eka2l1::vec2 size = (ctx->scissor_bl_.size == eka2l1::vec2(-1, -1) && ctx->draw_surface_)
+                ? ctx->draw_surface_->dimension_ : ctx->scissor_bl_.size;
+            params[0] = convert_query_value<T>(ctx->scissor_bl_.top.x);
+            params[1] = convert_query_value<T>(ctx->scissor_bl_.top.y);
+            params[2] = convert_query_value<T>(size.x);
+            params[3] = convert_query_value<T>(size.y);
+            break;
+        }
+
+        case GL_POLYGON_OFFSET_FACTOR_EMU:
+            *params = convert_query_value<T>(ctx->polygon_offset_factor_);
+            break;
+
+        case GL_POLYGON_OFFSET_UNITS_EMU:
+            *params = convert_query_value<T>(ctx->polygon_offset_units_);
+            break;
+
         case GL_ACTIVE_TEXTURE_EMU:
             *params = static_cast<T>(ctx->active_texture_unit_ + GL_TEXTURE0_EMU);
             break;
 
         case GL_ARRAY_BUFFER_BINDING_EMU:
             *params = static_cast<T>(ctx->binded_array_buffer_handle_);
-            break;
-
-        case GL_BLEND_EMU:
-            if (ctx->non_shader_statuses_ & egl_context_es_shared::NON_SHADER_STATE_BLEND_ENABLE)
-                *params = 1;
-            else
-                *params = 0;
-
             break;
 
         case GL_BLEND_DST_EMU:
@@ -1592,20 +1650,12 @@ namespace eka2l1::dispatch {
             params[3] = static_cast<T>(ctx->clear_color_[3] * scale_factor);
             break;
 
-        case GL_COLOR_LOGIC_OP_EMU:
-            *params = static_cast<T>((ctx->non_shader_statuses_ & egl_context_es_shared::NON_SHADER_STATE_COLOR_LOGIC_OP_ENABLE) ? 1 : 0);
-            break;
-
         case GL_COLOR_WRITEMASK_EMU:
-            params[0] = static_cast<T>((ctx->color_mask_ & 1) ? 1 : 0);
-            params[1] = static_cast<T>((ctx->color_mask_ & 2) ? 1 : 0);
-            params[2] = static_cast<T>((ctx->color_mask_ & 4) ? 1 : 0);
-            params[3] = static_cast<T>((ctx->color_mask_ & 8) ? 1 : 0);
+            params[0] = convert_query_value<T>((ctx->color_mask_ & 1) != 0);
+            params[1] = convert_query_value<T>((ctx->color_mask_ & 2) != 0);
+            params[2] = convert_query_value<T>((ctx->color_mask_ & 4) != 0);
+            params[3] = convert_query_value<T>((ctx->color_mask_ & 8) != 0);
 
-            break;
-
-        case GL_CULL_FACE_EMU:
-            *params = static_cast<T>((ctx->non_shader_statuses_ & egl_context_es_shared::NON_SHADER_STATE_CULL_FACE_ENABLE) ? 1 : 0);
             break;
 
         case GL_CULL_FACE_MODE_EMU:
@@ -1652,11 +1702,13 @@ namespace eka2l1::dispatch {
             break;
 
         case GL_NUM_COMPRESSED_TEXTURE_FORMATS_EMU:
-            *params = GLES_EMU_COMPRESSED_TEX_FORMAT_COUNT;
+            *params = convert_query_value<T>(GLES_EMU_COMPRESSED_TEX_FORMAT_COUNT);
             break;
 
         case GL_COMPRESSED_TEXTURE_FORMATS_EMU:
-            std::memcpy(params, GLES_EMU_COMPRESSED_TEX_FORMATS, sizeof(GLES_EMU_COMPRESSED_TEX_FORMATS));
+            for (std::size_t i = 0; i < GLES_EMU_COMPRESSED_TEX_FORMAT_COUNT; ++i) {
+                params[i] = static_cast<T>(GLES_EMU_COMPRESSED_TEX_FORMATS[i]);
+            }
             break;
 
         default:
@@ -1669,7 +1721,7 @@ namespace eka2l1::dispatch {
     bool egl_context_es_shared::get_data(drivers::graphics_driver *drv, const std::uint32_t feature, void *data, gles_get_data_type data_type) {
         switch (data_type) {
         case GLES_GET_DATA_TYPE_BOOLEAN:
-            return get_data_impl<std::int32_t>(this, drv, feature, reinterpret_cast<std::int32_t*>(data), 255);
+            return get_data_impl<bool>(this, drv, feature, reinterpret_cast<bool*>(data), 1);
 
         case GLES_GET_DATA_TYPE_FIXED:
             return get_data_impl<gl_fixed>(this, drv, feature, reinterpret_cast<gl_fixed*>(data), 65536);
@@ -3503,7 +3555,7 @@ namespace eka2l1::dispatch {
         gl_get_implv_emu(sys, pname, params, GLES_GET_DATA_TYPE_FIXED);
     }
 
-    BRIDGE_FUNC_LIBRARY(void, gl_get_booleanv_emu, std::uint32_t pname, std::int32_t *params) {
+    BRIDGE_FUNC_LIBRARY(void, gl_get_booleanv_emu, std::uint32_t pname, std::uint8_t *params) {
         gl_get_implv_emu(sys, pname, params, GLES_GET_DATA_TYPE_BOOLEAN);
     }
 
