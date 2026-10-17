@@ -59,6 +59,7 @@ namespace eka2l1 {
         void get_tsy_name(service::ipc_context *ctx);
         void query_tsy_functionality(service::ipc_context *ctx);
         void is_supported_by_module(service::ipc_context *ctx);
+        void set_extended_error_granularity(service::ipc_context *ctx);
         void line_enumerate_call(service::ipc_context *ctx);
 
         void open_from_session(service::ipc_context *ctx);

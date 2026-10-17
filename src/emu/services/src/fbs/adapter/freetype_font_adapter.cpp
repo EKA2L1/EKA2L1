@@ -21,6 +21,7 @@
 #include <common/log.h>
 
 #include <services/fbs/adapter/freetype_font_adapter.h>
+#include <cstring>
 #include <memory>
 
 #include <freetype/tttables.h>
@@ -278,21 +279,26 @@ namespace eka2l1::epoc::adapter {
         character_metric.vertical_advance = ft_convention_to_int_pixel(glyph->metrics.vertAdvance);
         character_metric.bitmap_type = produced;
 
-        if (produced != glyph_bitmap_type::monochrome_glyph_bitmap) {
-            return bitmap.buffer;
-        }
-
         const std::int32_t width = static_cast<std::int32_t>(bitmap.width);
         const std::int32_t height = static_cast<std::int32_t>(bitmap.rows);
 
-        // Hinting grid-fits a monochrome glyph, so the bitmap is not the size
-        // the outline metrics describe. The client decodes the runs using these
-        // metrics, and reading a glyph as wider than it was encoded walks off
-        // the end of the shared chunk, so report what was actually rasterised.
+        // Clients read the glyph data using these metrics, so report the grid-fitted
+        // bitmap rather than the outline, as Symbian's FreeType rasteriser does.
         character_metric.width = static_cast<std::int16_t>(width);
         character_metric.height = static_cast<std::int16_t>(height);
         character_metric.horizontal_bearing_x = static_cast<std::int16_t>(glyph->bitmap_left);
         character_metric.horizontal_bearing_y = static_cast<std::int16_t>(glyph->bitmap_top);
+
+        if (produced != glyph_bitmap_type::monochrome_glyph_bitmap) {
+            // Antialiased glyph data is read as tightly packed rows.
+            if (bitmap.pitch > width) {
+                for (std::int32_t y = 1; y < height; y++) {
+                    std::memmove(bitmap.buffer + static_cast<std::ptrdiff_t>(y) * width,
+                        bitmap.buffer + static_cast<std::ptrdiff_t>(y) * bitmap.pitch, width);
+                }
+            }
+            return bitmap.buffer;
+        }
 
         // FreeType packs a monochrome row most significant bit first and pads
         // it to whole bytes; a Symbian glyph is one run of bits, least
@@ -501,7 +507,8 @@ namespace eka2l1::epoc::adapter {
         // TODO: Filling max depth?
         open_font_metrics metrics{};
         metrics.ascent = ft_convention_to_int_pixel(face->size->metrics.ascender);
-        metrics.descent = ft_convention_to_int_pixel(face->size->metrics.descender);
+        // FreeType's descender is negative; Symbian metrics store the descent as a positive distance.
+        metrics.descent = ft_convention_to_int_pixel(-face->size->metrics.descender);
         metrics.max_height = ft_convention_to_int_pixel(face->size->metrics.height);
         metrics.max_width = ft_convention_to_int_pixel(face->size->metrics.max_advance);
         metrics.max_depth = 0;

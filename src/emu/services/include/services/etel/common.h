@@ -107,6 +107,7 @@ namespace eka2l1::epoc {
         etel_load_phone_module = 57,
         etel_phone_info_by_index = 59,
         etel_query_tsy_functionality = 60,
+        etel_set_extended_error_granularity = 61,
         etel_line_notify_incoming_call = 71,
         etel_line_cancel_notify_incoming_call = 72,
         etel_phone_init = 75,

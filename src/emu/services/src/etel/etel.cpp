@@ -416,6 +416,11 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void etel_session::set_extended_error_granularity(service::ipc_context *ctx) {
+        // Extended error codes are never produced, so the requested granularity has no effect.
+        ctx->complete(epoc::error_none);
+    }
+
     void etel_session::fetch(service::ipc_context *ctx) {
         if (server<etel_server>()->legacy_level() <= ETEL_LEGACY_LEVEL_TRANSITION) {
             switch (ctx->msg->function) {
@@ -457,6 +462,10 @@ namespace eka2l1 {
 
             case epoc::etel_old_is_supported_by_module:
                 is_supported_by_module(ctx);
+                break;
+
+            case epoc::etel_old_set_extend_error_granularity:
+                set_extended_error_granularity(ctx);
                 break;
 
             default:
@@ -508,6 +517,10 @@ namespace eka2l1 {
 
             case epoc::etel_query_tsy_functionality:
                 query_tsy_functionality(ctx);
+                break;
+
+            case epoc::etel_set_extended_error_granularity:
+                set_extended_error_granularity(ctx);
                 break;
 
             case epoc::etel_line_enumerate_call:

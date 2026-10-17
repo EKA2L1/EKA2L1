@@ -1475,7 +1475,7 @@ namespace eka2l1::drivers {
         }
 
         case shader_var_type::mat3: {
-            glUniformMatrix2fv(binding, static_cast<GLsizei>((cmd.data_[2] + 35) / 36), GL_FALSE, reinterpret_cast<const GLfloat *>(data));
+            glUniformMatrix3fv(binding, static_cast<GLsizei>((cmd.data_[2] + 35) / 36), GL_FALSE, reinterpret_cast<const GLfloat *>(data));
             delete[] data;
 
             return;
