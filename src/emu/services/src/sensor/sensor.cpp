@@ -102,6 +102,18 @@ namespace eka2l1 {
             channel_data(ctx);
             break;
 
+        case sensor_set_property:
+            set_property(ctx);
+            break;
+
+        case sensor_async_property_data:
+            property_data(ctx);
+            break;
+
+        case sensor_stop_property_listening:
+            stop_property_listening(ctx);
+            break;
+
         default: {
             LOG_ERROR(SERVICE_SENSOR, "Unimplemented opcode for Sensor server 0x{:X}", ctx->msg->function);
             break;
@@ -196,6 +208,11 @@ namespace eka2l1 {
         ctx->write_data_to_descriptor_argument(1, max_buffer);
         ctx->write_data_to_descriptor_argument(2, data_item_size);
 
+        // Sensors change properties from within set_property, on the session's own thread.
+        controller->set_property_change_callback([this, channel_id](const drivers::sensor_property_data &data) {
+            store_changed_property(channel_id, data);
+        });
+
         channels_.emplace(channel_id, std::move(controller));
         ctx->complete(epoc::error_none);
     }
@@ -211,6 +228,7 @@ namespace eka2l1 {
                 channel_data_msgs_.erase(data_msg);
             }
             ask_recv_time_.erase(channel_id);
+            stop_property_listening(channel_id);
 
             channels_.erase(find_result);
             ctx->complete(epoc::error_none);
@@ -486,5 +504,105 @@ namespace eka2l1 {
         ctx->write_data_to_descriptor_argument(2, property_count);
         ctx->set_descriptor_argument_length(1, property_count * sizeof(sensor_property));
         ctx->complete(epoc::error_none);
+    }
+
+    static void copy_client_sensor_property_to_driver(const sensor_property &source, drivers::sensor_property_data &dest) {
+        switch (source.property_type) {
+        case property_types::real_property:
+            dest.set_double(source.real_value, source.item_index);
+            break;
+
+        case property_types::buffer_property:
+            dest.set_buffer(std::string(source.buf_value.data, common::min(source.buf_value.get_length(),
+                PROPERTY_TEXT_BUFFER_LENGTH)), source.item_index);
+            break;
+
+        default:
+            dest.set_int(static_cast<std::int32_t>(source.int_value), source.item_index);
+            break;
+        }
+
+        dest.array_index_ = static_cast<std::int32_t>(source.array_index);
+        dest.property_id_ = static_cast<drivers::sensor_property>(source.property_id);
+    }
+
+    void sensor_client_session::set_property(eka2l1::service::ipc_context *ctx) {
+        std::uint32_t channel_id = *(ctx->get_argument_value<std::uint32_t>(0));
+        std::optional<sensor_property> property = ctx->get_argument_data_from_descriptor<sensor_property>(1);
+
+        if (!property.has_value()) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        drivers::sensor *controller = get_sensor_channel(channel_id);
+        if (!controller) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        drivers::sensor_property_data data;
+        copy_client_sensor_property_to_driver(property.value(), data);
+
+        ctx->complete(controller->set_property(data) ? epoc::error_none : epoc::error_argument);
+    }
+
+    void sensor_client_session::property_data(eka2l1::service::ipc_context *ctx) {
+        std::uint32_t channel_id = *(ctx->get_argument_value<std::uint32_t>(0));
+        if (!get_sensor_channel(channel_id)) {
+            ctx->complete(epoc::error_not_found);
+            return;
+        }
+
+        property_listener &listener = property_listeners_[channel_id];
+        if (listener.msg_) {
+            ctx->complete(epoc::error_in_use);
+            return;
+        }
+
+        listener.msg_ = ctx->move_to_new();
+        notify_next_property(listener);
+    }
+
+    void sensor_client_session::stop_property_listening(eka2l1::service::ipc_context *ctx) {
+        stop_property_listening(*(ctx->get_argument_value<std::uint32_t>(0)));
+        ctx->complete(epoc::error_none);
+    }
+
+    void sensor_client_session::stop_property_listening(const std::uint32_t channel_id) {
+        auto listener = property_listeners_.find(channel_id);
+        if (listener == property_listeners_.end()) {
+            return;
+        }
+
+        if (listener->second.msg_) {
+            listener->second.msg_->complete(epoc::error_cancel);
+        }
+
+        property_listeners_.erase(listener);
+    }
+
+    void sensor_client_session::store_changed_property(const std::uint32_t channel_id, const drivers::sensor_property_data &data) {
+        // Only a channel that has asked for property data once keeps changes, until it stops listening.
+        auto listener = property_listeners_.find(channel_id);
+        if (listener == property_listeners_.end()) {
+            return;
+        }
+
+        listener->second.unnotified_.push_back(data);
+        notify_next_property(listener->second);
+    }
+
+    void sensor_client_session::notify_next_property(property_listener &listener) {
+        if (!listener.msg_ || listener.unnotified_.empty()) {
+            return;
+        }
+
+        sensor_property property{};
+        copy_driver_sensor_property_to_client(listener.unnotified_.front(), property);
+        listener.unnotified_.pop_front();
+
+        std::unique_ptr<service::ipc_context> msg = std::move(listener.msg_);
+        msg->complete(msg->write_data_to_descriptor_argument(1, property) ? epoc::error_none : epoc::error_bad_descriptor);
     }
 }

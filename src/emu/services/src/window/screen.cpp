@@ -312,9 +312,7 @@ namespace eka2l1::epoc {
             break;
         }
 
-        // 270 rotation clock-wise makes screen content comes from the top where camera lies, to down where the ports reside.
-        // That makes it a standard, non-flip landscape. 0 is obviously standard too. Therefore mode 90 and 180 needs flip.
-        const float rotation_draw = ((mode_info.rotation == 90) || (mode_info.rotation == 180)) ? 180.0f : 0.0f;
+        const float rotation_draw = is_framebuffer_upside_down() ? 180.0f : 0.0f;
 
         builder.bind_bitmap(screen_texture);
         builder.set_feature(drivers::graphics_feature::clipping, false);
@@ -442,7 +440,7 @@ namespace eka2l1::epoc {
             drivers::read_bitmap(driver, screen_texture, eka2l1::point(0, 0), eka2l1::object_size(crrmode.size),
                 bits_per_pixel, buffer_ptr);
 
-            if ((crrmode.rotation == 90) || (crrmode.rotation == 180)) {
+            if (is_framebuffer_upside_down()) {
                 flip_screen_image(buffer_ptr, tight_pitch, crrmode.size.y);
             }
             if (direct_framebuffer_mapped) {
@@ -455,7 +453,7 @@ namespace eka2l1::epoc {
         drivers::read_bitmap(driver, screen_texture, eka2l1::point(0, 0), eka2l1::object_size(crrmode.size),
             bits_per_pixel, tight_buffer.data());
 
-        if ((crrmode.rotation == 90) || (crrmode.rotation == 180)) {
+        if (is_framebuffer_upside_down()) {
             flip_screen_image(tight_buffer.data(), tight_pitch, crrmode.size.y);
         }
 
@@ -938,6 +936,17 @@ namespace eka2l1::epoc {
 
     std::uint8_t *screen::screen_buffer_ptr() {
         return reinterpret_cast<std::uint8_t *>(screen_buffer_chunk->host_base()) + sizeof(std::uint16_t) * WORD_PALETTE_ENTRIES_COUNT;
+    }
+
+    bool screen::is_framebuffer_upside_down() const {
+        // A panel framebuffer reads 270 as the standard landscape, so 90 and 180 arrive flipped.
+        // A ScreenPlay framebuffer is a surface already turned to the device orientation.
+        if (is_screenplay_architecture()) {
+            return false;
+        }
+
+        const int rotation = current_mode().rotation;
+        return (rotation == 90) || (rotation == 180);
     }
 
     std::uint32_t screen::screen_buffer_byte_width() const {

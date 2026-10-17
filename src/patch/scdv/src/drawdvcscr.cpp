@@ -79,16 +79,21 @@
         return 1 | 2 | 4 | 8;                                                     \
     }                                                                             \
     TBool name::SetDeviceOrientation(TUint aOrientation) {                        \
-        TOrientation orientation;                                                 \
-        switch (aOrientation) {                                                   \
-        case 1: orientation = EOrientationNormal; break;                          \
-        case 2: orientation = EOrientationRotate90; break;                        \
-        case 4: orientation = EOrientationRotate180; break;                       \
-        case 8: orientation = EOrientationRotate270; break;                       \
-        default: return EFalse;                                                   \
+        if ((aOrientation != 1) && (aOrientation != 2) && (aOrientation != 4)     \
+            && (aOrientation != 8)) {                                             \
+            return EFalse;                                                        \
         }                                                                         \
-        if (!base::SetOrientation(orientation)) {                                 \
-            return EFalse;                                                       \
+        /* The surface itself turns: size and rows follow the rotated */          \
+        /* framebuffer rather than a software-rotated graphics orientation. */    \
+        if (IsFlippedOrientation(aOrientation)                                    \
+            != IsFlippedOrientation(iDeviceOrientation)) {                        \
+            base::SetSize(TSize(iSize.iHeight, iSize.iWidth));                    \
+            const TInt dataStride = ScreenDeviceDataStride(iScreenNumber,         \
+                iDisplayMode, iSize);                                             \
+            if (dataStride != -1) {                                               \
+                iScanLineWords = dataStride >> 2;                                 \
+                iLongWidth = dataStride >> 2;                                     \
+            }                                                                     \
         }                                                                         \
         iDeviceOrientation = aOrientation;                                        \
         return ETrue;                                                             \

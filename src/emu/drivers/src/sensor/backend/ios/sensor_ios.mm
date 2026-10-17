@@ -22,6 +22,7 @@
 
 #include "sensor_ios.h"
 #include <drivers/sensor/backend/ios/controller_motion.h>
+#include <drivers/sensor/magnetometer.h>
 
 #include <common/log.h>
 #include <common/time.h>
@@ -45,6 +46,7 @@ namespace eka2l1::drivers {
     static constexpr double STANDARD_GRAVITY_MS2 = 9.80665;
     static constexpr std::uint32_t ACCELEROMETER_SENSOR_ID = 1;
     static constexpr std::uint32_t ROTATION_SENSOR_ID = 2;
+    static constexpr std::uint32_t MAGNETOMETER_SENSOR_ID = 3;
 
     // Queued samples must pass this guard before accessing the driver;
     // destruction clears the owner and pause waits out any callback in flight.
@@ -104,6 +106,10 @@ namespace eka2l1::drivers {
             default:
                 return false;
             }
+        }
+
+        if ((type_ == SENSOR_TYPE_MAGNEGTOMETER) && (prop != SENSOR_PROPERTY_SAMPLE_RATE)) {
+            return get_magnetometer_property(prop, data);
         }
 
         switch (prop) {
@@ -169,6 +175,14 @@ namespace eka2l1::drivers {
     }
 
     bool sensor_ios::set_property(const sensor_property_data &data) {
+        if (type_ == SENSOR_TYPE_MAGNEGTOMETER) {
+            std::optional<sensor_property_data> changed;
+            if (set_magnetometer_property(data, changed)) {
+                notify_property_change(*changed);
+                return true;
+            }
+        }
+
         switch (data.property_id_) {
         case SENSOR_PROPERTY_SAMPLE_RATE:
             if (data.array_index_ == SENSOR_PROPERTY_ARRAY) {
@@ -186,7 +200,7 @@ namespace eka2l1::drivers {
             return false;
 
         case SENSOR_PROPERTY_MEASURE_RANGE:
-            if (type_ == SENSOR_TYPE_ROTATION) {
+            if (type_ != SENSOR_TYPE_ACCELEROMETER) {
                 return false;
             }
             if (data.array_index_ == SENSOR_PROPERTY_ARRAY) {
@@ -210,9 +224,20 @@ namespace eka2l1::drivers {
         return false;
     }
 
-    void sensor_ios::push_sample(const double x_ms2, const double y_ms2, const double z_ms2) {
+    std::uint32_t sensor_ios::data_packet_size() const {
+        switch (type_) {
+        case SENSOR_TYPE_ROTATION:
+            return sizeof(sensor_rotation_data);
+        case SENSOR_TYPE_MAGNEGTOMETER:
+            return sizeof(sensor_magnetometer_axis_data);
+        default:
+            return sizeof(sensor_accelerometer_axis_data);
+        }
+    }
+
+    void sensor_ios::push_sample(const motion_sample &sample) {
         const std::lock_guard<std::mutex> guard(lock_);
-        if (!data_callback_) {
+        if (!data_callback_ || ((type_ == SENSOR_TYPE_MAGNEGTOMETER) && !sample.has_magnetic_)) {
             return;
         }
 
@@ -223,7 +248,9 @@ namespace eka2l1::drivers {
         };
 
         if (type_ == SENSOR_TYPE_ROTATION) {
-            append(rotation_from_acceleration(timestamp, x_ms2, y_ms2, z_ms2));
+            append(rotation_from_acceleration(timestamp, sample.gravity_[0], sample.gravity_[1], sample.gravity_[2]));
+        } else if (type_ == SENSOR_TYPE_MAGNEGTOMETER) {
+            append(magnetometer_from_microtesla(timestamp, sample.magnetic_raw_.data(), sample.magnetic_calibrated_.data()));
         } else {
             const double measure_range = ACCELEROMETER_MEASURE_RANGE_AVAILABLE[active_accel_measure_range_];
             auto scale = [measure_range](const double value_ms2) -> std::int32_t {
@@ -234,9 +261,9 @@ namespace eka2l1::drivers {
 
             sensor_accelerometer_axis_data axis_data;
             axis_data.timestamp_ = timestamp;
-            axis_data.axis_x_ = scale(x_ms2);
-            axis_data.axis_y_ = scale(y_ms2);
-            axis_data.axis_z_ = scale(z_ms2);
+            axis_data.axis_x_ = scale(sample.acceleration_[0]);
+            axis_data.axis_y_ = scale(sample.acceleration_[1]);
+            axis_data.axis_z_ = scale(sample.acceleration_[2]);
             append(axis_data);
         }
 
@@ -361,6 +388,14 @@ namespace eka2l1::drivers {
 #endif
     }
 
+    bool sensor_driver_ios::magnetometer_available() const {
+#if TARGET_OS_SIMULATOR
+        return true;
+#else
+        return pump_->manager_.magnetometerAvailable;
+#endif
+    }
+
     void set_controller_motion_source(sensor_driver *driver, void *controller) {
         if (driver) static_cast<sensor_driver_ios *>(driver)->set_controller(controller);
     }
@@ -404,8 +439,46 @@ namespace eka2l1::drivers {
         return best;
     }
 
+    bool sensor_driver_ios::magnetometer_listening_locked() {
+        if (listening_list_.empty()) {
+            return false;
+        }
+
+        common::double_linked_queue_element *first = listening_list_.first();
+        common::double_linked_queue_element *end = listening_list_.end();
+
+        do {
+            if (E_LOFF(first, sensor_ios, listening_link_)->type_ == SENSOR_TYPE_MAGNEGTOMETER) {
+                return true;
+            }
+
+            first = first->next;
+        } while (first != end);
+
+        return false;
+    }
+
     void sensor_driver_ios::refresh_pump_locked() {
         const bool want_running = !paused_ && !listening_list_.empty();
+        CMMotionManager *manager = pump_->manager_;
+
+        // Device motion supplies the calibrated field, the magnetometer the raw one.
+        const bool want_magnetometer = want_running && magnetometer_listening_locked();
+        const bool calibrated_field_available = manager.deviceMotionAvailable
+            && ([CMMotionManager availableAttitudeReferenceFrames] & CMAttitudeReferenceFrameXArbitraryCorrectedZVertical);
+
+        if (!want_magnetometer) {
+            [manager stopMagnetometerUpdates];
+            [manager stopDeviceMotionUpdates];
+        } else {
+            if (manager.magnetometerAvailable && !manager.magnetometerActive) {
+                [manager startMagnetometerUpdates];
+            }
+            if (calibrated_field_available && !manager.deviceMotionActive) {
+                [manager startDeviceMotionUpdatesUsingReferenceFrame:CMAttitudeReferenceFrameXArbitraryCorrectedZVertical];
+            }
+        }
+
         GCMotion *motion = pump_->controller_.motion;
         if (motion.sensorsRequireManualActivation && motion.sensorsActive != want_running) {
             motion.sensorsActive = want_running;
@@ -427,6 +500,8 @@ namespace eka2l1::drivers {
 
         const std::uint32_t rate_hz = max_requested_sampling_rate_locked();
         pump_->manager_.accelerometerUpdateInterval = 1.0 / static_cast<double>(rate_hz);
+        pump_->manager_.magnetometerUpdateInterval = 1.0 / static_cast<double>(rate_hz);
+        pump_->manager_.deviceMotionUpdateInterval = 1.0 / static_cast<double>(rate_hz);
         const std::uint64_t interval = NSEC_PER_SEC / rate_hz;
         if (pump_->timer_) {
             dispatch_source_set_timer(pump_->timer_, DISPATCH_TIME_NOW, interval, interval / 10);
@@ -444,8 +519,9 @@ namespace eka2l1::drivers {
     }
 
     void sensor_driver_ios::poll_sample() {
-        std::array<double, 3> acceleration;
-        std::array<double, 3> gravity;
+        motion_sample sample;
+        std::array<double, 3> &acceleration = sample.acceleration_;
+        std::array<double, 3> &gravity = sample.gravity_;
         int rotation;
         {
             const std::lock_guard<std::mutex> hold(list_lock_);
@@ -469,14 +545,44 @@ namespace eka2l1::drivers {
                 gravity = acceleration;
                 rotation = motion_rotation_deg_.load(std::memory_order_relaxed);
             }
+
+#if TARGET_OS_SIMULATOR
+            // Stands in for a phone lying flat with its top pointing north.
+            sample.magnetic_raw_ = { 0.0, 22.0, -42.0 };
+            sample.magnetic_calibrated_ = sample.magnetic_raw_;
+            sample.has_magnetic_ = true;
+#else
+            CMMagnetometerData *raw_field = pump_->manager_.magnetometerData;
+            CMDeviceMotion *device_motion = pump_->manager_.deviceMotion;
+            const bool calibrated = device_motion
+                && (device_motion.magneticField.accuracy != CMMagneticFieldCalibrationAccuracyUncalibrated);
+
+            if (calibrated) {
+                const CMMagneticField field = device_motion.magneticField.field;
+                sample.magnetic_calibrated_ = { field.x, field.y, field.z };
+            }
+            if (raw_field) {
+                sample.magnetic_raw_ = { raw_field.magneticField.x, raw_field.magneticField.y, raw_field.magneticField.z };
+            } else {
+                sample.magnetic_raw_ = sample.magnetic_calibrated_;
+            }
+            if (!calibrated) {
+                sample.magnetic_calibrated_ = sample.magnetic_raw_;
+            }
+            sample.has_magnetic_ = calibrated || raw_field;
+#endif
         }
         // Apple reports gravity in g; Symbian reports reaction force in m/s².
         for (int axis = 0; axis < 3; ++axis) {
             acceleration[axis] *= -STANDARD_GRAVITY_MS2;
             gravity[axis] *= -STANDARD_GRAVITY_MS2;
             if (!std::isfinite(acceleration[axis]) || !std::isfinite(gravity[axis])) return;
+            if (!std::isfinite(sample.magnetic_raw_[axis]) || !std::isfinite(sample.magnetic_calibrated_[axis])) {
+                sample.has_magnetic_ = false;
+            }
         }
-        dispatch_sample(acceleration, gravity, rotation);
+        // The field always comes from the phone, even when a controller supplies motion.
+        dispatch_sample(sample, rotation, motion_rotation_deg_.load(std::memory_order_relaxed));
     }
 
     void sensor_driver_ios::refresh_pump() {
@@ -488,20 +594,22 @@ namespace eka2l1::drivers {
         motion_rotation_deg_.store(((degrees % 360) + 360) % 360, std::memory_order_relaxed);
     }
 
-    void sensor_driver_ios::dispatch_sample(std::array<double, 3> acceleration,
-        std::array<double, 3> gravity, int rotation) {
-        auto rotate = [rotation](std::array<double, 3> &v) {
-            const double x = v[0];
-            const double y = v[1];
-            switch (rotation) {
-            case 90: v[0] = y; v[1] = -x; break;
-            case 180: v[0] = -x; v[1] = -y; break;
-            case 270: v[0] = -y; v[1] = x; break;
-            default: break;
-            }
-        };
-        rotate(acceleration);
-        rotate(gravity);
+    static void rotate_device_axes(std::array<double, 3> &v, const int rotation) {
+        const double x = v[0];
+        const double y = v[1];
+        switch (rotation) {
+        case 90: v[0] = y; v[1] = -x; break;
+        case 180: v[0] = -x; v[1] = -y; break;
+        case 270: v[0] = -y; v[1] = x; break;
+        default: break;
+        }
+    }
+
+    void sensor_driver_ios::dispatch_sample(motion_sample sample, int rotation, int magnetic_rotation) {
+        rotate_device_axes(sample.acceleration_, rotation);
+        rotate_device_axes(sample.gravity_, rotation);
+        rotate_device_axes(sample.magnetic_raw_, magnetic_rotation);
+        rotate_device_axes(sample.magnetic_calibrated_, magnetic_rotation);
 
         // Collect completed batches under the list lock, but invoke the guest
         // callbacks outside it: they take the kernel lock, and SVC handlers
@@ -524,8 +632,7 @@ namespace eka2l1::drivers {
 
                 do {
                     sensor_ios *sensor_obj = E_LOFF(first, sensor_ios, listening_link_);
-                    const auto &sample = sensor_obj->type_ == SENSOR_TYPE_ROTATION ? gravity : acceleration;
-                    sensor_obj->push_sample(sample[0], sample[1], sample[2]);
+                    sensor_obj->push_sample(sample);
 
                     ready_batch batch;
                     if (sensor_obj->take_ready_batch(batch.callback_, batch.data_, batch.packet_count_)) {
@@ -556,21 +663,34 @@ namespace eka2l1::drivers {
 
     std::vector<sensor_info> sensor_driver_ios::queries_active_sensor(const sensor_info &search_info) {
         std::vector<sensor_info> results;
+        std::vector<sensor_info> candidates;
 
-        if (!accelerometer_available()) {
-            return results;
+        if (accelerometer_available()) {
+            for (const bool rotation : { false, true }) {
+                sensor_info info;
+                info.type_ = rotation ? SENSOR_TYPE_ROTATION : SENSOR_TYPE_ACCELEROMETER;
+                info.quantity_ = rotation ? SENSOR_DATA_QUANTITY_ROTATION : SENSOR_DATA_QUANTITY_ACCELERATION;
+                info.data_type_ = rotation ? SENSOR_DATA_TYPE_ROTATION : SENSOR_DATA_TYPE_ACCELOREMETER_AXIS;
+                info.item_size_ = rotation ? sizeof(sensor_rotation_data) : sizeof(sensor_accelerometer_axis_data);
+                info.name_ = rotation ? "iOS Rotation" : "iOS Accelerometer";
+                info.id_ = rotation ? ROTATION_SENSOR_ID : ACCELEROMETER_SENSOR_ID;
+                candidates.push_back(info);
+            }
         }
 
-        for (const auto type : { SENSOR_TYPE_ACCELEROMETER, SENSOR_TYPE_ROTATION }) {
+        if (magnetometer_available()) {
             sensor_info info;
-            info.type_ = type;
-            const bool rotation = type == SENSOR_TYPE_ROTATION;
-            info.quantity_ = rotation ? SENSOR_DATA_QUANTITY_ROTATION : SENSOR_DATA_QUANTITY_ACCELERATION;
-            info.data_type_ = rotation ? SENSOR_DATA_TYPE_ROTATION : SENSOR_DATA_TYPE_ACCELOREMETER_AXIS;
-            info.item_size_ = rotation ? sizeof(sensor_rotation_data) : sizeof(sensor_accelerometer_axis_data);
-            info.name_ = rotation ? "iOS Rotation" : "iOS Accelerometer";
+            info.type_ = SENSOR_TYPE_MAGNEGTOMETER;
+            info.quantity_ = SENSOR_DATA_QUANTITY_MAGNEGTIC;
+            info.data_type_ = SENSOR_DATA_TYPE_MAGNEGTOMETER_AXIS;
+            info.item_size_ = sizeof(sensor_magnetometer_axis_data);
+            info.name_ = "iOS Magnetometer";
+            info.id_ = MAGNETOMETER_SENSOR_ID;
+            candidates.push_back(info);
+        }
+
+        for (sensor_info &info : candidates) {
             info.vendor_ = "Apple";
-            info.id_ = rotation ? ROTATION_SENSOR_ID : ACCELEROMETER_SENSOR_ID;
 
             if ((search_info.type_ && search_info.type_ != info.type_)
                 || (search_info.data_type_ && search_info.data_type_ != info.data_type_)
@@ -584,12 +704,26 @@ namespace eka2l1::drivers {
     }
 
     std::unique_ptr<sensor> sensor_driver_ios::new_sensor_controller(const std::uint32_t id) {
-        if ((id != ACCELEROMETER_SENSOR_ID && id != ROTATION_SENSOR_ID) || !accelerometer_available()) {
+        switch (id) {
+        case ACCELEROMETER_SENSOR_ID:
+        case ROTATION_SENSOR_ID:
+            if (!accelerometer_available()) {
+                return nullptr;
+            }
+
+            return std::make_unique<sensor_ios>(this,
+                id == ROTATION_SENSOR_ID ? SENSOR_TYPE_ROTATION : SENSOR_TYPE_ACCELEROMETER);
+
+        case MAGNETOMETER_SENSOR_ID:
+            if (!magnetometer_available()) {
+                return nullptr;
+            }
+
+            return std::make_unique<sensor_ios>(this, SENSOR_TYPE_MAGNEGTOMETER);
+
+        default:
             return nullptr;
         }
-
-        return std::make_unique<sensor_ios>(this,
-            id == ROTATION_SENSOR_ID ? SENSOR_TYPE_ROTATION : SENSOR_TYPE_ACCELEROMETER);
     }
 
     bool sensor_driver_ios::pause() {
