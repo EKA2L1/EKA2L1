@@ -10,10 +10,9 @@ struct BTNetFriend: Identifiable, Hashable {
 struct SettingsView: View {
     @ObservedObject private var peripheralManager = PeripheralManager.shared
     @State private var mappingTarget: PeripheralManager.Peripheral?
-    @AppStorage("ios.showFPSOverlay") private var showFPSOverlay = true
+    @AppStorage("ios.showFPSOverlay") private var showFPSOverlay = false
 
-    @State private var integerScaling = true
-    @State private var nearestNeighborFiltering = true
+    @State private var extensiveLogging = false
     @State private var hideSystemApps = true
     @State private var useJIT = false
     @State private var performanceMode = "balanced"
@@ -65,10 +64,6 @@ struct SettingsView: View {
                         }
                     }
                 }
-                Picker("settings.performanceMode", selection: $performanceMode) {
-                    Text("settings.performanceMode.high").tag("high-performance")
-                    Text("settings.performanceMode.balanced").tag("balanced")
-                }
             } header: {
                 Text("settings.device")
             } footer: {
@@ -83,25 +78,25 @@ struct SettingsView: View {
                     Text("settings.imei.invalidChecksum")
                 }
             }
-            // Only sideload/simulator builds carry the dynarmic JIT; App Store /
-            // TestFlight builds compile without it and never show this section.
-            if EKA2L1Bridge.shared.jitCompiledIn {
-                Section {
+            Section {
+                Picker("settings.performanceMode", selection: $performanceMode) {
+                    Text("settings.performanceMode.high").tag("high-performance")
+                    Text("settings.performanceMode.balanced").tag("balanced")
+                }
+                Toggle("settings.hideSystemApps", isOn: $hideSystemApps)
+                if EKA2L1Bridge.shared.jitCompiledIn {
                     Toggle("settings.jit", isOn: $useJIT)
-                } header: {
-                    Text("settings.system")
-                } footer: {
+                }
+            } header: {
+                Text("settings.system")
+            } footer: {
+                if EKA2L1Bridge.shared.jitCompiledIn {
                     if !EKA2L1Bridge.shared.jitAvailable {
                         Text("settings.jit.unavailable")
                     } else {
                         Text("settings.jit.hint")
                     }
                 }
-            }
-            Section("settings.graphics") {
-                Toggle("settings.integerScaling", isOn: $integerScaling)
-                Toggle("settings.nearestFiltering", isOn: $nearestNeighborFiltering)
-                Toggle("settings.fpsOverlay", isOn: $showFPSOverlay)
             }
             Section {
                 Text("settings.airplay.hint")
@@ -192,8 +187,9 @@ struct SettingsView: View {
                     }
                 }
             }
-            Section("settings.library") {
-                Toggle("settings.hideSystemApps", isOn: $hideSystemApps)
+            Section("settings.diagnostics") {
+                Toggle("settings.fpsOverlay", isOn: $showFPSOverlay)
+                Toggle("settings.extensiveLogging", isOn: $extensiveLogging)
             }
             Section("settings.support") {
                 if FileManager.default.fileExists(atPath: logURL.path) {
@@ -243,8 +239,7 @@ struct SettingsView: View {
         }
         .onChange(of: useJIT) { _ in save() }
         .onChange(of: performanceMode) { _ in save() }
-        .onChange(of: integerScaling) { _ in save() }
-        .onChange(of: nearestNeighborFiltering) { _ in save() }
+        .onChange(of: extensiveLogging) { _ in save() }
         .onChange(of: hideSystemApps) { _ in save() }
         .onChange(of: btDiscoveryMode) { _ in save() }
         .onChange(of: btListenPort) { _ in save() }
@@ -291,11 +286,8 @@ struct SettingsView: View {
 
     private func load() {
         let snapshot = EKA2L1Bridge.shared.currentConfigSnapshot()
-        if let value = snapshot["integerScaling"] as? NSNumber {
-            integerScaling = value.boolValue
-        }
-        if let value = snapshot["nearestNeighborFiltering"] as? NSNumber {
-            nearestNeighborFiltering = value.boolValue
+        if let value = snapshot["extensiveLogging"] as? NSNumber {
+            extensiveLogging = value.boolValue
         }
         if let value = snapshot["hideSystemApps"] as? NSNumber {
             hideSystemApps = value.boolValue
@@ -333,8 +325,7 @@ struct SettingsView: View {
     private func save() {
         let snapshot: [String: Any] = [
             "deviceDisplayName": friendlyPhoneName,
-            "integerScaling": integerScaling,
-            "nearestNeighborFiltering": nearestNeighborFiltering,
+            "extensiveLogging": extensiveLogging,
             "hideSystemApps": hideSystemApps,
             "jitEnabled": useJIT && EKA2L1Bridge.shared.jitCompiledIn,
             "performanceMode": performanceMode,

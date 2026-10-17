@@ -16,7 +16,7 @@ struct EmulatorView: View {
     @AppStorage(KeypadDefaults.opacityKey) private var keypadOpacity = KeypadDefaults.opacity
     @AppStorage(DisplayLayoutDefaults.portraitKey) private var portraitDisplayLayout = ""
     @AppStorage(DisplayLayoutDefaults.landscapeKey) private var landscapeDisplayLayout = ""
-    @AppStorage("ios.showFPSOverlay") private var showFPSOverlay = true
+    @AppStorage("ios.showFPSOverlay") private var showFPSOverlay = false
     @AppStorage("ios.fpsOverlayX") private var fpsOverlayX = -1.0
     @AppStorage("ios.fpsOverlayY") private var fpsOverlayY = -1.0
     @Environment(\.dismiss) private var dismiss
