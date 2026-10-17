@@ -18,6 +18,7 @@
  */
 
 #include "sensor_null.h"
+#include <drivers/sensor/magnetometer.h>
 #include <common/log.h>
 
 namespace eka2l1::drivers {
@@ -127,6 +128,36 @@ namespace eka2l1::drivers {
         unit_prop.set_int(SENSOR_UNIT_MS_PER_S2);
 
         properties_datas_.push_back(unit_prop);
+    }
+
+    sensor_magnetometer_null::sensor_magnetometer_null(const sensor_info &info)
+        : sensor_null_base(info) {
+    }
+
+    bool sensor_magnetometer_null::get_property(const sensor_property prop, const std::int32_t item_index,
+        const std::int32_t array_index, sensor_property_data &data) {
+        data = {};
+        data.property_id_ = prop;
+
+        if (get_magnetometer_property(prop, data)) {
+            return true;
+        }
+
+        return sensor_null_base::get_property(prop, item_index, array_index, data);
+    }
+
+    bool sensor_magnetometer_null::set_property(const sensor_property_data &data) {
+        std::optional<sensor_property_data> changed;
+        if (set_magnetometer_property(data, changed)) {
+            notify_property_change(*changed);
+            return true;
+        }
+
+        return sensor_null_base::set_property(data);
+    }
+
+    std::uint32_t sensor_magnetometer_null::data_packet_size() const {
+        return sizeof(sensor_magnetometer_axis_data);
     }
 
     sensor_driver_null::sensor_driver_null() {
@@ -241,8 +272,8 @@ namespace eka2l1::drivers {
         }
 
         sensor_info basis_info = stubbed_infos_[id - 1];
-        if (basis_info.type_ == drivers::SENSOR_TYPE_ACCELEROMETER) {
-            return std::make_unique<sensor_accelerometer_null>(basis_info);
+        if (basis_info.type_ == drivers::SENSOR_TYPE_MAGNEGTOMETER) {
+            return std::make_unique<sensor_magnetometer_null>(basis_info);
         }
 
         return std::make_unique<sensor_accelerometer_null>(basis_info);
