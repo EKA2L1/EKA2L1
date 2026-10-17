@@ -335,6 +335,7 @@ namespace eka2l1::dispatch {
 
         void init_context_state() override;
         void destroy(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) override;
+        void on_buffer_deleted(std::uint32_t name) override;
         bool prepare_for_draw(drivers::graphics_driver *driver, egl_controller &controller, kernel::process *crr_process,
             const std::int32_t first_index, const std::uint32_t vcount, const drivers::graphics_primitive_mode primitive_mode) override;
         bool prepare_for_clear(drivers::graphics_driver *driver, egl_controller &controller) override;

@@ -843,6 +843,8 @@ namespace eka2l1::dispatch {
             }
         }
 
+        buffers_.clear();
+
         while (!texture_pools_2d_.empty()) {
             drivers::handle h = texture_pools_2d_.top();
             builder.destroy(h);
@@ -1195,13 +1197,60 @@ namespace eka2l1::dispatch {
         , data_size_(0) {
     }
 
-    gles_driver_buffer *egl_context_es_shared::binded_buffer(const bool is_array_buffer) {
-        auto *obj = objects_.get(is_array_buffer ? binded_array_buffer_handle_ : binded_element_array_buffer_handle_);
-        if (!obj || (*obj)->object_type() != GLES_OBJECT_BUFFER) {
-            return nullptr;
+    std::uint32_t egl_context_es_shared::generate_buffer() {
+        std::uint32_t name = 1;
+        while (buffers_.find(name) != buffers_.end()) {
+            ++name;
+        }
+        buffers_.emplace(name, std::make_unique<gles_driver_buffer>(*this));
+        return name;
+    }
+
+    bool egl_context_es_shared::is_buffer(const std::uint32_t name) const {
+        const auto buffer = buffers_.find(name);
+        return buffer != buffers_.end() && buffer->second->was_bound_;
+    }
+
+    std::uint32_t egl_context_es_shared::bind_buffer(const std::uint32_t target, const std::uint32_t name) {
+        if ((target != GL_ARRAY_BUFFER_EMU) && (target != GL_ELEMENT_ARRAY_BUFFER_EMU)) {
+            return GL_INVALID_ENUM;
         }
 
-        return reinterpret_cast<gles_driver_buffer*>(obj->get());
+        if (name != 0) {
+            auto &buffer = buffers_[name];
+            if (!buffer) {
+                buffer = std::make_unique<gles_driver_buffer>(*this);
+            }
+            buffer->was_bound_ = true;
+        }
+
+        if (target == GL_ARRAY_BUFFER_EMU) {
+            binded_array_buffer_handle_ = name;
+        } else {
+            binded_element_array_buffer_handle_ = name;
+        }
+        return 0;
+    }
+
+    void egl_context_es_shared::delete_buffer(const std::uint32_t name) {
+        if (name == 0 || buffers_.find(name) == buffers_.end()) {
+            return;
+        }
+        if (binded_array_buffer_handle_ == name) {
+            binded_array_buffer_handle_ = 0;
+        }
+        if (binded_element_array_buffer_handle_ == name) {
+            binded_element_array_buffer_handle_ = 0;
+        }
+        on_buffer_deleted(name);
+        attrib_changed_ = true;
+        buffers_.erase(name);
+    }
+
+    gles_driver_buffer *egl_context_es_shared::binded_buffer(const bool is_array_buffer) {
+        const auto name = is_array_buffer ? binded_array_buffer_handle_ : binded_element_array_buffer_handle_;
+        const auto buffer = buffers_.find(name);
+        return buffer == buffers_.end() ? nullptr : buffer->second.get();
     }
 
     void egl_context_es_shared::return_handle_to_pool(const gles_object_type type, const drivers::handle h, const int subtype) {
@@ -1279,13 +1328,12 @@ namespace eka2l1::dispatch {
             if (first_index_real) {
                 offset += first_index_real * get_gl_attrib_stride(attrib);
             }
-            auto *buffer_inst_ptr = objects_.get(attrib.buffer_obj_);
-            if (!buffer_inst_ptr || ((*buffer_inst_ptr)->object_type() != GLES_OBJECT_BUFFER)) {
+            const auto buffer = buffers_.find(attrib.buffer_obj_);
+            if (buffer == buffers_.end()) {
                 return false;
             }
 
-            gles_driver_buffer *buffer = reinterpret_cast<gles_driver_buffer*>((*buffer_inst_ptr).get());
-            buffer_handle_drv = buffer->handle_value();
+            buffer_handle_drv = buffer->second->handle_value();
         }
 
         auto ite = std::find(vertex_buffers_alloc.begin(), vertex_buffers_alloc.end(), buffer_handle_drv);
@@ -1923,8 +1971,7 @@ namespace eka2l1::dispatch {
             return false;
         }
 
-        gles_driver_object_instance *obj = ctx->objects_.get(name);
-        return obj && ((*obj)->object_type() == GLES_OBJECT_BUFFER);
+        return ctx->is_buffer(name);
     }
     
     static void gen_gles_objects_generic(system *sys, gles_object_type obj_type, std::int32_t n, std::uint32_t *texs) {
@@ -1954,8 +2001,8 @@ namespace eka2l1::dispatch {
                 break;
 
             case GLES_OBJECT_BUFFER:
-                stub_obj = std::make_unique<gles_driver_buffer>(*ctx);
-                break;
+                texs[i] = ctx->generate_buffer();
+                continue;
 
             default:
                 break;
@@ -1984,15 +2031,9 @@ namespace eka2l1::dispatch {
         }
 
         for (std::int32_t i = 0; i < n; i++) {
-            // Deleting a bound buffer reverts that binding to zero, even for a name never generated.
             if (obj_type == GLES_OBJECT_BUFFER) {
-                if (ctx->binded_array_buffer_handle_ == names[i]) {
-                    ctx->binded_array_buffer_handle_ = 0;
-                }
-
-                if (ctx->binded_element_array_buffer_handle_ == names[i]) {
-                    ctx->binded_element_array_buffer_handle_ = 0;
-                }
+                ctx->delete_buffer(names[i]);
+                continue;
             }
 
             auto *obj = ctx->objects_.get(names[i]);
@@ -2027,18 +2068,9 @@ namespace eka2l1::dispatch {
         dispatcher *dp = sys->get_dispatcher();
         dispatch::egl_controller &controller = dp->get_egl_controller();
 
-        switch (target) {
-        case GL_ARRAY_BUFFER_EMU:
-            ctx->binded_array_buffer_handle_ = name;
-            break;
-
-        case GL_ELEMENT_ARRAY_BUFFER_EMU:
-            ctx->binded_element_array_buffer_handle_ = name;
-            break;
-
-        default:
-            controller.push_error(ctx, GL_INVALID_ENUM);
-            return;
+        const auto error = ctx->bind_buffer(target, name);
+        if (error != 0) {
+            controller.push_error(ctx, error);
         }
     }
 

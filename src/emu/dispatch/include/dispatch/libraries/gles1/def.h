@@ -271,6 +271,7 @@ namespace eka2l1::dispatch {
             const std::int32_t first_index, const std::uint32_t vcount, const drivers::graphics_primitive_mode primitive_mode) override;
         void flush_to_driver(egl_controller &controller, drivers::graphics_driver *driver, const bool is_frame_swap_flush = false) override;
         void destroy(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) override;
+        void on_buffer_deleted(std::uint32_t name) override;
         bool enable(const std::uint32_t feature) override;
         bool disable(const std::uint32_t feature) override;
         bool is_enabled(const std::uint32_t feature, bool &enabled) override;

@@ -213,3 +213,127 @@ TEST_CASE("GLES scissor query resolves the initial surface dimensions before dra
         context->draw_surface_ = nullptr;
     }
 }
+
+namespace {
+    template <typename Context>
+    struct buffer_test_context : Context {
+        ~buffer_test_context() {
+            this->buffers_.clear();
+            this->objects_.clear();
+        }
+    };
+}
+
+// OpenGL ES 1.1/2.0 sections 2.9 and 6.1.6 distinguish reserved names from objects.
+TEST_CASE("GLES buffer names become objects only on their first binding", "[gles1][gles2]") {
+    buffer_test_context<egl_context_es1> es1;
+    buffer_test_context<egl_context_es2> es2;
+    for (egl_context_es_shared *context : { static_cast<egl_context_es_shared*>(&es1),
+             static_cast<egl_context_es_shared*>(&es2) }) {
+        gles_driver_object_instance texture = std::make_unique<gles_driver_texture>(*context);
+        const auto texture_name = static_cast<std::uint32_t>(context->objects_.add(texture));
+        auto *texture_object = context->objects_.get(texture_name)->get();
+        context->delete_buffer(texture_name);
+        REQUIRE(context->objects_.get(texture_name)->get() == texture_object);
+        REQUIRE_FALSE(context->is_buffer(0));
+        REQUIRE_FALSE(context->is_buffer(texture_name));
+
+        const auto first = context->generate_buffer();
+        const auto second = context->generate_buffer();
+        REQUIRE(first != 0);
+        REQUIRE(second != 0);
+        REQUIRE(first != second);
+        REQUIRE_FALSE(context->is_buffer(first));
+        REQUIRE_FALSE(context->is_buffer(second));
+        REQUIRE(context->bind_buffer(GL_ELEMENT_ARRAY_BUFFER_EMU, first) == 0);
+        REQUIRE(context->is_buffer(first));
+        auto *buffer = context->binded_buffer(false);
+        buffer->assign_data_size(128);
+        REQUIRE(context->bind_buffer(GL_ARRAY_BUFFER_EMU, first) == 0);
+        REQUIRE(context->binded_buffer(true) == buffer);
+        REQUIRE(buffer->data_size() == 128);
+        REQUIRE(context->bind_buffer(GL_ARRAY_BUFFER_EMU, 0) == 0);
+        REQUIRE(context->is_buffer(first));
+        REQUIRE(context->binded_buffer(false) == buffer);
+
+        context->attrib_changed_ = false;
+        context->delete_buffer(0);
+        context->delete_buffer(0xFFFFFFFF);
+        REQUIRE_FALSE(context->attrib_changed_);
+        REQUIRE(context->binded_buffer(false) == buffer);
+        context->delete_buffer(first);
+        REQUIRE_FALSE(context->is_buffer(first));
+        REQUIRE(context->binded_element_array_buffer_handle_ == 0);
+        REQUIRE_FALSE(context->is_buffer(second));
+        REQUIRE(context->objects_.get(texture_name)->get() == texture_object);
+        REQUIRE(context->bind_buffer(GL_ARRAY_BUFFER_EMU, first) == 0);
+        REQUIRE(context->binded_buffer(true)->data_size() == 0);
+        REQUIRE(context->is_buffer(first));
+        context->delete_buffer(second);
+        const auto replacement = context->generate_buffer();
+        REQUIRE(replacement != 0);
+        REQUIRE(replacement != first);
+        REQUIRE_FALSE(context->is_buffer(replacement));
+    }
+}
+
+TEST_CASE("GLES1 deleting a buffer detaches every captured array binding", "[gles1]") {
+    buffer_test_context<egl_context_es1> context;
+    REQUIRE(context.bind_buffer(GL_ARRAY_BUFFER_EMU, 7) == 0);
+    context.binded_buffer(true)->assign_handle(42);
+    REQUIRE(context.bind_buffer(GL_ELEMENT_ARRAY_BUFFER_EMU, 7) == 0);
+    gles_vertex_attrib *attributes[] = { &context.vertex_attrib_, &context.color_attrib_, &context.normal_attrib_,
+        &context.matrix_index_attrib_, &context.weight_attrib_, &context.point_size_attrib_ };
+    for (auto *attribute : attributes) {
+        attribute->buffer_obj_ = 7;
+        attribute->offset_ = 12;
+    }
+    for (auto &unit : context.texture_units_) {
+        unit.coord_attrib_.buffer_obj_ = 7;
+    }
+    context.texture_units_[1].coord_attrib_.buffer_obj_ = 8;
+    REQUIRE(context.bind_buffer(GL_ARRAY_BUFFER_EMU, 8) == 0);
+    context.attrib_changed_ = false;
+    context.delete_buffer(7);
+    REQUIRE(context.binded_array_buffer_handle_ == 8);
+    REQUIRE(context.binded_element_array_buffer_handle_ == 0);
+    REQUIRE(context.attrib_changed_);
+    REQUIRE_FALSE(context.is_buffer(7));
+    REQUIRE(context.buffer_pools_.top() == 42);
+    for (const auto *attribute : attributes) {
+        REQUIRE(attribute->buffer_obj_ == 0);
+        REQUIRE(attribute->offset_ == 12);
+    }
+    for (std::size_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; ++i) {
+        REQUIRE(context.texture_units_[i].coord_attrib_.buffer_obj_ == (i == 1 ? 8 : 0));
+    }
+    REQUIRE(context.bind_buffer(GL_ARRAY_BUFFER_EMU, 7) == 0);
+    REQUIRE(context.vertex_attrib_.buffer_obj_ == 0);
+    REQUIRE(context.binded_buffer(true)->handle_value() == 0);
+}
+
+TEST_CASE("GLES2 deleting a buffer detaches disabled as well as enabled attributes", "[gles2]") {
+    buffer_test_context<egl_context_es2> context;
+    REQUIRE(context.bind_buffer(GL_ARRAY_BUFFER_EMU, 7) == 0);
+    REQUIRE(context.bind_buffer(GL_ELEMENT_ARRAY_BUFFER_EMU, 7) == 0);
+    context.attributes_enabled_ = 1;
+    for (auto &attribute : context.attributes_) {
+        attribute.buffer_obj_ = 7;
+        attribute.offset_ = 16;
+        attribute.stride_ = 24;
+    }
+    context.attributes_.back().buffer_obj_ = 8;
+    context.attrib_changed_ = false;
+    context.delete_buffer(7);
+    REQUIRE(context.binded_array_buffer_handle_ == 0);
+    REQUIRE(context.binded_element_array_buffer_handle_ == 0);
+    REQUIRE(context.attrib_changed_);
+    REQUIRE(context.attributes_enabled_ == 1);
+    for (std::size_t i = 0; i < context.attributes_.size(); ++i) {
+        REQUIRE(context.attributes_[i].buffer_obj_ == (i + 1 == context.attributes_.size() ? 8 : 0));
+        REQUIRE(context.attributes_[i].offset_ == 16);
+        REQUIRE(context.attributes_[i].stride_ == 24);
+    }
+    REQUIRE(context.bind_buffer(GL_ARRAY_BUFFER_EMU, 7) == 0);
+    REQUIRE(context.attributes_[0].buffer_obj_ == 0);
+}
