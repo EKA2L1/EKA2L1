@@ -77,8 +77,9 @@ TEST_CASE("GLES1 point size queries preserve pixel units and fixed point precisi
     REQUIRE(fixed == 163840);
     REQUIRE(context.get_data(nullptr, GL_POINT_SIZE_EMU, &integer, GLES_GET_DATA_TYPE_INTEGER));
     REQUIRE(integer == 3);
-    REQUIRE(context.get_data(nullptr, GL_POINT_SIZE_EMU, &integer, GLES_GET_DATA_TYPE_BOOLEAN));
-    REQUIRE(integer == 1);
+    std::uint8_t boolean = 0;
+    REQUIRE(context.get_data(nullptr, GL_POINT_SIZE_EMU, &boolean, GLES_GET_DATA_TYPE_BOOLEAN));
+    REQUIRE(boolean == 1);
     context.point_size_ = 7.0f;
     REQUIRE(context.get_data(nullptr, GL_POINT_SIZE_EMU, &integer, GLES_GET_DATA_TYPE_INTEGER));
     REQUIRE(integer == 7);
@@ -317,10 +318,11 @@ TEST_CASE("GLES1 point parameter state follows the ES 1.1 defaults and conversio
     REQUIRE(fixed[0] == 32768);
     REQUIRE(fixed[1] == 16384);
     REQUIRE(fixed[2] == 8192);
-    REQUIRE(context.get_data(&driver, GL_POINT_DISTANCE_ATTENUATION_EMU, fixed, GLES_GET_DATA_TYPE_BOOLEAN));
-    REQUIRE(fixed[0] == 1);
-    REQUIRE(fixed[1] == 1);
-    REQUIRE(fixed[2] == 1);
+    std::uint8_t boolean[3]{};
+    REQUIRE(context.get_data(&driver, GL_POINT_DISTANCE_ATTENUATION_EMU, boolean, GLES_GET_DATA_TYPE_BOOLEAN));
+    REQUIRE(boolean[0] == 1);
+    REQUIRE(boolean[1] == 1);
+    REQUIRE(boolean[2] == 1);
 }
 
 TEST_CASE("GLES1 point limits reject negative values and preserve the native size range", "[gles1]") {

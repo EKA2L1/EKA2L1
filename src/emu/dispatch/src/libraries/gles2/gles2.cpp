@@ -1398,7 +1398,7 @@ APPLY_PENDING_ROUTES:
         }
         switch (data_type) {
         case GLES_GET_DATA_TYPE_BOOLEAN:
-            return get_data_impl_es2<std::int32_t>(this, drv, feature, reinterpret_cast<std::int32_t*>(data), 255);
+            return get_data_impl_es2<bool>(this, drv, feature, reinterpret_cast<bool*>(data), 1);
 
         case GLES_GET_DATA_TYPE_FIXED:
             return get_data_impl_es2<gl_fixed>(this, drv, feature, reinterpret_cast<gl_fixed*>(data), 65536);

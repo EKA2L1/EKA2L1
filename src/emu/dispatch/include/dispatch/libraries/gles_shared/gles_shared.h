@@ -98,7 +98,7 @@ namespace eka2l1::dispatch {
     BRIDGE_FUNC_LIBRARY(void, gl_enable_emu, std::uint32_t cap);
     BRIDGE_FUNC_LIBRARY(void, gl_disable_emu, std::uint32_t cap);
     BRIDGE_FUNC_LIBRARY(void, gl_get_integerv_emu, std::uint32_t pname, std::uint32_t *params);
-    BRIDGE_FUNC_LIBRARY(void, gl_get_booleanv_emu, std::uint32_t pname, std::int32_t *params);
+    BRIDGE_FUNC_LIBRARY(void, gl_get_booleanv_emu, std::uint32_t pname, std::uint8_t *params);
     BRIDGE_FUNC_LIBRARY(void, gl_get_fixedv_emu, std::uint32_t pname, gl_fixed *params);
     BRIDGE_FUNC_LIBRARY(void, gl_get_floatv_emu, std::uint32_t pname, float *params);
     BRIDGE_FUNC_LIBRARY(std::int32_t, gl_is_enabled_emu, std::uint32_t cap);
