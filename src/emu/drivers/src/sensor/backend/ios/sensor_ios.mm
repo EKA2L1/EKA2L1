@@ -519,7 +519,7 @@ namespace eka2l1::drivers {
     }
 
     void sensor_driver_ios::poll_sample() {
-        motion_sample sample;
+        motion_sample sample{};
         std::array<double, 3> &acceleration = sample.acceleration_;
         std::array<double, 3> &gravity = sample.gravity_;
         int rotation;
