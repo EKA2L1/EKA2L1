@@ -24,8 +24,11 @@ find_package(Qt${QT_VERSION_MAJOR} COMPONENTS Widgets LinguistTools Svg Network 
 # displaywidget.cpp includes <qpa/qplatformnativeinterface.h> on X11/Wayland.
 # Some distributions expose those private headers only through Qt6::GuiPrivate,
 # others through Qt6::Gui and ship no such package -- so ask, but do not require.
+# Qt warns that private headers tie the binary to the exact Qt build it was
+# compiled against. That comes with including qpa headers at all, so the warning adds nothing.
 if (NOT WIN32 AND NOT APPLE AND NOT CMAKE_SYSTEM_NAME STREQUAL "Haiku"
         AND ${QT_VERSION_MAJOR} GREATER_EQUAL 6)
+    set(QT_NO_PRIVATE_MODULE_WARNING ON)
     find_package(Qt${QT_VERSION_MAJOR} QUIET COMPONENTS GuiPrivate)
 endif()
 
