@@ -422,6 +422,9 @@ option(LIBUV_BUILD_BENCH "Build bench for libuv" OFF)
 option(BUILD_UVW_LIBS "Build UVW libraries" ON)
 option(FETCH_LIBUV "Fetch the libuv repo using CMake FetchContent facility" ON)
 set (BUILD_TESTING OFF CACHE INTERNAL "Enable testing with ctest." FORCE)
+# uvw would otherwise add -stdlib=libc++ as a PUBLIC compile option wherever libc++ is
+# installed, regardless of the standard library the rest of the build links against.
+set(USE_LIBCPP OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(uvw)
 add_subdirectory(uvlooper)
