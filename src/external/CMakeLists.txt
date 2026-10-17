@@ -1,11 +1,11 @@
 include(ExternalProject)
 include(CheckSymbolExists)
 
-# Several of the vendored projects still declare a cmake_minimum_required below
-# 3.5, which CMake 4 refuses outright. They are not ours to change -- two of them
-# are submodules of dynarmic -- so the floor is relaxed for this subtree only,
-# rather than making every caller pass the flag.
-set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+# Several vendored projects still declare a cmake_minimum_required below 3.10,
+# which CMake 4 refuses (< 3.5) or warns about as deprecated. They are not ours
+# to change -- some are submodules of dynarmic -- so the floor is raised for this
+# subtree only, rather than making every caller pass the flag.
+set(CMAKE_POLICY_VERSION_MINIMUM 3.10)
 
 # libarchive is the one archive reader in this tree: device dumps packed as .7z, N-Gage game cards as
 # .zip / .7z / .rar. It is here rather than a bare 7z decoder so that another container is a matter of
@@ -422,6 +422,9 @@ option(LIBUV_BUILD_BENCH "Build bench for libuv" OFF)
 option(BUILD_UVW_LIBS "Build UVW libraries" ON)
 option(FETCH_LIBUV "Fetch the libuv repo using CMake FetchContent facility" ON)
 set (BUILD_TESTING OFF CACHE INTERNAL "Enable testing with ctest." FORCE)
+# uvw would otherwise add -stdlib=libc++ as a PUBLIC compile option wherever libc++ is
+# installed, regardless of the standard library the rest of the build links against.
+set(USE_LIBCPP OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(uvw)
 add_subdirectory(uvlooper)
