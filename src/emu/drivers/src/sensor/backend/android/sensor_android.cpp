@@ -18,6 +18,7 @@
  */
 
 #include "sensor_android.h"
+#include <drivers/sensor/magnetometer.h>
 #include <drivers/sensor/rotation.h>
 #include <common/log.h>
 #include <common/time.h>
@@ -70,6 +71,10 @@ namespace eka2l1::drivers {
         switch (sensor_type_) {
             case ASENSOR_TYPE_ACCELEROMETER:
                 packet_size_ = rotation_ ? sizeof(sensor_rotation_data) : sizeof(sensor_accelerometer_axis_data);
+                break;
+
+            case ASENSOR_TYPE_MAGNETIC_FIELD:
+                packet_size_ = sizeof(sensor_magnetometer_axis_data);
                 break;
 
             default:
@@ -187,6 +192,8 @@ namespace eka2l1::drivers {
                     LOG_TRACE(SERVICE_SENSOR, "Unhandled getting accelerometer sensor property {}", static_cast<int>(prop));
                     break;
             }
+        } else if (sensor_type_ == ASENSOR_TYPE_MAGNETIC_FIELD) {
+            return get_magnetometer_property(prop, data);
         } else {
             LOG_ERROR(SERVICE_SENSOR, "Get property unimplemented for Android sensor type {}!", sensor_type_);
             return false;
@@ -236,6 +243,7 @@ namespace eka2l1::drivers {
                         }
 
                         active_accel_measure_range_ = static_cast<std::uint32_t>(data.int_value_);
+                        return true;
                     } else {
                         LOG_ERROR(SERVICE_SENSOR, "Trying to set read-only measure range property! Only current measure range index can be set!");
                         return false;
@@ -246,6 +254,12 @@ namespace eka2l1::drivers {
                 default:
                     LOG_TRACE(SERVICE_SENSOR, "Unhandled setting accelerometer sensor property {}", static_cast<int>(data.property_id_));
                     break;
+            }
+        } else if (sensor_type_ == ASENSOR_TYPE_MAGNETIC_FIELD) {
+            std::optional<sensor_property_data> changed;
+            if (set_magnetometer_property(data, changed)) {
+                notify_property_change(*changed);
+                return true;
             }
         } else {
             LOG_ERROR(SERVICE_SENSOR, "Set property unimplemented for Android sensor type {}!", sensor_type_);
@@ -288,6 +302,16 @@ namespace eka2l1::drivers {
                 events_translated_.insert(events_translated_.end(), reinterpret_cast<std::uint8_t*>(&axis_data),
                                           reinterpret_cast<std::uint8_t*>(&axis_data + 1));
 
+                break;
+            }
+
+            case ASENSOR_TYPE_MAGNETIC_FIELD: {
+                // Android already reports the calibrated field in uT, in the same device frame.
+                const double field[3] = { event.magnetic.x, event.magnetic.y, event.magnetic.z };
+                const auto data = magnetometer_from_microtesla(common::get_current_utc_time_in_microseconds_since_0ad(),
+                    field, field);
+                const auto *bytes = reinterpret_cast<const std::uint8_t *>(&data);
+                events_translated_.insert(events_translated_.end(), bytes, bytes + sizeof(data));
                 break;
             }
 
@@ -457,6 +481,26 @@ namespace eka2l1::drivers {
         }
 
         for (int i = 0; i < sensor_count_; i++) {
+            if (ASensor_getType(all_sensors_[i]) == ASENSOR_TYPE_MAGNETIC_FIELD) {
+                sensor_info info;
+                info.type_ = SENSOR_TYPE_MAGNEGTOMETER;
+                info.quantity_ = SENSOR_DATA_QUANTITY_MAGNEGTIC;
+                info.data_type_ = SENSOR_DATA_TYPE_MAGNEGTOMETER_AXIS;
+                info.item_size_ = sizeof(sensor_magnetometer_axis_data);
+
+                if ((search_info.type_ && search_info.type_ != info.type_)
+                    || (search_info.data_type_ && search_info.data_type_ != info.data_type_)
+                    || (search_info.quantity_ && search_info.quantity_ != info.quantity_)) {
+                    continue;
+                }
+
+                info.name_ = ASensor_getName(all_sensors_[i]);
+                info.vendor_ = ASensor_getVendor(all_sensors_[i]);
+                info.id_ = static_cast<std::uint32_t>(i + 1);
+                results.push_back(info);
+                continue;
+            }
+
             if (ASensor_getType(all_sensors_[i]) != ASENSOR_TYPE_ACCELEROMETER) {
                 continue;
             }
@@ -486,12 +530,17 @@ namespace eka2l1::drivers {
 
     std::unique_ptr<sensor> sensor_driver_android::new_sensor_controller(const std::uint32_t id) {
         const std::uint32_t native_id = id & ~ROTATION_CHANNEL_FLAG;
-        if ((native_id == 0) || (native_id > static_cast<std::uint32_t>(sensor_count_))
-            || ASensor_getType(all_sensors_[native_id - 1]) != ASENSOR_TYPE_ACCELEROMETER) {
+        const bool rotation = (id & ROTATION_CHANNEL_FLAG) != 0;
+        if ((native_id == 0) || (native_id > static_cast<std::uint32_t>(sensor_count_))) {
             return nullptr;
         }
 
-        return std::make_unique<sensor_android>(this, all_sensors_[native_id - 1], (id & ROTATION_CHANNEL_FLAG) != 0);
+        const int native_type = ASensor_getType(all_sensors_[native_id - 1]);
+        if ((native_type != ASENSOR_TYPE_ACCELEROMETER) && ((native_type != ASENSOR_TYPE_MAGNETIC_FIELD) || rotation)) {
+            return nullptr;
+        }
+
+        return std::make_unique<sensor_android>(this, all_sensors_[native_id - 1], rotation);
     }
 
     void sensor_driver_android::track_active_listener(common::double_linked_queue_element *link) {

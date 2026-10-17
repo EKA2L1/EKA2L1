@@ -26,6 +26,13 @@
 #include "drawdvc16.h"
 #include "drawdvc32.h"
 
+// Returns -1 when the device should pack its rows itself.
+TInt ScreenDeviceDataStride(const TUint32 aScreenNo, const TDisplayMode aMode, const TSize &aSize);
+
+inline TBool IsFlippedOrientation(const TUint aDeviceOrientation) {
+    return (aDeviceOrientation & (2 | 8)) != 0;
+}
+
 #define SCRDVC_DECL()                                                     \
     TUint32 iScreenNumber;                                                \
     TUint iDeviceOrientation;                                             \

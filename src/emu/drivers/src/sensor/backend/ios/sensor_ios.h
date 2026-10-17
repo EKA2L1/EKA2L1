@@ -36,6 +36,16 @@ namespace eka2l1::drivers {
     // header stays includable from plain C++, e.g. the driver factory).
     struct core_motion_pump;
 
+    // One pump tick: acceleration and gravity in the Symbian m/s^2 convention,
+    // magnetic field in uT.
+    struct motion_sample {
+        std::array<double, 3> acceleration_;
+        std::array<double, 3> gravity_;
+        std::array<double, 3> magnetic_raw_;
+        std::array<double, 3> magnetic_calibrated_;
+        bool has_magnetic_ = false;
+    };
+
     class sensor_ios : public sensor {
     private:
         friend class sensor_driver_ios;
@@ -55,9 +65,8 @@ namespace eka2l1::drivers {
 
         common::double_linked_queue_element listening_link_;
 
-        // Called by the driver's motion pump for each accelerometer
-        // sample, already converted to the Android/Symbian m/s^2 convention.
-        void push_sample(const double x_ms2, const double y_ms2, const double z_ms2);
+        // Called by the driver's motion pump for each sample, already in the guest's device frame.
+        void push_sample(const motion_sample &sample);
 
         // Move out the armed callback plus the buffered packets when enough
         // have accumulated, so the pump can invoke the callback lock-free.
@@ -79,9 +88,7 @@ namespace eka2l1::drivers {
 
         std::vector<sensor_property_data> get_all_properties(const sensor_property *prop_value = nullptr) override;
 
-        std::uint32_t data_packet_size() const override {
-            return type_ == SENSOR_TYPE_ROTATION ? sizeof(sensor_rotation_data) : sizeof(sensor_accelerometer_axis_data);
-        }
+        std::uint32_t data_packet_size() const override;
     };
 
     class sensor_driver_ios : public sensor_driver {
@@ -114,9 +121,10 @@ namespace eka2l1::drivers {
 
         // Pump handler: fan a sample out to every listening sensor.
         void poll_sample();
-        void dispatch_sample(std::array<double, 3> acceleration, std::array<double, 3> gravity, int rotation);
+        void dispatch_sample(motion_sample sample, int rotation, int magnetic_rotation);
 
         std::uint32_t max_requested_sampling_rate_locked();
+        bool magnetometer_listening_locked();
 
     public:
         explicit sensor_driver_ios();
@@ -132,5 +140,6 @@ namespace eka2l1::drivers {
         void set_controller_rotation(int degrees);
 
         bool accelerometer_available() const;
+        bool magnetometer_available() const;
     };
 }

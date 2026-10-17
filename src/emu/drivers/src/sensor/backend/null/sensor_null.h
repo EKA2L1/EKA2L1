@@ -53,6 +53,18 @@ namespace eka2l1::drivers {
         explicit sensor_accelerometer_null(const sensor_info &info);
     };
 
+    // Delivers no field, but answers the magnetometer properties and calibration requests.
+    class sensor_magnetometer_null: public sensor_null_base {
+    public:
+        explicit sensor_magnetometer_null(const sensor_info &info);
+
+        bool get_property(const sensor_property prop, const std::int32_t item_index,
+            const std::int32_t array_index, sensor_property_data &data) override;
+        bool set_property(const sensor_property_data &data) override;
+
+        std::uint32_t data_packet_size() const override;
+    };
+
     class sensor_driver_null: public sensor_driver {
     private:
         std::vector<sensor_info> stubbed_infos_;

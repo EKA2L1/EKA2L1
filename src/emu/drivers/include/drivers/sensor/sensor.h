@@ -96,7 +96,10 @@ namespace eka2l1::drivers {
         SENSOR_PROPERTY_MODEL_NAME = 0x11,
         SENSOR_PROPERTY_CONNECTION_TYPE = 0x12,
         SENSOR_PROPERTY_DESCRIPTION = 0x13,
-        SENSOR_PROPERTY_ACCELEROMETER_AXIS_ACTIVE = 0x1001
+        SENSOR_PROPERTY_ACCELEROMETER_AXIS_ACTIVE = 0x1001,
+        SENSOR_PROPERTY_MAGNETOMETER_AUTO_CALIBRATION_ACTIVE = 0x1006,
+        SENSOR_PROPERTY_MAGNETOMETER_CALIBRATION_LEVEL = 0x1007,
+        SENSOR_PROPERTY_MAGNETOMETER_AUTO_CALIBRATION_SUPPORTED = 0x1008
     };
 
     struct sensor_info {
@@ -169,11 +172,26 @@ namespace eka2l1::drivers {
     static_assert(sizeof(sensor_accelerometer_axis_data) == 24);
 
     using sensor_data_callback = std::function<void(std::vector<std::uint8_t> &, std::size_t)>;
+    using sensor_property_change_callback = std::function<void(const sensor_property_data &)>;
 
-    // TODO: Property listening
     class sensor {
+    protected:
+        sensor_property_change_callback property_change_callback_;
+
+        void notify_property_change(const sensor_property_data &data) {
+            if (property_change_callback_) {
+                property_change_callback_(data);
+            }
+        }
+
     public:
         virtual ~sensor() = default;
+
+        // Receives properties the sensor changes on its own, such as a calibration level.
+        void set_property_change_callback(sensor_property_change_callback callback) {
+            property_change_callback_ = std::move(callback);
+        }
+
         virtual bool get_property(const sensor_property prop, const std::int32_t item_index,
             const std::int32_t array_index, sensor_property_data &data) = 0;
         virtual bool set_property(const sensor_property_data &data) = 0;

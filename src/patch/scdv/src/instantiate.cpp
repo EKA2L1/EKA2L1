@@ -105,7 +105,7 @@ CFbsDrawDevice *CFbsDrawDevice::NewBitmapDeviceL(TScreenInfo aInfo, TDisplayMode
 
 // Only 32-bit framebuffer rows are ever padded, and the narrower devices reject a stride
 // that is not a multiple of their pixel group, so leave those to work out their own.
-static TInt ScreenDeviceDataStride(const TUint32 aScreenNo, const TDisplayMode aMode, const TSize &aSize) {
+TInt ScreenDeviceDataStride(const TUint32 aScreenNo, const TDisplayMode aMode, const TSize &aSize) {
     switch (aMode) {
     case EColor16MUAlter:
     case EColor16MAAlter:

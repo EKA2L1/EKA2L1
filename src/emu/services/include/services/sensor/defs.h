@@ -35,7 +35,15 @@ namespace eka2l1 {
         sensor_get_property,
         sensor_async_property_data,
         sensor_stop_property_listening,
-        sensor_get_all_properties
+        sensor_get_all_properties,
+        sensor_add_condition_set,
+        sensor_remove_condition_set,
+        sensor_start_condition_listening,
+        sensor_stop_condition_listening,
+        sensor_async_condition_met,
+        sensor_async_channel_change_notification,
+        sensor_stop_channel_change_listening,
+        sensor_set_property
     };
 
     constexpr std::uint32_t LOCATION_LENGTH = 16;

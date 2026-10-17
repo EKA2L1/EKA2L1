@@ -209,6 +209,11 @@ namespace eka2l1::epoc {
         std::uint32_t screen_buffer_byte_width(const epoc::display_mode mode) const;
 
         /**
+         * \brief Check if the emulated framebuffer holds the picture rotated by 180 degrees.
+         */
+        bool is_framebuffer_upside_down() const;
+
+        /**
          * \brief Get the size of this screen, in pixels.
          */
         eka2l1::vec2 size() const;
