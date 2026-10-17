@@ -101,6 +101,16 @@ static void WriteRgb32ToAddressANDNOT(TUint8 *aAddress, TUint8 aRed, TUint8 aGre
     aAddress[3] = (~aAddress[3]) & aAlpha;
 }
 
+static inline void BlendColor24(TUint32 *aColorWord, TUint32 aColor24, TUint32 aAlpha) {
+    TUint32 rb = (*aColorWord & 0xFF00FF);
+    TUint32 g = (*aColorWord & 0x00FF00);
+
+    rb += ((aColor24 & 0xff00ff) - rb) * aAlpha >> 8;
+    g += ((aColor24 & 0x00ff00) - g) * aAlpha >> 8;
+
+    *aColorWord = (*aColorWord & 0xFF000000) | (rb & 0xff00ff) | (g & 0xff00) | 0x01000000;
+}
+
 static void WriteRgb32ToAddressBlend(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
     // NOTE (pent0): Some games gives zero alpha, because alpha blending was not documented before.
     // So if we see a zero alpha, we should only write RGB. This is a hack.
@@ -109,17 +119,7 @@ static void WriteRgb32ToAddressBlend(TUint8 *aAddress, TUint8 aRed, TUint8 aGree
         return;
     }
 
-    TUint32 *colorWord = reinterpret_cast<TUint32 *>(aAddress);
-    TUint32 color24 = aBlue | (aGreen << 8) | (aRed << 16);
-
-    TUint32 rb = (*colorWord & 0xFF00FF);
-    TUint32 g = (*colorWord & 0x00FF00);
-
-    rb += ((color24 & 0xff00ff) - rb) * aAlpha >> 8;
-    g += ((color24 & 0x00ff00) - g) * aAlpha >> 8;
-
-    *colorWord &= ~0xFFFFFF;
-    *colorWord |= ((rb & 0xff00ff) | (g & 0xff00)) | (0x01000000);
+    BlendColor24(reinterpret_cast<TUint32 *>(aAddress), aBlue | (aGreen << 8) | (aRed << 16), aAlpha);
 }
 
 static void WriteRgb32ToAddressUNIMPL(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
@@ -244,6 +244,31 @@ void CFbsThirtyTwoBitsDrawDevice::WriteLine(TInt aX, TInt aY, TInt aLength, TUin
 
     if (aX + aLength > LongWidth())
         PanicAtTheEndOfTheWorld();
+
+    // Blits come through here for every pixel, so the common modes skip the per-pixel call.
+    // Both loops produce exactly what writeFunc would.
+    if (writeFunc == WriteRgb32ToAddressAlpha) {
+        Mem::Copy(pixelAddress, aBuffer, aLength * 4);
+        return;
+    }
+
+    if (writeFunc == WriteRgb32ToAddressBlend) {
+        TUint32 *pixelWord = reinterpret_cast<TUint32 *>(pixelAddress);
+        const TUint32 *bufferEnd = aBuffer + aLength;
+
+        for (const TUint32 *source = aBuffer; source < bufferEnd; source++, pixelWord++) {
+            const TUint32 color = *source;
+            const TUint32 alpha = color >> 24;
+
+            if (alpha == 255 || alpha == 0) {
+                *pixelWord = color | 0xFF000000;
+            } else {
+                BlendColor24(pixelWord, ((color >> 16) & 0xFF) | (color & 0xFF00) | ((color & 0xFF) << 16), alpha);
+            }
+        }
+
+        return;
+    }
 
     for (TInt x = aX; x < aX + aLength; x++) {
         // Try to reduce if calls pls
