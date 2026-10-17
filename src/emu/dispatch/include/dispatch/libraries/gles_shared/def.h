@@ -34,6 +34,7 @@
 #include <optional>
 #include <stack>
 #include <tuple>
+#include <vector>
 
 namespace eka2l1 {
     class system;
@@ -245,6 +246,9 @@ namespace eka2l1::dispatch {
     private:
         std::uint32_t data_size_;
 
+        // Copy of data uploaded as indices, so client-side attribute arrays can be sized to the highest index.
+        std::vector<std::uint8_t> index_data_;
+
     public:
         bool was_bound_ = false;
 
@@ -258,6 +262,12 @@ namespace eka2l1::dispatch {
         const std::uint32_t data_size() const {
             return data_size_;
         }
+
+        void assign_index_data(const std::uint32_t target, const void *data, const std::uint32_t size);
+        void update_index_data(const std::uint32_t offset, const void *data, const std::uint32_t size);
+
+        // Returns -1 when the referenced indices have no copy uploaded through GL_ELEMENT_ARRAY_BUFFER.
+        std::int32_t max_index(const std::uint32_t offset, const std::int32_t count, const std::uint32_t index_type) const;
 
         gles_object_type object_type() const override {
             return GLES_OBJECT_BUFFER;
