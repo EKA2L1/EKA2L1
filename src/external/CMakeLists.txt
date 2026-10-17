@@ -1,11 +1,11 @@
 include(ExternalProject)
 include(CheckSymbolExists)
 
-# Several of the vendored projects still declare a cmake_minimum_required below
-# 3.5, which CMake 4 refuses outright. They are not ours to change -- two of them
-# are submodules of dynarmic -- so the floor is relaxed for this subtree only,
-# rather than making every caller pass the flag.
-set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
+# Several vendored projects still declare a cmake_minimum_required below 3.10,
+# which CMake 4 refuses (< 3.5) or warns about as deprecated. They are not ours
+# to change -- some are submodules of dynarmic -- so the floor is raised for this
+# subtree only, rather than making every caller pass the flag.
+set(CMAKE_POLICY_VERSION_MINIMUM 3.10)
 
 # libarchive is the one archive reader in this tree: device dumps packed as .7z, N-Gage game cards as
 # .zip / .7z / .rar. It is here rather than a bare 7z decoder so that another container is a matter of
