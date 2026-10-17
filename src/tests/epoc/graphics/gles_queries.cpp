@@ -277,6 +277,37 @@ TEST_CASE("GLES buffer names become objects only on their first binding", "[gles
     }
 }
 
+// ES 1.1/2.0 2.8 and 2.9.2: indices from an element buffer select vertices up to their maximum, not count.
+TEST_CASE("GLES element buffers report the highest index of the drawn range", "[gles1][gles2]") {
+    buffer_test_context<egl_context_es1> es1;
+    buffer_test_context<egl_context_es2> es2;
+    for (egl_context_es_shared *context : { static_cast<egl_context_es_shared*>(&es1),
+             static_cast<egl_context_es_shared*>(&es2) }) {
+        const std::array<std::uint16_t, 4> indices = { 2, 688, 5, 1 };
+        gles_driver_buffer buffer(*context);
+        buffer.assign_data_size(sizeof(indices));
+        buffer.assign_index_data(GL_ELEMENT_ARRAY_BUFFER_EMU, indices.data(), sizeof(indices));
+        REQUIRE(buffer.max_index(0, 4, GL_UNSIGNED_SHORT_EMU) == 688);
+        REQUIRE(buffer.max_index(4, 2, GL_UNSIGNED_SHORT_EMU) == 5);
+        REQUIRE(buffer.max_index(1, 3, GL_UNSIGNED_BYTE_EMU) == 176);
+        REQUIRE(buffer.max_index(2, 4, GL_UNSIGNED_SHORT_EMU) == -1);
+        REQUIRE(buffer.max_index(0, 0, GL_UNSIGNED_SHORT_EMU) == -1);
+
+        const std::uint16_t replacement = 900;
+        buffer.update_index_data(6, &replacement, sizeof(replacement));
+        REQUIRE(buffer.max_index(4, 2, GL_UNSIGNED_SHORT_EMU) == 900);
+        buffer.update_index_data(7, &replacement, sizeof(replacement));
+        REQUIRE(buffer.max_index(4, 2, GL_UNSIGNED_SHORT_EMU) == 900);
+
+        buffer.assign_data_size(16);
+        buffer.assign_index_data(GL_ELEMENT_ARRAY_BUFFER_EMU, nullptr, 16);
+        REQUIRE(buffer.max_index(0, 8, GL_UNSIGNED_SHORT_EMU) == 0);
+
+        buffer.assign_index_data(GL_ARRAY_BUFFER_EMU, indices.data(), sizeof(indices));
+        REQUIRE(buffer.max_index(0, 4, GL_UNSIGNED_SHORT_EMU) == -1);
+    }
+}
+
 TEST_CASE("GLES1 deleting a buffer detaches every captured array binding", "[gles1]") {
     buffer_test_context<egl_context_es1> context;
     REQUIRE(context.bind_buffer(GL_ARRAY_BUFFER_EMU, 7) == 0);

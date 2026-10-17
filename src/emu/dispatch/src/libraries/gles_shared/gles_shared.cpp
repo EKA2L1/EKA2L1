@@ -1197,6 +1197,43 @@ namespace eka2l1::dispatch {
         , data_size_(0) {
     }
 
+    void gles_driver_buffer::assign_index_data(const std::uint32_t target, const void *data, const std::uint32_t size) {
+        if (target != GL_ELEMENT_ARRAY_BUFFER_EMU) {
+            index_data_.clear();
+            return;
+        }
+
+        const std::uint8_t *data_bytes = reinterpret_cast<const std::uint8_t *>(data);
+        if (data_bytes) {
+            index_data_.assign(data_bytes, data_bytes + size);
+        } else {
+            index_data_.assign(size, 0);
+        }
+    }
+
+    void gles_driver_buffer::update_index_data(const std::uint32_t offset, const void *data, const std::uint32_t size) {
+        if (data && (index_data_.size() == data_size_) && (offset <= data_size_) && (size <= data_size_ - offset)) {
+            std::memcpy(index_data_.data() + offset, data, size);
+        }
+    }
+
+    std::int32_t gles_driver_buffer::max_index(const std::uint32_t offset, const std::int32_t count, const std::uint32_t index_type) const {
+        const std::size_t index_size = (index_type == GL_UNSIGNED_SHORT_EMU) ? 2 : 1;
+        if ((count <= 0) || (index_data_.size() != data_size_) || (offset > index_data_.size())
+            || (static_cast<std::size_t>(count) > (index_data_.size() - offset) / index_size)) {
+            return -1;
+        }
+
+        std::int32_t result = 0;
+        for (std::int32_t i = 0; i < count; i++) {
+            std::uint16_t index = 0;
+            std::memcpy(&index, index_data_.data() + offset + i * index_size, index_size);
+            result = common::max(result, static_cast<std::int32_t>(index));
+        }
+
+        return result;
+    }
+
     std::uint32_t egl_context_es_shared::generate_buffer() {
         std::uint32_t name = 1;
         while (buffers_.find(name) != buffers_.end()) {
@@ -2715,6 +2752,7 @@ namespace eka2l1::dispatch {
         }
 
         buffer->assign_data_size(static_cast<std::uint32_t>(size));
+        buffer->assign_index_data(target, data, static_cast<std::uint32_t>(size));
     }
 
     BRIDGE_FUNC_LIBRARY(void, gl_buffer_sub_data_emu, std::uint32_t target, std::int32_t offset, std::int32_t size, const void *data) {
@@ -2740,6 +2778,7 @@ namespace eka2l1::dispatch {
         std::uint32_t size_upload_casted = static_cast<std::uint32_t>(size);
         ctx->cmd_builder_.update_buffer_data(buffer->handle_value(), static_cast<std::size_t>(offset), 1,
             &data, &size_upload_casted);
+        buffer->update_index_data(static_cast<std::uint32_t>(offset), data, size_upload_casted);
     }
 
     BRIDGE_FUNC_LIBRARY(void, gl_color_mask_emu, std::uint8_t red, std::uint8_t green, std::uint8_t blue, std::uint8_t alpha) {
@@ -3409,7 +3448,16 @@ namespace eka2l1::dispatch {
                 }
             }
         } else {
-            min_vert_index = -1;
+            // Client-side attribute arrays must cover the highest referenced vertex, not just count vertices.
+            const gles_driver_buffer *index_buffer = ctx->binded_buffer(false);
+            const std::int32_t max_vert_index = index_buffer ? index_buffer->max_index(indices_ptr, count, index_type) : -1;
+
+            if (max_vert_index >= 0) {
+                min_vert_index = 0;
+                total_vert = max_vert_index + 1;
+            } else {
+                min_vert_index = -1;
+            }
         }
 
         gles_driver_buffer *binded_elem_buffer_managed = ctx->binded_buffer(false);
