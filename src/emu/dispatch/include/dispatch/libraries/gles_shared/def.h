@@ -246,6 +246,8 @@ namespace eka2l1::dispatch {
         std::uint32_t data_size_;
 
     public:
+        bool was_bound_ = false;
+
         explicit gles_driver_buffer(egl_context_es_shared &ctx);
         ~gles_driver_buffer() override;
 
@@ -281,6 +283,7 @@ namespace eka2l1::dispatch {
 
     struct egl_context_es_shared : public egl_context {
     protected:
+        virtual void on_buffer_deleted(std::uint32_t name) = 0;
         virtual bool retrieve_vertex_buffer_slot(std::vector<drivers::handle> &vertex_buffers_alloc, drivers::graphics_driver *drv,
             kernel::process *crr_process, const gles_vertex_attrib &attrib, const std::int32_t first_index, const std::int32_t vcount,
             std::uint32_t &res, int &offset, bool &attrib_not_persistent);
@@ -304,6 +307,7 @@ namespace eka2l1::dispatch {
         drivers::blend_equation blend_equation_a_;
 
         common::identity_container<gles_driver_object_instance> objects_;
+        std::map<std::uint32_t, std::unique_ptr<gles_driver_buffer>> buffers_;
 
         std::stack<drivers::handle> texture_pools_2d_;
         std::stack<drivers::handle> texture_pools_cube_;
@@ -395,6 +399,10 @@ namespace eka2l1::dispatch {
             return nullptr;
         }
 
+        std::uint32_t generate_buffer();
+        bool is_buffer(std::uint32_t name) const;
+        std::uint32_t bind_buffer(std::uint32_t target, std::uint32_t name);
+        void delete_buffer(std::uint32_t name);
         gles_driver_buffer *binded_buffer(const bool is_array_buffer);
 
         virtual void init_context_state() override;

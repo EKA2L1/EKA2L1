@@ -18,9 +18,11 @@ using namespace eka2l1::dispatch;
 
 namespace {
     struct point_buffer_context : egl_context_es1 {
+        using egl_context_es_shared::retrieve_vertex_buffer_slot;
         ~point_buffer_context() {
             // Synthetic contexts bypass the controller's object teardown.
             objects_.clear();
+            buffers_.clear();
         }
     };
 }
@@ -191,9 +193,9 @@ TEST_CASE("GLES1 rejects unavailable point size buffers before preparing a draw"
     point_buffer_context context;
     egl_controller controller(nullptr);
     context.associated_thread_uid_ = 7;
-    gles_driver_object_instance vertex_buffer = std::make_unique<gles_driver_buffer>(context);
-    vertex_buffer->assign_handle(1);
-    context.vertex_attrib_.buffer_obj_ = static_cast<std::uint32_t>(context.objects_.add(vertex_buffer));
+    REQUIRE(context.bind_buffer(GL_ARRAY_BUFFER_EMU, 1) == 0);
+    context.binded_buffer(true)->assign_handle(1);
+    context.vertex_attrib_.buffer_obj_ = 1;
     context.point_size_attrib_.buffer_obj_ = 999;
     context.vertex_statuses_ |= egl_context_es1::VERTEX_STATE_CLIENT_VERTEX_ARRAY
         | egl_context_es1::VERTEX_STATE_CLIENT_POINT_SIZE_ARRAY;
@@ -269,9 +271,9 @@ TEST_CASE("GLES1 point arrays retain VBO offsets and are ignored for triangle dr
         egl_controller controller(&driver);
         point_buffer_context context;
         context.associated_thread_uid_ = 9;
-        gles_driver_object_instance buffer = std::make_unique<gles_driver_buffer>(context);
-        buffer->assign_handle(42);
-        const auto name = static_cast<std::uint32_t>(context.objects_.add(buffer));
+        const std::uint32_t name = 1;
+        REQUIRE(context.bind_buffer(GL_ARRAY_BUFFER_EMU, name) == 0);
+        context.binded_buffer(true)->assign_handle(42);
         context.vertex_attrib_ = { 3, GL_FLOAT_EMU, 16, 0, name };
         context.point_size_attrib_ = { 1, static_cast<std::uint32_t>(type), 16, 12, name };
         context.vertex_statuses_ |= egl_context_es1::VERTEX_STATE_CLIENT_VERTEX_ARRAY | egl_context_es1::VERTEX_STATE_CLIENT_POINT_SIZE_ARRAY;
@@ -503,4 +505,46 @@ TEST_CASE("GLES copies use framebuffer scale without scaling ordinary texture of
     REQUIRE(copy.data_[6] == (std::uint64_t(6) << 32 | 4));
     REQUIRE(copy.data_[7] == 0);
     delete[] commands.base_;
+}
+
+// OpenGL ES 1.1 sections 2.9 and 2.9.2 allow creation by binding an unused name.
+TEST_CASE("GLES buffers accept unused names independently of textures", "[gles1][gles2]") {
+    point_buffer_context context;
+    gles_driver_object_instance texture = std::make_unique<gles_driver_texture>(context);
+    const auto name = static_cast<std::uint32_t>(context.objects_.add(texture));
+    auto *texture_object = context.objects_.get(name)->get();
+
+    REQUIRE(context.bind_buffer(GL_ARRAY_BUFFER_EMU, name) == 0);
+    auto *buffer = context.binded_buffer(true);
+    REQUIRE(buffer != nullptr);
+    REQUIRE(context.is_buffer(name));
+    REQUIRE(buffer->data_size() == 0);
+    REQUIRE(buffer->handle_value() == 0);
+    REQUIRE(context.objects_.get(name)->get() == texture_object);
+
+    buffer->assign_handle(42);
+    std::vector<eka2l1::drivers::handle> vertex_buffers;
+    gles_vertex_attrib attribute{ 3, GL_SHORT_EMU, 10, 4, name };
+    std::uint32_t slot = 99;
+    int offset = -1;
+    bool transient = false;
+    REQUIRE(context.retrieve_vertex_buffer_slot(vertex_buffers, nullptr, nullptr, attribute, 3, 6, slot, offset, transient));
+    REQUIRE(vertex_buffers == std::vector<eka2l1::drivers::handle>{42});
+    REQUIRE(slot == 0);
+    REQUIRE(offset == 34);
+    REQUIRE_FALSE(transient);
+
+    REQUIRE(context.bind_buffer(GL_ELEMENT_ARRAY_BUFFER_EMU, name) == 0);
+    REQUIRE(context.binded_buffer(false) == buffer);
+    REQUIRE(context.bind_buffer(GL_ARRAY_BUFFER_EMU, 0) == 0);
+    REQUIRE(context.binded_buffer(true) == nullptr);
+    REQUIRE(context.binded_buffer(false) == buffer);
+    REQUIRE(context.buffers_.size() == 1);
+
+    REQUIRE(context.bind_buffer(GL_ARRAY_BUFFER_EMU, 0xFFFFFFFE) == 0);
+    REQUIRE(context.binded_buffer(true) != buffer);
+    REQUIRE(context.buffers_.size() == 2);
+    REQUIRE(context.bind_buffer(GL_TEXTURE_2D_EMU, 123) == GL_INVALID_ENUM);
+    REQUIRE(context.binded_array_buffer_handle_ == 0xFFFFFFFE);
+    REQUIRE(context.buffers_.size() == 2);
 }

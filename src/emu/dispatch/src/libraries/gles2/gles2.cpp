@@ -1057,6 +1057,14 @@ APPLY_PENDING_ROUTES:
         std::fill(texture_units_.begin(), texture_units_.end(), 0);
     }
 
+    void egl_context_es2::on_buffer_deleted(const std::uint32_t name) {
+        for (auto &attribute : attributes_) {
+            if (attribute.buffer_obj_ == name) {
+                attribute.buffer_obj_ = 0;
+            }
+        }
+    }
+
     void egl_context_es2::destroy(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) {
         while (!compiled_shader_cleanup_.empty()) {
             builder.destroy(compiled_shader_cleanup_.front());

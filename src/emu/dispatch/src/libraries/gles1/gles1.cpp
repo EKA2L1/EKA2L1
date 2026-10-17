@@ -189,6 +189,20 @@ namespace eka2l1::dispatch {
         egl_context_es_shared::flush_to_driver(controller, drv, is_frame_swap_flush);
     }
 
+    void egl_context_es1::on_buffer_deleted(const std::uint32_t name) {
+        for (auto *attribute : { &vertex_attrib_, &color_attrib_, &normal_attrib_,
+                 &matrix_index_attrib_, &weight_attrib_, &point_size_attrib_ }) {
+            if (attribute->buffer_obj_ == name) {
+                attribute->buffer_obj_ = 0;
+            }
+        }
+        for (auto &unit : texture_units_) {
+            if (unit.coord_attrib_.buffer_obj_ == name) {
+                unit.coord_attrib_.buffer_obj_ = 0;
+            }
+        }
+    }
+
     void egl_context_es1::destroy(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) {
         if (input_desc_) {
             cmd_builder_.destroy(input_desc_);
