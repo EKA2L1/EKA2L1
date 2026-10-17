@@ -110,6 +110,15 @@ namespace eka2l1::manager {
         }
     }
 
+    // --- Wave: Against Every Beat (Colorbox) crash fix (wave_crash_fix.lua) ---
+    // Starting a run refreshes a sprite animation that never started (frame -1).
+    // The game then reads 64KB past a heap cell, which only happens to be mapped on the phone.
+    static void wave_skip_unstarted_animation_refresh() {
+        if (static_cast<std::int32_t>(scripting::cpu::get_register(1)) < 0) {
+            scripting::cpu::set_register(15, scripting::cpu::get_pc() + 0x16);
+        }
+    }
+
     void scripts::register_builtin_patches() {
         // The kernel-level hooks must be live for breakpoints to fire.
         register_kernel_hooks();
@@ -175,6 +184,8 @@ namespace eka2l1::manager {
         for (const std::uint32_t addr : { 0x10024F88, 0x10024FDC, 0x10025030 }) {
             register_breakpoint("6r65.app", addr, 0, 0x101FD402, 0xBA80BDA5, ssx_skip_null_client_read);
         }
+
+        register_breakpoint("cboxapp_0x20041fae.exe", 0x956B, 0, 0x20041FAE, 0xCB7985E9, wave_skip_unstarted_animation_refresh);
 
         current_module = nullptr;
 
