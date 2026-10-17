@@ -143,6 +143,7 @@ namespace eka2l1::mem::flexible {
         const vm_address dropping_place_end = static_cast<vm_address>((offset + size + control_->page_size() - 1) >> control_->page_size_bits_);
 
         int total_page_to_decommit = static_cast<int>(dropping_place_end - dropping_place);
+        const int committed_in_range = page_bma_ ? page_bma_->allocated_count(dropping_place, dropping_place_end - 1) : total_page_to_decommit;
 
         // Change the protection of the correspond region in memory object.
         if (!mem_obj_->decommit(dropping_place, total_page_to_decommit)) {
@@ -155,7 +156,7 @@ namespace eka2l1::mem::flexible {
             page_bma_->deallocate(dropping_place, static_cast<int>(total_page_to_decommit));
         }
 
-        committed_ -= static_cast<std::uint32_t>(total_page_to_decommit << control_->page_size_bits_);
+        committed_ -= static_cast<std::uint32_t>(committed_in_range << control_->page_size_bits_);
     }
 
     std::int32_t flexible_mem_model_chunk::allocate(const std::size_t size) {
@@ -175,7 +176,13 @@ namespace eka2l1::mem::flexible {
         }
 
         std::uint32_t offset_to_commit_bytes = static_cast<std::uint32_t>(page_offset << control_->page_size_bits_);
-        commit(offset_to_commit_bytes, size);
+        if (commit(offset_to_commit_bytes, size) == 0) {
+            page_bma_->deallocate(page_offset, page_allocated);
+            return -2;
+        }
+
+        // commit() sees the run already marked by allocate_from and counts none of it.
+        committed_ += static_cast<std::uint32_t>(page_allocated << control_->page_size_bits_);
 
         return static_cast<std::int32_t>(offset_to_commit_bytes);
     }

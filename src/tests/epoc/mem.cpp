@@ -129,3 +129,30 @@ TEST_CASE("a_global_chunk_outlives_the_process_that_created_it", "mem") {
     REQUIRE(chunk->max() >= 0x1000);
     REQUIRE(opener->detach_chunk(chunk));
 }
+
+TEST_CASE("disconnected_chunk_committed_size_counts_each_page_once", "mem") {
+    // RChunk::Size() reports committed bytes, and RHybridHeap allocates page runs with
+    // Allocate() and later frees them alongside never-committed gaps with Decommit().
+    for (const auto model : { mem::mem_model_type::multiple, mem::mem_model_type::flexible }) {
+        mem_model_fixture fixture(model);
+
+        mem::mem_model_chunk_creation_info info;
+        info.size = 0x10000;
+        info.flags = mem::MEM_MODEL_CHUNK_TYPE_DISCONNECT | mem::MEM_MODEL_CHUNK_REGION_USER_LOCAL;
+        info.perm = prot_read_write;
+
+        mem::mem_model_chunk *chunk = nullptr;
+        REQUIRE(fixture.process->create_chunk(chunk, info) == mem::MEM_MODEL_CHUNK_ERR_OK);
+
+        REQUIRE(chunk->allocate(0x2000) == 0);
+        REQUIRE(chunk->committed() == 0x2000);
+
+        chunk->decommit(0, 0x4000);
+        REQUIRE(chunk->committed() == 0);
+
+        chunk->decommit(0, 0x4000);
+        REQUIRE(chunk->committed() == 0);
+
+        fixture.process->delete_chunk(chunk);
+    }
+}
