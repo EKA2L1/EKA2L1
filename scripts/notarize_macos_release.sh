@@ -17,11 +17,16 @@ done
 script_dir=$(cd "$(dirname "$0")" && pwd)
 work_dir=$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/eka2l1-notary.XXXXXX")
 keychain="$work_dir/signing.keychain-db"
+original_keychains=()
+while IFS= read -r original_keychain; do
+    original_keychains+=("$original_keychain")
+done < <(security list-keychains -d user | sed -E 's/^[[:space:]]*"//; s/"[[:space:]]*$//')
 mounted=false
 cleanup() {
     if [[ $mounted == true ]]; then
         hdiutil detach "$work_dir/mount" || true
     fi
+    security list-keychains -d user -s "${original_keychains[@]}" >/dev/null 2>&1 || true
     security delete-keychain "$keychain" >/dev/null 2>&1 || true
     rm -rf "$work_dir"
 }
@@ -40,6 +45,7 @@ PY
 
 keychain_password=$(openssl rand -hex 32)
 security create-keychain -p "$keychain_password" "$keychain"
+security list-keychains -d user -s "$keychain" "${original_keychains[@]}"
 security set-keychain-settings -lut 21600 "$keychain"
 security unlock-keychain -p "$keychain_password" "$keychain"
 security import "$work_dir/signing.p12" -k "$keychain" \
