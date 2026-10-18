@@ -444,8 +444,9 @@ jobs:
 
   roll-release:
    needs: [build-android, build-desktop, build-ios]
-   runs-on: "ubuntu-latest"
-   if: github.repository_owner == 'EKA2L1' && github.ref == 'refs/heads/master'
+   runs-on: macos-26
+   timeout-minutes: 180
+   if: github.repository == 'EKA2L1/EKA2L1' && github.ref == 'refs/heads/master' && github.event_name != 'pull_request'
    permissions:
      contents: write
    steps:
@@ -469,6 +470,23 @@ jobs:
         name: "eka2l1-${{ steps.git_short_sha.outputs.value }}-macos"
         path: mac-files
 
+    - name: Sign and notarize the macOS release
+      env:
+        MACOS_SIGNING_CERTIFICATE: ${{ secrets.MACOS_SIGNING_CERTIFICATE }}
+        MACOS_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_SIGNING_CERTIFICATE_PASSWORD }}
+        MACOS_NOTARY_KEY_ID: ${{ secrets.MACOS_NOTARY_KEY_ID }}
+        MACOS_NOTARY_ISSUER_ID: ${{ secrets.MACOS_NOTARY_ISSUER_ID }}
+        MACOS_NOTARY_PRIVATE_KEY: ${{ secrets.MACOS_NOTARY_PRIVATE_KEY }}
+      run: bash scripts/notarize_macos_release.sh mac-files/EKA2L1.dmg EKA2L1-MacOS-arm64.dmg
+
+    - name: Upload notarization diagnostics
+      if: always()
+      uses: actions/upload-artifact@v7
+      with:
+        name: macos-notarization-${{ github.sha }}
+        path: macos-notarization/*.json
+        if-no-files-found: ignore
+
     - name: Download Linux artifact
       uses: actions/download-artifact@v8
       with:
@@ -489,7 +507,6 @@ jobs:
     - name: Rename artifacts for release
       run: |
         (cd windows-files && zip -r ../EKA2L1-Windows-x86_64.zip .)
-        mv mac-files/EKA2L1.dmg EKA2L1-MacOS-arm64.dmg
         mv eka2l1-qt-x64.AppImage EKA2L1-Linux-x86_64.AppImage
         mv eka2l1-${{ steps.git_short_sha.outputs.value }}.apk EKA2L1-Android.apk
 
