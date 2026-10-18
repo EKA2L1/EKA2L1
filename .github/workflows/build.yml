@@ -471,6 +471,8 @@ jobs:
         path: mac-files
 
     - name: Sign and notarize the macOS release
+      id: macos_notarization
+      continue-on-error: true
       env:
         MACOS_SIGNING_CERTIFICATE: ${{ secrets.MACOS_SIGNING_CERTIFICATE }}
         MACOS_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.MACOS_SIGNING_CERTIFICATE_PASSWORD }}
@@ -479,8 +481,15 @@ jobs:
         MACOS_NOTARY_PRIVATE_KEY: ${{ secrets.MACOS_NOTARY_PRIVATE_KEY }}
       run: bash scripts/notarize_macos_release.sh mac-files/EKA2L1.dmg EKA2L1-MacOS-arm64.dmg
 
+    - name: Use the original macOS artifact if notarization failed
+      if: steps.macos_notarization.outcome == 'failure'
+      run: |
+        echo "::warning::macOS signing or notarization failed; publishing the original CI DMG."
+        cp -f mac-files/EKA2L1.dmg EKA2L1-MacOS-arm64.dmg
+
     - name: Upload notarization diagnostics
       if: always()
+      continue-on-error: true
       uses: actions/upload-artifact@v7
       with:
         name: macos-notarization-${{ github.sha }}
