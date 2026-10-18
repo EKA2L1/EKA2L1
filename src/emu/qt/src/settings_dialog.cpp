@@ -748,6 +748,7 @@ void settings_dialog::on_binding_button_clicked() {
     }
 
     target_bind_ = qobject_cast<QPushButton *>(sender());
+    target_bind_->setFocus();
     target_bind_->setText(tr("Waiting for input"));
 }
 
