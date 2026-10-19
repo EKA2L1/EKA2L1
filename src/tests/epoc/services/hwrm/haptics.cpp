@@ -84,6 +84,33 @@ TEST_CASE("Modifying a Vibe effect keeps its elapsed time", "[haptics]") {
     expect_integer(dev.execute(state, 60), 0);
 }
 
+TEST_CASE("Vibe slot replacement preserves paused effects until an explicit stop", "[haptics]") {
+    device dev;
+    dev.execute(open_device, 0);
+    expect_integer(dev.execute(sweep, 0), 1);
+    REQUIRE(dev.execute(pause_effect, 20).error == error_none);
+    expect_integer(dev.execute(periodic, 30), 2);
+    expect_integer(dev.execute(state, 30), 2);
+    REQUIRE(dev.execute(bytes("19000200000001000000"), 40).error == error_none);
+    expect_integer(dev.execute(sweep, 50), 3);
+
+    REQUIRE(dev.execute(resume_effect, 60).error == error_none);
+    expect_integer(dev.execute(state, 60), 1);
+    expect_integer(dev.execute(bytes("1b000200000001000000"), 60), 2);
+    expect_integer(dev.execute(bytes("1b000300000001000000"), 60), 0);
+    CHECK(dev.output(60) == vibration{80, 50});
+    expect_integer(dev.execute(state, 140), 0);
+
+    REQUIRE(dev.execute(bytes("1a000200000001000000"), 150).error == error_none);
+    CHECK(dev.output(150) == vibration{90, 50});
+    REQUIRE(dev.execute(bytes("19000200000001000000"), 160).error == error_none);
+    expect_integer(dev.execute(sweep, 170), 4);
+    REQUIRE(dev.execute(bytes("080001000000"), 180).error == error_none);
+    expect_integer(dev.execute(bytes("1b000200000001000000"), 180), 0);
+    expect_integer(dev.execute(bytes("1b000400000001000000"), 180), 0);
+    CHECK(dev.output(180).duration == 0);
+}
+
 TEST_CASE("Vibe stop, disable and strength have per-device scope", "[haptics]") {
     device dev, other;
     dev.execute(open_device, 0);

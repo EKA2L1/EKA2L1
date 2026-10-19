@@ -49,6 +49,12 @@ namespace eka2l1::epoc::haptics {
         }
     }
 
+    void device::stop_playing() {
+        for (auto &[handle, effect] : effects_) {
+            if (effect.state == 1) effect.state = 0;
+        }
+    }
+
     void device::stop_all() {
         for (auto &[handle, effect] : effects_) {
             effect.state = 0;
@@ -159,7 +165,7 @@ namespace eka2l1::epoc::haptics {
                     return {error_overflow, {}};
                 }
                 id = next_handle_++;
-                stop_all();
+                stop_playing();
                 effects_[id] = {static_cast<std::uint32_t>(duration),
                     static_cast<std::uint32_t>(magnitude * static_cast<std::int64_t>(strength_) / 10000), now, 0,
                     disabled_ ? 0 : 1};
@@ -186,7 +192,7 @@ namespace eka2l1::epoc::haptics {
                 value.elapsed += now - value.started;
                 value.state = 2;
             } else if (cmd == vibe_command::resume && value.state == 2 && !disabled_) {
-                stop_all();
+                stop_playing();
                 value.started = now;
                 value.state = 1;
             }

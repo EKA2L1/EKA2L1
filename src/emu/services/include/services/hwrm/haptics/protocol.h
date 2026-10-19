@@ -77,6 +77,7 @@ namespace eka2l1::epoc::haptics {
         std::int32_t next_handle_ = 1;
         std::map<std::int32_t, effect> effects_;
         void expire(std::uint64_t now);
+        void stop_playing();
 
     public:
         response execute(const std::vector<std::uint8_t> &packet, std::uint64_t now);

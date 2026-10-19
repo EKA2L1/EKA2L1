@@ -117,6 +117,13 @@ namespace eka2l1 {
     void haptics_server::release(haptics_session *session) {
         const auto it = std::find(reservations_.begin(), reservations_.end(), session);
         if (it == reservations_.end()) return;
+        if (it == reservations_.begin()) {
+            session->device_.stop_all();
+            if (output_owner_ == session) {
+                if (vibrator_) vibrator_->stop_vibrate();
+                output_owner_ = nullptr;
+            }
+        }
         reservations_.erase(it);
         notify_reservations();
     }
