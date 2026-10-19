@@ -613,7 +613,10 @@ final class EmulatorViewController: UIViewController {
             EKA2L1Bridge.shared.setAppExitHandler { [weak self] fatalDetails in
                 self?.handleAppExited(fatalDetails: fatalDetails)
             }
+            let uid = uid
             EKA2L1Bridge.shared.launchApp(uid: uid) { [weak self] success in
+                NotificationCenter.default.post(name: .eka2l1GuestAppLaunched, object: nil,
+                                                userInfo: ["uid": uid, "success": success])
                 self?.onAppLaunch?(success)
             }
         }
@@ -637,6 +640,9 @@ final class EmulatorViewController: UIViewController {
     // scenePhase.
     private func handleAppExited(fatalDetails: String?) {
         EKA2L1Bridge.shared.setAppExitHandler(nil)
+        var info: [String: Any] = ["uid": uid]
+        info["fatal"] = fatalDetails
+        NotificationCenter.default.post(name: .eka2l1GuestAppExited, object: nil, userInfo: info)
         onAppExit?(fatalDetails)
     }
 }

@@ -262,6 +262,11 @@ struct EmulatorView: View {
             isEditingDisplay = false
             DisplayOrientation.unlock()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .eka2l1RemoteCloseApp)) { _ in
+            guestFatalDetails = nil
+            EKA2L1Bridge.shared.closeRunningApp()
+            dismiss()
+        }
         .alert("emulator.guestFatal", isPresented: Binding(
             get: { guestFatalDetails != nil },
             set: { isPresented in

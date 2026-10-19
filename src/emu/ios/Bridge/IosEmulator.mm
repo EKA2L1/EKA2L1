@@ -1250,7 +1250,14 @@ namespace eka2l1::ios {
 }
 
 - (NSString *)currentDeviceDriveEPath {
-    if (!_state || !_state->mounted || !_state->symsys) {
+    return [self currentDeviceDrivePath:'e'];
+}
+
+- (NSString *)currentDeviceDrivePath:(unichar)driveLetter {
+    const unichar letter = static_cast<unichar>(tolower(driveLetter));
+    // Not gated on `mounted`: the os loop stays parked after an app closes, but
+    // the device and its drive folders are unchanged.
+    if (!_state || !_state->symsys || (letter < 'c') || (letter > 'e')) {
         return nil;
     }
     auto *dvc = _state->symsys->get_device_manager();
@@ -1258,7 +1265,8 @@ namespace eka2l1::ios {
         return nil;
     }
     std::lock_guard<std::mutex> dvc_lock(dvc->lock);
-    const std::string path = _state->symsys->get_device_drive_path(drive_e);
+    const std::string path = _state->symsys->get_device_drive_path(
+        static_cast<drive_number>(drive_c + (letter - 'c')));
     if (path.empty()) {
         return nil;
     }
@@ -2529,6 +2537,7 @@ namespace eka2l1::ios {
 
     NSMutableArray<NSNumber *> *modes = [NSMutableArray array];
     NSInteger current = -1;
+    eka2l1::vec2 size;
     std::unique_lock<std::recursive_mutex> session_lock(_state->session_mutex, std::try_to_lock);
     if (session_lock.owns_lock() && _state->winserv) {
         if (eka2l1::epoc::screen *screen = _state->winserv->get_current_focus_screen()) {
@@ -2536,9 +2545,13 @@ namespace eka2l1::ios {
             for (int mode = 0; mode < screen->total_screen_mode(); ++mode) {
                 [modes addObject:@(mode)];
             }
+            size = screen->current_mode().size;
+            if ((screen->ui_rotation % 180) != 0) {
+                std::swap(size.x, size.y);
+            }
         }
     }
-    return @{ @"modes": modes, @"current": @(current) };
+    return @{ @"modes": modes, @"current": @(current), @"width": @(size.x), @"height": @(size.y) };
 }
 
 - (void)setGuestScreenModeForAppUID:(uint32_t)uid
