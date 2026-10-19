@@ -230,10 +230,10 @@ public class EmulatorActivity extends AppCompatActivity {
 
         androidToSymbian = (params.keyMappings != null) ? params.keyMappings : KeyMapper.getDefaultKeyMap();
 
-        if (params.showKeyboard) {
+        if (params.showKeyboard && !ProfilesManager.hidesKeyboardByDefault(configDir, deviceCode)) {
             setVirtualKeyboard(uidStr);
         }
-        if (params.showKeyboard && keyboard instanceof FixedKeyboard) {
+        if (keyboard instanceof FixedKeyboard) {
             setOrientation(ORIENTATION_PORTRAIT);
         } else {
             setOrientation(params.orientation);

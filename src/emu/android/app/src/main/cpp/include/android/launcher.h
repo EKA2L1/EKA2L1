@@ -89,6 +89,7 @@ namespace eka2l1::android {
         bool delete_device(std::uint32_t id);
         void rescan_devices();
         std::uint32_t get_current_device();
+        bool is_touch_screen_device(const std::string &firmware_code);
         device_installation_error install_device(std::string &rpkg_path, std::string &rom_path, bool install_rpkg, bool isolate_drives);
         bool does_rom_need_rpkg(const std::string &rom_path);
         std::vector<std::string> get_packages();

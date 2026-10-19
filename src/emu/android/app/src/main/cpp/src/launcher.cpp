@@ -27,6 +27,7 @@
 #include <system/devices.h>
 
 #include <common/fileutils.h>
+#include <common/algorithm.h>
 #include <common/android/jniutils.h>
 #include <common/language.h>
 #include <common/path.h>
@@ -265,6 +266,16 @@ namespace eka2l1::android {
 
     std::uint32_t launcher::get_current_device() {
         return conf->device;
+    }
+
+    bool launcher::is_touch_screen_device(const std::string &firmware_code) {
+        device_manager *dvc_mngr = sys->get_device_manager();
+        for (auto &device : dvc_mngr->get_devices()) {
+            if (common::compare_ignore_case(device.firmware_code.c_str(), firmware_code.c_str()) == 0) {
+                return device.ver >= epocver::epoc94;
+            }
+        }
+        return sys->get_symbian_version_use() >= epocver::epoc94;
     }
 
     bool launcher::does_rom_need_rpkg(const std::string &rom_path) {

@@ -157,6 +157,12 @@ public class ProfilesManager {
         return params;
     }
 
+    // Touch ROMs (S60v5 / Symbian^3+) start without the keypad until the app has its own config.
+    public static boolean hidesKeyboardByDefault(File appConfigDir, String deviceCode) {
+        return !new File(appConfigDir, Emulator.APP_CONFIG_FILE).exists()
+                && Emulator.isTouchScreenDevice(deviceCode);
+    }
+
     public static void saveConfig(ProfileModel p) {
         try (FileWriter writer = new FileWriter(new File(p.dir, Emulator.APP_CONFIG_FILE))) {
             gson.toJson(p, writer);

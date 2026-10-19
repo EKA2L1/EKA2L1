@@ -121,6 +121,7 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
     private boolean isProfile;
     private File configDir;
     private String defProfile;
+    private String deviceCode;
     private boolean needShow;
     private AppDataStore dataStore;
     private long uid;
@@ -158,11 +159,12 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
             actionBar.setTitle(args.getString(KEY_APP_NAME));
             configDir = new File(Emulator.getConfigsDir(), uidStr);
             dataStore = AppDataStore.getAppStore(uidStr);
+            deviceCode = args.getString(KEY_DEVICE_CODE);
         }
         configDir.mkdirs();
 
         defProfile = AppDataStore.getAndroidStore().getString(PREF_DEFAULT_PROFILE, null);
-        params = ProfilesManager.loadConfigOrDefault(configDir, defProfile);
+        params = loadConfigOrDefault();
         if (!params.isNew && !needShow) {
             startApp();
             getParentFragmentManager().popBackStackImmediate();
@@ -403,6 +405,15 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
         }
     }
 
+    // Show the keypad default the emulator will actually use, so saving untouched settings keeps it.
+    private ProfileModel loadConfigOrDefault() {
+        ProfileModel result = ProfilesManager.loadConfigOrDefault(configDir, defProfile);
+        if (!isProfile && ProfilesManager.hidesKeyboardByDefault(configDir, deviceCode)) {
+            result.showKeyboard = false;
+        }
+        return result;
+    }
+
     @Override
     public void onPause() {
         if (needShow && configDir != null) {
@@ -436,7 +447,7 @@ public class ConfigFragment extends Fragment implements View.OnClickListener {
     @SuppressLint("SetTextI18n")
     public void loadParams(boolean reloadFromFile) {
         if (reloadFromFile) {
-            params = ProfilesManager.loadConfigOrDefault(configDir, defProfile);
+            params = loadConfigOrDefault();
         }
         if (!isProfile) {
             etScreenRefreshRate.setText(dataStore.getString("fps", "60"));
