@@ -853,13 +853,14 @@ struct ContentView: View {
 //
 // Never fall back to .data: that re-enables every file in the picker, which is
 // exactly what filtering is meant to prevent. If our declaration never reached
-// LaunchServices (TrollStore registers apps itself), both lookups come back
-// empty; the extension's dynamic type is then the one the picker gives the file.
+// LaunchServices (TrollStore registers apps itself), the picker types the file
+// as the extension's data-conforming dynamic type. types(tag:) answers with a
+// different dynamic type that matches nothing, so dynamic results are dropped.
 private func importTypes(extension ext: String, declaredAs identifier: String) -> [UTType] {
     var types: [UTType] = []
     if let declared = UTType(identifier) { types.append(declared) }
     for type in UTType.types(tag: ext, tagClass: .filenameExtension, conformingTo: nil)
-    where !types.contains(type) {
+    where !type.isDynamic && !types.contains(type) {
         types.append(type)
     }
     if types.isEmpty, let fallback = UTType(filenameExtension: ext, conformingTo: .data) {
