@@ -153,13 +153,9 @@ namespace eka2l1::kernel {
             case loader::relocation_type::inferred: {
                 const std::uint32_t val = *reinterpret_cast<std::uint32_t *>(&base_ptr[offset_to_relocate]);
 
-                if ((code_base <= val) && (val <= code_base + code_size)) {
-                    the_delta = code_delta;
-                } else if ((data_base <= val) && (val <= data_base + data_size + bss_size)) {
-                    the_delta = data_delta;
-                } else {
-                    LOG_ERROR(KERNEL, "Unable to infer the relocation type of offset 0x{:X}", val);
-                }
+                // Same rule as the Symbian loader: text only if inside [code_base, code_base + code_size),
+                // anything else is data. The data section often starts right at code_base + code_size.
+                the_delta = ((val - code_base) < code_size) ? code_delta : data_delta;
 
                 break;
             }
