@@ -215,8 +215,14 @@ Java_com_github_eka2l1_emu_Emulator_getCurrentDevice(JNIEnv *env, jclass clazz) 
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
-Java_com_github_eka2l1_emu_Emulator_currentDeviceIsTouchScreen(JNIEnv *env, jclass clazz) {
-    return state->launcher->current_device_is_touch_screen();
+Java_com_github_eka2l1_emu_Emulator_isTouchScreenDevice(JNIEnv *env, jclass clazz, jstring firmware_code) {
+    std::string code;
+    if (firmware_code) {
+        const char *cstr = env->GetStringUTFChars(firmware_code, nullptr);
+        code = cstr;
+        env->ReleaseStringUTFChars(firmware_code, cstr);
+    }
+    return state->launcher->is_touch_screen_device(code);
 }
 
 extern "C" JNIEXPORT jint JNICALL

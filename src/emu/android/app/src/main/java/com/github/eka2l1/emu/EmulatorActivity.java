@@ -230,9 +230,7 @@ public class EmulatorActivity extends AppCompatActivity {
 
         androidToSymbian = (params.keyMappings != null) ? params.keyMappings : KeyMapper.getDefaultKeyMap();
 
-        // Touch ROMs (S60v5 / Symbian^3+) start without the keypad unless the app has its own config.
-        boolean hasAppConfig = new File(configDir, Emulator.APP_CONFIG_FILE).exists();
-        if (params.showKeyboard && (hasAppConfig || !Emulator.currentDeviceIsTouchScreen())) {
+        if (params.showKeyboard && !ProfilesManager.hidesKeyboardByDefault(configDir, deviceCode)) {
             setVirtualKeyboard(uidStr);
         }
         if (keyboard instanceof FixedKeyboard) {

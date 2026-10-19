@@ -753,7 +753,8 @@ public class Emulator {
 
     public static native int getCurrentDevice();
 
-    public static native boolean currentDeviceIsTouchScreen();
+    // Falls back to the current device when the code is null or unknown.
+    public static native boolean isTouchScreenDevice(String firmwareCode);
 
     public static native int installDevice(String rpkgPath, String romPath, boolean installRPKG, boolean isolateDrives);
 
