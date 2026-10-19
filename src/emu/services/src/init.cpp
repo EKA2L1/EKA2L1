@@ -50,6 +50,7 @@
 #include <services/featmgr/featmgr.h>
 #include <services/fs/fs.h>
 #include <services/goommonitor/goommonitor.h>
+#include <services/hwrm/haptics/haptics.h>
 #include <services/hwrm/hwrm.h>
 #include <services/internet/accesspoints.h>
 #include <services/internet/connmonitor.h>
@@ -320,6 +321,9 @@ namespace eka2l1 {
             CREATE_SERVER(sys, applist_server);
             CREATE_SERVER(sys, oom_ui_app_server);
             CREATE_SERVER(sys, hwrm_server);
+            if (!sys->get_kernel_system()->is_eka1()) {
+                CREATE_SERVER(sys, haptics_server);
+            }
             CREATE_SERVER(sys, view_server);
             CREATE_SERVER(sys, remcon_server);
             CREATE_SERVER(sys, etel_server);

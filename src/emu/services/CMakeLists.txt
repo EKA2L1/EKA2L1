@@ -80,6 +80,8 @@ add_library(epocservs
         include/services/fs/fs.h
         include/services/goommonitor/goommonitor.h
         include/services/hwrm/def.h
+        include/services/hwrm/haptics/haptics.h
+        include/services/hwrm/haptics/protocol.h
         include/services/hwrm/hwrm.h
         include/services/hwrm/op.h
         include/services/hwrm/light/light_data.h
@@ -244,6 +246,8 @@ add_library(epocservs
         src/fs/parser.cpp
         src/fs/std.cpp
         src/goommonitor/goommonitor.cpp
+        src/hwrm/haptics/protocol.cpp
+        src/hwrm/haptics/haptics.cpp
         src/hwrm/hwrm.cpp
         src/hwrm/light/light_data.cpp
         src/hwrm/light/light.cpp
