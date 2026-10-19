@@ -267,6 +267,10 @@ namespace eka2l1::android {
         return conf->device;
     }
 
+    bool launcher::current_device_is_touch_screen() {
+        return sys->get_symbian_version_use() >= epocver::epoc94;
+    }
+
     bool launcher::does_rom_need_rpkg(const std::string &rom_path) {
         return loader::should_install_requires_additional_rpkg(rom_path);
     }

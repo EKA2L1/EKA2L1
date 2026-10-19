@@ -753,6 +753,8 @@ public class Emulator {
 
     public static native int getCurrentDevice();
 
+    public static native boolean currentDeviceIsTouchScreen();
+
     public static native int installDevice(String rpkgPath, String romPath, boolean installRPKG, boolean isolateDrives);
 
     public static native boolean doesRomNeedRPKG(String romPath);

@@ -214,6 +214,11 @@ Java_com_github_eka2l1_emu_Emulator_getCurrentDevice(JNIEnv *env, jclass clazz) 
     return state->launcher->get_current_device();
 }
 
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_github_eka2l1_emu_Emulator_currentDeviceIsTouchScreen(JNIEnv *env, jclass clazz) {
+    return state->launcher->current_device_is_touch_screen();
+}
+
 extern "C" JNIEXPORT jint JNICALL
 Java_com_github_eka2l1_emu_Emulator_installDevice(JNIEnv *env, jclass clazz, jstring rpkg_path,
     jstring rom_path, jboolean install_rpkg, jboolean isolate_drives) {
