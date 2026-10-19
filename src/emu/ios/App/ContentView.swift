@@ -233,6 +233,14 @@ struct ContentView: View {
             pendingOpenURLs.append(url)
             processPendingOpenURLs()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .eka2l1RemoteLaunchApp)) { note in
+            guard let uid = note.userInfo?["uid"] as? UInt32 else { return }
+            showingOnboarding = false
+            showingSettings = false
+            showingDeviceManager = false
+            autoLaunchUID = uid
+            showingAutoLaunch = true
+        }
         .onReceive(NotificationCenter.default.publisher(for: .eka2l1AppListInvalidated)) { _ in
             // A settings action (e.g. a system-language switch) changed how the
             // app list should render; re-scan so the new captions show.
@@ -510,6 +518,7 @@ struct ContentView: View {
         if EKA2L1Bridge.shared.start(documentsPath: documentsRoot()) {
             booted = true
             store.refresh()
+            DebugControl.start(store: store)
             reportFailedBootDevice()
             selectLaunchRomThenAutoLaunch()
             processPendingOpenURLs()
