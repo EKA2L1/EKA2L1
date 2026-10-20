@@ -834,7 +834,7 @@ namespace eka2l1 {
         ctx.complete(epoc::error_none);
     }
 
-    void applist_server::launch_app(service::ipc_context &ctx) {
+    void applist_server::launch_app(service::ipc_context &ctx, const bool return_thread_id) {
         std::optional<std::u16string> cmd_line = ctx.get_argument_value<std::u16string>(0);
         if (!cmd_line) {
             LOG_ERROR(SERVICE_APPLIST, "Failed to launch a new app! Command line is not available.");
@@ -867,10 +867,12 @@ namespace eka2l1 {
             return;
         }
 
-        if (kern->is_eka1()) {
-            ctx.write_data_to_descriptor_argument<kernel::uid_eka1>(1, static_cast<kernel::uid_eka1>(thread_id));
-        } else {
-            ctx.write_data_to_descriptor_argument<kernel::uid>(1, thread_id);
+        if (return_thread_id) {
+            if (kern->is_eka1()) {
+                ctx.write_data_to_descriptor_argument<kernel::uid_eka1>(1, static_cast<kernel::uid_eka1>(thread_id));
+            } else {
+                ctx.write_data_to_descriptor_argument<kernel::uid>(1, thread_id);
+            }
         }
 
         ctx.complete(epoc::error_none);
@@ -1317,7 +1319,7 @@ namespace eka2l1 {
                 break;
 
             case applist_request_oldarch_start_app:
-                server<applist_server>()->launch_app(*ctx);
+                server<applist_server>()->launch_app(*ctx, true);
                 break;
 
             case applist_request_oldarch_is_program:
@@ -1377,7 +1379,7 @@ namespace eka2l1 {
                 break;
 
             case applist_request_trans_start_app_without_returning_thread_id:
-                server<applist_server>()->launch_app(*ctx);
+                server<applist_server>()->launch_app(*ctx, false);
                 break;
 
             default:
