@@ -757,8 +757,8 @@ namespace eka2l1 {
             return;
         }
 
-        // A fix carries no time of its own, so it is stamped with the time it is read.
-        write_position_info(info, &fix.value(), ctx->sys->get_kernel_system()->universal_time(), get_positioner(ctx)->module_id_);
+        // The global cache has no module provenance, matching Location Monitor's null UID.
+        write_position_info(info, &fix.value(), ctx->sys->get_kernel_system()->universal_time(), 0);
         write_descriptor(ctx, 0, info);
         ctx->complete(epoc::error_none);
     }
