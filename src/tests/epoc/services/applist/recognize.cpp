@@ -94,3 +94,16 @@ TEST_CASE("recognizer_reads_the_magic_for_media", "applist") {
     // ftyp sits at byte 4, so the brand runs from 4 to 11.
     REQUIRE(type_of(recognize({ 0, 0, 0, 0x18, 'f', 't', 'y', 'p', 'm', 'p', '4', '2' }, u"c:\\clip.dat")) == "video/mp4");
 }
+
+TEST_CASE("recognizer_reads_amr_and_nokia_ringing_tones", "applist") {
+    // RFC 4867 storage format magic, followed here by one 12.2 kbit/s frame header.
+    data_recog_result amr = recognize({ '#', '!', 'A', 'M', 'R', '\n', 0x3C, 0, 0, 0, 0, 0 }, u"d:\\Memo.dat");
+    REQUIRE(type_of(amr) == "audio/amr");
+    REQUIRE(amr.confidence_rating_ == data_recognition_confidence_certain);
+    REQUIRE(type_of(recognize(bytes("#!AMR-WB\n\x04\x00\x00"), u"c:\\a.dat")) == "audio/amr-wb");
+
+    // Composer's .rng: command count, then the 7-bit ringing-tone programming command (0x25).
+    const std::vector<std::uint8_t> tune = { 0x02, 0x4A, 0x3A, 0x80, 0x40, 0, 0, 0, 0, 0, 0, 0 };
+    REQUIRE(type_of(recognize(tune, u"c:\\Nokia\\Sounds\\Simple\\Tune 1.rng")) == "application/vnd.nokia.ringing-tone");
+    REQUIRE(type_of(recognize(tune, u"c:\\Tune 1.bin")) == "application/octet-stream");
+}

@@ -47,12 +47,15 @@
 #include <config/config.h>
 
 namespace eka2l1 {
-    static const std::array<std::u16string, 10> RECOG_MIME_TYPES = {
+    static const std::array<std::u16string, 13> RECOG_MIME_TYPES = {
         u"image/png",
         u"image/jpeg",
         u"image/bmp",
         u"audio/wav",
         u"audio/mpeg",
+        u"audio/amr",
+        u"audio/amr-wb",
+        u"application/vnd.nokia.ringing-tone",
         u"video/mp4",
         u"text/html",
         u"text/xml",
@@ -1020,8 +1023,21 @@ namespace eka2l1 {
         app.data_type.uid = 0;
 
         config::state *conf = kern->get_config();
+        symfile document = sys->get_io_system()->open_file(path, READ_MODE | BIN_MODE);
+        data_recog_result recognised{};
+        std::string recognised_type;
 
-        if (conf && conf->mime_detection) {
+        if (document) {
+            ro_file_stream stream(document.get());
+            recognised = recognize_data_impl(stream, path);
+            recognised_type = recognised.type_.type_name_.to_std_string(nullptr);
+            document->close();
+        }
+
+        if (!recognised_type.empty() && (recognised_type != "application/octet-stream")) {
+            app.data_type.data_type = recognised.type_.type_name_;
+            app.uid = find_data_type_handler(regs, recognised_type, 0);
+        } else if (conf && conf->mime_detection) {
             LOG_TRACE(SERVICE_APPLIST, "AppList::AppForDocument datatype stubbed with file extension");
 
             const std::u16string ext = eka2l1::path_extension(path);
@@ -1036,6 +1052,14 @@ namespace eka2l1 {
             }
         } else {
             LOG_TRACE(SERVICE_APPLIST, "AppList::AppForDocument datatype left empty!");
+        }
+
+        if (legacy_level() == APA_LEGACY_LEVEL_OLD) {
+            // 6.x/7.0 clients take the UID and the TDataType in separate buffers in slots 1 and 2.
+            const bool written = ctx.write_data_to_descriptor_argument<epoc::uid>(1, app.uid)
+                && ctx.write_data_to_descriptor_argument<applist_data_type>(2, app.data_type);
+            ctx.complete(written ? epoc::error_none : epoc::error_argument);
+            return;
         }
 
         const int result_slot = (legacy_level() == APA_LEGACY_LEVEL_S60V2) ? 1 : 0;
@@ -1057,8 +1081,8 @@ namespace eka2l1 {
     }
 
     void applist_server::get_app_for_document(service::ipc_context &ctx) {
-        // The 7.0s/8.0 client sends the filename in slot 0 and the 272-byte result in slot 1.
-        const int filename_slot = (legacy_level() == APA_LEGACY_LEVEL_S60V2) ? 0 : 2;
+        // The 6.x-8.0 clients send the filename in slot 0; 7.0s/8.0 take the 272-byte result in slot 1.
+        const int filename_slot = (legacy_level() <= APA_LEGACY_LEVEL_S60V2) ? 0 : 2;
         std::optional<std::u16string> path = ctx.get_argument_value<std::u16string>(filename_slot);
         if (!path.has_value()) {
             ctx.complete(epoc::error_argument);
@@ -1124,6 +1148,26 @@ namespace eka2l1 {
         if ((memcmp(magic4, "RIFF", 4) == 0) && (memcmp(magic8 + 4, "WAVE", 4) == 0)) {
             result.type_.type_name_.assign(nullptr, "audio/wav");
             result.confidence_rating_ = data_recognition_confidence_certain;
+            return result;
+        }
+
+        if ((memcmp(magic4, "#!AM", 4) == 0) && (memcmp(magic8, "R\n", 2) == 0)) {
+            result.type_.type_name_.assign(nullptr, "audio/amr");
+            result.confidence_rating_ = data_recognition_confidence_certain;
+            return result;
+        }
+
+        if ((memcmp(magic4, "#!AM", 4) == 0) && (memcmp(magic8, "R-WB\n", 5) == 0)) {
+            result.type_.type_name_.assign(nullptr, "audio/amr-wb");
+            result.confidence_rating_ = data_recognition_confidence_certain;
+            return result;
+        }
+
+        // Nokia smart messaging ringing tone: one to three command parts, the first ringing-tone programming.
+        if ((common::compare_ignore_case(extension, u".rng") == 0) && (magic4[0] >= 1) && (magic4[0] <= 3)
+            && ((magic4[1] >> 1) == 0x25)) {
+            result.type_.type_name_.assign(nullptr, "application/vnd.nokia.ringing-tone");
+            result.confidence_rating_ = data_recognition_confidence_probable;
             return result;
         }
 
@@ -1324,6 +1368,10 @@ namespace eka2l1 {
 
             case applist_request_oldarch_is_program:
                 server<applist_server>()->is_program(*ctx);
+                break;
+
+            case applist_request_oldarch_app_for_document:
+                server<applist_server>()->get_app_for_document(*ctx);
                 break;
 
             case applist_request_oldarch_app_icon_by_uid_and_size:
