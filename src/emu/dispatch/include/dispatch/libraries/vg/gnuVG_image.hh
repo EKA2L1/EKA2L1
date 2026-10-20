@@ -62,8 +62,7 @@ namespace gnuVG {
 		void vgImageSubData(const GraphicState &state, const void * data, VGint dataStride,
 				    VGImageFormat dataFormat,
 				    VGint x, VGint y, VGint width, VGint height);
-		void vgGetImageSubData(const GraphicState &state, eka2l1::dispatch::egl_controller &controller,
-				       void * data, VGint dataStride,
+		void vgGetImageSubData(const GraphicState &state, void * data, VGint dataStride,
 				       VGImageFormat dataFormat,
 				       VGint x, VGint y,
 				       VGint width, VGint height);

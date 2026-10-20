@@ -115,21 +115,25 @@ namespace gnuVG {
 	}
 
 	void Context::flush_to_driver(eka2l1::dispatch::egl_controller &controller, eka2l1::drivers::graphics_driver *driver, const bool is_frame_swap_flush) {
+		GraphicState state;
+		state.driver = driver;
+		state.shaderman = &controller.get_vg_shaderman();
+
+		flush_to_driver(state, is_frame_swap_flush);
+	}
+
+	void Context::flush_to_driver(const GraphicState &state, const bool is_frame_swap_flush) {
 		eka2l1::drivers::graphics_command_builder transfer_builder;
         vertex_buffer_pusher.flush(transfer_builder);
         index_buffer_pusher.flush(transfer_builder);
 
         eka2l1::drivers::command_list retrieved = transfer_builder.retrieve_command_list();
-        driver->submit_command_list(retrieved);
+        state.driver->submit_command_list(retrieved);
 
 		// Reference is important!
-		GraphicState temp_state;
-		temp_state.driver = driver;
-		temp_state.shaderman = &controller.get_vg_shaderman();
-
-		eka2l1::common::erase_elements(cleanup_lists, [&temp_state](auto &cleanup) {
+		eka2l1::common::erase_elements(cleanup_lists, [&state](auto &cleanup) {
 			if (cleanup.use_count() == 1) {
-				cleanup->free_resources(temp_state);
+				cleanup->free_resources(state);
 				return true;
 			}
 			return false;
@@ -137,7 +141,7 @@ namespace gnuVG {
 
 		retrieved = cmd_builder_.retrieve_command_list();
 
-		driver->submit_command_list(retrieved);
+		state.driver->submit_command_list(retrieved);
 		init_context_state();
 
 		if (is_frame_swap_flush) {
@@ -1819,6 +1823,10 @@ namespace gnuVG {
 		return (format == VG_sARGB_8888) || (format == VG_sXRGB_8888) || (format == VG_sARGB_8888_PRE);
 	}
 
+	static bool is_premultiplied(VGImageFormat format) {
+		return (format == VG_sRGBA_8888_PRE) || (format == VG_sARGB_8888_PRE);
+	}
+
 	static bool translate_vg_image_format_to_driver_format(VGImageFormat src_format, eka2l1::drivers::texture_format &in_format,
 		eka2l1::drivers::texture_format &internal_format,
 		eka2l1::drivers::texture_data_type &dtype,
@@ -2115,27 +2123,91 @@ namespace gnuVG {
 		available_temporary_framebuffers.push_back(fbf);
 	}
 
+	// The region a transfer may touch: the whole framebuffer, or a child image's subset of it.
+	static void get_transfer_extent(const Context::FrameBuffer *fb, const Context::FrameBufferSubsetInfo *subset_info,
+		std::int64_t &origin_x, std::int64_t &origin_y, std::int64_t &width, std::int64_t &height) {
+		if (subset_info && (subset_info->subset_width >= 0)) {
+			origin_x = subset_info->subset_x;
+			origin_y = subset_info->subset_y;
+			width = subset_info->subset_width;
+			height = subset_info->subset_height;
+		} else {
+			origin_x = 0;
+			origin_y = 0;
+			width = fb->width;
+			height = fb->height;
+		}
+	}
+
+	// Clips a copy against both extents like computeBlitRegion() in the reference implementation, so source pixels
+	// outside the source are skipped rather than clamped. Coordinates come back relative to the textures.
+	static bool clip_blit_region(const Context::FrameBuffer *dst, const Context::FrameBufferSubsetInfo *dst_subset,
+		const Context::FrameBuffer *src, const Context::FrameBufferSubsetInfo *src_subset,
+		VGint &dx, VGint &dy, VGint &sx, VGint &sy, VGint &width, VGint &height) {
+		std::int64_t dst_x, dst_y, dst_w, dst_h;
+		std::int64_t src_x, src_y, src_w, src_h;
+		get_transfer_extent(dst, dst_subset, dst_x, dst_y, dst_w, dst_h);
+		get_transfer_extent(src, src_subset, src_x, src_y, src_w, src_h);
+
+		const std::int64_t skip_x = std::max<std::int64_t>({ 0, -static_cast<std::int64_t>(sx), -static_cast<std::int64_t>(dx) });
+		const std::int64_t skip_y = std::max<std::int64_t>({ 0, -static_cast<std::int64_t>(sy), -static_cast<std::int64_t>(dy) });
+		const std::int64_t w = std::min<std::int64_t>({ width - skip_x, src_w - (sx + skip_x), dst_w - (dx + skip_x) });
+		const std::int64_t h = std::min<std::int64_t>({ height - skip_y, src_h - (sy + skip_y), dst_h - (dy + skip_y) });
+
+		if ((w <= 0) || (h <= 0)) {
+			return false;
+		}
+
+		dx = static_cast<VGint>(dst_x + dx + skip_x);
+		dy = static_cast<VGint>(dst_y + dy + skip_y);
+		sx = static_cast<VGint>(src_x + sx + skip_x);
+		sy = static_cast<VGint>(src_y + sy + skip_y);
+		width = static_cast<VGint>(w);
+		height = static_cast<VGint>(h);
+
+		return true;
+	}
+
+	// Whether drawing sampled source colours straight into the destination texture would store the wrong values.
+	static bool needs_format_conversion(VGImageFormat src_format, VGImageFormat dst_format) {
+		return (dst_format == VG_A_8) || (is_premultiplied(src_format) != is_premultiplied(dst_format));
+	}
+
 	void Context::copy_framebuffer_to_framebuffer(const GraphicState &state,
 							  FrameBuffer* dst,
 						      FrameBuffer* src,
 						      VGint dx, VGint dy,
 						      VGint sx, VGint sy,
 						      VGint _width, VGint _height,
-						      bool do_blend) {
+						      const FrameBufferSubsetInfo *dst_subset,
+						      const FrameBufferSubsetInfo *src_subset) {
 		if (src == &screen_buffer) {
 			GNUVG_ERROR("Copying from the drawing surface is not supported!\n");
+			return;
+		}
+
+		if (!clip_blit_region(dst, dst_subset, src, src_subset, dx, dy, sx, sy, _width, _height)) {
+			return;
+		}
+
+		if ((dst != &screen_buffer) && needs_format_conversion(src->format, dst->format)) {
+			const VGint row_stride = static_cast<VGint>(calculate_image_data_stride(dst->format, _width));
+			std::vector<std::uint8_t> pixels(static_cast<std::size_t>(row_stride) * _height);
+
+			copy_framebuffer_to_memory(state, src, nullptr, pixels.data(), row_stride, dst->format, sx, sy, _width, _height);
+			copy_memory_to_framebuffer(state, dst, nullptr, pixels.data(), row_stride, dst->format, dx, dy, _width, _height);
 			return;
 		}
 
 		if (src->color_buffer == dst->color_buffer) {
 			// Sampling the texture being rendered to is undefined, and vgCopyImage allows the regions to overlap.
 			FrameBuffer staging;
-			if (!create_framebuffer(state, &staging, VG_sRGBA_8888, _width, _height, VG_IMAGE_QUALITY_NONANTIALIASED, true)) {
+			if (!create_framebuffer(state, &staging, src->format, _width, _height, VG_IMAGE_QUALITY_NONANTIALIASED, true)) {
 				return;
 			}
 
-			copy_framebuffer_to_framebuffer(state, &staging, src, 0, 0, sx, sy, _width, _height, false);
-			copy_framebuffer_to_framebuffer(state, dst, &staging, dx, dy, 0, 0, _width, _height, do_blend);
+			copy_framebuffer_to_framebuffer(state, &staging, src, 0, 0, sx, sy, _width, _height);
+			copy_framebuffer_to_framebuffer(state, dst, &staging, dx, dy, 0, 0, _width, _height);
 			delete_framebuffer(state, &staging);
 			return;
 		}
@@ -2144,6 +2216,11 @@ namespace gnuVG {
 
 		apply_state_changes(state);
 		render_to_framebuffer(state, dst);
+
+		// Scissoring applies to the drawing surface (vgSetPixels), never to copies into images.
+		if (dst != &screen_buffer) {
+			cmd_builder_.set_feature(eka2l1::drivers::graphics_feature::stencil_test, false);
+		}
 
 		auto shader = state.shaderman->get_shader(state.driver, Shader::do_texture);
 		shader->set_current_graphics_command_builder(cmd_builder_);
@@ -2158,11 +2235,10 @@ namespace gnuVG {
 
 		shader->set_matrix(identity);
 
-		Blending blend_mode_temp = (do_blend ? blend_src_over : blend_src);
 		Blending blend_mode_prev = blend_mode;
 
-		if (blend_mode != blend_mode_temp) {
-			blend_mode = blend_mode_temp;
+		if (blend_mode != blend_src) {
+			blend_mode = blend_src;
 			sync_blend_mode();
 		}
 
@@ -2225,15 +2301,8 @@ namespace gnuVG {
 	static bool clip_image_transfer(const Context::FrameBuffer *fb, const Context::FrameBufferSubsetInfo *subset_info,
 		std::ptrdiff_t stride, std::ptrdiff_t pixel_size, VGint &x, VGint &y, VGint &width, VGint &height,
 		std::ptrdiff_t &memory_offset) {
-		std::int64_t origin_x = 0, origin_y = 0;
-		std::int64_t extent_w = fb->width, extent_h = fb->height;
-
-		if (subset_info && (subset_info->subset_width >= 0)) {
-			origin_x = subset_info->subset_x;
-			origin_y = subset_info->subset_y;
-			extent_w = subset_info->subset_width;
-			extent_h = subset_info->subset_height;
-		}
+		std::int64_t origin_x, origin_y, extent_w, extent_h;
+		get_transfer_extent(fb, subset_info, origin_x, origin_y, extent_w, extent_h);
 
 		const std::int64_t x0 = std::max<std::int64_t>(x, 0);
 		const std::int64_t y0 = std::max<std::int64_t>(y, 0);
@@ -2252,10 +2321,6 @@ namespace gnuVG {
 		height = static_cast<VGint>(y1 - y0);
 
 		return true;
-	}
-
-	static bool is_premultiplied(VGImageFormat format) {
-		return (format == VG_sRGBA_8888_PRE) || (format == VG_sARGB_8888_PRE);
 	}
 
 	// Converts a 32-bit pixel (alpha in byte 3 for every supported layout) between straight and premultiplied alpha.
@@ -2330,7 +2395,6 @@ namespace gnuVG {
 	}
 
 	void Context::copy_framebuffer_to_memory(const GraphicState &state,
-						 eka2l1::dispatch::egl_controller &controller,
 						 FrameBuffer* src,
 						 const FrameBufferSubsetInfo *subset_info,
 						 void *memory, VGint stride,
@@ -2365,7 +2429,7 @@ namespace gnuVG {
 		}
 
 		const std::ptrdiff_t pixel_size = static_cast<std::ptrdiff_t>(calculate_image_data_stride(fmt, 1));
-		const std::ptrdiff_t row_stride = (stride == 0) ? pixel_size * width : stride;
+		const std::ptrdiff_t row_stride = stride;
 
 		std::ptrdiff_t memory_offset = 0;
 		if (!clip_image_transfer(src, subset_info, row_stride, pixel_size, x, y, width, height, memory_offset)) {
@@ -2377,7 +2441,7 @@ namespace gnuVG {
 		}
 
 		// The read is synchronous, so everything queued so far must reach the driver first.
-		flush_to_driver(controller, state.driver);
+		flush_to_driver(state);
 
 		std::vector<std::uint8_t> texels(static_cast<std::size_t>(width) * height * 4);
 		eka2l1::drivers::read_framebuffer(state.driver, src->framebuffer, eka2l1::vec2(x, y), eka2l1::vec2(width, height),
@@ -2440,13 +2504,13 @@ namespace gnuVG {
 			}
 
 			copy_memory_to_framebuffer(state, &staging, nullptr, memory, stride, fmt, 0, 0, width, height);
-			copy_framebuffer_to_framebuffer(state, dst, &staging, x, y, 0, 0, width, height, false);
+			copy_framebuffer_to_framebuffer(state, dst, &staging, x, y, 0, 0, width, height);
 			delete_framebuffer(state, &staging);
 			return;
 		}
 
 		const std::ptrdiff_t pixel_size = static_cast<std::ptrdiff_t>(calculate_image_data_stride(fmt, 1));
-		std::ptrdiff_t row_stride = (stride == 0) ? pixel_size * width : stride;
+		std::ptrdiff_t row_stride = stride;
 
 		std::ptrdiff_t memory_offset = 0;
 		if (!clip_image_transfer(dst, subset_info, row_stride, pixel_size, x, y, width, height, memory_offset)) {
@@ -2457,13 +2521,13 @@ namespace gnuVG {
 		const std::size_t clipped_row_size = static_cast<std::size_t>(pixel_size * width);
 
 		// Repack when the driver cannot take the rows as they are: ARGB needs its bytes swapped, alpha may need
-		// converting, and a negative stride (Qt passes flipped QImages this way) cannot be an unpack row length.
+		// converting, and a zero or negative stride (Qt passes flipped QImages this way) is no unpack row length.
 		const bool dst_premultiplied = is_premultiplied(dst->format);
 		const bool swap_red_blue = is_bgra_byte_order(fmt);
 		const bool convert_alpha = (pixel_size == 4) && (is_premultiplied(fmt) != dst_premultiplied);
 		std::vector<std::uint8_t> packed;
 
-		if ((row_stride < 0) || swap_red_blue || convert_alpha) {
+		if ((row_stride <= 0) || swap_red_blue || convert_alpha) {
 			packed.resize(clipped_row_size * height);
 
 			for (VGint row = 0; row < height; row++) {
