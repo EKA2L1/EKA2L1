@@ -17,6 +17,8 @@
  *
  */
 
+#include <algorithm>
+#include <cstring>
 #include <limits>
 #include <string.h>
 
@@ -1812,6 +1814,11 @@ namespace gnuVG {
 		return 0;
 	}
 
+	// ARGB words are BGRA bytes in little-endian memory.
+	static bool is_bgra_byte_order(VGImageFormat format) {
+		return (format == VG_sARGB_8888) || (format == VG_sXRGB_8888) || (format == VG_sARGB_8888_PRE);
+	}
+
 	static bool translate_vg_image_format_to_driver_format(VGImageFormat src_format, eka2l1::drivers::texture_format &in_format,
 		eka2l1::drivers::texture_format &internal_format,
 		eka2l1::drivers::texture_data_type &dtype,
@@ -1844,12 +1851,11 @@ namespace gnuVG {
 		case VG_sARGB_8888:
 		case VG_sXRGB_8888:
 		case VG_sARGB_8888_PRE:
+			// Uploads swap these to RGBA bytes, so rendering into the texture stores the same layout as sampling expects.
 			in_format = eka2l1::drivers::texture_format::rgba;
 			internal_format = eka2l1::drivers::texture_format::rgba;
 			dtype = eka2l1::drivers::texture_data_type::ubyte;
-			swizzle = eka2l1::drivers::channel_swizzles{ eka2l1::drivers::channel_swizzle::blue, eka2l1::drivers::channel_swizzle::green,
-				eka2l1::drivers::channel_swizzle::red,
-				(src_format == VG_sXRGB_8888) ? eka2l1::drivers::channel_swizzle::one : eka2l1::drivers::channel_swizzle::alpha };
+			swizzle[3] = (src_format == VG_sXRGB_8888) ? eka2l1::drivers::channel_swizzle::one : eka2l1::drivers::channel_swizzle::alpha;
 			break;
 
 		case VG_sBGRA_8888:
@@ -2116,13 +2122,41 @@ namespace gnuVG {
 						      VGint sx, VGint sy,
 						      VGint _width, VGint _height,
 						      bool do_blend) {
+		if (src == &screen_buffer) {
+			GNUVG_ERROR("Copying from the drawing surface is not supported!\n");
+			return;
+		}
+
+		if (src->color_buffer == dst->color_buffer) {
+			// Sampling the texture being rendered to is undefined, and vgCopyImage allows the regions to overlap.
+			FrameBuffer staging;
+			if (!create_framebuffer(state, &staging, VG_sRGBA_8888, _width, _height, VG_IMAGE_QUALITY_NONANTIALIASED, true)) {
+				return;
+			}
+
+			copy_framebuffer_to_framebuffer(state, &staging, src, 0, 0, sx, sy, _width, _height, false);
+			copy_framebuffer_to_framebuffer(state, dst, &staging, dx, dy, 0, 0, _width, _height, do_blend);
+			delete_framebuffer(state, &staging);
+			return;
+		}
+
 		save_current_framebuffer();
 
 		apply_state_changes(state);
 		render_to_framebuffer(state, dst);
 
-		auto caps = Shader::do_pattern;
-		auto shader = state.shaderman->get_shader(state.driver, caps);
+		auto shader = state.shaderman->get_shader(state.driver, Shader::do_texture);
+		shader->set_current_graphics_command_builder(cmd_builder_);
+		shader->use_shader();
+
+		float identity[] = {
+			1.0f, 0.0f, 0.0f, 0.0f,
+			0.0f, 1.0f, 0.0f, 0.0f,
+			0.0f, 0.0f, 1.0f, 0.0f,
+			0.0f, 0.0f, 0.0f, 1.0f
+		};
+
+		shader->set_matrix(identity);
 
 		Blending blend_mode_temp = (do_blend ? blend_src_over : blend_src);
 		Blending blend_mode_prev = blend_mode;
@@ -2132,28 +2166,30 @@ namespace gnuVG {
 			sync_blend_mode();
 		}
 
-		shader->set_pattern_texture(src->color_buffer, eka2l1::drivers::addressing_option::clamp_to_edge);
-		shader->set_pattern_size(_width, _height);
+		cmd_builder_.set_texture_addressing_mode(src->color_buffer, eka2l1::drivers::addressing_direction::s, eka2l1::drivers::addressing_option::clamp_to_edge);
+		cmd_builder_.set_texture_addressing_mode(src->color_buffer, eka2l1::drivers::addressing_direction::t, eka2l1::drivers::addressing_option::clamp_to_edge);
+		shader->set_texture(src->color_buffer);
 
-		float mtrx[] = {
-			1.0, 0.0, 0.0, (float)(sx - dx),
-			0.0, 1.0, 0.0, (float)(sy - dy),
-			0.0, 0.0, 1.0,     0.0,
-			0.0, 0.0, 0.0,     1.0
-		};
-
-		shader->set_pattern_matrix(mtrx);
-
-		VGfloat x = (VGfloat)dx;
-		VGfloat y = (VGfloat)dy;
-		VGfloat width = (VGfloat)_width;
-		VGfloat height = (VGfloat)_height;
+		auto c1 = screen_matrix.map_point(Point((VGfloat)dx, (VGfloat)dy));
+		auto c2 = screen_matrix.map_point(Point((VGfloat)(dx + _width), (VGfloat)(dy + _height)));
 
 		float vertices[] = {
-			x,         y,
-			x + width, y,
-			x + width, y + height,
-			x        , y + height
+			c1.x, c1.y,
+			c2.x, c1.y,
+			c2.x, c2.y,
+			c1.x, c2.y
+		};
+
+		const float u1 = (float)sx / src->width;
+		const float v1 = (float)sy / src->height;
+		const float u2 = (float)(sx + _width) / src->width;
+		const float v2 = (float)(sy + _height) / src->height;
+
+		float texture_coords[] = {
+			u1, v1,
+			u2, v1,
+			u2, v2,
+			u1, v2
 		};
 
 		std::uint32_t indices[] = {
@@ -2162,7 +2198,7 @@ namespace gnuVG {
 		};
 
 		setup_buffers_and_descriptors(state.driver, vertices, 8 * sizeof(float), 0,
-			nullptr, 0, 0);
+			texture_coords, 8 * sizeof(float), 0);
 
 		if (!index_buffer_pusher.is_initialized()) {
 			index_buffer_pusher.initialize(eka2l1::common::MB(2));
@@ -2184,26 +2220,204 @@ namespace gnuVG {
 		restore_current_framebuffer(state);
 	}
 
-	void Context::copy_framebuffer_to_memory(const FrameBuffer* src,
+	// Clips a transfer between client memory and an image to the image extent (a child image's subset when given), like
+	// computeBlitRegion() in the reference implementation. Returns false when nothing is left to transfer.
+	static bool clip_image_transfer(const Context::FrameBuffer *fb, const Context::FrameBufferSubsetInfo *subset_info,
+		std::ptrdiff_t stride, std::ptrdiff_t pixel_size, VGint &x, VGint &y, VGint &width, VGint &height,
+		std::ptrdiff_t &memory_offset) {
+		std::int64_t origin_x = 0, origin_y = 0;
+		std::int64_t extent_w = fb->width, extent_h = fb->height;
+
+		if (subset_info && (subset_info->subset_width >= 0)) {
+			origin_x = subset_info->subset_x;
+			origin_y = subset_info->subset_y;
+			extent_w = subset_info->subset_width;
+			extent_h = subset_info->subset_height;
+		}
+
+		const std::int64_t x0 = std::max<std::int64_t>(x, 0);
+		const std::int64_t y0 = std::max<std::int64_t>(y, 0);
+		const std::int64_t x1 = std::min<std::int64_t>(static_cast<std::int64_t>(x) + width, extent_w);
+		const std::int64_t y1 = std::min<std::int64_t>(static_cast<std::int64_t>(y) + height, extent_h);
+
+		if ((x0 >= x1) || (y0 >= y1)) {
+			return false;
+		}
+
+		memory_offset = static_cast<std::ptrdiff_t>(y0 - y) * stride + static_cast<std::ptrdiff_t>(x0 - x) * pixel_size;
+
+		x = static_cast<VGint>(origin_x + x0);
+		y = static_cast<VGint>(origin_y + y0);
+		width = static_cast<VGint>(x1 - x0);
+		height = static_cast<VGint>(y1 - y0);
+
+		return true;
+	}
+
+	static bool is_premultiplied(VGImageFormat format) {
+		return (format == VG_sRGBA_8888_PRE) || (format == VG_sARGB_8888_PRE);
+	}
+
+	// Converts a 32-bit pixel (alpha in byte 3 for every supported layout) between straight and premultiplied alpha.
+	static void convert_alpha_mode(std::uint8_t *pixel, bool to_premultiplied) {
+		const std::uint32_t alpha = pixel[3];
+
+		for (int channel = 0; channel < 3; channel++) {
+			if (to_premultiplied) {
+				pixel[channel] = static_cast<std::uint8_t>((pixel[channel] * alpha + 127) / 255);
+			} else {
+				pixel[channel] = static_cast<std::uint8_t>((alpha == 0) ? 0 : std::min<std::uint32_t>(255, (pixel[channel] * 255 + alpha / 2) / alpha));
+			}
+		}
+	}
+
+	static std::uint8_t swizzle_channel(const std::uint8_t *texel, eka2l1::drivers::channel_swizzle swizzle) {
+		switch (swizzle) {
+		case eka2l1::drivers::channel_swizzle::red:
+			return texel[0];
+		case eka2l1::drivers::channel_swizzle::green:
+			return texel[1];
+		case eka2l1::drivers::channel_swizzle::blue:
+			return texel[2];
+		case eka2l1::drivers::channel_swizzle::alpha:
+			return texel[3];
+		case eka2l1::drivers::channel_swizzle::zero:
+			return 0;
+		default:
+			break;
+		}
+
+		return 0xFF;
+	}
+
+	// Packs one colour into client memory, the inverse of how copy_memory_to_framebuffer() uploads it.
+	static void write_image_pixel(VGImageFormat fmt, const std::uint8_t *rgba, std::uint8_t *out) {
+		switch (fmt) {
+		case VG_sRGBA_8888:
+		case VG_sRGBA_8888_PRE:
+			std::memcpy(out, rgba, 4);
+			break;
+
+		case VG_sARGB_8888:
+		case VG_sXRGB_8888:
+		case VG_sARGB_8888_PRE:
+		case VG_sBGRA_8888:
+			out[0] = rgba[2];
+			out[1] = rgba[1];
+			out[2] = rgba[0];
+			out[3] = (fmt == VG_sXRGB_8888) ? 0xFF : rgba[3];
+			break;
+
+		case VG_sRGB_565: {
+			const std::uint16_t value = static_cast<std::uint16_t>(((rgba[0] >> 3) << 11) | ((rgba[1] >> 2) << 5) | (rgba[2] >> 3));
+			std::memcpy(out, &value, sizeof(value));
+			break;
+		}
+
+		case VG_sRGBA_5551: {
+			const std::uint16_t value = static_cast<std::uint16_t>(((rgba[0] >> 3) << 11) | ((rgba[1] >> 3) << 6) | ((rgba[2] >> 3) << 1) | (rgba[3] >> 7));
+			std::memcpy(out, &value, sizeof(value));
+			break;
+		}
+
+		case VG_A_8:
+			out[0] = rgba[3];
+			break;
+
+		default:
+			break;
+		}
+	}
+
+	void Context::copy_framebuffer_to_memory(const GraphicState &state,
+						 eka2l1::dispatch::egl_controller &controller,
+						 FrameBuffer* src,
+						 const FrameBufferSubsetInfo *subset_info,
 						 void *memory, VGint stride,
 						 VGImageFormat fmt,
 						 VGint x, VGint y,
 						 VGint width, VGint height) {
+		if (!memory || (width <= 0) || (height <= 0)) {
+			set_error(VG_ILLEGAL_ARGUMENT_ERROR);
+			return;
+		}
+
+		if ((src == &screen_buffer) || (src->scale_factor > 0.0f)) {
+			GNUVG_ERROR("Reading back from the drawing surface is not supported!\n");
+			return;
+		}
+
+		eka2l1::drivers::texture_format in_format;
+		eka2l1::drivers::texture_format internal_format;
+		eka2l1::drivers::texture_data_type dtype;
+		eka2l1::drivers::channel_swizzles src_swizzle;
+		eka2l1::drivers::channel_swizzles dst_swizzle;
+
+		if (!translate_vg_image_format_to_driver_format(fmt, in_format, internal_format, dtype,
+			dst_swizzle, state.driver->is_stricted())) {
+			set_error(VG_UNSUPPORTED_IMAGE_FORMAT_ERROR);
+			return;
+		}
+
+		if (!translate_vg_image_format_to_driver_format(src->format, in_format, internal_format, dtype,
+			src_swizzle, state.driver->is_stricted())) {
+			return;
+		}
+
+		const std::ptrdiff_t pixel_size = static_cast<std::ptrdiff_t>(calculate_image_data_stride(fmt, 1));
+		const std::ptrdiff_t row_stride = (stride == 0) ? pixel_size * width : stride;
+
+		std::ptrdiff_t memory_offset = 0;
+		if (!clip_image_transfer(src, subset_info, row_stride, pixel_size, x, y, width, height, memory_offset)) {
+			return;
+		}
+
+		if (!link_buffers_for_framebuffer_and_scale(state, src)) {
+			return;
+		}
+
+		// The read is synchronous, so everything queued so far must reach the driver first.
+		flush_to_driver(controller, state.driver);
+
+		std::vector<std::uint8_t> texels(static_cast<std::size_t>(width) * height * 4);
+		eka2l1::drivers::read_framebuffer(state.driver, src->framebuffer, eka2l1::vec2(x, y), eka2l1::vec2(width, height),
+			eka2l1::drivers::texture_format::rgba, eka2l1::drivers::texture_data_type::ubyte, texels.data());
+
+		std::uint8_t *out_base = reinterpret_cast<std::uint8_t*>(memory) + memory_offset;
+		const bool dst_premultiplied = is_premultiplied(fmt);
+		const bool convert_alpha = (is_premultiplied(src->format) != dst_premultiplied);
+
+		for (VGint row = 0; row < height; row++) {
+			const std::uint8_t *texel = texels.data() + static_cast<std::size_t>(row) * width * 4;
+			std::uint8_t *out = out_base + static_cast<std::ptrdiff_t>(row) * row_stride;
+
+			for (VGint col = 0; col < width; col++, texel += 4, out += pixel_size) {
+				// Texels are RGBA; the source swizzle fills in what sampling sees for alpha-only and X formats.
+				std::uint8_t rgba[4] = {
+					swizzle_channel(texel, src_swizzle[0]),
+					swizzle_channel(texel, src_swizzle[1]),
+					swizzle_channel(texel, src_swizzle[2]),
+					swizzle_channel(texel, src_swizzle[3])
+				};
+
+				if (convert_alpha) {
+					convert_alpha_mode(rgba, dst_premultiplied);
+				}
+
+				write_image_pixel(fmt, rgba, out);
+			}
+		}
 	}
 
 	void Context::copy_memory_to_framebuffer(const GraphicState &state,
 						 FrameBuffer* dst,
+						 const FrameBufferSubsetInfo *subset_info,
 						 const void *memory, VGint stride,
 						 VGImageFormat fmt,
 						 VGint x, VGint y,
 						 VGint width, VGint height) {
-		if(dst == &screen_buffer) {
-			GNUVG_ERROR("Trying to write from memory directly to the screen buffer.\n");
-			return; /* can't copy directly to framebuffer */
-		}
-
-		if (dst->scale_factor > 0.0f) {
-			GNUVG_ERROR("Trying to write to scalable framebuffer texture!");
+		if (!memory || (width <= 0) || (height <= 0)) {
+			set_error(VG_ILLEGAL_ARGUMENT_ERROR);
 			return;
 		}
 
@@ -2214,21 +2428,81 @@ namespace gnuVG {
 
 		if (!translate_vg_image_format_to_driver_format(fmt, in_format, internal_format, dtype,
 			swizzle, state.driver->is_stricted())) {
-			GNUVG_ERROR("Format 0x{:X} is currently unsupported.\n", static_cast<int>(fmt));
+			set_error(VG_UNSUPPORTED_IMAGE_FORMAT_ERROR);
 			return;
 		}
 
-		std::size_t stride_selfcalc = calculate_image_data_stride(fmt, width);
-		std::size_t total_data_size = height * ((stride == 0) ? stride_selfcalc : stride);
-		std::size_t bytes_per_pixel = (stride_selfcalc / width);
+		if ((dst == &screen_buffer) || (dst->scale_factor > 0.0f)) {
+			// The surface texture is not addressable in VG pixels, so stage the data and draw it like vgSetPixels.
+			FrameBuffer staging;
+			if (!create_framebuffer(state, &staging, fmt, width, height, VG_IMAGE_QUALITY_NONANTIALIASED, true)) {
+				return;
+			}
 
-		if ((stride % bytes_per_pixel) != 0) {
+			copy_memory_to_framebuffer(state, &staging, nullptr, memory, stride, fmt, 0, 0, width, height);
+			copy_framebuffer_to_framebuffer(state, dst, &staging, x, y, 0, 0, width, height, false);
+			delete_framebuffer(state, &staging);
+			return;
+		}
+
+		const std::ptrdiff_t pixel_size = static_cast<std::ptrdiff_t>(calculate_image_data_stride(fmt, 1));
+		std::ptrdiff_t row_stride = (stride == 0) ? pixel_size * width : stride;
+
+		std::ptrdiff_t memory_offset = 0;
+		if (!clip_image_transfer(dst, subset_info, row_stride, pixel_size, x, y, width, height, memory_offset)) {
+			return;
+		}
+
+		const std::uint8_t *data = reinterpret_cast<const std::uint8_t*>(memory) + memory_offset;
+		const std::size_t clipped_row_size = static_cast<std::size_t>(pixel_size * width);
+
+		// Repack when the driver cannot take the rows as they are: ARGB needs its bytes swapped, alpha may need
+		// converting, and a negative stride (Qt passes flipped QImages this way) cannot be an unpack row length.
+		const bool dst_premultiplied = is_premultiplied(dst->format);
+		const bool swap_red_blue = is_bgra_byte_order(fmt);
+		const bool convert_alpha = (pixel_size == 4) && (is_premultiplied(fmt) != dst_premultiplied);
+		std::vector<std::uint8_t> packed;
+
+		if ((row_stride < 0) || swap_red_blue || convert_alpha) {
+			packed.resize(clipped_row_size * height);
+
+			for (VGint row = 0; row < height; row++) {
+				std::uint8_t *packed_row = packed.data() + row * clipped_row_size;
+				std::memcpy(packed_row, data + static_cast<std::ptrdiff_t>(row) * row_stride, clipped_row_size);
+
+				if (!swap_red_blue && !convert_alpha) {
+					continue;
+				}
+
+				for (std::size_t offset = 0; offset < clipped_row_size; offset += 4) {
+					if (swap_red_blue) {
+						std::swap(packed_row[offset], packed_row[offset + 2]);
+					}
+
+					// The X byte is padding; the pixel is opaque.
+					if (fmt == VG_sXRGB_8888) {
+						packed_row[offset + 3] = 0xFF;
+					}
+
+					if (convert_alpha) {
+						convert_alpha_mode(packed_row + offset, dst_premultiplied);
+					}
+				}
+			}
+
+			data = packed.data();
+			row_stride = pixel_size * width;
+		}
+
+		if ((row_stride % pixel_size) != 0) {
 			LOG_WARN(eka2l1::HLE_DISPATCHER, "Stride byte count is odd compare to pixel size! VG Image may contains distortion!");
 		}
 
-		cmd_builder_.update_texture(dst->color_buffer, reinterpret_cast<const char*>(memory),
+		const std::size_t total_data_size = static_cast<std::size_t>((height - 1) * row_stride) + clipped_row_size;
+
+		cmd_builder_.update_texture(dst->color_buffer, reinterpret_cast<const char*>(data),
 			total_data_size, 0, in_format, dtype, eka2l1::vec3(x, y, 0), eka2l1::vec3(width, height, 0),
-			(stride == 0) ? 0 : stride / bytes_per_pixel);
+			row_stride / pixel_size, 1);
 	}
 
 	void Context::save_current_framebuffer() {

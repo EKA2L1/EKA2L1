@@ -272,12 +272,16 @@ namespace gnuVG {
 						     VGint sx, VGint sy,
 						     VGint width, VGint height,
 						     bool do_blend = false);
-		void copy_framebuffer_to_memory(const FrameBuffer* src,
+		void copy_framebuffer_to_memory(const GraphicState &state,
+						eka2l1::dispatch::egl_controller &controller,
+						FrameBuffer* src,
+						const FrameBufferSubsetInfo *subset_info,
 						void *memory, VGint stride,
 						VGImageFormat fmt,
 						VGint x, VGint y,
 						VGint width, VGint height);
 		void copy_memory_to_framebuffer(const GraphicState &state, FrameBuffer* dst,
+						const FrameBufferSubsetInfo *subset_info,
 						const void *memory, VGint stride,
 						VGImageFormat fmt,
 						VGint x, VGint y,
