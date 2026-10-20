@@ -62,7 +62,7 @@ namespace gnuVG {
 		void vgImageSubData(const GraphicState &state, const void * data, VGint dataStride,
 				    VGImageFormat dataFormat,
 				    VGint x, VGint y, VGint width, VGint height);
-		void vgGetImageSubData(void * data, VGint dataStride,
+		void vgGetImageSubData(const GraphicState &state, void * data, VGint dataStride,
 				       VGImageFormat dataFormat,
 				       VGint x, VGint y,
 				       VGint width, VGint height);

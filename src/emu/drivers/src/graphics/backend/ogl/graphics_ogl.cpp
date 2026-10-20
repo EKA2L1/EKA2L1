@@ -1786,6 +1786,7 @@ namespace eka2l1::drivers {
         if (h != 0) {
             fb = reinterpret_cast<drivers::ogl_framebuffer*>(get_graphics_object(h));
             if (!fb) {
+                finish(cmd.status_, -1);
                 return;
             }
         }
@@ -1802,6 +1803,8 @@ namespace eka2l1::drivers {
         glBindFramebuffer(GL_READ_FRAMEBUFFER, fb ? fb->get_fbo() : 0);
         glReadPixels(x, y, width, height, format, type, reinterpret_cast<std::uint64_t*>(cmd.data_[4]));
         glBindFramebuffer(GL_READ_FRAMEBUFFER, last_read_fb);
+
+        finish(cmd.status_, 0);
     }
 
     void ogl_graphics_driver::save_gl_state() {

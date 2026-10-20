@@ -25,11 +25,21 @@ namespace gnuVG {
 		     VGint width, VGint height,
 		     VGbitfield allowedQuality)
 		: Object(ctx) {
+		if ((width <= 0) || (height <= 0)) {
+			ctx->set_error(VG_ILLEGAL_ARGUMENT_ERROR);
+			throw FailedToCreateImageException();
+		}
+
 		framebuffer = new Context::FrameBuffer;
 		if (!ctx->create_framebuffer(state, framebuffer, format, width, height, allowedQuality, true)) {
 			delete framebuffer;
 			throw FailedToCreateImageException();
 		}
+
+		// New images are transparent black, but the texture (often recycled from the pool) starts out undefined.
+		// A zero stride repeats the one cleared row down the whole image.
+		const std::vector<std::uint8_t> transparent_row(static_cast<std::size_t>(width) * 4);
+		ctx->copy_memory_to_framebuffer(state, framebuffer, nullptr, transparent_row.data(), 0, format, 0, 0, width, height);
 	}
 
 	Image::Image(Context *ctx, Image *parent, int subx, int suby, int width, int height)
@@ -94,6 +104,7 @@ namespace gnuVG {
 			context->copy_memory_to_framebuffer(
 				state,
 				framebuffer,
+				&subset_info,
 				data, dataStride,
 				dataFormat,
 				x, y,
@@ -101,13 +112,15 @@ namespace gnuVG {
 		}
 	}
 
-	void Image::vgGetImageSubData(void * data, VGint dataStride,
+	void Image::vgGetImageSubData(const GraphicState &state, void * data, VGint dataStride,
 				      VGImageFormat dataFormat,
 				      VGint x, VGint y,
 				      VGint width, VGint height) {
 		if (context) {
 			context->copy_framebuffer_to_memory(
+				state,
 				framebuffer,
+				&subset_info,
 				data, dataStride,
 				dataFormat,
 				x, y,
@@ -151,7 +164,8 @@ namespace gnuVG {
 			context->copy_framebuffer_to_framebuffer(
 				state,
 				framebuffer, src->framebuffer,
-				dx, dy, sx, sy, width, height);
+				dx, dy, sx, sy, width, height,
+				&subset_info, &src->subset_info);
 		}
 	}
 
@@ -167,7 +181,8 @@ namespace gnuVG {
 			auto fbuf = context->get_internal_framebuffer(Context::GNUVG_CURRENT_FRAMEBUFFER);
 			context->copy_framebuffer_to_framebuffer(state,
 				fbuf, framebuffer,
-				dx, dy, sx, sy, width, height);
+				dx, dy, sx, sy, width, height,
+				nullptr, &subset_info);
 		}
 	}
 
@@ -178,7 +193,8 @@ namespace gnuVG {
 			auto fbuf = context->get_internal_framebuffer(Context::GNUVG_CURRENT_FRAMEBUFFER);
 			context->copy_framebuffer_to_framebuffer(state,
 				framebuffer, fbuf,
-				dx, dy, sx, sy, width, height);
+				dx, dy, sx, sy, width, height,
+				&subset_info, nullptr);
 		}
 	}
 
@@ -301,7 +317,8 @@ namespace eka2l1::dispatch {
 
 	BRIDGE_FUNC_LIBRARY(void, vg_get_image_subdata_emu, VGImage image, void * data, VGint dataStride,
 		VGImageFormat dataFormat, VGint x, VGint y, VGint width, VGint height) {
-		Context *context = gnuVG::get_active_context(sys);
+		GraphicState state;
+		Context *context = gnuVG::get_active_context(sys, &state);
 
 		if (!context) {
 			return;
@@ -309,7 +326,7 @@ namespace eka2l1::dispatch {
 
 		auto i = context->get<Image>(image);
 		if(i)
-			i->vgGetImageSubData(data, dataStride, dataFormat, x, y, width, height);
+			i->vgGetImageSubData(state, data, dataStride, dataFormat, x, y, width, height);
 	}
 
 	// What the fuck is this
@@ -414,6 +431,7 @@ namespace eka2l1::dispatch {
 			context->copy_memory_to_framebuffer(
 				state,
 				fbuf,
+				nullptr,
 				data, dataStride,
 				dataFormat,
 				dx, dy,
@@ -423,12 +441,15 @@ namespace eka2l1::dispatch {
 
 	BRIDGE_FUNC_LIBRARY(void, vg_read_pixels_emu, void * data, VGint dataStride,
 		VGImageFormat dataFormat, VGint sx, VGint sy, VGint width, VGint height) {
-		Context *context = gnuVG::get_active_context(sys);
+		GraphicState state;
+		Context *context = gnuVG::get_active_context(sys, &state);
 
 		if (context) {
 			auto fbuf = context->get_internal_framebuffer(Context::GNUVG_CURRENT_FRAMEBUFFER);
 			context->copy_framebuffer_to_memory(
+				state,
 				fbuf,
+				nullptr,
 				data, dataStride,
 				dataFormat,
 				sx, sy,

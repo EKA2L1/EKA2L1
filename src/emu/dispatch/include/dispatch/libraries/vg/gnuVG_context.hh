@@ -205,6 +205,7 @@ namespace gnuVG {
 
 		void destroy(eka2l1::drivers::graphics_driver *driver, eka2l1::drivers::graphics_command_builder &builder) override;
         void flush_to_driver(eka2l1::dispatch::egl_controller &controller, eka2l1::drivers::graphics_driver *driver, const bool is_frame_swap_flush = false) override;
+        void flush_to_driver(const GraphicState &state, const bool is_frame_swap_flush = false);
         void on_surface_changed(eka2l1::drivers::graphics_driver *driver, eka2l1::dispatch::egl_surface *prev_read, eka2l1::dispatch::egl_surface *prev_draw) override;
         void on_draw_surface_resized(eka2l1::drivers::graphics_driver *driver) override;
         void init_context_state() override;
@@ -271,13 +272,17 @@ namespace gnuVG {
 						     VGint dx, VGint dy,
 						     VGint sx, VGint sy,
 						     VGint width, VGint height,
-						     bool do_blend = false);
-		void copy_framebuffer_to_memory(const FrameBuffer* src,
+						     const FrameBufferSubsetInfo *dst_subset = nullptr,
+						     const FrameBufferSubsetInfo *src_subset = nullptr);
+		void copy_framebuffer_to_memory(const GraphicState &state,
+						FrameBuffer* src,
+						const FrameBufferSubsetInfo *subset_info,
 						void *memory, VGint stride,
 						VGImageFormat fmt,
 						VGint x, VGint y,
 						VGint width, VGint height);
 		void copy_memory_to_framebuffer(const GraphicState &state, FrameBuffer* dst,
+						const FrameBufferSubsetInfo *subset_info,
 						const void *memory, VGint stride,
 						VGImageFormat fmt,
 						VGint x, VGint y,
