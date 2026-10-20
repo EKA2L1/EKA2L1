@@ -218,7 +218,6 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
         if (registry) {
             // Load the app
             epoc::apa::command_line cmdline;
-            cmdline.launch_cmd_ = epoc::apa::command_create;
 
             svr->launch_app(*registry, cmdline, nullptr, [emu](kernel::process *pr) {
                 return emu->ui_main->get_process_exit_callback()(pr);
@@ -262,7 +261,6 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
                 == tokstr) {
                 // Load the app
                 epoc::apa::command_line cmdline;
-                cmdline.launch_cmd_ = epoc::apa::command_create;
 
                 emu->launched_app_name_ = tokstr;
 
@@ -525,7 +523,6 @@ bool run_ngage_game_option_handler(eka2l1::common::arg_parser *parser, void *use
     }
 
     epoc::apa::command_line cmdline;
-    cmdline.launch_cmd_ = epoc::apa::command_create;
 
     if (!svr->launch_app(registry, cmdline, nullptr, [](kernel::process*) {
         exit(0);

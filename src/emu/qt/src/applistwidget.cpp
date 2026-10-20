@@ -530,8 +530,6 @@ bool applist_widget::launch_from_widget_item(applist_widget_item *item, std::fun
     eka2l1::apa_app_registry *registry = get_registry_from_widget_item(item);
     if (registry) {
         eka2l1::epoc::apa::command_line cmd_line;
-        cmd_line.launch_cmd_ = eka2l1::epoc::apa::command_open;
-
         return lister_->launch_app(*registry, cmd_line, nullptr, done_cb);
     }
 
