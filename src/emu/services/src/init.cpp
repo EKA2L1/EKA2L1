@@ -87,7 +87,6 @@
 #include <system/epoc.h>
 #include <utils/locale.h>
 #include <utils/system.h>
-#include <vfs/vfs.h>
 
 #include <config/config.h>
 #include <system/devices.h>
@@ -233,55 +232,6 @@ namespace eka2l1::epoc {
         DEFINE_BIN_PROP(sys, epoc::SYS_CATEGORY, epoc::LOCALE_LANG_KEY, sizeof(epoc::locale_language), lang);
         DEFINE_BIN_PROP(sys, epoc::SYS_CATEGORY, epoc::LOCALE_DATA_KEY, sizeof(epoc::locale), locale);
         DEFINE_BIN_PROP(sys, epoc::SYS_CATEGORY, epoc::LOCALE_LOCALE_SETTINGS_KEY, sizeof(epoc::locale_locale_settings), locale_settings);
-    }
-
-    // Starter has the RFS server run this on first boot; ROM apps assume its folders exist. CP lines are
-    // skipped because C: is usually shared between devices and would collect each ROM's seed files.
-    static void run_rfs_init_script(system *sys) {
-        io_system *io = sys->get_io_system();
-        symfile script_file = io->open_file(u"Z:\\System\\Rfs\\ScriptInit.txt", READ_MODE | BIN_MODE);
-
-        if (!script_file) {
-            return;
-        }
-
-        std::u16string script(static_cast<std::size_t>(script_file->size() / sizeof(char16_t)), u'\0');
-        script_file->read_file(script.data(), sizeof(char16_t), static_cast<std::uint32_t>(script.length()));
-        script_file->close();
-
-        std::u16string session_path = u"C:\\";
-        std::size_t line_start = 0;
-
-        while (line_start < script.length()) {
-            std::size_t line_end = script.find_first_of(u"\r\n", line_start);
-            if (line_end == std::u16string::npos) {
-                line_end = script.length();
-            }
-
-            const std::u16string line = script.substr(line_start, line_end - line_start);
-            line_start = line_end + 1;
-
-            const std::size_t command_start = line.find_first_not_of(u"\xFEFF \t");
-            const std::size_t command_end = line.find_first_of(u" \t", command_start);
-            const std::size_t arg_start = line.find_first_not_of(u" \t", command_end);
-
-            if (arg_start == std::u16string::npos) {
-                continue;
-            }
-
-            const std::u16string command = common::lowercase_ucs2_string(line.substr(command_start, command_end - command_start));
-            std::u16string arg = line.substr(arg_start, line.find_first_of(u" \t", arg_start) - arg_start);
-
-            if ((arg.length() < 2) || (arg[1] != u':')) {
-                arg = session_path + arg;
-            }
-
-            if (command == u"cd") {
-                session_path = arg;
-            } else if (command == u"md") {
-                io->create_directories(arg);
-            }
-        }
     }
 }
 
@@ -450,7 +400,6 @@ namespace eka2l1 {
         void init_services_post_bootup(system *sys) {
             epoc::sms::supply_sim_settings(sys);
             supply_plpvariant_machine_id(sys);
-            epoc::run_rfs_init_script(sys);
         }
     }
 }

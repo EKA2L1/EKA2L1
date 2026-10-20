@@ -41,6 +41,7 @@
 
 #include <common/buffer.h>
 #include <loader/nvg.h>
+#include <loader/rom.h>
 
 #include <lunasvg.h>
 
@@ -1049,6 +1050,29 @@ namespace eka2l1 {
         return bmp;
     }
 
+    fbsbitmap *fbs_server::get_rom_bitmap(const address addr) {
+        if (!kern->get_rom_info() || !kern->is_address_in_rom(addr)) {
+            return nullptr;
+        }
+
+        if (auto ite = rom_bitmaps_.find(addr); ite != rom_bitmaps_.end()) {
+            return ite->second;
+        }
+
+        epoc::bitwise_bitmap *bws_bmp = eka2l1::ptr<epoc::bitwise_bitmap>(addr).get(kern->get_memory_system());
+        if (!bws_bmp || (bws_bmp->uid_ != epoc::bitwise_bitmap_uid)) {
+            return nullptr;
+        }
+
+        // CFbsBitmap::DuplicateInRom() contract. No owning server, so the ROM data is never freed;
+        // the extra reference keeps the wrapper alive.
+        fbsbitmap *bmp = make_new<fbsbitmap>(nullptr, bws_bmp, false, false);
+        bmp->ref();
+
+        rom_bitmaps_.emplace(addr, bmp);
+        return bmp;
+    }
+
     bool fbs_server::free_bitmap(fbsbitmap *bmp) {
         if (!bmp->bitmap_ || bmp->count > 0) {
             return false;
@@ -1098,11 +1122,18 @@ namespace eka2l1 {
             return (ptr < committed_end) ? static_cast<std::size_t>(committed_end - ptr) : 0;
         }
 
-        // Pixels always come out of one of the two chunks above, whatever the
-        // bitmap's age or format: even a bitmap read straight from a ROM MBM is
-        // decompressed into them (load_data_to_rom). A pointer that lands outside
-        // both was computed from a header field that no longer describes reality,
-        // and following it walks host memory the emulator does not own.
+        // Clients also use ROM bitmaps in place (see get_rom_bitmap()).
+        if (const loader::rom *rom = kern->get_rom_info()) {
+            const std::uint8_t *rom_begin = eka2l1::ptr<std::uint8_t>(rom->header.rom_base).get(kern->get_memory_system());
+
+            if (rom_begin && (ptr >= rom_begin) && (ptr < rom_begin + rom->header.rom_size)) {
+                return static_cast<std::size_t>(rom_begin + rom->header.rom_size - ptr);
+            }
+        }
+
+        // Any other pixels come out of one of the two chunks above. A pointer that
+        // lands outside them was computed from a header field that no longer
+        // describes reality, and following it walks host memory the emulator does not own.
         return 0;
     }
 

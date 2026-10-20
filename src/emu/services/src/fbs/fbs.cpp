@@ -309,6 +309,8 @@ namespace eka2l1 {
         , fntstr_seg(nullptr)
         , bmp_font_vtab(0)
         , session_cache_list(nullptr) {
+        // Host icon decoding reads the palette from frontend threads, possibly before any client connects.
+        initialize_palette();
     }
 
     static void compressor_thread_func(compress_queue *queue) {
@@ -342,8 +344,6 @@ namespace eka2l1 {
     }
 
     void fbs_server::initialize_server() {
-        initialize_palette();
-
         // Initialize those chunks
         shared_chunk = kern->create_and_add<kernel::chunk>(
                                kernel::owner_type::kernel,
