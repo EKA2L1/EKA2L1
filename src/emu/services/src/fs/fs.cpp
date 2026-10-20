@@ -507,6 +507,11 @@ namespace eka2l1 {
                     io->create_directories(shared_data_dir);
                 }
             }
+
+            // Composer saves new tones here (PathInfo::SimpleSoundsPath); retail ROMs leave it to the factory C: image.
+            if (io->get_drive_entry(drive_c)) {
+                io->create_directories(u"C:\\Nokia\\Sounds\\Simple\\");
+            }
         }
 
         std::u16string temp_data_dir = u"?:\\System\\Temp\\";
