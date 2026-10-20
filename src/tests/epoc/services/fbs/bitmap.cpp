@@ -97,6 +97,49 @@ TEST_CASE("ROM palette follows the immutable DynamicPalette export", "[fbs],[pal
     }
 }
 
+TEST_CASE("ROM palette follows the default scheme of a switching DynamicPalette", "[fbs],[palette]") {
+    constexpr std::uint32_t base = 0x50540bd8;
+    std::vector<std::uint8_t> code(64 + sizeof(epoc::palette_256));
+    const auto put16 = [&](std::size_t offset, std::uint16_t value) {
+        std::memcpy(code.data() + offset, &value, sizeof(value));
+    };
+    const auto put = [&](std::size_t offset, std::uint32_t value) {
+        std::memcpy(code.data() + offset, &value, sizeof(value));
+    };
+    // N-Gage DefaultColor256Util: LSL r0,#2; LDR r1,=jt; ADD r0,r1; LDR r0,[r0]; MOV pc,r0.
+    put16(0, 0x0080);
+    put16(2, 0x4902);
+    put16(4, 0x1840);
+    put16(6, 0x6800);
+    put16(8, 0x4687);
+    put(12, base + 16);
+    put(16, base + 24);
+    put(20, base + 32);
+    put16(24, 0x4800);
+    put(28, base + 64);
+    put16(40, 0x602e);
+    auto expected = epoc::color_256_palette_old;
+    expected[237] = 0x7b9484;
+    std::memcpy(code.data() + 64, expected.data(), sizeof(expected));
+    const auto read = [&] {
+        return epoc::read_rom_palette_256(code.data(), code.size(), base, base | 1, (base + 40) | 1);
+    };
+
+    SECTION("uses scheme 0") {
+        const auto palette = read();
+        REQUIRE(palette);
+        REQUIRE(*palette == expected);
+    }
+    SECTION("rejects a scheme entry that does not load a table") {
+        put16(24, 0);
+        REQUIRE_FALSE(read());
+    }
+    SECTION("rejects a jump table outside the image") {
+        put(12, base + static_cast<std::uint32_t>(code.size()));
+        REQUIRE_FALSE(read());
+    }
+}
+
 TEST_CASE("ROM GDI palette follows the indexed colour lookup", "[fbs],[palette]") {
     constexpr std::uint32_t base = 0x5018975c;
     std::vector<std::uint32_t> code{0xe59f300c, 0xe1a00100, 0xe2000fff, 0xe7930000, 0xe12fff1e, base + 24};
