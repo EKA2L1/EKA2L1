@@ -39,7 +39,6 @@ static const TInt KToneOpenerPriority = KOpenerPriority + 1;
 
 CMMFMdaAudioOpenComplete::CMMFMdaAudioOpenComplete()
     : CIdle(KOpenerPriority)
-    , iIsFixup(EFalse)
     , iTarget(NULL)
     , iIsTone(EFalse)
     , iTargetState(EMdaStateReady)
@@ -49,7 +48,6 @@ CMMFMdaAudioOpenComplete::CMMFMdaAudioOpenComplete()
 }
 
 CMMFMdaAudioOpenComplete::~CMMFMdaAudioOpenComplete() {
-    iIsFixup = EFalse;
     Deque();
 }
 
@@ -134,19 +132,9 @@ void CMMFMdaAudioOpenComplete::Open(CMMFMdaAudioToneUtility *aUtil) {
 }
 
 void CMMFMdaAudioOpenComplete::FixupActiveStatus() {
-    iIsFixup = ETrue;
-
+    // CIdle::Start already completed the request; Cancel() consumes that signal, so completing again would leave a stray.
     if (IsActive()) {
         Cancel();
-    }
-
-    iIsFixup = EFalse;
-}
-
-void CMMFMdaAudioOpenComplete::DoCancel() {
-    if (iIsFixup) {
-        TRequestStatus *statusPointer = &iStatus;
-        User::RequestComplete(statusPointer, KErrCancel);
     }
 }
 
