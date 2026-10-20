@@ -53,6 +53,42 @@ TEST_CASE("nokia_tone_rejects_other_formats", "[tone]") {
     REQUIRE(!parse_nokia_tone_sequence(sqnc, sizeof(sqnc), program));
 }
 
+TEST_CASE("smart_messaging_ringtone_composer_tune", "[tone]") {
+    // N-Gage Composer's "Tune 1": C E G C quarter notes, 160 bpm, scale-2, natural style, Unicode title.
+    const std::uint8_t tune[] = { 0x03, 0x4A, 0x44, 0x3A, 0x58, 0x01, 0x50, 0x01, 0xD4, 0x01, 0xB8, 0x01, 0x94, 0x00, 0x80,
+        0x00, 0xC4, 0x04, 0x00, 0x0F, 0x20, 0x96, 0x11, 0x41, 0x54, 0x18, 0x41, 0x14, 0x00, 0x00 };
+    tone_program program;
+
+    REQUIRE(parse_smart_messaging_ringtone(tune, sizeof(tune), program));
+    REQUIRE(program.size() == 8);
+    REQUIRE(program[0].frequency_one == 523);
+    REQUIRE(program[2].frequency_one == 659);
+    REQUIRE(program[4].frequency_one == 784);
+    REQUIRE(program[1].frequency_one == 0);
+    REQUIRE(tone_program_duration_us(program, 0, 0) == 1500000);
+}
+
+TEST_CASE("smart_messaging_ringtone_pattern_loops_and_reuse", "[tone]") {
+    // Temporary song: pattern A looped once more holding a legato whole-note A, then A replayed by reference.
+    const std::uint8_t tune[] = { 0x01, 0x4A, 0x01, 0x3A, 0x80, 0x80, 0x20, 0x4D, 0x34, 0x00, 0x00, 0x00, 0x00 };
+    tone_program program;
+
+    REQUIRE(parse_smart_messaging_ringtone(tune, sizeof(tune), program));
+    REQUIRE(program.size() == 4);
+    REQUIRE(program[0].kind == tone_instruction::LOOP_START);
+    REQUIRE(program[0].loop_count == 2);
+    REQUIRE(program[1].frequency_one == 880);
+    REQUIRE(program[1].duration_us == 1500000);
+    REQUIRE(tone_program_duration_us(program, 0, 0) == 4500000);
+}
+
+TEST_CASE("smart_messaging_ringtone_needs_ringing_tone_programming", "[tone]") {
+    const std::uint8_t tune[] = { 0x01, 0x3A, 0x80, 0x40 };
+    tone_program program;
+
+    REQUIRE(!parse_smart_messaging_ringtone(tune, sizeof(tune), program));
+}
+
 TEST_CASE("tone_repeats_add_trailing_silence_to_every_pass", "[tone]") {
     const tone_program program = make_tone_program(440, 0, 100000);
 

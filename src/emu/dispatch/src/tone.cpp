@@ -182,6 +182,222 @@ namespace eka2l1::dispatch {
         return true;
     }
 
+    bool parse_smart_messaging_ringtone(const std::uint8_t *data, const std::size_t size, tone_program &program) {
+        if (!data || (size == 0)) {
+            return false;
+        }
+
+        std::size_t bit = 0;
+        const auto read = [&](const std::uint32_t count, std::uint32_t &value) {
+            if (bit + count > size * 8) {
+                return false;
+            }
+
+            value = 0;
+            for (std::uint32_t i = 0; i < count; i++, bit++) {
+                value = (value << 1) | ((data[bit / 8] >> (7 - bit % 8)) & 1);
+            }
+
+            return true;
+        };
+
+        static constexpr std::uint32_t BEATS_PER_MINUTE[] = { 25, 28, 31, 35, 40, 45, 50, 56, 63, 70, 80, 90, 100, 112,
+            125, 140, 160, 180, 200, 225, 250, 285, 320, 355, 400, 450, 500, 565, 635, 715, 800, 900 };
+
+        // Defaults from the smart messaging specification: scale-2 (A = 880 Hz), natural style, 160 bpm.
+        std::uint32_t scale = 1;
+        std::uint32_t style = 0;
+        std::uint32_t tempo = 16;
+
+        const auto read_pattern = [&](const std::uint32_t count, tone_program &pattern) {
+            for (std::uint32_t i = 0; i < count; i++) {
+                std::uint32_t id = 0;
+                std::uint32_t value = 0;
+
+                if (!read(3, id)) {
+                    return false;
+                }
+
+                switch (id) {
+                case 1: {
+                    std::uint32_t length = 0;
+                    std::uint32_t specifier = 0;
+
+                    if (!read(4, value) || !read(3, length) || !read(2, specifier)) {
+                        return false;
+                    }
+
+                    // A whole note is four beats; dotted, double dotted and triplet scale it by 3/2, 7/4 and 2/3.
+                    static constexpr std::uint32_t SPECIFIER_NUMERATOR[] = { 1, 3, 7, 2 };
+                    static constexpr std::uint32_t SPECIFIER_DENOMINATOR[] = { 1, 2, 4, 3 };
+
+                    const std::uint64_t duration_us = 240000000ULL * SPECIFIER_NUMERATOR[specifier]
+                        / (BEATS_PER_MINUTE[tempo] * (1ULL << std::min<std::uint32_t>(length, 5)) * SPECIFIER_DENOMINATOR[specifier]);
+
+                    std::uint32_t frequency = 0;
+                    if ((value >= 1) && (value <= 12)) {
+                        frequency = static_cast<std::uint32_t>(std::lround(440.0 * (1 << scale)
+                            * std::pow(2.0, (static_cast<double>(value) - 10.0) / 12.0)));
+                    }
+
+                    // Gap lengths for natural and staccato are approximations; legato plays the note through.
+                    const std::uint64_t sounding_us = (style == 1) ? duration_us : ((style == 2) ? duration_us / 2 : duration_us * 7 / 8);
+
+                    pattern.push_back(make_tone(frequency, 0, sounding_us));
+                    if (sounding_us != duration_us) {
+                        pattern.push_back(make_tone(0, 0, duration_us - sounding_us));
+                    }
+
+                    break;
+                }
+
+                case 2:
+                    if (!read(2, scale)) {
+                        return false;
+                    }
+
+                    break;
+
+                case 3:
+                    if (!read(2, style)) {
+                        return false;
+                    }
+
+                    break;
+
+                case 4:
+                    if (!read(5, tempo)) {
+                        return false;
+                    }
+
+                    break;
+
+                case 5:
+                    if (!read(4, value)) {
+                        return false;
+                    }
+
+                    break;
+
+                default:
+                    return false;
+                }
+            }
+
+            return true;
+        };
+
+        const auto read_song = [&](tone_program &song) {
+            tone_program patterns[4];
+            std::uint32_t pattern_count = 0;
+
+            if (!read(8, pattern_count)) {
+                return false;
+            }
+
+            for (std::uint32_t i = 0; i < pattern_count; i++) {
+                std::uint32_t header = 0;
+                std::uint32_t id = 0;
+                std::uint32_t loop = 0;
+                std::uint32_t instruction_count = 0;
+
+                if (!read(3, header) || (header != 0) || !read(2, id) || !read(4, loop) || !read(8, instruction_count)) {
+                    return false;
+                }
+
+                // An instruction count of zero replays the pattern defined earlier under the same id.
+                if (instruction_count != 0) {
+                    patterns[id].clear();
+                    if (!read_pattern(instruction_count, patterns[id])) {
+                        return false;
+                    }
+                }
+
+                if (loop != 0) {
+                    tone_instruction start;
+                    start.kind = tone_instruction::LOOP_START;
+                    start.loop_count = (loop == 15) ? 0 : loop + 1;
+
+                    song.push_back(start);
+                }
+
+                song.insert(song.end(), patterns[id].begin(), patterns[id].end());
+
+                if (loop != 0) {
+                    tone_instruction end;
+                    end.kind = tone_instruction::LOOP_END;
+
+                    song.push_back(end);
+                }
+            }
+
+            return true;
+        };
+
+        bool programming = false;
+        bool unicode = false;
+        bool has_song = false;
+        tone_program parsed;
+
+        std::uint32_t command_count = 0;
+        while (read(8, command_count) && (command_count != 0)) {
+            for (std::uint32_t i = 0; i < command_count; i++) {
+                std::uint32_t command = 0;
+                if (!read(7, command)) {
+                    return false;
+                }
+
+                if (command == 0x25) {
+                    programming = true;
+                } else if (command == 0x22) {
+                    unicode = true;
+                } else if (command == 0x05) {
+                    std::uint32_t cancelled = 0;
+                    if (!read(7, cancelled)) {
+                        return false;
+                    }
+
+                    if (cancelled == 0x22) {
+                        unicode = false;
+                    }
+                } else if (command == 0x1D) {
+                    std::uint32_t song_type = 0;
+                    if (!programming || !read(3, song_type)) {
+                        return false;
+                    }
+
+                    // Basic songs carry a title, temporary ones do not.
+                    if (song_type == 1) {
+                        std::uint32_t title_length = 0;
+                        if (!read(4, title_length) || (bit + title_length * (unicode ? 16 : 8) > size * 8)) {
+                            return false;
+                        }
+
+                        bit += title_length * (unicode ? 16 : 8);
+                    }
+
+                    if ((song_type == 1) || (song_type == 2)) {
+                        if (!read_song(parsed)) {
+                            return false;
+                        }
+
+                        has_song = true;
+                    }
+                }
+
+                // Every command part is padded with filler bits to the next byte.
+                bit = (bit + 7) & ~std::size_t(7);
+            }
+        }
+
+        if (!has_song) {
+            return false;
+        }
+
+        program = std::move(parsed);
+        return true;
+    }
+
     bool make_dtmf_tone_program(const std::u16string &digits, const std::int64_t tone_on_us,
         const std::uint64_t tone_off_us, const std::uint64_t pause_us, tone_program &program) {
         tone_program built;
