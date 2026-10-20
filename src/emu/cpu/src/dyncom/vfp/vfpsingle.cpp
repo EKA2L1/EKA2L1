@@ -600,7 +600,7 @@ static std::uint32_t vfp_single_fsito(ARMul_State *state, int sd, std::int32_t u
 
     vs.sign = (m & 0x80000000) >> 16;
     vs.exponent = 127 + 31 - 1;
-    vs.significand = vs.sign ? -m : m;
+    vs.significand = vs.sign ? (0u - static_cast<std::uint32_t>(m)) : static_cast<std::uint32_t>(m);
 
     return vfp_single_normaliseround(state, sd, &vs, fpscr, 0, "fsito");
 }
