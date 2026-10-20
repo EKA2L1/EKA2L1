@@ -27,6 +27,8 @@
 #include <loader/mbm.h>
 
 namespace eka2l1::loader {
+    static constexpr std::uint32_t ROM_BITMAP_COMPRESSION_BASE = 50;
+
     bool sbm_header::internalize(common::ro_stream &stream) {
         std::uint64_t total_read = 0;
         total_read += stream.read(&bitmap_size, sizeof(std::uint32_t));
@@ -100,6 +102,11 @@ namespace eka2l1::loader {
 
             if (!sbm_headers[index].internalize(*stream)) {
                 return false;
+            }
+
+            // ROM bitmaps are stored as in-memory CBitwiseBitmaps, whose RLE types are offset by 50.
+            if (is_rom_version && (sbm_headers[index].compression >= ROM_BITMAP_COMPRESSION_BASE)) {
+                sbm_headers[index].compression -= ROM_BITMAP_COMPRESSION_BASE;
             }
 
             return true;
