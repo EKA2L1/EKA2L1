@@ -47,7 +47,6 @@ struct CMMFMdaAudioToneUtility;
 
 struct CMMFMdaAudioOpenComplete : public CIdle {
 protected:
-    TBool iIsFixup;
     TAny *iTarget;
     TBool iIsTone;
     TMdaState iTargetState;
@@ -73,7 +72,6 @@ public:
     void FlushNotify();
     void DiscardNotify();
 
-    virtual void DoCancel();
     void CompleteOpen();
 };
 
