@@ -341,6 +341,7 @@ namespace eka2l1::dispatch {
         GL_GENERATE_MIPMAP_EMU = 0x8191,
         GL_REPEAT_EMU = 0x2901,
         GL_CLAMP_TO_EDGE_EMU = 0x812F,
+        GL_DEPTH_COMPONENT_EMU = 0x1902,
         GL_DEPTH_COMPONENT16_EMU = 0x81A5,
         GL_BYTE_EMU = 0x1400,
         GL_SHORT_EMU = 0x1402,

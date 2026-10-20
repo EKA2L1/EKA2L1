@@ -1604,6 +1604,11 @@ namespace eka2l1 {
                     one_mode_only = true;
                 }
 
+                // WSERV takes "-1 -1" (dynamic) and "0 0" (HAL default) as the screen device size.
+                if (((scr_mode.size.x == -1) && (scr_mode.size.y == -1)) || ((scr_mode.size.x == 0) && (scr_mode.size.y == 0))) {
+                    scr_mode.size = default_screen_size;
+                }
+
                 current_mode_str = std::to_string(total_mode);
 
                 scr_mode.disp_mode = scr_mode_global;

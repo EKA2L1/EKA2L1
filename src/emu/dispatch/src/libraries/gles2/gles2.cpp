@@ -2001,6 +2001,11 @@ APPLY_PENDING_ROUTES:
             return;
         }
 
+        // Symbian's reference GLES2 passes the unsized format to the host; 16-bit is the closest we support.
+        if (internal_format == GL_DEPTH_COMPONENT_EMU) {
+            internal_format = GL_DEPTH_COMPONENT16_EMU;
+        }
+
         gles_renderbuffer_object *rb_obj = reinterpret_cast<gles_renderbuffer_object*>(obj->get());
         const std::uint32_t err = rb_obj->make_storage(sys->get_graphics_driver(), eka2l1::vec2(width, height), internal_format);
 
