@@ -62,7 +62,7 @@ namespace libuv {
 
     inline void close_and_delete_async(uv_async_t *async) {
         uv_close(reinterpret_cast<uv_handle_t *>(async), [](uv_handle_t *handle) {
-            delete handle;
+            delete reinterpret_cast<uv_async_t *>(handle);
         });
     }
 

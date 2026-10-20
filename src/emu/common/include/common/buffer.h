@@ -48,6 +48,8 @@ namespace eka2l1 {
 
         class basic_stream {
         public:
+            virtual ~basic_stream() = default;
+
             virtual void seek(const std::int64_t amount, seek_where wh) = 0;
             virtual bool valid() = 0;
             virtual std::uint64_t left() = 0;
