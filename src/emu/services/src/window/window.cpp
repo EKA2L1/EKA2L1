@@ -2634,7 +2634,7 @@ namespace eka2l1 {
     }
 
     epoc::bitwise_bitmap *window_server::get_bitmap(const std::uint32_t h) {
-        fbsbitmap *bmp = get_fbs_server()->get<fbsbitmap>(h);
+        fbsbitmap *bmp = get_raw_fbsbitmap(h);
         if (bmp) {
             bmp = bmp->final_clean();
             return bmp->bitmap_;
@@ -2644,7 +2644,12 @@ namespace eka2l1 {
     }
 
     fbsbitmap *window_server::get_raw_fbsbitmap(const std::uint32_t h) {
-        return get_fbs_server()->get<fbsbitmap>(h);
+        fbs_server *fbss = get_fbs_server();
+        if (fbsbitmap *bmp = fbss->get<fbsbitmap>(h)) {
+            return bmp;
+        }
+
+        return fbss->get_rom_bitmap(h);
     }
 
     void window_server::set_keyboard_repeat_rate(const std::uint64_t initial_time, const std::uint64_t next_time) {

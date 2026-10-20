@@ -372,6 +372,7 @@ namespace eka2l1 {
         std::u16string default_system_font;
 
         std::unordered_map<fbsbitmap_cache_info, fbsbitmap *> shared_bitmaps;
+        std::unordered_map<address, fbsbitmap *> rom_bitmaps_;
 
         std::unique_ptr<epoc::chunk_allocator> shared_chunk_allocator;
         std::unique_ptr<epoc::chunk_allocator> large_chunk_allocator;
@@ -448,6 +449,16 @@ namespace eka2l1 {
          */
         fbsbitmap *create_bitmap(fbs_bitmap_data_info &info, const bool alloc_data = true, const bool support_current_display_mod_flag = true,
             const bool support_dirty = true);
+
+        /**
+         * \brief   Get the bitmap a client uses in place from ROM.
+         *
+         * CFbsBitmap::Handle() of such a bitmap is the address of its CBitwiseBitmap,
+         * which the server and the window server must accept like a normal handle.
+         *
+         * \returns The bitmap, or nullptr if the address is not a ROM bitmap.
+         */
+        fbsbitmap *get_rom_bitmap(const address addr);
 
         /**
          * \brief   Turn an NVG extended bitmap into a plain raster one, in place.
