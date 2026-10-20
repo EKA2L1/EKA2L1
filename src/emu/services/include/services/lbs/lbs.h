@@ -43,6 +43,7 @@ namespace eka2l1 {
 
     struct lbs_positioner {
         std::uint64_t id_;
+        std::uint32_t module_id_;
         lbs_update_options options_;
 
         std::unique_ptr<service::ipc_context> update_msg_;
@@ -53,7 +54,7 @@ namespace eka2l1 {
     };
 
     /**
-     * @brief Location server (PosServer, !PosServer from Symbian^3) exposing the host location as one GPS module.
+     * @brief Location server (PosServer, !PosServer from Symbian^3) exposing the host location through GPS and network modules.
      *
      * Without a host fix, requests complete like a GPS receiver searching for satellites: partial
      * updates carrying only a timestamp, or KErrTimedOut when the client does not accept them.
@@ -82,7 +83,7 @@ namespace eka2l1 {
 
         void connect(service::ipc_context &context) override;
 
-        std::unique_ptr<lbs_positioner> new_positioner();
+        std::unique_ptr<lbs_positioner> new_positioner(const std::uint32_t module_id);
         void close_positioner(lbs_positioner *positioner);
 
         void start_location();
