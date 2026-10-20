@@ -230,11 +230,11 @@ namespace eka2l1::epoc::internet {
             if (protocol_ == INET_TCP_PROTOCOL_ID) {
                 looper_->one_shot([opaque_handle_copy = this->opaque_handle_] {
                     if (uv_tcp_close_reset(reinterpret_cast<uv_tcp_t *>(opaque_handle_copy), [](uv_handle_t *handle) {
-                            delete handle;
+                            delete reinterpret_cast<uv_tcp_t *>(handle);
                         })
                         < 0) {
                         uv_close(reinterpret_cast<uv_handle_t*>(opaque_handle_copy), [](uv_handle_t *handle) {
-                            delete handle;
+                            delete reinterpret_cast<uv_tcp_t *>(handle);
                         });
                     }
                 });
@@ -244,7 +244,7 @@ namespace eka2l1::epoc::internet {
                     uv_udp_recv_stop(udp_h);
 
                     uv_close(reinterpret_cast<uv_handle_t*>(udp_h), [](uv_handle_t *handle) {
-                        delete handle;
+                        delete reinterpret_cast<uv_udp_t *>(handle);
                     });
                 });
             }
