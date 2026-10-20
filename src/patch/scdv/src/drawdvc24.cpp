@@ -46,13 +46,7 @@ void CFbsTwentyfourBitDrawDevice::ReadLineRaw(TInt aX, TInt aY, TInt aLength, TA
     if (aX + aLength > LongWidth())
         PanicAtTheEndOfTheWorld();
 
-    TUint8 *pixelStart = GetPixelStartAddress(aX, aY);
-    TInt iterator = 0;
-
-    while (iterator < aLength) {
-        Mem::Copy(reinterpret_cast<TUint8 *>(aBuffer) + iterator * 3, pixelStart, 3);
-        pixelStart += 3;
-    }
+    Mem::Copy(aBuffer, GetPixelStartAddress(aX, aY), aLength * 3);
 }
 
 void CFbsTwentyfourBitDrawDevice::WriteRgbToAddress(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, CGraphicsContext::TDrawMode aDrawMode) {
