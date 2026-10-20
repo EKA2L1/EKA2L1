@@ -31,13 +31,7 @@ void CFbsDrawDeviceByteBuffer::ReadLineRaw(TInt aX, TInt aY, TInt aLength, TAny 
     if (aX + aLength > LongWidth())
         PanicAtTheEndOfTheWorld();
 
-    TUint8 *pixelStart = GetPixelStartAddress(aX, aY);
-    TInt iterator = 0;
-
-    while (iterator < aLength) {
-        Mem::Copy(reinterpret_cast<TUint8 *>(aBuffer) + iterator * iByteCount, pixelStart, 2);
-        pixelStart += iByteCount;
-    }
+    Mem::Copy(aBuffer, GetPixelStartAddress(aX, aY), aLength * iByteCount);
 }
 
 void CFbsDrawDeviceByteBuffer::WriteRgb(TInt aX, TInt aY, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode) {

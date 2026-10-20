@@ -49,13 +49,7 @@ void CFbsThirtyTwoBitsDrawDevice::ReadLineRaw(TInt aX, TInt aY, TInt aLength, TA
     if (aX + aLength > LongWidth())
         PanicAtTheEndOfTheWorld();
 
-    TUint8 *pixelStart = GetPixelStartAddress(aX, aY);
-    TInt iterator = 0;
-
-    while (iterator < aLength) {
-        Mem::Copy(reinterpret_cast<TUint8 *>(aBuffer) + iterator * 4, pixelStart, 4);
-        pixelStart += 4;
-    }
+    Mem::Copy(aBuffer, GetPixelStartAddress(aX, aY), aLength * 4);
 }
 
 // Write functions
