@@ -43,6 +43,9 @@ namespace eka2l1::dispatch {
     // The Nokia tone sequence bytecode carried by Avkon sound resources (AvkonSystemSounds.ra).
     bool parse_nokia_tone_sequence(const std::uint8_t *data, const std::size_t size, tone_program &program);
 
+    // A Nokia smart messaging ringing tone, the .rng/OTA format written by Composer.
+    bool parse_smart_messaging_ringtone(const std::uint8_t *data, const std::size_t size, tone_program &program);
+
     // A negative tone-on length plays the first digit until stopped (KMdaInfiniteDurationDTMFToneOnLength).
     bool make_dtmf_tone_program(const std::u16string &digits, const std::int64_t tone_on_us,
         const std::uint64_t tone_off_us, const std::uint64_t pause_us, tone_program &program);

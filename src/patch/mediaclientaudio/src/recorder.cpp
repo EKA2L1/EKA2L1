@@ -138,6 +138,10 @@ void CMdaAudioRecorderUtility::OpenL(TMdaClipLocation *aLocation, TMdaClipFormat
             auEncodingCC = KMMFFourCCCodeIMAD;
             break;
 
+        case KUidMdaRawAmrCodecDefine:
+            auEncodingCC = KMMFFourCCCodeAMR;
+            break;
+
         case KUidMdaWavPcmCodecDefine: {
             TMdaPcmWavCodec *pcmCodec = reinterpret_cast<TMdaPcmWavCodec *>(aArg1);
 

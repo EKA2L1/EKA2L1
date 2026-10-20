@@ -1487,7 +1487,8 @@ namespace eka2l1::dispatch {
     }
 
     static void set_tone_sequence(dsp_epoc_tone *tone, const std::uint8_t *data, const std::size_t size) {
-        if (!parse_nokia_tone_sequence(data, size, tone->program_)) {
+        if (!parse_nokia_tone_sequence(data, size, tone->program_)
+            && !parse_smart_messaging_ringtone(data, size, tone->program_)) {
             // Kept playable for the guest's sake: it completes at once, silently.
             LOG_WARN(HLE_AUD, "Tone sequence format not supported ({} bytes), it will play as silence", size);
             tone->program_.clear();

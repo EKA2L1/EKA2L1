@@ -1798,7 +1798,6 @@ namespace eka2l1::ios {
         return NO;
     }
     eka2l1::epoc::apa::command_line cmdline;
-    cmdline.launch_cmd_ = eka2l1::epoc::apa::command_create;
 
     eka2l1::kernel::uid launched_thread_id = 0;
     const std::uint64_t generation = ++_state->launch_generation;

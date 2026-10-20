@@ -664,6 +664,7 @@
 76 57           ; SetBalanceL__20CMdaAudioToneUtilityi
 
 [epoc6]
+73 1            ; NewL__20CMdaAudioToneUtilityR21MMdaAudioToneObserverP10CMdaServer
 16 2            ; NewDesPlayerReadOnlyL__22CMdaAudioPlayerUtilityRC6TDesC8R23MMdaAudioPlayerCallbacki22TMdaPriorityPreferenceP10CMdaServer
 17 3            ; NewFilePlayerL__22CMdaAudioPlayerUtilityRC7TDesC16R23MMdaAudioPlayerCallbacki22TMdaPriorityPreferenceP10CMdaServer
 15 4            ; NewDesPlayerL__22CMdaAudioPlayerUtilityRC6TDesC8R23MMdaAudioPlayerCallbacki22TMdaPriorityPreferenceP10CMdaServer

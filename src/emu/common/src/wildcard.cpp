@@ -23,41 +23,44 @@
 #include <common/cvt.h>
 #include <re2/re2.h>
 
+#include <string_view>
+#include <type_traits>
+
 namespace eka2l1::common {
-    template <>
-    std::basic_string<char> wildcard_to_regex_string(std::basic_string<char> regexstr, bool case_sensitive) {
-        regexstr = replace_all<char>(regexstr, "\\", "\\\\");
-        regexstr = replace_all<char>(regexstr, ".", std::string("\\") + ".");
-        regexstr = replace_all<char>(regexstr, "?", ".");
-        regexstr = replace_all<char>(regexstr, "*", ".*");
-        regexstr = replace_all<char>(regexstr, "[", "\\[");
-        regexstr = replace_all<char>(regexstr, "]", "\\]");
-        regexstr = replace_all<char>(regexstr, "{", "\\{");
-        regexstr = replace_all<char>(regexstr, "}", "\\}");
+    template <typename T>
+    static std::basic_string<T> wildcard_to_regex_string_impl(const std::basic_string<T> &wildcard, bool case_sensitive) {
+        static constexpr std::string_view REGEX_SPECIALS = "\\.^$|()[]{}+";
+        std::basic_string<T> regexstr;
 
         if (!case_sensitive) {
-            regexstr.insert(0, "(?i)");
+            regexstr += {T('('), T('?'), T('i'), T(')')};
+        }
+
+        for (const T c : wildcard) {
+            if (c == T('*')) {
+                regexstr += {T('.'), T('*')};
+            } else if (c == T('?')) {
+                regexstr += T('.');
+            } else {
+                if ((static_cast<std::make_unsigned_t<T>>(c) < 0x80) && (REGEX_SPECIALS.find(static_cast<char>(c)) != std::string_view::npos)) {
+                    regexstr += T('\\');
+                }
+
+                regexstr += c;
+            }
         }
 
         return regexstr;
     }
 
     template <>
+    std::basic_string<char> wildcard_to_regex_string(std::basic_string<char> regexstr, bool case_sensitive) {
+        return wildcard_to_regex_string_impl(regexstr, case_sensitive);
+    }
+
+    template <>
     std::basic_string<wchar_t> wildcard_to_regex_string(std::basic_string<wchar_t> regexstr, bool case_sensitive) {
-        regexstr = replace_all<wchar_t>(regexstr, L"\\", L"\\\\");
-        regexstr = replace_all<wchar_t>(regexstr, L".", std::wstring(L"\\") + L".");
-        regexstr = replace_all<wchar_t>(regexstr, L"?", L".");
-        regexstr = replace_all<wchar_t>(regexstr, L"*", L".*");
-        regexstr = replace_all<wchar_t>(regexstr, L"[", L"\\[");
-        regexstr = replace_all<wchar_t>(regexstr, L"]", L"\\]");
-        regexstr = replace_all<wchar_t>(regexstr, L"{", L"\\{");
-        regexstr = replace_all<wchar_t>(regexstr, L"}", L"\\}");
-
-        if (!case_sensitive) {
-            regexstr.insert(0, L"(?i)");
-        }
-
-        return regexstr;
+        return wildcard_to_regex_string_impl(regexstr, case_sensitive);
     }
 
     bool full_wildcard_match_impl(const std::string &reference, const std::string &match_pattern,

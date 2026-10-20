@@ -142,7 +142,6 @@ namespace eka2l1::android {
         apa_app_registry *reg = alserv->get_registration(uid);
 
         epoc::apa::command_line cmdline;
-        cmdline.launch_cmd_ = epoc::apa::command_create;
 
         kern->lock();
         alserv->launch_app(*reg, cmdline, nullptr, [&](kernel::process *pr) {

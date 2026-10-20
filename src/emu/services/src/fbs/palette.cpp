@@ -29,21 +29,47 @@ namespace eka2l1::epoc {
             return read_rom_data(code, size, code_address, address, out, count);
         };
 
-        // Only immutable palettes are safe to cache: the setter must immediately return.
-        if (setter & 1) {
+        const auto read_thumb = [&](const std::uint64_t address) -> std::optional<std::uint16_t> {
             std::uint16_t op;
-            if (!read(setter & ~1U, &op, sizeof(op)) || op != 0x4770) {
-                return std::nullopt;
-            }
+            return read(address, &op, sizeof(op)) ? std::optional<std::uint16_t>(op) : std::nullopt;
+        };
+
+        bool immutable = false;
+        if (setter & 1) {
+            immutable = read_thumb(setter & ~1U) == 0x4770;
         } else {
             std::uint32_t op;
-            if (!read(setter, &op, sizeof(op)) || (op != 0xe12fff1e && op != 0xe1a0f00e)) {
-                return std::nullopt;
-            }
+            immutable = read(setter, &op, sizeof(op)) && (op == 0xe12fff1e || op == 0xe1a0f00e);
         }
 
         std::uint64_t literal;
-        if (getter & 1) {
+        if (!immutable) {
+            // S60 1.x/2.x getters switch on the Settings colour scheme: LSL #2; LDR r1,=jt; ADD; LDR; MOV pc.
+            // Scheme 0 is the boot default and the out-of-range fallback; later scheme changes are not tracked.
+            if (!(getter & 1)) {
+                return std::nullopt;
+            }
+            std::optional<std::uint64_t> target;
+            for (std::uint64_t pc = getter & ~1U; pc < (getter & ~1U) + 96 && !target; pc += 2) {
+                const auto load_table = read_thumb(pc + 2);
+                if (read_thumb(pc) != 0x0080 || !load_table || (*load_table & 0xff00) != 0x4900
+                    || read_thumb(pc + 4) != 0x1840 || read_thumb(pc + 6) != 0x6800 || read_thumb(pc + 8) != 0x4687) {
+                    continue;
+                }
+                std::uint32_t jump_table;
+                std::uint32_t scheme_zero;
+                if (!read(((pc + 6) & ~3ULL) + (*load_table & 0xff) * 4, &jump_table, sizeof(jump_table))
+                    || !read(jump_table, &scheme_zero, sizeof(scheme_zero))) {
+                    return std::nullopt;
+                }
+                target = scheme_zero & ~1U;
+            }
+            const auto load_palette = target ? read_thumb(*target) : std::nullopt;
+            if (!load_palette || (*load_palette & 0xff00) != 0x4800) {
+                return std::nullopt;
+            }
+            literal = ((*target + 4) & ~3ULL) + (*load_palette & 0xff) * 4;
+        } else if (getter & 1) {
             std::uint16_t ops[2];
             if (!read(getter & ~1U, ops, sizeof(ops)) || (ops[0] & 0xff00) != 0x4800 || ops[1] != 0x4770) {
                 return std::nullopt;
