@@ -31,6 +31,7 @@
 #include <common/types.h>
 
 #include <scripting/cpu.h>
+#include <scripting/mem.h>
 #include <scripting/manager.h>
 
 #include <kernel/libmanager.h>
@@ -127,6 +128,13 @@ namespace eka2l1::manager {
         }
     }
 
+    // --- Let's Create! Pottery (Infinite Dreams) startup fix (pottery_startup_fix.lua) ---
+    // CIrrDeviceSymbian never initializes its Close flag, so run() reports the device as
+    // closed whenever the reused heap cell holds a nonzero byte there and nothing is drawn.
+    static void pottery_clear_device_close_flag() {
+        scripting::write_byte(scripting::cpu::get_register(0) + 0xB4, 0);
+    }
+
     void scripts::register_builtin_patches() {
         // The kernel-level hooks must be live for breakpoints to fire.
         register_kernel_hooks();
@@ -195,6 +203,8 @@ namespace eka2l1::manager {
 
         register_breakpoint("cboxapp_0x20041fae.exe", 0x956B, 0, 0x20041FAE, 0xCB7985E9, wave_skip_unstarted_animation_refresh);
         register_breakpoint("cboxapp_0x20041fae.exe", 0x1D44F, 0, 0x20041FAE, 0xCB7985E9, wave_skip_zero_fire_period);
+
+        register_breakpoint("pottery.exe", 0x187410, 0, 0x20042DDE, 0x58A29E91, pottery_clear_device_close_flag);
 
         current_module = nullptr;
 
