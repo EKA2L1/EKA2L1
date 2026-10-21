@@ -661,14 +661,16 @@ namespace eka2l1 {
         }
 
         template <typename T>
-        T *get_by_name_and_type(const std::string &name, const kernel::object_type obj_type) {
+        T *get_by_name_and_type(const std::string &name, const kernel::object_type obj_type, const bool ignore_case = false) {
             switch (obj_type) {
 #define OBJECT_SEARCH(obj_type, obj_map)                                               \
     case kernel::object_type::obj_type: {                                              \
         auto res = std::find_if(obj_map.begin(), obj_map.end(), [&](const auto &rhs) { \
             std::string the_full_name;                                                 \
             rhs->full_name(the_full_name);                                             \
-            return the_full_name == name;                                              \
+            return ignore_case                                                        \
+                ? common::compare_ignore_case(the_full_name.c_str(), name.c_str()) == 0  \
+                : the_full_name == name;                                               \
         });                                                                            \
         if (res == obj_map.end())                                                      \
             return nullptr;                                                            \
