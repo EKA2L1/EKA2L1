@@ -79,7 +79,26 @@ namespace eka2l1 {
         constexpr std::int32_t POSITION_PARTIAL_UPDATE = 2;
 
         constexpr std::uint32_t MODULE_UID = 0x2000EA21;
-        constexpr char16_t MODULE_NAME[] = u"EKA2L1 GPS";
+        struct lbs_module {
+            std::uint32_t id_;
+            const char16_t *name_;
+            std::uint32_t technology_;
+        };
+
+        // Keep the default GPS module while allowing clients to select network positioning.
+        constexpr lbs_module MODULES[] = {
+            { MODULE_UID, u"EKA2L1 GPS", 0x01 },
+            { 0x2000EA22, u"EKA2L1 Network", 0x02 }
+        };
+
+        const lbs_module *find_module(const std::uint32_t id) {
+            for (const auto &module : MODULES) {
+                if (module.id_ == id) {
+                    return &module;
+                }
+            }
+            return nullptr;
+        }
 
         // A GPS receiver reports once per second whether it has a fix or not.
         constexpr std::uint64_t RECEIVER_EPOCH_US = 1000000;
@@ -136,7 +155,6 @@ namespace eka2l1 {
         constexpr std::uint32_t POSITION_UPDATE_GENERAL = 0x01;
 
         constexpr std::size_t CLASS_FAMILY_COUNT = 7;
-        constexpr std::uint32_t TECHNOLOGY_TERMINAL = 0x01;
         constexpr std::uint32_t DEVICE_INTERNAL = 0x01;
         constexpr std::uint32_t CAPABILITY_POSITION_AND_COURSE = 0x0F;
         constexpr std::uint32_t DEVICE_STATUS_READY = 6;
@@ -168,11 +186,11 @@ namespace eka2l1 {
         }
 
         // A null fix writes a partial update, which only guarantees the timestamp.
-        void write_position_info(std::vector<std::uint8_t> &info, const drivers::location_fix *fix, const std::uint64_t time) {
+        void write_position_info(std::vector<std::uint8_t> &info, const drivers::location_fix *fix, const std::uint64_t time, const std::uint32_t module_id) {
             constexpr double NAN_DOUBLE = std::numeric_limits<double>::quiet_NaN();
             constexpr float NAN_FLOAT = std::numeric_limits<float>::quiet_NaN();
 
-            put_value<std::uint32_t>(info, POSITION_INFO_MODULE_ID_OFFSET, MODULE_UID);
+            put_value<std::uint32_t>(info, POSITION_INFO_MODULE_ID_OFFSET, module_id);
             put_value<std::uint32_t>(info, POSITION_INFO_UPDATE_TYPE_OFFSET, POSITION_UPDATE_GENERAL);
 
             const std::uint32_t class_type = get_value<std::uint32_t>(info, CLASS_TYPE_OFFSET);
@@ -199,7 +217,7 @@ namespace eka2l1 {
 
         bool is_our_module(service::ipc_context *ctx) {
             std::optional<std::uint32_t> module_id = ctx->get_argument_data_from_descriptor<std::uint32_t>(0);
-            return module_id && (module_id.value() == MODULE_UID);
+            return module_id && find_module(module_id.value());
         }
     }
 
@@ -232,9 +250,10 @@ namespace eka2l1 {
         context.complete(epoc::error_none);
     }
 
-    std::unique_ptr<lbs_positioner> lbs_server::new_positioner() {
+    std::unique_ptr<lbs_positioner> lbs_server::new_positioner(const std::uint32_t module_id) {
         auto positioner = std::make_unique<lbs_positioner>();
         positioner->id_ = ++positioner_id_counter_;
+        positioner->module_id_ = module_id;
         positioners_.emplace(positioner->id_, positioner.get());
 
         return positioner;
@@ -355,7 +374,7 @@ namespace eka2l1 {
             return;
         }
 
-        write_position_info(info, fix ? &fix.value() : nullptr, kern_->universal_time());
+        write_position_info(info, fix ? &fix.value() : nullptr, kern_->universal_time(), positioner->module_id_);
 
         write_descriptor(msg.get(), 0, info);
         msg->complete(result);
@@ -406,7 +425,7 @@ namespace eka2l1 {
             break;
 
         case lbs_server_get_num_modules:
-            ctx->write_data_to_descriptor_argument<std::uint32_t>(0, 1);
+            ctx->write_data_to_descriptor_argument<std::uint32_t>(0, std::size(MODULES));
             ctx->complete(epoc::error_none);
             break;
 
@@ -530,8 +549,20 @@ namespace eka2l1 {
     }
 
     void lbs_client_session::get_module_info(service::ipc_context *ctx, const bool by_index) {
-        const bool found = by_index ? (ctx->get_argument_value<std::uint32_t>(0) == 0u) : is_our_module(ctx);
-        if (!found) {
+        const lbs_module *module = nullptr;
+        if (by_index) {
+            const auto index = ctx->get_argument_value<std::uint32_t>(0);
+            if (index && (index.value() < std::size(MODULES))) {
+                module = &MODULES[index.value()];
+            }
+        } else {
+            const auto id = ctx->get_argument_data_from_descriptor<std::uint32_t>(0);
+            if (id) {
+                module = find_module(id.value());
+            }
+        }
+
+        if (!module) {
             ctx->complete(epoc::error_not_found);
             return;
         }
@@ -542,9 +573,9 @@ namespace eka2l1 {
             return;
         }
 
-        const std::u16string name = MODULE_NAME;
+        const std::u16string name = module->name_;
 
-        put_value<std::uint32_t>(info, MODULE_INFO_MODULE_ID_OFFSET, MODULE_UID);
+        put_value<std::uint32_t>(info, MODULE_INFO_MODULE_ID_OFFSET, module->id_);
         put_value<std::uint32_t>(info, MODULE_INFO_IS_AVAILABLE_OFFSET, 1);
 
         // TBuf<KPositionMaxModuleName>: length word (type EBuf in the top bits), max length, text.
@@ -552,7 +583,7 @@ namespace eka2l1 {
         put_value<std::uint32_t>(info, MODULE_INFO_NAME_OFFSET + 4, MODULE_INFO_NAME_MAX_LENGTH);
         std::memcpy(info.data() + MODULE_INFO_NAME_OFFSET + 8, name.data(), name.length() * sizeof(char16_t));
 
-        put_value<std::uint32_t>(info, MODULE_INFO_TECHNOLOGY_OFFSET, TECHNOLOGY_TERMINAL);
+        put_value<std::uint32_t>(info, MODULE_INFO_TECHNOLOGY_OFFSET, module->technology_);
         put_value<std::uint32_t>(info, MODULE_INFO_DEVICE_LOCATION_OFFSET, DEVICE_INTERNAL);
         put_value<std::uint32_t>(info, MODULE_INFO_CAPABILITIES_OFFSET, CAPABILITY_POSITION_AND_COURSE);
 
@@ -604,7 +635,9 @@ namespace eka2l1 {
         }
 
         const std::uint32_t handle = ++handle_counter_;
-        positioners_.emplace(handle, server<lbs_server>()->new_positioner());
+        const std::uint32_t module_id = by_module_id
+            ? ctx->get_argument_data_from_descriptor<std::uint32_t>(0).value() : MODULE_UID;
+        positioners_.emplace(handle, server<lbs_server>()->new_positioner(module_id));
 
         ctx->write_data_to_descriptor_argument<std::uint32_t>(3, handle);
         ctx->complete(epoc::error_none);
@@ -724,8 +757,8 @@ namespace eka2l1 {
             return;
         }
 
-        // A fix carries no time of its own, so it is stamped with the time it is read.
-        write_position_info(info, &fix.value(), ctx->sys->get_kernel_system()->universal_time());
+        // The global cache has no module provenance, matching Location Monitor's null UID.
+        write_position_info(info, &fix.value(), ctx->sys->get_kernel_system()->universal_time(), 0);
         write_descriptor(ctx, 0, info);
         ctx->complete(epoc::error_none);
     }
