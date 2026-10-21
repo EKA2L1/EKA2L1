@@ -24,9 +24,13 @@
 
 #include <algorithm>
 #include <cstdint>
-#include <cstring>
+#include <iterator>
 
 namespace eka2l1::arm::r12l1 {
+    // Tag for an empty slot or a missing permission. Zero would alias null-pointer accesses onto the
+    // cached page; this never equals an aligned address, and its page is unreachable from user mode.
+    static constexpr vaddress TLB_INVALID_ADDR = 0xFFFFFFFF;
+
     struct tlb_entry {
         vaddress read_addr;
         vaddress write_addr;
@@ -35,9 +39,9 @@ namespace eka2l1::arm::r12l1 {
         std::uint8_t *host_base;
 
         explicit tlb_entry()
-            : read_addr(0)
-            , write_addr(0)
-            , execute_addr(0)
+            : read_addr(TLB_INVALID_ADDR)
+            , write_addr(TLB_INVALID_ADDR)
+            , execute_addr(TLB_INVALID_ADDR)
             , host_base(nullptr) {
         }
     };
@@ -60,8 +64,7 @@ namespace eka2l1::arm::r12l1 {
         }
 
         void flush() {
-            // Using memfill to speed up this process
-            std::memset(entries, 0, sizeof(tlb_entry) * TLB_ENTRY_COUNT);
+            std::fill(std::begin(entries), std::end(entries), tlb_entry());
         }
 
         void add(vaddress addr, std::uint8_t *host, const std::uint32_t perm) {
@@ -76,19 +79,19 @@ namespace eka2l1::arm::r12l1 {
             if (perm & prot_read) {
                 entry.read_addr = addr_normed;
             } else {
-                entry.read_addr = 0;
+                entry.read_addr = TLB_INVALID_ADDR;
             }
 
             if (perm & prot_write) {
                 entry.write_addr = addr_normed;
             } else {
-                entry.write_addr = 0;
+                entry.write_addr = TLB_INVALID_ADDR;
             }
 
             if (perm & prot_exec) {
                 entry.execute_addr = addr_normed;
             } else {
-                entry.execute_addr = 0;
+                entry.execute_addr = TLB_INVALID_ADDR;
             }
         }
 
@@ -100,7 +103,7 @@ namespace eka2l1::arm::r12l1 {
             tlb_entry &entry = entries[tlb_index];
 
             if ((entry.read_addr == addr_normed) || (entry.write_addr == addr_normed) || (entry.execute_addr == addr_normed)) {
-                std::memset(&entry, 0, sizeof(tlb_entry));
+                entry = tlb_entry();
             }
         }
 

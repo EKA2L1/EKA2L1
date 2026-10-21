@@ -135,6 +135,16 @@ namespace eka2l1::manager {
         scripting::write_byte(scripting::cpu::get_register(0) + 0xB4, 0);
     }
 
+    // --- Block Breaker Deluxe 2 (Gameloft) Mansion boss fix (bbd2_mansion_boss_fix.lua) ---
+    // The Mansion boss loads its cannon from pack "/sb", but data.pkg names it "sb". The failed
+    // lookup returns NULL and the pack reader dereferences it, which faults on the phone too.
+    static void bbd2_fix_mansion_boss_pack_name() {
+        const address name = scripting::cpu::get_register(1);
+        if (scripting::read_byte(name) == '/') {
+            scripting::cpu::set_register(1, name + 1);
+        }
+    }
+
     void scripts::register_builtin_patches() {
         // The kernel-level hooks must be live for breakpoints to fire.
         register_kernel_hooks();
@@ -205,6 +215,8 @@ namespace eka2l1::manager {
         register_breakpoint("cboxapp_0x20041fae.exe", 0x1D44F, 0, 0x20041FAE, 0xCB7985E9, wave_skip_zero_fire_period);
 
         register_breakpoint("pottery.exe", 0x187410, 0, 0x20042DDE, 0x58A29E91, pottery_clear_device_close_flag);
+
+        register_breakpoint("bbd2_0x20024078.exe", 0x22165, 0, 0x20024078, 0xD29BB435, bbd2_fix_mansion_boss_pack_name);
 
         current_module = nullptr;
 
