@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #import "IosEmulator.h"
+#include "DeviceInstallation.h"
 
 #import <AVFoundation/AVFoundation.h>
 #import <UIKit/UIKit.h>
@@ -983,6 +984,7 @@ namespace eka2l1::ios {
 @end
 
 @implementation EKA2L1Emulator {
+    std::atomic<NSInteger> _lastInstalledDeviceIndex;
     // Queued work must be able to lock before reading a possibly torn-down state.
     std::recursive_mutex _sessionMutex;
     std::unique_ptr<eka2l1::ios::emulator> _state;
@@ -1011,6 +1013,7 @@ namespace eka2l1::ios {
     self = [super init];
     if (self) {
         _networkingSuspended = false;
+        _lastInstalledDeviceIndex = -1;
     }
     return self;
 }
@@ -1379,6 +1382,10 @@ namespace eka2l1::ios {
     return static_cast<NSInteger>(dvc->get_current_index());
 }
 
+- (NSInteger)lastInstalledDeviceIndex {
+    return _lastInstalledDeviceIndex.load();
+}
+
 - (NSString *)currentDeviceDriveEPath {
     return [self currentDeviceDrivePath:'e'];
 }
@@ -1413,6 +1420,7 @@ namespace eka2l1::ios {
                                             cancel_requested_callback cancelCb))installer
                                progress:(void (^)(double))progress
                             cancelCheck:(BOOL (^)(void))cancelCheck {
+    _lastInstalledDeviceIndex = -1;
     if (!_state || !_state->symsys) {
         return EKA2L1InstallResultGeneralFailure;
     }
@@ -1435,8 +1443,22 @@ namespace eka2l1::ios {
     }
 
     const std::string storage = _state->conf.storage;
-    const std::string root_z_path = eka2l1::add_path(storage, "drives/z/");
-    const std::string rom_resident_path = eka2l1::add_path(storage, "roms/");
+    const std::string staging = eka2l1::add_path(storage,
+        std::string("device-import-") + NSUUID.UUID.UUIDString.UTF8String + "/");
+    struct staging_cleanup {
+        std::string path;
+        bool discard = true;
+        ~staging_cleanup() {
+            if (discard) {
+                eka2l1::common::delete_folder(path);
+            }
+        }
+    } cleanup{staging};
+    eka2l1::config::state staging_conf;
+    staging_conf.storage = staging;
+    eka2l1::device_manager staging_devices(&staging_conf);
+    const std::string root_z_path = eka2l1::add_path(staging, "drives/z/");
+    const std::string rom_resident_path = eka2l1::add_path(staging, "roms/");
     eka2l1::common::create_directories(rom_resident_path);
 
     // The installers report (done, total) pairs whose scale changes between
@@ -1464,8 +1486,17 @@ namespace eka2l1::ios {
         cancel_cb = [cancelCheck]() -> bool { return cancelCheck() == YES; };
     }
 
-    const eka2l1::device_installation_error result = installer(dvc, rom_resident_path, root_z_path,
+    eka2l1::device_installation_error result = installer(&staging_devices, rom_resident_path, root_z_path,
         progress_cb, cancel_cb);
+    if (result == eka2l1::device_installation_none) {
+        if (cancel_cb && cancel_cb()) {
+            result = eka2l1::device_installation_general_failure;
+        } else if (staging_devices.total() != 1
+            || !eka2l1::ios::commit_device_install(*dvc, *staging_devices.lastest(),
+                staging, storage, cleanup.discard)) {
+            result = eka2l1::device_installation_general_failure;
+        }
+    }
 
     if (result != eka2l1::device_installation_none) {
         _state->mounted = was_mounted;
@@ -1478,8 +1509,7 @@ namespace eka2l1::ios {
         return eka2l1::ios::map_install_result(result);
     }
 
-    dvc->save_devices();
-
+    _lastInstalledDeviceIndex = dvc->get_current_index();
     if (progress) {
         progress(1.0);
     }

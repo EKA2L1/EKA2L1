@@ -608,7 +608,7 @@ private final class DebugControlServer {
             throw APIError.failed("install_failed", "device install failed: \(Self.installResultName(result)) (\(result.rawValue))")
         }
         if boot {
-            guard await store.bootNewestDevice() else {
+            guard await store.bootImportedDevice() else {
                 throw APIError.failed("boot_failed", "installed, but booting the new device failed")
             }
         } else {

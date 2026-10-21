@@ -110,6 +110,9 @@ typedef NS_ENUM(NSInteger, EKA2L1InstallResult) {
 // Index of the currently-booted device, or -1 if none is booted yet.
 - (NSInteger)currentDeviceIndex;
 
+// Index added or replaced by the last successful import, even before it boots.
+- (NSInteger)lastInstalledDeviceIndex;
+
 // Host folder of the booted device's own drive E, ignoring any game card mounted
 // over it. nil when no device is booted.
 - (nullable NSString *)currentDeviceDriveEPath;
@@ -122,7 +125,8 @@ typedef NS_ENUM(NSInteger, EKA2L1InstallResult) {
 // the Android launcher::install_device path: install_rpkg when the ROM needs
 // it, else install_rom. Writes into the sandbox storage and persists
 // devices.yml. Does NOT boot the device — call bootDeviceAtIndex: after.
-// `isolateDrives` gives the device drives C, D and E of its own.
+// Existing devices replace ROM/Z while retaining their writable drives and isolation setting.
+// `isolateDrives` gives a new device drives C, D and E of its own.
 //
 // Unpacking a firmware runs for minutes on a large dump, so both installer
 // callbacks are wired: `progress` reports 0…1 completion (throttled, delivered

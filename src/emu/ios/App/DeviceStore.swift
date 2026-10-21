@@ -148,13 +148,13 @@ final class DeviceStore: ObservableObject {
         return await boot(at: index)
     }
 
-    // Called after a successful device install. installedDevices() appends the
-    // newly-added device last, so boot that one.
+    // The installer selects its device, including when replacing an existing entry.
     @discardableResult
-    func bootNewestDevice() async -> Bool {
+    func bootImportedDevice() async -> Bool {
         reloadDevices()
-        guard let newest = devices.last else { return false }
-        return await boot(at: newest.index)
+        let index = EKA2L1Bridge.shared.lastInstalledDeviceIndex()
+        guard devices.contains(where: { $0.index == index }) else { return false }
+        return await boot(at: index)
     }
 
     // Mirrors the Android device-list screen's "Rescan devices" action: rebuild

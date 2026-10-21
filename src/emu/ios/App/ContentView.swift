@@ -200,7 +200,7 @@ struct ContentView: View {
                 ImportDeviceView { installed in
                     guard installed else { return }
                     Task {
-                        if await store.bootNewestDevice() {
+                        if await store.bootImportedDevice() {
                             banner = String(localized: "common.completed")
                         }
                     }
