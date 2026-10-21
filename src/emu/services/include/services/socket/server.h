@@ -277,6 +277,7 @@ namespace eka2l1 {
         socket_reform_so_cancel_connect = 0x8C,
         socket_reform_so_cancel_accept = 0x8D,
         socket_reform_so_cancel_all = 0x8E,
+        socket_reform_so_info = 0x8F,
         socket_reform_so_close = 0x88,
         socket_reform_so_cancel_ioctl = 0x89,
         socket_reform_hr_cancel = 0x91,

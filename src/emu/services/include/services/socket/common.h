@@ -52,6 +52,10 @@ namespace eka2l1::epoc::socket {
     static constexpr std::uint32_t SOCKET_OPTION_FAMILY_BASE = 1;
     static constexpr std::uint32_t SOCKET_OPTION_ID_NON_BLOCKING_IO = 4;
     static constexpr std::uint32_t SOCKET_OPTION_ID_BLOCKING_IO = 5;
+    static constexpr std::uint32_t SOCKET_OPTION_ID_SELECT_POLL = 6;
+    static constexpr std::uint32_t SOCKET_OPTION_ID_READ_BYTES_PENDING = 7;
+    static constexpr std::uint32_t SOCKET_OPTION_ID_SELECT_LAST_ERROR = 9;
+    static constexpr std::int32_t SOCKET_ERROR_WOULD_BLOCK = -1000;
 
     enum socket_subsession_type {
         socket_subsession_type_host_resolver,

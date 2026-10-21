@@ -181,16 +181,19 @@ namespace eka2l1::epoc::internet {
     bool retrieve_local_ip_info(epoc::socket::saddress &broadcast, epoc::socket::saddress *myip = nullptr);
 
     struct inet_connect_request;
+    struct inet_select_request;
 
     struct inet_socket : public socket::socket {
     private:
         friend struct inet_connect_request;
+        friend struct inet_select_request;
         inet_bridged_protocol *papa_;
         inet_socket *accept_socket_ptr_;
         inet_socket *accept_server_;
 
         void *opaque_handle_;
         std::shared_ptr<inet_connect_request> connect_request_;
+        std::shared_ptr<inet_select_request> select_request_;
         void *opaque_send_info_;
         void *opaque_write_info_;
 
@@ -211,6 +214,11 @@ namespace eka2l1::epoc::internet {
         bool take_available_only_;
         bool reuse_addr_ = false;
         bool reuse_addr_changed_ = false;
+        bool non_blocking_ = false;
+        bool listening_ = false;
+        bool connection_pending_ = false;
+        bool connected_ = false;
+        int connect_error_ = 0;
 
         std::vector<char> temp_buffer_;
         epoc::socket::saddress *recv_addr_;
@@ -262,6 +270,8 @@ namespace eka2l1::epoc::internet {
         sockaddr_in6 send_dest_;
 
         void close_down();
+        std::uint32_t poll_status() const;
+        std::uint32_t bytes_available() const;
         void handle_connect_done_error_code(const int error_code);
         std::size_t retrieve_next_interface_info(std::uint8_t *buffer, const std::size_t avail_size);
         void create_frequent_tcp_tasks();
@@ -291,6 +301,11 @@ namespace eka2l1::epoc::internet {
     public:
         explicit inet_socket(inet_bridged_protocol *papa);
         ~inet_socket() override;
+
+        bool info(protocol_description &description) const override;
+        void ioctl(std::uint32_t command, epoc::notify_info &complete_info, std::uint8_t *buffer,
+            std::size_t available_size, std::size_t max_buffer_size, std::uint32_t level) override;
+        void cancel_ioctl() override;
 
         bool open(const std::uint32_t family_id, const std::uint32_t protocol_id, const epoc::socket::socket_type sock_type);
         void connect(const epoc::socket::saddress &addr, epoc::notify_info &info) override;

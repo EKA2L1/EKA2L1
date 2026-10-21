@@ -29,6 +29,10 @@
 #define IS_SOCKET_GETOPT_ERROR(error) error > 0xFFFFFF00ULL
 #define GET_SOCKET_GETOPT_ERROR(error) -static_cast<int64_t>(error - 0xFFFFFF00ULL)
 
+namespace eka2l1 {
+    struct protocol_description;
+}
+
 namespace eka2l1::epoc::socket {
     struct saddress;
 
@@ -56,6 +60,8 @@ namespace eka2l1::epoc::socket {
     struct socket {
     public:
         virtual ~socket() = default;
+
+        virtual bool info(protocol_description &description) const { return false; }
 
         /**
          * @brief Get an option available from current socket.
@@ -197,12 +203,14 @@ namespace eka2l1::epoc::socket {
         virtual void cancel_connect();
 
         virtual void cancel_accept();
+        virtual void cancel_ioctl() {}
 
         void cancel_all() {
             cancel_connect();
             cancel_receive();
             cancel_send();
             cancel_accept();
+            cancel_ioctl();
         }
     };
 }

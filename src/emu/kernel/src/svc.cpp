@@ -1604,8 +1604,12 @@ namespace eka2l1::epoc {
 
         desc8 *desname = sema_name_des.get(pr);
         kernel::owner_type owner_kern = (owner == epoc::owner_process) ? kernel::owner_type::process : kernel::owner_type::thread;
+        const std::string name = desname ? desname->to_std_string(pr) : "";
+        if (!name.empty() && kern->get_by_name_and_type<kernel::semaphore>(name, kernel::object_type::sema, true)) {
+            return epoc::error_already_exists;
+        }
 
-        const kernel::handle sema = kern->create_and_add<kernel::semaphore>(owner_kern, pr, !desname ? "" : desname->to_std_string(pr).c_str(),
+        const kernel::handle sema = kern->create_and_add<kernel::semaphore>(owner_kern, pr, name,
                                             init_count, !desname ? kernel::access_type::local_access : kernel::access_type::global_access)
                                         .first;
 

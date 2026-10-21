@@ -28,6 +28,10 @@ target_link_libraries(ekatests PRIVATE
     libtess2
     lunasvg)
 
+if (WIN32)
+    target_compile_definitions(ekatests PRIVATE NOMINMAX)
+endif()
+
 if (EKA2L1_HAVE_FFMPEG)
     target_link_libraries(ekatests PRIVATE ffmpeg)
     target_compile_definitions(ekatests PRIVATE EKA2L1_HAS_FFMPEG=1)

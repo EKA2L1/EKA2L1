@@ -632,6 +632,11 @@ namespace eka2l1::epoc::socket {
                 cancel_accept(ctx);
                 return;
 
+            case socket_old_so_cancel_ioctl:
+                sock_->cancel_ioctl();
+                ctx->complete(epoc::error_none);
+                return;
+
             case socket_old_so_local_name:
                 local_name(ctx);
                 return;
@@ -700,6 +705,20 @@ namespace eka2l1::epoc::socket {
         } else {
             if (ctx->sys->get_symbian_version_use() >= epocver::epoc95) {
                 switch (ctx->msg->function) {
+                case socket_reform_so_cancel_ioctl:
+                    sock_->cancel_ioctl();
+                    ctx->complete(epoc::error_none);
+                    return;
+                case socket_reform_so_info: {
+                    protocol_description description{};
+                    if (!sock_->info(description)) {
+                        ctx->complete(epoc::error_not_supported);
+                        return;
+                    }
+                    ctx->write_data_to_descriptor_argument(0, description);
+                    ctx->complete(epoc::error_none);
+                    return;
+                }
                 case socket_reform_so_get_opt:
                     get_option(ctx);
                     return;
