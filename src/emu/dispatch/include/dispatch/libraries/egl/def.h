@@ -106,6 +106,7 @@ namespace eka2l1::dispatch {
         EGL_COLOR_BUFFER_TYPE_EMU = 0x303F,
         EGL_RENDERABLE_TYPE_EMU = 0x3040,
         EGL_CONFORMANT_EMU = 0x3042,
+        EGL_CLIENT_APIS_EMU = 0x308D,
         EGL_RGB_BUFFER_EMU = 0x308E,
         EGL_VENDOR_EMU = 0x3053,
         EGL_VERSION_EMU = 0x3054,
@@ -499,6 +500,7 @@ namespace eka2l1::dispatch {
     static constexpr const char *EGL_STATIC_STRING_VENDOR = "EKA2L1";
     static constexpr const char *EGL_STATIC_STRING_VERSION = "1.4";
     static constexpr const char *EGL_STATIC_STRING_EXTENSION = "EGL_KHR_create_context EGL_NOK_resource_profiling2";
+    static constexpr const char *EGL_STATIC_STRING_CLIENT_APIS = "OpenGL_ES OpenVG";
     static constexpr std::uint32_t EGL_PROF_QUERY_GLOBAL_BIT_NOK_EMU = 0x0001;
     static constexpr std::uint32_t EGL_PROF_QUERY_MEMORY_USAGE_BIT_NOK_EMU = 0x0002;
     static constexpr std::int32_t EGL_PROF_TOTAL_MEMORY_NOK_EMU = 0x3070;

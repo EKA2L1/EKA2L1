@@ -581,7 +581,7 @@ namespace eka2l1::dispatch {
         dispatcher *dp = sys->get_dispatcher();
         dispatch::egl_controller &controller = dp->get_egl_controller();
 
-        if ((param != EGL_EXTENSIONS_EMU) && (param != EGL_VENDOR_EMU) && (param != EGL_VERSION_EMU)) {
+        if ((param != EGL_EXTENSIONS_EMU) && (param != EGL_VENDOR_EMU) && (param != EGL_VERSION_EMU) && (param != EGL_CLIENT_APIS_EMU)) {
             egl_push_error(sys, EGL_BAD_PARAMETER_EMU);
             return 0;
         }

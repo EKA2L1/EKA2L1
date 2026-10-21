@@ -252,6 +252,7 @@ namespace eka2l1::dispatch {
             add_static_string(EGL_VENDOR_EMU, EGL_STATIC_STRING_VENDOR);
             add_static_string(EGL_VERSION_EMU, EGL_STATIC_STRING_VERSION);
             add_static_string(EGL_EXTENSIONS_EMU, EGL_STATIC_STRING_EXTENSION);
+            add_static_string(EGL_CLIENT_APIS_EMU, EGL_STATIC_STRING_CLIENT_APIS);
             add_static_string(VG_VENDOR_EMU, EKA2L1_GNUVG_VENDOR);
             add_static_string(VG_RENDERER_EMU, EKA2L1_GNUVG_RENDERER);
             add_static_string(VG_VERSION_EMU, EKA2L2_GNUVG_VERSION);
