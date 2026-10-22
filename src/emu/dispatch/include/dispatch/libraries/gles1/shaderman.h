@@ -33,6 +33,8 @@ namespace eka2l1::dispatch {
     std::uint64_t gles1_vertex_shader_key(std::uint64_t vertex_statuses, std::uint32_t active_texs);
 
     struct gles1_shader_variables_info {
+        std::int32_t logic_op_destination_loc_;
+        std::int32_t logic_op_mask_loc_;
         std::int32_t view_model_mat_loc_;
         std::int32_t proj_mat_loc_;
         std::int32_t color_loc_;

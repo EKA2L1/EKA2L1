@@ -241,7 +241,7 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1151, gl_load_identity_emu, "glLoadIdentity"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1152, gl_load_matrixf_emu, "glLoadMatrixf"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1153, gl_load_matrixx_emu, "glLoadMatrixx"),
-        //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1154, gl_logic_op_emu, "glLogicOp"),
+        BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1154, gl_logic_op_emu, "glLogicOp"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1155, gl_material_f_emu, "glMaterialf"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1156, gl_material_fv_emu, "glMaterialfv"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1157, gl_material_x_emu, "glMaterialx"),

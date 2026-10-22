@@ -146,6 +146,7 @@ namespace eka2l1::dispatch {
         GL_FRONT_EMU = 0x0404,
         GL_BACK_EMU = 0x0405,
         GL_FRONT_AND_BACK_EMU = 0x0408,
+        GL_OUT_OF_MEMORY = 0x0505,
         GL_INVALID_ENUM = 0x0500,
         GL_INVALID_VALUE = 0x0501,
         GL_INVALID_OPERATION = 0x0502,

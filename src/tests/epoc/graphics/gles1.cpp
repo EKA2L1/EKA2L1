@@ -548,3 +548,69 @@ TEST_CASE("GLES buffers accept unused names independently of textures", "[gles1]
     REQUIRE(context.binded_array_buffer_handle_ == 0xFFFFFFFE);
     REQUIRE(context.buffers_.size() == 2);
 }
+
+TEST_CASE("GLES1 logic operation defaults, queries and invalid enums follow the GL contract", "[gles1][logicop]") {
+    egl_context_es1 context;
+    bool enabled = true;
+    REQUIRE(context.is_enabled(GL_COLOR_LOGIC_OP_EMU, enabled));
+    REQUIRE_FALSE(enabled);
+    std::uint32_t op = 0;
+    REQUIRE(context.get_data(nullptr, GL_LOGIC_OP_MODE_EMU, &op, GLES_GET_DATA_TYPE_INTEGER));
+    REQUIRE(op == GL_COPY_EMU);
+    REQUIRE_FALSE(context.needs_logic_op_emulation());
+    REQUIRE(context.enable(GL_COLOR_LOGIC_OP_EMU));
+    REQUIRE_FALSE(context.needs_logic_op_emulation());
+    for (std::uint32_t operation = 0x1500; operation <= 0x150F; operation++) {
+        REQUIRE(context.set_logic_op(operation));
+        gl_fixed fixed = 0;
+        REQUIRE(context.get_data(nullptr, GL_LOGIC_OP_MODE_EMU, &fixed, GLES_GET_DATA_TYPE_FIXED));
+        REQUIRE(fixed == operation);
+        REQUIRE(context.needs_logic_op_emulation() == (operation != GL_COPY_EMU));
+    }
+    REQUIRE_FALSE(context.set_logic_op(0x14FF));
+    REQUIRE_FALSE(context.set_logic_op(0x1510));
+    REQUIRE(context.logic_op_ == GL_SET_EMU);
+    REQUIRE(context.disable(GL_COLOR_LOGIC_OP_EMU));
+    REQUIRE_FALSE(context.needs_logic_op_emulation());
+}
+
+TEST_CASE("Logic operations suppress host blending without changing the guest blend state", "[gles1][logicop]") {
+    egl_context_es1 context;
+    REQUIRE(context.enable(GL_BLEND_EMU));
+    REQUIRE(context.enable(GL_COLOR_LOGIC_OP_EMU));
+    REQUIRE(context.enable(GL_BLEND_EMU));
+    bool enabled = false;
+    REQUIRE(context.is_enabled(GL_BLEND_EMU, enabled));
+    REQUIRE(enabled);
+    REQUIRE(context.disable(GL_COLOR_LOGIC_OP_EMU));
+    auto commands = context.cmd_builder_.retrieve_command_list();
+    REQUIRE(commands.size_ == 4);
+    const bool expected[] = { true, false, false, true };
+    for (std::size_t i = 0; i < commands.size_; i++) {
+        eka2l1::drivers::graphics_feature feature;
+        bool host_enabled = false;
+        eka2l1::drivers::unpack_u64_to_2u32(commands.base_[i].data_[0], feature, host_enabled);
+        REQUIRE(feature == eka2l1::drivers::graphics_feature::blend);
+        REQUIRE(host_enabled == expected[i]);
+    }
+    delete[] commands.base_;
+}
+
+TEST_CASE("Logic draws preserve strip winding, fan order, loop closure and incomplete primitives", "[gles1][logicop]") {
+    using mode = eka2l1::drivers::graphics_primitive_mode;
+    REQUIRE(gles1_logic_op_indices(mode::triangle_strip, 5) == std::vector<std::uint32_t>{0,1,2, 2,1,3, 2,3,4});
+    REQUIRE(gles1_logic_op_indices(mode::triangle_fan, 5) == std::vector<std::uint32_t>{0,1,2, 0,2,3, 0,3,4});
+    REQUIRE(gles1_logic_op_indices(mode::triangles, 5) == std::vector<std::uint32_t>{0,1,2});
+    REQUIRE(gles1_logic_op_indices(mode::lines, 5) == std::vector<std::uint32_t>{0,1,2,3});
+    REQUIRE(gles1_logic_op_indices(mode::line_strip, 3) == std::vector<std::uint32_t>{0,1,1,2});
+    REQUIRE(gles1_logic_op_indices(mode::line_loop, 3) == std::vector<std::uint32_t>{0,1,1,2,2,0});
+    REQUIRE(gles1_logic_op_indices(mode::points, 3) == std::vector<std::uint32_t>{0,1,2});
+    REQUIRE(gles1_logic_op_indices(mode::line_loop, 1).empty());
+    REQUIRE(gles1_logic_op_indices(mode::triangle_strip, 2).empty());
+    REQUIRE(gles1_logic_op_indices(mode::triangle_fan, 0).empty());
+    const std::uint8_t bytes[] = { 5, 4, 3, 2 };
+    const std::uint16_t words[] = { 500, 400, 300, 200 };
+    REQUIRE(gles1_logic_op_indices(mode::triangle_strip, 4, bytes, 1) == std::vector<std::uint32_t>{5,4,3, 3,4,2});
+    REQUIRE(gles1_logic_op_indices(mode::triangle_strip, 4, reinterpret_cast<const std::uint8_t *>(words), 2)
+        == std::vector<std::uint32_t>{500,400,300, 300,400,200});
+}

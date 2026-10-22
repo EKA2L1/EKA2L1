@@ -254,6 +254,11 @@ namespace eka2l1::dispatch {
                 clip_plane_name.back()++;
             }
 
+            if (fragment_statuses & egl_context_es1::FRAGMENT_STATE_LOGIC_OP) {
+                info_inst->logic_op_destination_loc_ = metadata.get_uniform_binding("uLogicOpDestination");
+                info_inst->logic_op_mask_loc_ = metadata.get_uniform_binding("uLogicOpMask");
+            }
+
             info_inst->material_ambient_loc_ = metadata.get_uniform_binding("uMaterialAmbient");
             info_inst->material_diffuse_loc_ = metadata.get_uniform_binding("uMaterialDiffuse");
             info_inst->material_specular_loc_ = metadata.get_uniform_binding("uMaterialSpecular");

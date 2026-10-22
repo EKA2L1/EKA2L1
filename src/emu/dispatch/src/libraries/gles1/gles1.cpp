@@ -189,6 +189,133 @@ namespace eka2l1::dispatch {
         egl_context_es_shared::flush_to_driver(controller, drv, is_frame_swap_flush);
     }
 
+    std::vector<std::uint32_t> gles1_logic_op_indices(const drivers::graphics_primitive_mode mode,
+        const std::int32_t count, const std::uint8_t *indices, const std::uint32_t index_size) {
+        std::vector<std::uint32_t> result;
+        const auto index = [indices, index_size](int i) {
+            std::uint32_t value = i;
+            if (indices) {
+                value = 0;
+                std::memcpy(&value, indices + static_cast<std::size_t>(i) * index_size, index_size);
+            }
+            return value;
+        };
+        const auto append = [&result, &index](int i) { result.push_back(index(i)); };
+        using mode_type = drivers::graphics_primitive_mode;
+        switch (mode) {
+        case mode_type::points:
+            for (int i = 0; i < count; i++) {
+                append(i);
+            }
+            break;
+        case mode_type::lines:
+            for (int i = 0; i + 1 < count; i += 2) {
+                append(i);
+                append(i + 1);
+            }
+            break;
+        case mode_type::line_strip:
+        case mode_type::line_loop:
+            for (int i = 0; i + 1 < count; i++) {
+                append(i);
+                append(i + 1);
+            }
+            if (mode == mode_type::line_loop && count > 1) {
+                append(count - 1);
+                append(0);
+            }
+            break;
+        case mode_type::triangles:
+            for (int i = 0; i + 2 < count; i += 3) {
+                append(i);
+                append(i + 1);
+                append(i + 2);
+            }
+            break;
+        case mode_type::triangle_strip:
+            for (int i = 0; i + 2 < count; i++) {
+                append(i + (i & 1));
+                append(i + 1 - (i & 1));
+                append(i + 2);
+            }
+            break;
+        case mode_type::triangle_fan:
+            for (int i = 1; i + 1 < count; i++) {
+                append(0);
+                append(i);
+                append(i + 1);
+            }
+            break;
+        }
+        return result;
+    }
+
+    bool egl_context_es1::needs_logic_op_emulation() const {
+        return (non_shader_statuses_ & NON_SHADER_STATE_COLOR_LOGIC_OP_ENABLE) && logic_op_ != GL_COPY_EMU;
+    }
+
+    bool egl_context_es1::set_logic_op(const std::uint32_t op) {
+        if (op < GL_CLEAR_EMU || op > GL_SET_EMU) {
+            return false;
+        }
+        logic_op_ = op;
+        return true;
+    }
+
+    BRIDGE_FUNC_LIBRARY(void, gl_logic_op_emu, std::uint32_t op) {
+        auto *context = get_es1_active_context(sys);
+        if (context && !context->set_logic_op(op)) {
+            sys->get_dispatcher()->get_egl_controller().push_error(context, GL_INVALID_ENUM);
+        }
+    }
+
+    void egl_context_es1::draw_logic_op(drivers::graphics_driver *driver, egl_controller &controller, const drivers::graphics_primitive_mode mode,
+        const std::int32_t count, const std::uint8_t *indices, const std::uint32_t index_size) {
+        if (!(vertex_statuses_ & VERTEX_STATE_CLIENT_VERTEX_ARRAY)) {
+            return;
+        }
+        auto expanded = gles1_logic_op_indices(mode, count, indices, index_size);
+        if (expanded.empty()) {
+            return;
+        }
+        const auto size = draw_surface_->dimension_ * draw_surface_->current_scale_;
+        if (!logic_op_destination_) {
+            logic_op_destination_ = drivers::create_texture(driver, 2, 0, drivers::texture_format::rgba,
+                drivers::texture_format::rgba, drivers::texture_data_type::ubyte, nullptr, 0, { size.x, size.y, 0 });
+            if (!logic_op_destination_) {
+                controller.push_error(this, GL_OUT_OF_MEMORY);
+                return;
+            }
+            cmd_builder_.set_texture_filter(logic_op_destination_, true, drivers::filter_option::nearest);
+            cmd_builder_.set_texture_filter(logic_op_destination_, false, drivers::filter_option::nearest);
+        } else if (logic_op_destination_size_ != size) {
+            cmd_builder_.recreate_texture(logic_op_destination_, 2, 0, drivers::texture_format::rgba,
+                drivers::texture_format::rgba, drivers::texture_data_type::ubyte, nullptr, 0, { size.x, size.y, 0 });
+        }
+        logic_op_destination_size_ = size;
+        cmd_builder_.bind_texture(logic_op_destination_, GLES1_EMU_MAX_TEXTURE_COUNT);
+        if (!index_buffer_pusher_.is_initialized()) {
+            index_buffer_pusher_.initialize(common::MB(2));
+        }
+        std::size_t offset = 0;
+        auto buffer = index_buffer_pusher_.push_buffer(driver, reinterpret_cast<const std::uint8_t *>(expanded.data()), expanded.size() * sizeof(std::uint32_t), offset);
+        cmd_builder_.set_index_buffer(buffer);
+        using mode_type = drivers::graphics_primitive_mode;
+        const int vertices = mode == mode_type::points ? 1 :
+            (mode == mode_type::lines || mode == mode_type::line_strip || mode == mode_type::line_loop) ? 2 : 3;
+        const auto primitive = vertices == 1 ? mode_type::points : vertices == 2 ? mode_type::lines : mode_type::triangles;
+        // Each primitive must see earlier writes, including overlaps within one GL draw.
+        for (std::size_t i = 0; i < expanded.size(); i += vertices) {
+            if (cmd_builder_.need_flush()) {
+                flush_to_driver(controller, driver);
+                cmd_builder_.set_index_buffer(buffer);
+            }
+            const eka2l1::rect area({ 0, 0 }, size);
+            cmd_builder_.copy_framebuffer_to_texture(draw_surface_->handle_, logic_op_destination_, 2, 0, area, area, false);
+            cmd_builder_.draw_indexed(primitive, vertices, drivers::data_format::uint, offset + i * sizeof(std::uint32_t), 0);
+        }
+    }
+
     void egl_context_es1::on_buffer_deleted(const std::uint32_t name) {
         for (auto *attribute : { &vertex_attrib_, &color_attrib_, &normal_attrib_,
                  &matrix_index_attrib_, &weight_attrib_, &point_size_attrib_ }) {
@@ -208,6 +335,10 @@ namespace eka2l1::dispatch {
             cmd_builder_.destroy(input_desc_);
         }
 
+        if (logic_op_destination_) {
+            builder.destroy(logic_op_destination_);
+            logic_op_destination_ = 0;
+        }
         egl_context_es_shared::destroy(driver, builder);
     }
 
@@ -591,6 +722,10 @@ namespace eka2l1::dispatch {
     template <typename T>
     bool get_data_impl_es1(egl_context_es1 *ctx, drivers::graphics_driver *drv, std::uint32_t pname, T *params, std::uint32_t scale_factor) {
         switch (pname) {
+        case GL_LOGIC_OP_MODE_EMU:
+            *params = static_cast<T>(ctx->logic_op_);
+            break;
+
         case GL_SHADE_MODEL_EMU:
             *params = static_cast<T>((ctx->fragment_statuses_ & egl_context_es1::FRAGMENT_STATE_SHADE_MODEL_FLAT)
                 ? GL_FLAT_EMU : GL_SMOOTH_EMU);
@@ -2961,6 +3096,10 @@ namespace eka2l1::dispatch {
 
         const bool drawing_points = (vertex_statuses_ & VERTEX_STATE_DRAW_POINTS) != 0;
         std::uint64_t fragment_statuses = fragment_statuses_;
+        if (needs_logic_op_emulation()) {
+            fragment_statuses |= FRAGMENT_STATE_LOGIC_OP
+                | (static_cast<std::uint64_t>(logic_op_ - GL_CLEAR_EMU) << FRAGMENT_STATE_LOGIC_OP_POS);
+        }
         if (drawing_points && point_sprite_enabled_) {
             fragment_statuses |= FRAGMENT_STATE_POINT_SPRITE;
             for (std::size_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
@@ -2981,6 +3120,16 @@ namespace eka2l1::dispatch {
         cmd_builder_.use_program(program);
 
         if (var_info) {
+            if (needs_logic_op_emulation()) {
+                const auto &config = draw_surface_->config_;
+                const float mask[] = { static_cast<float>((1U << config.red_bits()) - 1),
+                    static_cast<float>((1U << config.green_bits()) - 1),
+                    static_cast<float>((1U << config.blue_bits()) - 1),
+                    static_cast<float>((1U << config.alpha_bits()) - 1) };
+                const std::int32_t unit = GLES1_EMU_MAX_TEXTURE_COUNT;
+                cmd_builder_.set_dynamic_uniform(var_info->logic_op_destination_loc_, drivers::shader_var_type::integer, &unit, 4);
+                cmd_builder_.set_dynamic_uniform(var_info->logic_op_mask_loc_, drivers::shader_var_type::vec4, mask, 16);
+            }
             // Not binded by uniform buffer/constant buffer
             if (vertex_statuses_ & egl_context_es1::VERTEX_STATE_SKINNING_ENABLE) {
                 std::vector<std::uint8_t> palette_mats_data(64 * GLES1_EMU_MAX_PALETTE_MATRICES);

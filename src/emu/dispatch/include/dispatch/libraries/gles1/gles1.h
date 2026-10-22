@@ -24,6 +24,7 @@
 #include <cstdint>
 
 namespace eka2l1::dispatch {
+    BRIDGE_FUNC_LIBRARY(void, gl_logic_op_emu, std::uint32_t op);
     BRIDGE_FUNC_LIBRARY(void, gl_matrix_mode_emu, std::uint32_t mode);
     BRIDGE_FUNC_LIBRARY(void, gl_push_matrix_emu);
     BRIDGE_FUNC_LIBRARY(void, gl_pop_matrix_emu);
