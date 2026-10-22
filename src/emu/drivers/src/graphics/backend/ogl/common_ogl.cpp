@@ -78,6 +78,9 @@ namespace eka2l1::drivers {
         case texture_format::depth16:
             return GL_DEPTH_COMPONENT16;
 
+        case texture_format::depth_component:
+            return GL_DEPTH_COMPONENT;
+
         case texture_format::stencil8:
             return GL_STENCIL_INDEX8;
 

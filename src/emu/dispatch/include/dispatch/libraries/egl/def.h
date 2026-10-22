@@ -33,6 +33,7 @@
 #include <kernel/common.h>
 
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <map>
 #include <stack>
@@ -61,6 +62,7 @@ namespace eka2l1::dispatch {
         EGL_PBUFFER_BIT_EMU = 1,
         EGL_PIXMAP_BIT_EMU = 2,
         EGL_WINDOW_BIT_EMU = 4,
+        EGL_CORE_NATIVE_ENGINE_EMU = 0x305B,
         EGL_MAJOR_VERSION_EMU = 1,
         EGL_MINOR_VERSION_EMU = 4,
         EGL_SUCCESS = 0x3000,
@@ -69,6 +71,7 @@ namespace eka2l1::dispatch {
         EGL_BAD_CONFIG = 0x3005,
         EGL_BAD_CONTEXT_EMU = 0x3006,
         EGL_BAD_DISPLAY_EMU = 0x3008,
+        EGL_BAD_MATCH_EMU = 0x3009,
         EGL_BAD_NATIVE_PIXMAP_EMU = 0x300A,
         EGL_BAD_NATIVE_WINDOW_EMU = 0x300B,
         EGL_BAD_PARAMETER_EMU = 0x300C,
@@ -537,6 +540,8 @@ namespace eka2l1::dispatch {
         std::uint8_t green_bits() const;
         std::uint8_t blue_bits() const;
         std::uint8_t alpha_bits() const;
+        std::uint8_t depth_bits() const { return (config_ & 0x20) ? 16 : 24; }
+        std::uint8_t stencil_bits() const { return (config_ & 0x20) ? 0 : 8; }
 
         target_context_version get_target_context_version();
         void set_target_context_version(const target_context_version ver);
@@ -567,6 +572,8 @@ namespace eka2l1::dispatch {
 
         float current_scale_;
         egl_context *bounded_context_;
+        std::shared_ptr<std::function<void()>> pixmap_readback_;
+        std::function<void()> pixmap_upload_;
 
         explicit egl_surface(epoc::canvas_base *backed_window, epoc::screen *screen, eka2l1::vec2 dim,
             drivers::handle h, egl_config config);

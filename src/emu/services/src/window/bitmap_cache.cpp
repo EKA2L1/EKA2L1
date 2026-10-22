@@ -50,6 +50,22 @@
 #include <lunasvg.h>
 
 namespace eka2l1::epoc {
+    bool bitmap_cache::set_bitmap_writer(bitwise_bitmap *bitmap, const std::shared_ptr<std::function<void()>> &writer) {
+        for (auto it = bitmap_writers_.begin(); it != bitmap_writers_.end();) {
+            if (it->second.expired()) {
+                it = bitmap_writers_.erase(it);
+            } else {
+                ++it;
+            }
+        }
+        auto &current = bitmap_writers_[bitmap];
+        if (!current.expired()) {
+            return false;
+        }
+        current = writer;
+        return true;
+    }
+
     bitmap_cache::bitmap_cache(kernel_system *kern_)
         : fbss_(nullptr)
         , kern(kern_) {
@@ -300,6 +316,15 @@ namespace eka2l1::epoc {
                 bmp->uid_);
 
             return 0;
+        }
+
+        auto writer = bitmap_writers_.find(bmp);
+        if (writer != bitmap_writers_.end()) {
+            if (auto synchronize = writer->second.lock()) {
+                (*synchronize)();
+            } else {
+                bitmap_writers_.erase(writer);
+            }
         }
 
         std::int64_t idx = 0;

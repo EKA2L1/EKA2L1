@@ -25,6 +25,7 @@
 #include <services/window/screen.h>
 
 #include <dispatch/dispatcher.h>
+#include <dispatch/libraries/egl/egl.h>
 #include <drivers/graphics/graphics.h>
 #include <system/epoc.h>
 #include <kernel/kernel.h>
@@ -3190,6 +3191,7 @@ namespace eka2l1::dispatch {
 
     
     BRIDGE_FUNC_LIBRARY(void, gl_finish_emu) {
+        egl_wait_gl_emu(sys);
     }
     
     BRIDGE_FUNC_LIBRARY(void, gl_flush_emu) {

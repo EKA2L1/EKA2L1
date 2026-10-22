@@ -45,8 +45,9 @@ namespace eka2l1::drivers {
         texture_ptr tex;
         texture_ptr ds_tex;
         int bpp;
+        std::uint32_t depth_bits;
 
-        explicit bitmap(graphics_driver *driver, const eka2l1::vec2 &size, const int initial_bpp);
+        explicit bitmap(graphics_driver *driver, const eka2l1::vec2 &size, const int initial_bpp, const std::uint32_t initial_depth_bits = 24);
         virtual ~bitmap();
 
         void resize(graphics_driver *driver, const eka2l1::vec2 &new_size);

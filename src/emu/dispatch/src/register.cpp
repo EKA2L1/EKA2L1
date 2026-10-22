@@ -161,7 +161,7 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1101, egl_copy_buffers_emu, "eglCopyBuffers"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1102, egl_create_context_emu, "eglCreateContext"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1103, egl_create_pbuffer_surface_emu, "eglCreatePbufferSurface"),
-        //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1104, egl_create_pixmap_surface_emu, "eglCreatePixmapSurface"),
+        BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1104, egl_create_pixmap_surface_emu, "eglCreatePixmapSurface"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1105, egl_create_window_surface_emu, "eglCreateWindowSurface"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1106, egl_destroy_context_emu, "eglDestroyContext"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1107, egl_destroy_surface_emu, "eglDestroySurface"),

@@ -859,11 +859,11 @@ namespace eka2l1::dispatch {
             break;
 
         case GL_DEPTH_BITS_EMU:
-            *params = static_cast<T>(24);
+            *params = static_cast<T>(ctx->draw_surface_->config_.depth_bits());
             break;
 
         case GL_STENCIL_BITS_EMU:
-            *params = static_cast<T>(8);
+            *params = static_cast<T>(ctx->draw_surface_->config_.stencil_bits());
             break;
 
         case GL_MAX_PALETTE_MATRICES_OES:

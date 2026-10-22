@@ -86,12 +86,15 @@ namespace eka2l1::dispatch {
     }
 
     void egl_surface::scale(egl_context *context, drivers::graphics_driver *drv) {
+        if (!backed_window_) {
+            return;
+        }
         if (current_scale_ != backed_screen_->display_scale_factor) {
             // Silently resize and scale
             float new_display_factor = backed_screen_->display_scale_factor;
             eka2l1::vec2 new_scaled_size = dimension_ * new_display_factor;
 
-            drivers::handle new_surface = drivers::create_bitmap(drv, new_scaled_size, 32);
+            drivers::handle new_surface = drivers::create_bitmap(drv, new_scaled_size, 32, config_.depth_bits());
 
             context->cmd_builder_.bind_bitmap(new_surface);
             context->cmd_builder_.draw_bitmap(handle_, 0, eka2l1::rect(eka2l1::vec2(0, 0), new_scaled_size),
@@ -158,6 +161,12 @@ namespace eka2l1::dispatch {
 
         auto ite = active_context_.find(thread_id);
         if ((ite != active_context_.end()) && ite->second && (ite->second != context_to_set)) {
+            if (ite->second->draw_surface_) {
+                ite->second->draw_surface_->bounded_context_ = nullptr;
+            }
+            if (ite->second->read_surface_) {
+                ite->second->read_surface_->bounded_context_ = nullptr;
+            }
             if (ite->second->draw_surface_ && ite->second->draw_surface_->dead_pending_) {
                 ite->second->cmd_builder_.destroy_bitmap(ite->second->draw_surface_->handle_);
 
@@ -178,14 +187,6 @@ namespace eka2l1::dispatch {
                         var = nullptr;
                     }
                 }
-            }
-
-            if (ite->second->draw_surface_) {
-                ite->second->draw_surface_->bounded_context_ = nullptr;
-            }
-
-            if (ite->second->read_surface_) {
-                ite->second->read_surface_->bounded_context_ = nullptr;
             }
 
             ite->second->draw_surface_ = nullptr;
