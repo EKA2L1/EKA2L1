@@ -124,7 +124,7 @@ namespace eka2l1::epoc {
         lastest_segment->type_ = gdi_store_command_segment_redraw;
     }
 
-    bool gdi_store_command_collection::clean_old_nonredraw_segments() {
+    bool gdi_store_command_collection::clean_old_nonredraw_segments(const segment_flattener &flatten) {
         if (segments_.empty()) {
             return false;
         }
@@ -140,19 +140,15 @@ namespace eka2l1::epoc {
         // Because some non-redraw segment may need to stay there.
         bool need_invalidate = false;
         std::int32_t left_to_keep = KEEP_NON_REDRAW_SEGMENTS;
+        std::vector<bool> expired(segments_.size(), false);
 
         if (non_redraw_segment_count > LIMIT_NON_REDRAW_SEGMENTS) {
-            for (std::int32_t i = 0; i < static_cast<std::int32_t>(segments_.size()); ) {
+            for (std::size_t i = 0; i < segments_.size(); i++) {
                 if ((segments_[i].get() != current_segment_) && (segments_[i]->type_ == gdi_store_command_segment_non_redraw)) {
-                    if (left_to_keep-- > 0) {
-                        i++;
-                        continue;
-                    } else {
-                        segments_.erase(segments_.begin() + i);
+                    if (left_to_keep-- <= 0) {
+                        expired[i] = true;
                         need_invalidate = true;
                     }
-                } else {
-                    i++;
                 }
             }
         }
@@ -163,15 +159,11 @@ namespace eka2l1::epoc {
             // Try to make it able to be cleaned (this routine is actually from OSS)
             if (current_time - current_segment_->creation_date_ > AGE_LIMIT_NONREDRAW_US) {
                 // Try to find older segments
-                for (std::size_t i = 0; i < segments_.size(); ) {
+                for (std::size_t i = 0; i < segments_.size(); i++) {
                     if ((segments_[i].get() != current_segment_) && (segments_[i]->type_ == gdi_store_command_segment_non_redraw)) {
                         if ((current_time - segments_[i]->creation_date_) > AGE_LIMIT_NONREDRAW_US * 2) {
-                            segments_.erase(segments_.begin() + i);
-                        } else {
-                            i++;
+                            expired[i] = true;
                         }
-                    } else {
-                        i++;
                     }
                 }
 
@@ -179,6 +171,32 @@ namespace eka2l1::epoc {
                 current_segment_ = nullptr;
 
                 need_invalidate = true;
+            }
+        }
+
+        const auto last_expired = std::find(expired.rbegin(), expired.rend(), true);
+        if (last_expired == expired.rend()) {
+            return need_invalidate;
+        }
+
+        // Older segments may be painted over by an expired one, so they have to go into the merge too.
+        const std::size_t merge_count = std::distance(last_expired, expired.rend());
+        std::unique_ptr<gdi_store_command_segment> merged = flatten ? flatten(segments_.data(), merge_count) : nullptr;
+
+        if (merged) {
+            for (std::size_t i = 0; i < merge_count; i++) {
+                if (segments_[i].get() == current_segment_) {
+                    current_segment_ = nullptr;
+                }
+            }
+
+            segments_.erase(segments_.begin(), segments_.begin() + merge_count);
+            segments_.insert(segments_.begin(), std::move(merged));
+        } else {
+            for (std::size_t i = expired.size(); i-- > 0;) {
+                if (expired[i]) {
+                    segments_.erase(segments_.begin() + i);
+                }
             }
         }
 
@@ -246,6 +264,10 @@ namespace eka2l1::epoc {
 
         case gdi_store_command_draw_bitmap:
             build_command_draw_bitmap(command.get_data_struct_const<gdi_store_command_draw_bitmap_data>());
+            break;
+
+        case gdi_store_command_draw_raw_texture:
+            build_command_draw_raw_texture(command.get_data_struct_const<gdi_store_command_draw_raw_texture_data>());
             break;
 
         case gdi_store_command_disable_clip:
@@ -371,8 +393,16 @@ namespace eka2l1::epoc {
 
         scale_rectangle(scaled_dest_rect, scale_factor_);
 
+        // The texture holds premultiplied pixels and stays transparent where nothing was drawn.
+        builder_.set_feature(drivers::graphics_feature::blend, true);
+        builder_.blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
+            drivers::blend_factor::one, drivers::blend_factor::one_minus_frag_out_alpha,
+            drivers::blend_factor::one, drivers::blend_factor::one_minus_frag_out_alpha);
+        builder_.set_texture_filter(cmd.texture_, false, texture_filter_);
+        builder_.set_texture_filter(cmd.texture_, true, texture_filter_);
         builder_.draw_bitmap(cmd.texture_, 0, scaled_dest_rect, eka2l1::rect{}, eka2l1::vec2(0, 0), 0.0f,
             cmd.flags_);
+        builder_.set_feature(drivers::graphics_feature::blend, false);
     }
 
     void gdi_command_builder::build_command_draw_bitmap(const gdi_store_command_draw_bitmap_data &cmd) {

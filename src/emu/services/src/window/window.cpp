@@ -2096,10 +2096,8 @@ namespace eka2l1 {
                 if (!make_key_event(input_mapping.key_input_map, input_event, guest_event)) {
                     make_mouse_event(original_input_evt, guest_event, get_current_focus_screen());
 
-                    if (update_pointer_position(guest_event) && !touch_shipper.deliver_to_grab_window(kern, guest_event)) {
-                        touch_shipper.add_new_event(guest_event);
-                        root_current->walk_tree(&touch_shipper, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
-                        touch_shipper.clear();
+                    if (update_pointer_position(guest_event)) {
+                        touch_shipper.deliver(kern, root_current, get_focus(), guest_event);
                     }
                 } else {
                     if (input_event.key_.state_ != drivers::key_state::repeat) {

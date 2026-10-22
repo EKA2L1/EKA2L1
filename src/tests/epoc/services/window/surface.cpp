@@ -566,3 +566,91 @@ TEST_CASE("Deferred bitmap versions survive mutation eviction and queued draws",
     builder.destroy_bitmap(target);
     submit(driver, builder);
 }
+
+TEST_CASE("Flattened GDI pixels leave undrawn areas to what lies beneath", "[window_surface],[gdi_store]") {
+    surface_driver driver;
+    epoc::bitmap_cache cache(nullptr);
+    drivers::graphics_command_builder builder;
+    const auto flattened = drivers::create_bitmap(&driver, { 1, 1 }, 32);
+    const auto screen = drivers::create_bitmap(&driver, { 1, 1 }, 32);
+    submit(driver, builder);
+    common::region clip;
+    clip.add_rect(rect({ 0, 0 }, { 1, 1 }));
+    epoc::gdi_command_builder gdi(&driver, builder, cache, drivers::filter_option::nearest,
+        { 0, 0 }, 1.0f, clip);
+
+    epoc::gdi_store_command draw;
+    draw.opcode_ = epoc::gdi_store_command_draw_raw_texture;
+    auto &data = draw.get_data_struct<epoc::gdi_store_command_draw_raw_texture_data>();
+    data.texture_ = flattened;
+    data.dest_rect_ = rect({ 0, 0 }, { 1, 1 });
+    data.flags_ = 0;
+    REQUIRE(epoc::gdi_store_command_draws_pixels(draw.opcode_));
+
+    const std::vector<std::uint8_t> beneath{ 0, 0, 255, 255 };
+    const auto composite = [&](const std::vector<std::uint8_t> &pixels) {
+        driver.images[flattened] = pixels;
+        driver.images[screen] = beneath;
+        builder.bind_bitmap(screen);
+        gdi.build_single_command(draw);
+        submit(driver, builder);
+        return driver.images[screen];
+    };
+
+    REQUIRE(composite({ 0, 0, 0, 0 }) == beneath);
+    REQUIRE(composite({ 0, 255, 0, 255 }) == std::vector<std::uint8_t>{ 0, 255, 0, 255 });
+    REQUIRE(composite({ 64, 0, 0, 128 }) == std::vector<std::uint8_t>{ 64, 0, 127, 255 });
+    REQUIRE_FALSE(driver.invalid_use);
+}
+
+TEST_CASE("Expiring no-redraw segments merges everything older instead of dropping it", "[gdi_store]") {
+    const bool with_flattener = GENERATE(false, true);
+    const rect window({ 0, 0 }, { 4, 4 });
+
+    epoc::gdi_store_command_collection store;
+    const auto *redraw = store.add_new_segment(window, epoc::gdi_store_command_segment_redraw);
+    std::vector<const epoc::gdi_store_command_segment *> non_redraw;
+    for (std::uint32_t i = 0; i <= epoc::gdi_store_command_collection::LIMIT_NON_REDRAW_SEGMENTS; i++) {
+        non_redraw.push_back(store.add_new_segment(window, epoc::gdi_store_command_segment_non_redraw));
+    }
+    const auto *current = store.get_current_segment();
+    REQUIRE(current == non_redraw.back());
+
+    std::vector<const epoc::gdi_store_command_segment *> merged_inputs;
+    const epoc::gdi_store_command_segment *merged = nullptr;
+    epoc::gdi_store_command_collection::segment_flattener flatten;
+    if (with_flattener) {
+        flatten = [&](const std::unique_ptr<epoc::gdi_store_command_segment> *segments, const std::size_t count) {
+            for (std::size_t i = 0; i < count; i++) {
+                merged_inputs.push_back(segments[i].get());
+            }
+            auto result = std::make_unique<epoc::gdi_store_command_segment>();
+            result->type_ = epoc::gdi_store_command_segment_redraw;
+            result->region_.add_rect(window);
+            merged = result.get();
+            return result;
+        };
+    }
+
+    REQUIRE(store.clean_old_nonredraw_segments(flatten));
+    REQUIRE(store.get_current_segment() == current);
+
+    std::vector<const epoc::gdi_store_command_segment *> remaining;
+    for (const auto &segment : store.get_segments()) {
+        remaining.push_back(segment.get());
+    }
+
+    if (with_flattener) {
+        // Every segment older than the newest expired one may lie beneath it, in replay order.
+        std::vector<const epoc::gdi_store_command_segment *> expected_inputs{ redraw };
+        expected_inputs.insert(expected_inputs.end(), non_redraw.begin(), non_redraw.end() - 1);
+        REQUIRE(merged_inputs == expected_inputs);
+        REQUIRE(remaining == std::vector<const epoc::gdi_store_command_segment *>{ merged, current });
+    } else {
+        std::vector<const epoc::gdi_store_command_segment *> expected{ redraw };
+        expected.insert(expected.end(), non_redraw.begin(),
+            non_redraw.begin() + epoc::gdi_store_command_collection::KEEP_NON_REDRAW_SEGMENTS);
+        expected.push_back(current);
+        REQUIRE(remaining == expected);
+    }
+}

@@ -94,6 +94,8 @@ namespace eka2l1::epoc {
 
         int shadow_height;
 
+        std::int32_t pointer_capture_priority_ = 0;
+
         std::uint32_t max_pointer_buffer_;
         std::vector<epoc::event> pointer_buffer_;
 
@@ -297,6 +299,8 @@ namespace eka2l1::epoc {
         ~redraw_msg_canvas() override;
         void update_surface_ui(drivers::graphics_command_builder &builder);
         bool draw_surface_window(drivers::graphics_command_builder &builder);
+        std::unique_ptr<gdi_store_command_segment> flatten_segments(const std::unique_ptr<gdi_store_command_segment> *segments,
+            const std::size_t count);
 
         void invalidate(const eka2l1::rect &irect);
         void on_activate() override;

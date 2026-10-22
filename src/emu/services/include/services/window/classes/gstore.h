@@ -27,6 +27,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <memory>
 
 namespace eka2l1::drivers {
@@ -48,7 +49,8 @@ namespace eka2l1::epoc {
         gdi_store_command_set_clip_rect_single,
         gdi_store_command_set_clip_rect_multiple,
         gdi_store_command_disable_clip,
-        gdi_store_command_update_texture
+        gdi_store_command_update_texture,
+        gdi_store_command_draw_raw_texture
     };
 
     // Whether replaying this opcode puts any pixel on the target. The clipping
@@ -63,6 +65,7 @@ namespace eka2l1::epoc {
         case gdi_store_command_draw_bitmap:
         case gdi_store_command_draw_text:
         case gdi_store_command_update_texture:
+        case gdi_store_command_draw_raw_texture:
             return true;
 
         default:
@@ -216,8 +219,13 @@ namespace eka2l1::epoc {
         gdi_store_command_segment *add_new_segment(const eka2l1::rect &draw_rect, const gdi_store_command_segment_type type_);
         void promote_last_segment();
         
-        // Returns true if this must cause an invalidation
-        bool clean_old_nonredraw_segments();
+        // Replaces the oldest segments with one that reproduces their pixels, or returns null.
+        using segment_flattener = std::function<std::unique_ptr<gdi_store_command_segment>(
+            const std::unique_ptr<gdi_store_command_segment> *segments, std::size_t count)>;
+
+        // Returns true if this must cause an invalidation. With a flattener, expired segments and
+        // everything older are merged instead of dropped.
+        bool clean_old_nonredraw_segments(const segment_flattener &flatten = nullptr);
         void redraw_done();
 
         gdi_store_command_segment *get_current_segment() const {

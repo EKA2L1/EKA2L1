@@ -121,7 +121,6 @@ namespace eka2l1::epoc {
 
 namespace eka2l1 {
     void fbs_server::initialize_palette() {
-        palette_256_ = epoc::get_suitable_palette_256(sys->get_symbian_version_use());
         std::optional<epoc::palette_256> rom_palette;
         if (const auto palette = sys->get_lib_manager()->load(u"palette.dll"); palette && palette->is_rom()) {
             std::uint8_t *code = nullptr;

@@ -119,6 +119,9 @@ namespace eka2l1::epoc {
         bool remove(epoc::bitwise_bitmap *bmp);
 
         void clean(drivers::graphics_driver *drv);
+
+        // The texture is destroyed by the next flush_retired() after the last reference drops.
+        std::shared_ptr<drivers::handle> retain_texture(const drivers::handle texture);
         // Append destruction after all draws recorded for this screen update.
         void flush_retired(drivers::graphics_command_builder &builder);
     };

@@ -409,7 +409,6 @@ namespace eka2l1 {
         void load_fonts_from_directory(eka2l1::io_system *io, eka2l1::directory *dir);
         void load_linked_fonts_from_directory(eka2l1::io_system *io, const std::u16string &fonts_folder_path);
         void initialize_server();
-        void initialize_palette();
 
         bool add_font(common::ro_stream &stream, const std::string &name, const bool user_font = false);
         bool add_single_font(eka2l1::io_system *io, const std::u16string &path);
@@ -419,6 +418,13 @@ namespace eka2l1 {
         ~fbs_server() override;
 
         service::uid init();
+
+        /**
+         * \brief   Resolve the Color256 table from the ROM's palette or GDI library.
+         *
+         * Call once drive Z is mounted; until then the version-based table is used.
+         */
+        void initialize_palette();
 
         const std::array<std::uint32_t, 256> &palette_256() const {
             return palette_256_;

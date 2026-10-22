@@ -398,6 +398,12 @@ namespace eka2l1 {
         }
         
         void init_services_post_bootup(system *sys) {
+            // ROM libraries only become loadable once the frontend has mounted drive Z.
+            if (auto fbss = reinterpret_cast<fbs_server *>(sys->get_kernel_system()->get_by_name<service::server>(
+                    epoc::get_fbs_server_name_by_epocver(sys->get_symbian_version_use())))) {
+                fbss->initialize_palette();
+            }
+
             epoc::sms::supply_sim_settings(sys);
             supply_plpvariant_machine_id(sys);
         }
