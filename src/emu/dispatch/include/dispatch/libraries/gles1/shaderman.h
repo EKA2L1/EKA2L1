@@ -45,6 +45,7 @@ namespace eka2l1::dispatch {
         std::int32_t point_attenuation_loc_;
         std::int32_t point_range_loc_;
         std::int32_t palette_mat_loc_;
+        std::int32_t weight_scale_loc_;
         std::int32_t texcoord_loc_[GLES1_EMU_MAX_TEXTURE_COUNT];
         std::int32_t texview_loc_[GLES1_EMU_MAX_TEXTURE_COUNT];
         std::int32_t texenv_color_loc_[GLES1_EMU_MAX_TEXTURE_COUNT];

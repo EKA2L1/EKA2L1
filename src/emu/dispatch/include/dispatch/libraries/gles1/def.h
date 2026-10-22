@@ -194,6 +194,7 @@ namespace eka2l1::dispatch {
             VERTEX_STATE_CLIENT_MATRIX_INDEX_ARRAY = 1 << 14,
             VERTEX_STATE_CLIENT_WEIGHT_ARRAY = 1 << 15,
             VERTEX_STATE_SKINNING_ENABLE = 1 << 16,
+            // Store the matrix-index array size minus one to cover all four vertex units.
             VERTEX_STATE_SKIN_WEIGHTS_PER_VERTEX_BITS_POS = 17,
             VERTEX_STATE_SKIN_WEIGHTS_PER_VERTEX_MASK = 0b11 << 17,
             VERTEX_STATE_LIGHTING_ENABLE = 1 << 19,
