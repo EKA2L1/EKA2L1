@@ -18,6 +18,25 @@
 
 using namespace eka2l1::dispatch;
 
+TEST_CASE("GLES2 rejects GLES1 logic operation capabilities without changing blending", "[gles2][logicop]") {
+    egl_context_es2 context;
+    REQUIRE(context.enable(GL_BLEND_EMU));
+    REQUIRE_FALSE(context.enable(GL_COLOR_LOGIC_OP_EMU));
+    REQUIRE_FALSE(context.disable(GL_COLOR_LOGIC_OP_EMU));
+    bool enabled = false;
+    REQUIRE_FALSE(context.is_enabled(GL_COLOR_LOGIC_OP_EMU, enabled));
+    REQUIRE(context.is_enabled(GL_BLEND_EMU, enabled));
+    REQUIRE(enabled);
+    auto commands = context.cmd_builder_.retrieve_command_list();
+    REQUIRE(commands.size_ == 1);
+    eka2l1::drivers::graphics_feature feature;
+    bool host_enabled = false;
+    eka2l1::drivers::unpack_u64_to_2u32(commands.base_[0].data_[0], feature, host_enabled);
+    REQUIRE(feature == eka2l1::drivers::graphics_feature::blend);
+    REQUIRE(host_enabled);
+    delete[] commands.base_;
+}
+
 TEST_CASE("GLES boolean queries write one canonical byte per component", "[gles1][gles2]") {
     egl_context_es1 es1;
     egl_context_es2 es2;
@@ -377,6 +396,9 @@ TEST_CASE("EGL can select native pixmaps with 32-bit colour and 16-bit depth", "
     std::vector<egl_config> configs(32, egl_config(0));
     std::int32_t count = 0;
     REQUIRE(egl_choose_config_emu(nullptr, 1, const_cast<std::int32_t *>(attributes), configs.data(), configs.size(), &count));
+    REQUIRE(count > 0);
+    REQUIRE(configs[0].buffer_size() == 32);
+    REQUIRE(configs[0].depth_bits() == 16);
     bool exact_match = false;
     for (int i = 0; i < count; i++) {
         std::uint32_t colour = 0, depth = 0, surfaces = 0;

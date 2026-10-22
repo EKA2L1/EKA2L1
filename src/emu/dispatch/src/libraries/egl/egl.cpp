@@ -39,13 +39,11 @@ namespace eka2l1::dispatch {
     // First bit is surface type, and second bit is buffer size bits
     static constexpr std::uint32_t EGL_EMU_CONFIG_LIST_VALS[] = {
         // GLES1
-        0b010, 0b100, 0b110,
+        0b100010, 0b010, 0b100100, 0b100, 0b100110, 0b110,
         // GLES2
         0b1010, 0b1100, 0b1110,
         // VG
         0b10010, 0b10100, 0b10110,
-        // GLES1, 16-bit depth without stencil.
-        0b100010, 0b100100, 0b100110,
     };
 
     static constexpr std::uint32_t EGL_EMU_CONFIG_LIST_VALS_LENGTH = sizeof(EGL_EMU_CONFIG_LIST_VALS) / sizeof(std::uint32_t);
@@ -651,7 +649,6 @@ namespace eka2l1::dispatch {
         }
 
         if (surface->pixmap_readback_) {
-            (*surface->pixmap_readback_)();
             return EGL_TRUE;
         }
 

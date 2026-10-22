@@ -391,6 +391,11 @@ namespace eka2l1::dispatch {
         }
 
         switch (feature) {
+        case GL_COLOR_LOGIC_OP_EMU:
+            non_shader_statuses_ |= egl_context_es_shared::NON_SHADER_STATE_COLOR_LOGIC_OP_ENABLE;
+            cmd_builder_.set_feature(drivers::graphics_feature::blend, false);
+            break;
+
         case GL_POINT_SPRITE_OES:
             point_sprite_enabled_ = true;
             break;
@@ -496,6 +501,11 @@ namespace eka2l1::dispatch {
         }
 
         switch (feature) {
+        case GL_COLOR_LOGIC_OP_EMU:
+            non_shader_statuses_ &= ~egl_context_es_shared::NON_SHADER_STATE_COLOR_LOGIC_OP_ENABLE;
+            cmd_builder_.set_feature(drivers::graphics_feature::blend, non_shader_statuses_ & NON_SHADER_STATE_BLEND_ENABLE);
+            break;
+
         case GL_POINT_SPRITE_OES:
             point_sprite_enabled_ = false;
             break;
@@ -601,6 +611,10 @@ namespace eka2l1::dispatch {
         }
 
         switch (feature) {
+        case GL_COLOR_LOGIC_OP_EMU:
+            enabled = (non_shader_statuses_ & egl_context_es_shared::NON_SHADER_STATE_COLOR_LOGIC_OP_ENABLE) ? 1 : 0;
+            break;
+
         case GL_POINT_SPRITE_OES:
             enabled = point_sprite_enabled_;
             break;
