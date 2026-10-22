@@ -1801,7 +1801,7 @@ namespace eka2l1 {
     static constexpr std::uint64_t DIRECT_FRAMEBUFFER_REFRESH_INTERVAL_US = 1000000 / 60;
 
     void window_server::map_direct_framebuffer(epoc::screen *scr) {
-        if (!kern->is_eka1() || !scr->screen_buffer_chunk) {
+        if (scr->is_screenplay_architecture() || !scr->screen_buffer_chunk) {
             return;
         }
         scr->mark_direct_framebuffer_mapped();

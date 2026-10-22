@@ -332,7 +332,7 @@ namespace eka2l1::epoc {
             draw_area(eka2l1::rect(eka2l1::vec2(0, first), eka2l1::vec2(screen_size.x, end - first)));
         };
 
-        if (direct_framebuffer_mapped) {
+        if (direct_framebuffer_mapped && !(symbian_rects && rect_count)) {
             const auto &rows = direct_framebuffer.written_rows();
             for (int y = 0; y < static_cast<int>(rows.size());) {
                 if (!rows[y]) {

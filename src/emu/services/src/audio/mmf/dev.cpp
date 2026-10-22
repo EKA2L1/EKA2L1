@@ -1073,6 +1073,11 @@ namespace eka2l1 {
     void mmf_dev_server_session::fetch(service::ipc_context *ctx) {
         const epocver ver = server<mmf_dev_server>()->get_kernel_object_owner()->get_epoc_version();
 
+        if (ver == epocver::epoc91 && ctx->msg->function == epoc::mmf_dev_v91_set_priority_settings) {
+            set_priority_settings(ctx);
+            return;
+        }
+
         if ((ver == epocver::epoc91) || (ver == epocver::epoc93fp1) || (ver == epocver::epoc93fp2) || (ver == epocver::epoc94)) {
             switch (ctx->msg->function) {
             case epoc::mmf_dev_init0:
@@ -1189,6 +1194,7 @@ namespace eka2l1 {
 
             default:
                 LOG_ERROR(SERVICE_MMFAUD, "Unimplemented MMF dev server session opcode {}", ctx->msg->function);
+                ctx->complete(epoc::error_not_supported);
                 
                 break;
             }
@@ -1316,6 +1322,7 @@ namespace eka2l1 {
 
             default:
                 LOG_ERROR(SERVICE_MMFAUD, "Unimplemented MMF dev server session opcode {}", ctx->msg->function);
+                ctx->complete(epoc::error_not_supported);
                 break;
             }
         }

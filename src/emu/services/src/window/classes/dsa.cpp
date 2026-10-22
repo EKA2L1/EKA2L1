@@ -87,12 +87,13 @@ namespace eka2l1::epoc {
         std::uint32_t window_handle = 0;
 
         if (sync_thread_ && (cmd.header.cmd_len == 8)) {
-            // First integer looks like a sync status too. Probably for other side around.
-            // TODO: Use it.
+            // Early message-queue clients include a status word but complete it themselves.
             window_handle = *(reinterpret_cast<std::uint32_t *>(cmd.data_ptr) + 1);
 
-            dsa_must_stop_notify_.sts = *reinterpret_cast<address *>(cmd.data_ptr);
-            dsa_must_stop_notify_.requester = ctx.msg->own_thr;
+            if (client->protocol().legacy_dsa()) {
+                dsa_must_stop_notify_.sts = *reinterpret_cast<address *>(cmd.data_ptr);
+                dsa_must_stop_notify_.requester = ctx.msg->own_thr;
+            }
         } else {
             window_handle = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
         }

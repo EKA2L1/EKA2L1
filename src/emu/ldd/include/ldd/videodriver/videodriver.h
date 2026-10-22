@@ -21,6 +21,10 @@
 
 #include <kernel/ldd.h>
 
+namespace eka2l1::kernel {
+    class chunk;
+}
+
 namespace eka2l1::ldd {
     enum video_driver_control_op {
         video_driver_control_op_get_screen_display_constrast = 3,
@@ -73,6 +77,33 @@ namespace eka2l1::ldd {
         ~video_driver_factory() override {
         }
 
+        void install() override;
+        std::unique_ptr<channel> make_channel(epoc::version ver) override;
+    };
+
+    enum lcd_driver_control_op {
+        lcd_driver_get_framebuffer = 0x1001,
+        lcd_driver_create_context = 0x2001,
+        lcd_driver_submit_queue = 0x2003,
+        lcd_driver_get_orientation = 0x2008,
+        lcd_driver_get_scale = 0x200B
+    };
+
+    class lcd_driver_channel : public channel {
+        kernel::chunk *command_queue_ = nullptr;
+
+    public:
+        explicit lcd_driver_channel(kernel_system *kern, system *sys, epoc::version ver);
+        int destroy() override;
+        std::int32_t do_control(kernel::thread *r, std::uint32_t n, eka2l1::ptr<void> arg1,
+            eka2l1::ptr<void> arg2) override;
+        std::int32_t do_request(epoc::notify_info info, std::uint32_t n, eka2l1::ptr<void> arg1,
+            eka2l1::ptr<void> arg2, bool is_supervisor) override;
+    };
+
+    class lcd_driver_factory : public factory {
+    public:
+        explicit lcd_driver_factory(kernel_system *kern, system *sys);
         void install() override;
         std::unique_ptr<channel> make_channel(epoc::version ver) override;
     };

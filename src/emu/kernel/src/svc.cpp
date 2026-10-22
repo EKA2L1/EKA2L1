@@ -5889,6 +5889,15 @@ namespace eka2l1::epoc {
         return chn->do_request(request_nof_info, func, args[0], args[1], false);
     }
 
+    BRIDGE_FUNC(std::int32_t, logical_channel_request, const kernel::handle h, const int func,
+        eka2l1::ptr<void> arg1, eka2l1::ptr<void> arg2) {
+        if (func < 0) {
+            return logical_channel_do_request(kern, h, ~func, arg1.cast<epoc::request_status>(),
+                arg2.cast<std::uint32_t>().get(kern->crr_process()));
+        }
+        return logical_channel_do_control(kern, h, func, arg1, arg2);
+    }
+
     // TChannelCreateInfo8, as Exec::ChannelCreate receives it.
     struct logical_channel_create_info {
         epoc::version version;
@@ -6367,6 +6376,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x02, chunk_size),
         BRIDGE_REGISTER(0x03, chunk_max_size),
         BRIDGE_REGISTER(0x05, tick_count),
+        BRIDGE_REGISTER(0x0A, logical_channel_request),
         BRIDGE_REGISTER(0x0B, math_rand),
         BRIDGE_REGISTER(0x0C, imb_range),
         BRIDGE_REGISTER(0x0E, library_lookup),
@@ -6456,6 +6466,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x7D, server_create),
         BRIDGE_REGISTER(0x7E, session_create),
         BRIDGE_REGISTER(0x7F, session_create_from_handle),
+        BRIDGE_REGISTER(0x82, logical_channel_create),
         BRIDGE_REGISTER(0x83, timer_create),
         BRIDGE_REGISTER(0x84, timer_after_high_res), // Actually TimerHighRes
         BRIDGE_REGISTER(0x85, after), // Actually AfterHighRes
