@@ -30,6 +30,8 @@
 #include <utils/cardinality.h>
 #include <utils/consts.h>
 
+#include <utility>
+
 namespace eka2l1 {
     static bool read_str16_aligned(common::ro_stream *stream, std::u16string &dat) {
         char len = 0;
@@ -107,8 +109,21 @@ namespace eka2l1 {
             return false;
         }
 
-        // TODO: Read MIME infos, and file ownership lists
+        std::int16_t datatype_count = 0;
+        if (stream->read(&datatype_count, sizeof(datatype_count)) != sizeof(datatype_count) || datatype_count < 0) {
+            return false;
+        }
 
+        std::vector<data_type> data_types;
+        for (std::int16_t i = 0; i < datatype_count; ++i) {
+            data_type type;
+            if (stream->read(&type.priority_, sizeof(type.priority_)) != sizeof(type.priority_)
+                || !loader::read_resource_string(*stream, type.type_)) {
+                return false;
+            }
+            data_types.push_back(std::move(type));
+        }
+        reg.data_types = std::move(data_types);
         return true;
     }
 

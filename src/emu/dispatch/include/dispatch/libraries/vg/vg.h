@@ -4,6 +4,7 @@
 #include <dispatch/def.h>
 
 namespace eka2l1::dispatch {
+    BRIDGE_FUNC_LIBRARY(void, vg_flush_emu);
     BRIDGE_FUNC_LIBRARY(void, vg_gaussian_blur_emu, VGImage dst, VGImage src, VGfloat stdDeviationX, VGfloat stdDeviationY, VGTilingMode tilingMode);
 	BRIDGE_FUNC_LIBRARY(VGErrorCode, vg_get_error_emu);
 	BRIDGE_FUNC_LIBRARY(void, vg_setf_emu, VGParamType type, VGfloat value);

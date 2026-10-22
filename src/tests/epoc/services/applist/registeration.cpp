@@ -85,3 +85,58 @@ TEST_CASE("mandatory_check_localise", "applist_registeration") {
     REQUIRE(reg.mandatory_info.short_caption.to_std_string(nullptr) == u"ITried");
     REQUIRE(reg.mandatory_info.long_caption.to_std_string(nullptr) == u"ITried");
 }
+
+static std::vector<std::uint8_t> registration_with_mime_types() {
+    std::vector<std::uint8_t> data(8, 0);
+    const auto append_string16 = [&data](const std::u16string &value) {
+        data.push_back(static_cast<std::uint8_t>(value.size()));
+        if (!value.empty()) {
+            if (data.size() & 1) {
+                data.push_back(0);
+            }
+            for (const auto ch : value) {
+                data.push_back(ch & 0xFF);
+                data.push_back(ch >> 8);
+            }
+        }
+    };
+    append_string16(u"MimeTest");
+    data.insert(data.end(), 4, 0); // Attributes.
+    append_string16(u"");
+    data.insert(data.end(), 8, 0); // Localisable resource ID and capabilities.
+    append_string16(u"");
+    data.push_back(0); // Default screen.
+    data.insert(data.end(), { 2, 0 });
+    for (const auto &type : { std::string("application/x-shockwave-flash"), std::string("video/x-flv") }) {
+        data.insert(data.end(), { 0x78, 0x56, 0x34, 0x12 });
+        data.push_back(static_cast<std::uint8_t>(type.size()));
+        data.insert(data.end(), type.begin(), type.end());
+    }
+    return data;
+}
+
+TEST_CASE("registration_reads_mime_types_and_full_width_priorities", "applist_registeration") {
+    auto data = registration_with_mime_types();
+    common::ro_buf_stream stream(data.data(), data.size());
+    apa_app_registry reg;
+
+    REQUIRE(read_registeration_info(&stream, reg, drive_z, false));
+    REQUIRE(reg.data_types.size() == 2);
+    REQUIRE(reg.data_types[0].type_ == "application/x-shockwave-flash");
+    REQUIRE(reg.data_types[1].type_ == "video/x-flv");
+    REQUIRE(reg.data_types[0].priority_ == 0x12345678);
+    REQUIRE(reg.data_types[1].priority_ == 0x12345678);
+    reg.mandatory_info.uid = 0x101FD693;
+    REQUIRE(find_data_type_handler({ reg }, "application/x-shockwave-flash") == 0x101FD693);
+}
+
+TEST_CASE("truncated_mime_list_preserves_mandatory_registration", "applist_registeration") {
+    auto data = registration_with_mime_types();
+    data.pop_back();
+    common::ro_buf_stream stream(data.data(), data.size());
+    apa_app_registry reg;
+
+    REQUIRE(read_registeration_info(&stream, reg, drive_z, false));
+    REQUIRE(reg.mandatory_info.app_path.to_std_string(nullptr) == u"Z:\\MimeTest.exe");
+    REQUIRE(reg.data_types.empty());
+}

@@ -34,6 +34,8 @@
 
 #include <map>
 #include <memory>
+#include <optional>
+#include <string>
 
 namespace eka2l1 {
     namespace epoc::socket {
@@ -46,6 +48,7 @@ namespace eka2l1 {
             std::shared_ptr<connection_reference> reference_;
             std::vector<connection_info> snapshot_;
             conn_progress progress_{};
+            std::optional<std::string> start_preferences_;
             std::unique_ptr<service::ipc_context> progress_request_;
 
             void cancel_progress();
@@ -264,6 +267,11 @@ namespace eka2l1 {
         socket_reform_hr_open_with_connection = 0x47,
         socket_reform_cn_open_with_cn_type = 0x48,
         socket_reform_cn_open_with_name = 0x49,
+        socket_reform_cn_start = 0x4A,
+        socket_reform_cn_set_start_preferences = 0x4B,
+        socket_reform_cn_get_int_setting = 0x4D,
+        socket_reform_cn_get_des_setting = 0x50,
+        socket_reform_cn_close = 0x97,
         socket_reform_cn_name = 0x98,
         socket_reform_cn_control = 0x10,
         socket_reform_cn_get_long_des_setting = 0x51,

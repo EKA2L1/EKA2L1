@@ -58,6 +58,9 @@ namespace gnuVG {
 	}
 
 	void Context::on_surface_changed(eka2l1::drivers::graphics_driver *driver, eka2l1::dispatch::egl_surface *prev_read, eka2l1::dispatch::egl_surface *prev_draw) {
+		if (driver) {
+			max_image_dimension = static_cast<VGint>(std::min<std::uint32_t>(driver->max_texture_size(), std::numeric_limits<VGint>::max()));
+		}
 		if (!draw_surface_) {
 			return;
 		}
@@ -913,12 +916,19 @@ namespace gnuVG {
 		case VG_MAX_COLOR_RAMP_STOPS:
 			return GNUVG_MAX_COLOR_RAMP_STOPS;
 
-		case VG_MAX_KERNEL_SIZE:
-		case VG_MAX_SEPARABLE_KERNEL_SIZE:
 		case VG_MAX_IMAGE_WIDTH:
 		case VG_MAX_IMAGE_HEIGHT:
+			return max_image_dimension;
+
 		case VG_MAX_IMAGE_PIXELS:
+			return static_cast<VGint>(std::min<std::int64_t>(static_cast<std::int64_t>(max_image_dimension) * max_image_dimension,
+				std::numeric_limits<VGint>::max() / 4));
+
 		case VG_MAX_IMAGE_BYTES:
+			return vgGeti(VG_MAX_IMAGE_PIXELS) * 4;
+
+		case VG_MAX_KERNEL_SIZE:
+		case VG_MAX_SEPARABLE_KERNEL_SIZE:
 		case VG_MAX_FLOAT:
 		case VG_MAX_GAUSSIAN_STD_DEVIATION:
 			break;
@@ -1281,7 +1291,7 @@ namespace gnuVG {
 		}
 
 		apply_state_changes(state);
-		prepare_framebuffer_matrix(framebuffer, subset_info, do_glyph);
+		prepare_framebuffer_matrix(framebuffer, subset_info, do_glyph ? GNUVG_MATRIX_GLYPH_USER_TO_SURFACE : GNUVG_MATRIX_IMAGE_USER_TO_SURFACE);
 
 		auto f = [this, vertices, vertices_full, mat, mat_full, indices, texture_coords, wrap_mode, state, do_glyph]
 			(const FrameBuffer *fbuffer,
@@ -1430,14 +1440,14 @@ namespace gnuVG {
 		trivial_render_elements(state, vertices, 8, indices, 6, r, g, b, a);
 	}
 
-	void Context::prepare_framebuffer_matrix(const FrameBuffer* fbuf, const FrameBufferSubsetInfo *subset, bool is_glyph) {
-		int matrix_index = (is_glyph ? GNUVG_MATRIX_GLYPH_USER_TO_SURFACE : GNUVG_MATRIX_IMAGE_USER_TO_SURFACE);
-
-		/* if dirty - calculate final matrix */
-		if(matrix_is_dirty[matrix_index]) {
-			matrix_is_dirty[matrix_index] = false;
-
-			final_matrix[matrix_index].multiply(screen_matrix, matrix[matrix_index]);
+	void Context::prepare_framebuffer_matrix(const FrameBuffer* fbuf, const FrameBufferSubsetInfo *subset, MatrixMode matrix_mode) {
+		Matrix image_to_clip;
+		if (matrix_mode == GNUVG_MATRIX_FILL_PAINT_TO_USER || matrix_mode == GNUVG_MATRIX_STROKE_PAINT_TO_USER) {
+			Matrix paint_to_surface;
+			paint_to_surface.multiply(matrix[conversion_matrix], matrix[matrix_mode]);
+			image_to_clip.multiply(screen_matrix, paint_to_surface);
+		} else {
+			image_to_clip.multiply(screen_matrix, matrix[matrix_mode]);
 		}
 
 		/* Create matrix to convert from final on-screen OpenGL
@@ -1447,7 +1457,7 @@ namespace gnuVG {
 		if(subset && (subset->subset_x >= 0))
 			temp_a.translate(-subset->subset_x, -subset->subset_y);
 		temp_a.scale(fbuf->width, fbuf->height);
-		temp_b.multiply(final_matrix[matrix_index], temp_a);
+		temp_b.multiply(image_to_clip, temp_a);
 		temp_b.invert();
 
 		/* Convert to OpenGL friendly format */
@@ -1627,7 +1637,7 @@ namespace gnuVG {
 			if(active_paint->pattern) {
 				auto ptf = active_paint->pattern->get_framebuffer();
 				auto subset = active_paint->pattern->get_subset_info();
-				prepare_framebuffer_matrix(ptf, &subset, false);
+				prepare_framebuffer_matrix(ptf, &subset, pipeline_mode == VG_FILL_PATH ? GNUVG_MATRIX_FILL_PAINT_TO_USER : GNUVG_MATRIX_STROKE_PAINT_TO_USER);
 
 				eka2l1::drivers::addressing_option wrap_mode = eka2l1::drivers::addressing_option::clamp_to_edge;
 				switch (active_paint->tiling_mode) {
@@ -2613,6 +2623,12 @@ namespace gnuVG {
 using namespace gnuVG;
 
 namespace eka2l1::dispatch {
+    BRIDGE_FUNC_LIBRARY(void, vg_flush_emu) {
+        gnuVG::Context *ctx = get_active_context(sys);
+        if (ctx) {
+            ctx->flush_to_driver(sys->get_dispatcher()->get_egl_controller(), sys->get_graphics_driver());
+        }
+    }
 
 	/*********************
 	 *

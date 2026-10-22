@@ -523,5 +523,6 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1457, vg_load_identity_emu, "vgLoadIdentity"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1458, vg_draw_path_emu, "vgDrawPath"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1459, egl_query_profiling_data_nok_emu, "eglQueryProfilingDataNOK"),
+        BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x145A, vg_flush_emu, "vgFlush"),
     };
 }

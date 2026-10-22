@@ -41,6 +41,7 @@
 
 namespace gnuVG {
 	class Context : public eka2l1::dispatch::egl_context {
+		VGint max_image_dimension = 2048;
 	public:
 		struct FrameBuffer {
 			eka2l1::drivers::handle framebuffer = 0;
@@ -234,7 +235,7 @@ namespace gnuVG {
 						VGTilingMode = VG_TILE_FILL,
 						const FrameBufferSubsetInfo *subset_info = nullptr,
 						bool do_glyph = false);
-		void prepare_framebuffer_matrix(const FrameBuffer* frbuf, const FrameBufferSubsetInfo *subset_info, bool is_glyph);
+		void prepare_framebuffer_matrix(const FrameBuffer* frbuf, const FrameBufferSubsetInfo *subset_info, MatrixMode matrix_mode);
 		void select_conversion_matrix(MatrixMode conversion_matrix);
 		void use_pipeline(const GraphicState &state, gnuVGPipeline new_pipeline, VGPaintMode new_mode);
 		void reset_pre_translation();

@@ -25,7 +25,9 @@ namespace gnuVG {
 		     VGint width, VGint height,
 		     VGbitfield allowedQuality)
 		: Object(ctx) {
-		if ((width <= 0) || (height <= 0)) {
+		if ((width <= 0) || (height <= 0)
+			|| (width > ctx->vgGeti(VG_MAX_IMAGE_WIDTH)) || (height > ctx->vgGeti(VG_MAX_IMAGE_HEIGHT))
+			|| (static_cast<std::int64_t>(width) * height > ctx->vgGeti(VG_MAX_IMAGE_PIXELS))) {
 			ctx->set_error(VG_ILLEGAL_ARGUMENT_ERROR);
 			throw FailedToCreateImageException();
 		}
