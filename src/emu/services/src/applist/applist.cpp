@@ -25,6 +25,7 @@
 #include <services/fbs/fbs.h>
 
 #include <common/benchmark.h>
+#include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/log.h>
 #include <common/path.h>
@@ -1600,7 +1601,13 @@ namespace eka2l1 {
         }
 
         if (app_exit_callback) {
-            pr->logon([app_exit_callback, this](kernel::process *pr) {
+            std::u16string app_directory;
+            if (legacy_level() < APA_LEGACY_LEVEL_MORDEN) {
+                if (auto *reg = get_registration(known_uid)) {
+                    app_directory = file_directory(reg->mandatory_info.app_path.to_std_string(nullptr), true);
+                }
+            }
+            pr->logon([app_exit_callback, app_directory, this](kernel::process *pr) {
                 auto child_processes = pr->get_child_processes();
 
                 // Handle case where a subsequence UI process is spawned
@@ -1611,7 +1618,10 @@ namespace eka2l1 {
                         if (child->get_exit_type() == kernel::entity_exit_type::pending) {
                             auto pid = child->get_uid();
 
-                            if (get_registration(pid)) {
+                            // EKA1 application DLLs can hand off to an unregistered EXE in their own directory.
+                            const bool bundled_executable = !app_directory.empty()
+                                && common::compare_ignore_case(app_directory, file_directory(child->get_exe_path(), true)) == 0;
+                            if (get_registration(pid) || bundled_executable) {
                                 child->logon([app_exit_callback](kernel::process *pr) {
                                     app_exit_callback(pr);
                                 });
