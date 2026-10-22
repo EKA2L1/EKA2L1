@@ -263,6 +263,9 @@ namespace eka2l1::dispatch {
             return data_size_;
         }
 
+        const std::uint8_t *index_data(std::uint32_t offset) const {
+            return offset < index_data_.size() ? index_data_.data() + offset : nullptr;
+        }
         void assign_index_data(const std::uint32_t target, const void *data, const std::uint32_t size);
         void update_index_data(const std::uint32_t offset, const void *data, const std::uint32_t size);
 

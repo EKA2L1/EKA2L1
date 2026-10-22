@@ -121,6 +121,7 @@ namespace eka2l1::drivers {
         rgb5_a1,
         rgb565,
         depth16,
+        depth_component,
         stencil8,
         depth_stencil,
         depth24_stencil8,

@@ -141,17 +141,20 @@ namespace eka2l1::drivers {
         return texture;
     }
 
-    static texture_ptr instantiate_bitmap_depth_stencil_texture(graphics_driver *driver, const eka2l1::vec2 &size) {
+    static texture_ptr instantiate_bitmap_depth_stencil_texture(graphics_driver *driver, const eka2l1::vec2 &size, const std::uint32_t depth_bits) {
         auto ds_tex = make_texture(driver);
         ds_tex->create(driver, 2, 0, eka2l1::vec3(size.x, size.y, 0),
-            texture_format::depth24_stencil8, texture_format::depth_stencil, texture_data_type::uint_24_8,
+            depth_bits == 16 ? texture_format::depth16 : texture_format::depth24_stencil8,
+            depth_bits == 16 ? texture_format::depth_component : texture_format::depth_stencil,
+            depth_bits == 16 ? texture_data_type::ushort : texture_data_type::uint_24_8,
             nullptr, 0);
 
         return ds_tex;
     }
 
-    bitmap::bitmap(graphics_driver *driver, const eka2l1::vec2 &size, const int initial_bpp)
-        : bpp(initial_bpp) {
+    bitmap::bitmap(graphics_driver *driver, const eka2l1::vec2 &size, const int initial_bpp, const std::uint32_t initial_depth_bits)
+        : bpp(initial_bpp)
+        , depth_bits(initial_depth_bits) {
         // Make color buffer for our bitmap!
         tex = std::move(instantiate_suit_color_bitmap_texture(driver, size, bpp));
     }
@@ -164,11 +167,11 @@ namespace eka2l1::drivers {
 
     void bitmap::resize(graphics_driver *driver, const eka2l1::vec2 &new_size) {
         auto tex_to_replace = std::move(instantiate_suit_color_bitmap_texture(driver, new_size, bpp));
-        auto ds_tex_to_replace = std::move(instantiate_bitmap_depth_stencil_texture(driver, new_size));
+        auto ds_tex_to_replace = std::move(instantiate_bitmap_depth_stencil_texture(driver, new_size, depth_bits));
 
         if (fb) {
             auto new_fb = make_framebuffer(driver, { tex_to_replace.get() }, { 0 }, ds_tex_to_replace.get(), 0,
-                ds_tex_to_replace.get(), 0);
+                depth_bits == 16 ? nullptr : ds_tex_to_replace.get(), 0);
 
             fb->bind(driver, framebuffer_bind_read);
             new_fb->bind(driver, framebuffer_bind_draw);
@@ -194,8 +197,8 @@ namespace eka2l1::drivers {
     }
 
     void bitmap::init_fb(graphics_driver *driver) {
-        ds_tex = std::move(instantiate_bitmap_depth_stencil_texture(driver, tex->get_size()));
-        fb = make_framebuffer(driver, { tex.get() }, { 0 }, ds_tex.get(), 0, ds_tex.get(), 0);
+        ds_tex = std::move(instantiate_bitmap_depth_stencil_texture(driver, tex->get_size(), depth_bits));
+        fb = make_framebuffer(driver, { tex.get() }, { 0 }, ds_tex.get(), 0, depth_bits == 16 ? nullptr : ds_tex.get(), 0);
     }
 
     shared_graphics_driver::shared_graphics_driver(const graphic_api gr_api)
@@ -433,10 +436,10 @@ namespace eka2l1::drivers {
         auto slot_free = std::find(bmp_textures.begin(), bmp_textures.end(), nullptr);
 
         if (slot_free != bmp_textures.end()) {
-            *slot_free = std::make_unique<bitmap>(this, size, static_cast<int>(bpp));
+            *slot_free = std::make_unique<bitmap>(this, size, static_cast<int>(bpp), static_cast<std::uint32_t>(cmd.data_[3]));
             *result = std::distance(bmp_textures.begin(), slot_free) + 1;
         } else {
-            bmp_textures.push_back(std::make_unique<bitmap>(this, size, static_cast<int>(bpp)));
+            bmp_textures.push_back(std::make_unique<bitmap>(this, size, static_cast<int>(bpp), static_cast<std::uint32_t>(cmd.data_[3])));
             *result = bmp_textures.size();
         }
 

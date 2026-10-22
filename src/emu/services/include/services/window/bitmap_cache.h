@@ -30,6 +30,8 @@
 #include <services/fbs/bitmap.h>
 
 #include <array>
+#include <functional>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <vector>
@@ -63,6 +65,7 @@ namespace eka2l1::epoc {
         timestamps_array timestamps;
         hashes_array hashes;
         sizes_array bitmap_sizes;
+        std::map<bitwise_bitmap *, std::weak_ptr<std::function<void()>>> bitmap_writers_;
 
         fbs_server *fbss_;
 
@@ -76,6 +79,7 @@ namespace eka2l1::epoc {
 
     public:
         explicit bitmap_cache(kernel_system *kern_);
+        bool set_bitmap_writer(bitwise_bitmap *bitmap, const std::shared_ptr<std::function<void()>> &writer);
 
         const driver_texture_handle_array &texture_array() {
             return driver_textures;

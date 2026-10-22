@@ -13,8 +13,29 @@
 #include <limits>
 #include <dispatch/libraries/gles1/def.h>
 #include <dispatch/libraries/gles2/def.h>
+#include <dispatch/libraries/egl/egl.h>
+#include <services/window/bitmap_cache.h>
 
 using namespace eka2l1::dispatch;
+
+TEST_CASE("GLES2 rejects GLES1 logic operation capabilities without changing blending", "[gles2][logicop]") {
+    egl_context_es2 context;
+    REQUIRE(context.enable(GL_BLEND_EMU));
+    REQUIRE_FALSE(context.enable(GL_COLOR_LOGIC_OP_EMU));
+    REQUIRE_FALSE(context.disable(GL_COLOR_LOGIC_OP_EMU));
+    bool enabled = false;
+    REQUIRE_FALSE(context.is_enabled(GL_COLOR_LOGIC_OP_EMU, enabled));
+    REQUIRE(context.is_enabled(GL_BLEND_EMU, enabled));
+    REQUIRE(enabled);
+    auto commands = context.cmd_builder_.retrieve_command_list();
+    REQUIRE(commands.size_ == 1);
+    eka2l1::drivers::graphics_feature feature;
+    bool host_enabled = false;
+    eka2l1::drivers::unpack_u64_to_2u32(commands.base_[0].data_[0], feature, host_enabled);
+    REQUIRE(feature == eka2l1::drivers::graphics_feature::blend);
+    REQUIRE(host_enabled);
+    delete[] commands.base_;
+}
 
 TEST_CASE("GLES boolean queries write one canonical byte per component", "[gles1][gles2]") {
     egl_context_es1 es1;
@@ -367,4 +388,91 @@ TEST_CASE("GLES2 deleting a buffer detaches disabled as well as enabled attribut
     }
     REQUIRE(context.bind_buffer(GL_ARRAY_BUFFER_EMU, 7) == 0);
     REQUIRE(context.attributes_[0].buffer_obj_ == 0);
+}
+
+TEST_CASE("EGL can select native pixmaps with 32-bit colour and 16-bit depth", "[egl][pixmap]") {
+    const std::int32_t attributes[] = { EGL_BUFFER_SIZE_EMU, 32, EGL_DEPTH_SIZE_EMU, 16,
+        EGL_SURFACE_TYPE_EMU, EGL_PIXMAP_BIT_EMU, EGL_NONE_EMU };
+    std::vector<egl_config> configs(32, egl_config(0));
+    std::int32_t count = 0;
+    REQUIRE(egl_choose_config_emu(nullptr, 1, const_cast<std::int32_t *>(attributes), configs.data(), configs.size(), &count));
+    REQUIRE(count > 0);
+    REQUIRE(configs[0].buffer_size() == 32);
+    REQUIRE(configs[0].depth_bits() == 16);
+    bool exact_match = false;
+    for (int i = 0; i < count; i++) {
+        std::uint32_t colour = 0, depth = 0, surfaces = 0;
+        REQUIRE(egl_get_config_attrib_emu(nullptr, 1, configs[i].config_, EGL_BUFFER_SIZE_EMU, &colour));
+        REQUIRE(egl_get_config_attrib_emu(nullptr, 1, configs[i].config_, EGL_DEPTH_SIZE_EMU, &depth));
+        REQUIRE(egl_get_config_attrib_emu(nullptr, 1, configs[i].config_, EGL_SURFACE_TYPE_EMU, &surfaces));
+        REQUIRE((surfaces & EGL_PIXMAP_BIT_EMU) != 0);
+        REQUIRE(depth >= 16);
+        exact_match |= colour == 32 && depth == 16;
+    }
+    REQUIRE(exact_match);
+}
+
+TEST_CASE("EGL depth and stencil minimums exclude incompatible configurations", "[egl][pixmap]") {
+    for (const auto limits : { std::pair<int, int>{24, 0}, {16, 8} }) {
+        std::int32_t attributes[] = { EGL_DEPTH_SIZE_EMU, limits.first,
+            EGL_STENCIL_SIZE_EMU, limits.second, EGL_NONE_EMU };
+        std::vector<egl_config> configs(32, egl_config(0));
+        std::int32_t count = 0;
+        REQUIRE(egl_choose_config_emu(nullptr, 1, attributes, configs.data(), configs.size(), &count));
+        REQUIRE(count > 0);
+        for (int i = 0; i < count; i++) {
+            REQUIRE(configs[i].depth_bits() >= limits.first);
+            REQUIRE(configs[i].stencil_bits() >= limits.second);
+        }
+    }
+}
+
+TEST_CASE("Pixmap readback respects Symbian row order, colours and padding", "[egl][pixmap]") {
+    std::array<std::uint8_t, 36> rgba{};
+    for (int y = 0; y < 3; y++) {
+        for (int x = 0; x < 3; x++) {
+            rgba[(y * 3 + x) * 4 + 2 - y] = 255;
+            rgba[(y * 3 + x) * 4 + 3] = (y + 1) * 17;
+        }
+    }
+    using eka2l1::epoc::display_mode;
+    for (auto mode : { display_mode::color64k, display_mode::color16m,
+             display_mode::color16mu, display_mode::color16ma }) {
+        const int bytes = mode == display_mode::color64k ? 2 : mode == display_mode::color16m ? 3 : 4;
+        const int pitch = (3 * bytes + 3) & ~3;
+        std::vector<std::uint8_t> result(3 * pitch + 2, 0xA5);
+        copy_egl_pixmap_pixels(rgba.data(), result.data() + 1, { 3, 3 }, pitch, mode);
+        REQUIRE(result.front() == 0xA5);
+        REQUIRE(result.back() == 0xA5);
+        for (int y = 0; y < 3; y++) {
+            const auto *row = result.data() + 1 + y * pitch;
+            for (int x = 0; x < 3; x++) {
+                if (bytes == 2) {
+                    const std::uint16_t expected[] = {0xF800, 0x07E0, 0x001F};
+                    REQUIRE((row[x * 2] | (row[x * 2 + 1] << 8)) == expected[y]);
+                } else {
+                    for (int c = 0; c < 3; c++) {
+                        REQUIRE(row[x * bytes + c] == (c == 2 - y ? 255 : 0));
+                    }
+                    if (bytes == 4) {
+                        REQUIRE(row[x * bytes + 3] == (mode == display_mode::color16ma ? (3 - y) * 17 : 255));
+                    }
+                }
+            }
+            for (int i = bytes * 3; i < pitch; i++) {
+                REQUIRE(row[i] == 0xA5);
+            }
+        }
+    }
+}
+
+TEST_CASE("Native bitmap writer ownership ends with its EGL surface", "[egl][pixmap]") {
+    eka2l1::epoc::bitmap_cache cache(nullptr);
+    eka2l1::epoc::bitwise_bitmap bitmap{};
+    auto first = std::make_shared<std::function<void()>>([] {});
+    auto second = std::make_shared<std::function<void()>>([] {});
+    REQUIRE(cache.set_bitmap_writer(&bitmap, first));
+    REQUIRE_FALSE(cache.set_bitmap_writer(&bitmap, second));
+    first.reset();
+    REQUIRE(cache.set_bitmap_writer(&bitmap, second));
 }

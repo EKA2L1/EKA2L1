@@ -60,7 +60,7 @@ namespace eka2l1::drivers {
         return reinterpret_cast<std::uint64_t>(copy);
     }
 
-    drivers::handle create_bitmap(graphics_driver *driver, const eka2l1::vec2 &size, const std::uint32_t bpp) {
+    drivers::handle create_bitmap(graphics_driver *driver, const eka2l1::vec2 &size, const std::uint32_t bpp, const std::uint32_t depth_bits) {
         drivers::handle handle_num = 0;
 
         command cmd;
@@ -68,6 +68,7 @@ namespace eka2l1::drivers {
         cmd.data_[0] = PACK_2U32_TO_U64(size.x, size.y);
         cmd.data_[1] = bpp;
         cmd.data_[2] = reinterpret_cast<std::uint64_t>(&handle_num);
+        cmd.data_[3] = depth_bits;
 
         if (send_sync_command(driver, cmd) != 0) {
             return 0;

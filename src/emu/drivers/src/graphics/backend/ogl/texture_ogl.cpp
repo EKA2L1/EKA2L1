@@ -315,16 +315,17 @@ namespace eka2l1::drivers {
     }
 
     void ogl_texture::bind(graphics_driver *driver, const int binding) {
-        glGetIntegerv(get_binding_enum_dim(dimensions), &last_tex);
         glGetIntegerv(GL_ACTIVE_TEXTURE, &last_active);
-
-        glActiveTexture(GL_TEXTURE0 + binding);
+        last_binding = GL_TEXTURE0 + binding;
+        glActiveTexture(last_binding);
+        glGetIntegerv(get_binding_enum_dim(dimensions), &last_tex);
         glBindTexture(to_gl_tex_dim(dimensions), texture);
     }
 
     void ogl_texture::unbind(graphics_driver *driver) {
-        glActiveTexture(last_active);
+        glActiveTexture(last_binding);
         glBindTexture(to_gl_tex_dim(dimensions), last_tex);
+        glActiveTexture(last_active);
         last_tex = 0;
     }
 

@@ -22,9 +22,11 @@
 #include <dispatch/libraries/gles_shared/gles_shared.h>
 #include <dispatch/libraries/gles2/consts.h>
 #include <dispatch/libraries/gles2/def.h>
+#include <dispatch/libraries/gles1/def.h>
 #include <services/window/screen.h>
 
 #include <dispatch/dispatcher.h>
+#include <dispatch/libraries/egl/egl.h>
 #include <drivers/graphics/graphics.h>
 #include <system/epoc.h>
 #include <kernel/kernel.h>
@@ -786,7 +788,8 @@ namespace eka2l1::dispatch {
         cmd_builder_.set_stencil_action(drivers::rendering_face::back, stencil_action_fail_drv_back,
             stencil_action_depth_fail_drv_back, stencil_action_depth_pass_drv_back);
 
-        cmd_builder_.set_feature(drivers::graphics_feature::blend, non_shader_statuses_ & NON_SHADER_STATE_BLEND_ENABLE);
+        cmd_builder_.set_feature(drivers::graphics_feature::blend,
+            (non_shader_statuses_ & NON_SHADER_STATE_BLEND_ENABLE) && !(non_shader_statuses_ & NON_SHADER_STATE_COLOR_LOGIC_OP_ENABLE));
         cmd_builder_.set_feature(drivers::graphics_feature::clipping, non_shader_statuses_ & NON_SHADER_STATE_SCISSOR_ENABLE);
         cmd_builder_.set_feature(drivers::graphics_feature::cull, non_shader_statuses_ & NON_SHADER_STATE_CULL_FACE_ENABLE);
         cmd_builder_.set_feature(drivers::graphics_feature::depth_test, non_shader_statuses_ & NON_SHADER_STATE_DEPTH_TEST_ENABLE);
@@ -1421,12 +1424,8 @@ namespace eka2l1::dispatch {
         switch (feature) {
         case GL_BLEND_EMU:
             non_shader_statuses_ |= egl_context_es_shared::NON_SHADER_STATE_BLEND_ENABLE;
-            cmd_builder_.set_feature(drivers::graphics_feature::blend, true);
+            cmd_builder_.set_feature(drivers::graphics_feature::blend, !(non_shader_statuses_ & NON_SHADER_STATE_COLOR_LOGIC_OP_ENABLE));
 
-            break;
-
-        case GL_COLOR_LOGIC_OP_EMU:
-            non_shader_statuses_ |= egl_context_es_shared::NON_SHADER_STATE_COLOR_LOGIC_OP_ENABLE;
             break;
 
         case GL_CULL_FACE_EMU:
@@ -1510,10 +1509,6 @@ namespace eka2l1::dispatch {
 
             break;
 
-        case GL_COLOR_LOGIC_OP_EMU:
-            non_shader_statuses_ &= ~egl_context_es_shared::NON_SHADER_STATE_COLOR_LOGIC_OP_ENABLE;
-            break;
-
         case GL_CULL_FACE_EMU:
             non_shader_statuses_ &= ~egl_context_es_shared::NON_SHADER_STATE_CULL_FACE_ENABLE;
             cmd_builder_.set_feature(drivers::graphics_feature::cull, false);
@@ -1590,10 +1585,6 @@ namespace eka2l1::dispatch {
         switch (feature) {
         case GL_BLEND_EMU:
             enabled = (non_shader_statuses_ & egl_context_es_shared::NON_SHADER_STATE_BLEND_ENABLE) ? 1 : 0;
-            break;
-
-        case GL_COLOR_LOGIC_OP_EMU:
-            enabled = (non_shader_statuses_ & egl_context_es_shared::NON_SHADER_STATE_COLOR_LOGIC_OP_ENABLE) ? 1 : 0;
             break;
 
         case GL_CULL_FACE_EMU:
@@ -3190,6 +3181,7 @@ namespace eka2l1::dispatch {
 
     
     BRIDGE_FUNC_LIBRARY(void, gl_finish_emu) {
+        egl_wait_gl_emu(sys);
     }
     
     BRIDGE_FUNC_LIBRARY(void, gl_flush_emu) {
@@ -3346,12 +3338,20 @@ namespace eka2l1::dispatch {
             return;
         }
 
+        if (count == 0) {
+            return;
+        }
         if (!ctx->prepare_for_draw(drv, controller, sys->get_kernel_system()->crr_process(), first_index, count, prim_mode_drv)) {
             LOG_ERROR(HLE_DISPATCHER, "Error while preparing GLES draw. This should not happen!");
             return;
         }
 
-        ctx->cmd_builder_.draw_arrays(prim_mode_drv, 0, count, false);
+        auto *es1 = ctx->context_type() == EGL_GLES1_CONTEXT ? static_cast<egl_context_es1 *>(ctx) : nullptr;
+        if (es1 && es1->needs_logic_op_emulation()) {
+            es1->draw_logic_op(drv, controller, prim_mode_drv, count);
+        } else {
+            ctx->cmd_builder_.draw_arrays(prim_mode_drv, 0, count, false);
+        }
  
         if (ctx->cmd_builder_.need_flush()) {
             ctx->flush_to_driver(controller, drv);
@@ -3396,6 +3396,10 @@ namespace eka2l1::dispatch {
 
         default:
             controller.push_error(ctx, GL_INVALID_ENUM);
+            return;
+        }
+
+        if (count == 0) {
             return;
         }
 
@@ -3458,6 +3462,24 @@ namespace eka2l1::dispatch {
             } else {
                 min_vert_index = -1;
             }
+        }
+
+        auto *es1 = ctx->context_type() == EGL_GLES1_CONTEXT ? static_cast<egl_context_es1 *>(ctx) : nullptr;
+        if (es1 && es1->needs_logic_op_emulation()) {
+            auto *buffer = ctx->binded_buffer(false);
+            const auto *indices = buffer ? buffer->index_data(indices_ptr) : indicies_data_raw;
+            if (min_vert_index < 0 || !indices) {
+                controller.push_error(ctx, GL_INVALID_OPERATION);
+            } else if (ctx->prepare_for_draw(drv, controller, kern->crr_process(), min_vert_index, total_vert, prim_mode_drv)) {
+                es1->draw_logic_op(drv, controller, prim_mode_drv, count, indices, index_type == GL_UNSIGNED_SHORT_EMU ? 2 : 1);
+            }
+            if (relocated_indicies) {
+                free(indicies_data_raw);
+            }
+            if (ctx->cmd_builder_.need_flush()) {
+                ctx->flush_to_driver(controller, drv);
+            }
+            return;
         }
 
         gles_driver_buffer *binded_elem_buffer_managed = ctx->binded_buffer(false);

@@ -17,6 +17,7 @@ namespace eka2l1::drivers {
         std::uint32_t texture{ 0 };
         int last_tex{ 0 };
         int last_active{ 0 };
+        int last_binding{ 0 };
 
     public:
         ogl_texture() {}

@@ -73,7 +73,7 @@ namespace eka2l1::drivers {
       * 
       * \returns ID of the bitmap.
       */
-    drivers::handle create_bitmap(graphics_driver *driver, const eka2l1::vec2 &size, const std::uint32_t bpp);
+    drivers::handle create_bitmap(graphics_driver *driver, const eka2l1::vec2 &size, const std::uint32_t bpp, const std::uint32_t depth_bits = 24);
 
     /** \brief Create a new shader module.
       *

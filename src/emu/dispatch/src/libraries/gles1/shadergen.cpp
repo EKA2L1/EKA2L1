@@ -578,6 +578,22 @@ namespace eka2l1::dispatch {
             }
         }
 
+        if (fragment_statuses & egl_context_es1::FRAGMENT_STATE_LOGIC_OP) {
+            uni_decl += "uniform sampler2D uLogicOpDestination;\n"
+                        "uniform vec4 uLogicOpMask;\n";
+            main_body += "\tuvec4 s = uvec4(clamp(oColor, 0.0, 1.0) * uLogicOpMask + 0.5);\n"
+                         "\tuvec4 d = uvec4(texelFetch(uLogicOpDestination, ivec2(gl_FragCoord.xy), 0) * uLogicOpMask + 0.5);\n"
+                         "\tuvec4 r = uvec4(0u);\n";
+            const auto op = (fragment_statuses >> egl_context_es1::FRAGMENT_STATE_LOGIC_OP_POS) & 15;
+            const char *terms[] = { "s & d", "s & ~d", "~s & d", "~s & ~d" };
+            for (int bit = 0; bit < 4; bit++) {
+                if (op & (1U << bit)) {
+                    main_body += fmt::format("\tr |= {};\n", terms[bit]);
+                }
+            }
+            main_body += "\toColor = vec4(r & uvec4(uLogicOpMask)) / max(uLogicOpMask, vec4(1.0));\n"
+                         "\tif (uLogicOpMask.a == 0.0) oColor.a = 1.0;\n";
+        }
         main_body += "}";
         return input_decl + uni_decl + "out vec4 oColor;\n" + main_body;
     }

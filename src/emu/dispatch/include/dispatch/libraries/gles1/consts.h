@@ -16,6 +16,11 @@ namespace eka2l1::dispatch {
         GLES1_EMU_POINT_SIZE_ATTRIBUTE = GLES1_EMU_WEIGHT_ATTRIBUTE + GLES1_EMU_MAX_WEIGHTS_PER_VERTEX
     };
 
+    static constexpr std::uint32_t GL_LOGIC_OP_MODE_EMU = 0x0BF0;
+    static constexpr std::uint32_t GL_CLEAR_EMU = 0x1500;
+    static constexpr std::uint32_t GL_COPY_EMU = 0x1503;
+    static constexpr std::uint32_t GL_SET_EMU = 0x150F;
+
     static constexpr const char *GLES1_STATIC_STRING_VENDOR = "IMAGINATION TECHNOLOGIES EKA2L1";
     static constexpr const char *GLES1_STATIC_STRING_RENDERER = "POWERVR EKA2L1";
     static constexpr const char *GLES1_STATIC_STRING_VERSION = "OpenGL ES-CM 1.1 POWERVR (EKA2L1 IMPLEMENTATION)";
