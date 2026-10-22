@@ -255,21 +255,22 @@ namespace eka2l1::epoc {
         if (!get_brush_color(color)) {
             return false;
         }
-        cmd.opcode_ = gdi_store_command_draw_rect;
-        if (drawing_mode == draw_mode::invert_screen) {
-            color = { 255, 255, 255, 255 };
-            cmd.opcode_ = gdi_store_command_xor_rect;
-        } else if (drawing_mode == draw_mode::exclusive_or) {
-            // Blending implements bitwise XOR exactly only for all-zero/all-one colour channels.
-            const auto binary = [](int channel) { return channel == 0 || channel == 255; };
-            if (binary(color.x) && binary(color.y) && binary(color.z)) {
-                cmd.opcode_ = gdi_store_command_xor_rect;
-            }
-        }
+        cmd.opcode_ = resolve_xor_color(color) ? gdi_store_command_xor_rect : gdi_store_command_draw_rect;
         auto &data = cmd.get_data_struct<gdi_store_command_draw_rect_data>();
         data.rect_ = area;
         data.color_ = color;
         return true;
+    }
+
+    bool graphic_context::resolve_xor_color(eka2l1::vec4 &color) const {
+        if (drawing_mode == draw_mode::invert_screen) {
+            color = { 255, 255, 255, 255 };
+            return true;
+        }
+
+        // Blending implements bitwise XOR exactly only for all-zero/all-one colour channels.
+        const auto binary = [](int channel) { return channel == 0 || channel == 255; };
+        return (drawing_mode == draw_mode::exclusive_or) && binary(color.x) && binary(color.y) && binary(color.z);
     }
 
     void graphic_context::set_brush_pattern(fbsbitmap *bitmap) {
@@ -995,8 +996,42 @@ namespace eka2l1::epoc {
         drivers::pen_style pen_style;
         eka2l1::vec4 pen_color;
         epoc::gdi_store_command gdi_cmd;
+        eka2l1::rect fill_area = area;
 
-        if (get_pen_color_and_style(pen_color, pen_style)) {
+        const bool has_pen = get_pen_color_and_style(pen_color, pen_style);
+        eka2l1::vec4 xor_color = pen_color;
+
+        // Wider pens draw their outline in EDrawModePEN on Symbian too.
+        const bool xor_outline = has_pen && (pen_style == drivers::pen_style_solid) && (pen_size == eka2l1::vec2(1, 1))
+            && resolve_xor_color(xor_color);
+
+        if (xor_outline) {
+            // CFbsBitGc::DrawRect: one-pixel edges inside the rectangle that never overlap, so a second XOR erases them.
+            const eka2l1::vec2 &tl = area.top;
+            const int width = area.size.x;
+            const int height = area.size.y;
+            const eka2l1::rect edges[4] = {
+                eka2l1::rect(tl, { width, 1 }),
+                (height > 2 && width > 1) ? eka2l1::rect({ tl.x + width - 1, tl.y + 1 }, { 1, height - 2 }) : eka2l1::rect(),
+                (height > 1) ? eka2l1::rect({ tl.x, tl.y + height - 1 }, { width, 1 }) : eka2l1::rect(),
+                (height > 2) ? eka2l1::rect({ tl.x, tl.y + 1 }, { 1, height - 2 }) : eka2l1::rect()
+            };
+
+            for (const eka2l1::rect &edge : edges) {
+                if (edge.empty()) {
+                    continue;
+                }
+
+                epoc::gdi_store_command edge_cmd;
+                edge_cmd.opcode_ = epoc::gdi_store_command_xor_rect;
+                auto &edge_data = edge_cmd.get_data_struct<epoc::gdi_store_command_draw_rect_data>();
+                edge_data.rect_ = edge;
+                edge_data.color_ = xor_color;
+                add_draw_command(edge_cmd);
+            }
+
+            fill_area = (width < 3 || height < 3) ? eka2l1::rect() : eka2l1::rect({ tl.x + 1, tl.y + 1 }, { width - 2, height - 2 });
+        } else if (has_pen) {
             eka2l1::vec2 point_list[5] =  {
                 area.top,
                 area.top + eka2l1::vec2(area.size.x, 0),
@@ -1018,7 +1053,7 @@ namespace eka2l1::epoc {
             add_draw_command(gdi_cmd);
         }
 
-        if (make_brush_fill_command(area, gdi_cmd)) {
+        if (make_brush_fill_command(fill_area, gdi_cmd)) {
             add_draw_command(gdi_cmd);
         }
 

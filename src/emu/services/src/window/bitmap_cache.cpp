@@ -97,6 +97,15 @@ namespace eka2l1::epoc {
         drv->submit_command_list(retrieved);
     }
 
+    std::shared_ptr<drivers::handle> bitmap_cache::retain_texture(const drivers::handle texture) {
+        return std::shared_ptr<drivers::handle>(new drivers::handle(texture),
+            [retired = retired_](drivers::handle *handle) {
+                const std::lock_guard<std::mutex> lock(retired->mutex);
+                retired->handles.push_back(*handle);
+                delete handle;
+            });
+    }
+
     void bitmap_cache::flush_retired(drivers::graphics_command_builder &builder) {
         const std::lock_guard<std::mutex> lock(retired_->mutex);
         for (const auto handle : retired_->handles) {
@@ -391,12 +400,7 @@ namespace eka2l1::epoc {
 
             driver_textures[idx] = drivers::create_bitmap(driver, bmp->header_.size_pixels, suit_bpp);
             if (snapshot) {
-                texture_snapshots[idx] = std::shared_ptr<drivers::handle>(new drivers::handle(driver_textures[idx]),
-                    [retired = retired_](drivers::handle *handle) {
-                        const std::lock_guard<std::mutex> lock(retired->mutex);
-                        retired->handles.push_back(*handle);
-                        delete handle;
-                    });
+                texture_snapshots[idx] = retain_texture(driver_textures[idx]);
             }
         }
 

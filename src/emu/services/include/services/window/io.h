@@ -36,28 +36,21 @@ namespace eka2l1::epoc {
     struct canvas_base;
 
     /**
-     * \brief Walk through all windows and deliver pointer to those who are applicable.
+     * \brief Deliver pointer events to the window the WSERV pointer rules select.
      */
-    struct window_pointer_focus_walker : public epoc::window_tree_walker {
-        std::vector<std::pair<epoc::event, bool>> evts_;
-        eka2l1::vec2 scr_coord_;
-
+    struct window_pointer_focus_walker {
         // Per pointer: the window that grabbed it on button 1 down. It gets every event
         // up to and including button 1 up, wherever the pointer is (WSERV TWsPointer::iGrabWindow).
         // Guarded by the kernel lock, under which windows are destroyed.
         std::map<std::uint8_t, epoc::canvas_base *> grab_windows_;
 
-        void add_new_event(const epoc::event &evt);
-        void process_event_to_target_window(epoc::window *win, epoc::event &evt);
+        epoc::canvas_base *take_grab_window(const epoc::event &evt);
 
-        bool deliver_to_grab_window(kernel_system *kern, epoc::event &evt);
+        // Sends the event to the grabbing window, or hit-tests window groups from first_group honouring pointer capture.
+        void deliver(kernel_system *kern, epoc::window *first_group, epoc::window *focus, epoc::event &evt);
 
         // Caller holds the kernel lock.
         void release_grab(epoc::window *win);
-
-        bool do_it(epoc::window *win) override;
-
-        void clear();
     };
 
     /**

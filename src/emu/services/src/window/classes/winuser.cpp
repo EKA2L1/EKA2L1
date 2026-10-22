@@ -34,6 +34,7 @@
 #include <kernel/timing.h>
 
 #include <common/log.h>
+#include <common/time.h>
 #include <common/vecx.h>
 #include <config/config.h>
 
@@ -1008,10 +1009,28 @@ namespace eka2l1::epoc {
         }
 
         case EWsWinOpSetPointerCapture: {
-            // TODO: !
+            // RWindowBase::TCaptureFlags; drag-drop and all-groups only apply with capture enabled.
+            const std::uint32_t capture = *reinterpret_cast<std::uint32_t *>(cmd.data_ptr);
+            flags &= ~(flags_pointer_capture | flags_pointer_capture_drag_drop | flags_pointer_capture_all_groups);
+
+            if (capture & 1) {
+                flags |= flags_pointer_capture;
+                flags |= (capture & 2) ? flags_pointer_capture_drag_drop : 0;
+                flags |= (capture & 4) ? flags_pointer_capture_all_groups : 0;
+            }
+
             ctx.complete(epoc::error_none);
             break;
         }
+
+        case EWsWinOpSetPointerCapturePriority:
+            pointer_capture_priority_ = *reinterpret_cast<std::int32_t *>(cmd.data_ptr);
+            ctx.complete(epoc::error_none);
+            break;
+
+        case EWsWinOpGetPointerCapturePriority:
+            ctx.complete(pointer_capture_priority_);
+            break;
 
         case EWsWinOpActivate:
             activate(ctx, cmd);
@@ -1209,6 +1228,62 @@ namespace eka2l1::epoc {
         }
         pending_segment_.reset();
         builder.bind_bitmap(scr->screen_texture);
+    }
+
+    std::unique_ptr<gdi_store_command_segment> redraw_msg_canvas::flatten_segments(const std::unique_ptr<gdi_store_command_segment> *segments,
+        const std::size_t count) {
+        const eka2l1::vec2 pixel_size = size() * scr->display_scale_factor;
+        if (pixel_size.x <= 0 || pixel_size.y <= 0) {
+            return nullptr;
+        }
+
+        drivers::graphics_driver *driver = client->get_ws().get_graphics_driver();
+        epoc::bitmap_cache *bcache = client->get_ws().get_bitmap_cache();
+        const drivers::filter_option filter = client->get_ws().get_kernel_system()->get_config()->nearest_neighbor_filtering
+            ? drivers::filter_option::nearest : drivers::filter_option::linear;
+
+        const drivers::handle texture = drivers::create_bitmap(driver, pixel_size, 32);
+        if (!texture) {
+            return nullptr;
+        }
+
+        drivers::graphics_command_builder builder;
+        builder.bind_bitmap(texture);
+        builder.set_feature(drivers::graphics_feature::cull, false);
+        builder.set_feature(drivers::graphics_feature::depth_test, false);
+        builder.set_feature(drivers::graphics_feature::clipping, false);
+        builder.set_feature(drivers::graphics_feature::stencil_test, false);
+        builder.set_feature(drivers::graphics_feature::blend, false);
+        builder.clear(eka2l1::vecx<float, 6>({ 0, 0, 0, 0, 1, 0 }), drivers::draw_buffer_bit_color_buffer);
+
+        auto merged = std::make_unique<gdi_store_command_segment>();
+        merged->type_ = gdi_store_command_segment_redraw;
+        merged->creation_date_ = common::get_current_utc_time_in_microseconds_since_epoch();
+
+        for (std::size_t i = 0; i < count; i++) {
+            const gdi_store_command_segment &segment = *segments[i];
+            merged->region_.add_region(segment.region_);
+
+            builder.clip_bitmap_region(segment.region_, scr->display_scale_factor);
+            gdi_command_builder gdi_builder(driver, builder, *bcache, filter, { 0, 0 }, scr->display_scale_factor,
+                segment.region_, true);
+            gdi_builder.build_segment(segment);
+        }
+
+        builder.bind_bitmap(0);
+        drivers::command_list list = builder.retrieve_command_list();
+        driver->submit_command_list(list);
+
+        gdi_store_command draw;
+        draw.opcode_ = gdi_store_command_draw_raw_texture;
+        auto &data = draw.get_data_struct<gdi_store_command_draw_raw_texture_data>();
+        data.texture_ = texture;
+        data.dest_rect_ = eka2l1::rect({ 0, 0 }, size());
+        data.flags_ = 0;
+        draw.resources_.push_back(bcache->retain_texture(texture));
+
+        merged->add_command(draw);
+        return merged;
     }
 
     bool redraw_msg_canvas::draw_surface_window(drivers::graphics_command_builder &builder) {
@@ -1431,15 +1506,20 @@ namespace eka2l1::epoc {
     void redraw_msg_canvas::add_draw_command(gdi_store_command &command) {
         const std::lock_guard<std::mutex> guard(scr->screen_mutex);
 
+        const bool retains_pixels = client->get_ws().no_redraw_storing_enabled();
         bool created_non_redraw_segment = false;
         if ((flags & flags_in_redraw) == 0) {
             eka2l1::rect full_size_rect(eka2l1::vec2(0, 0), abs_rect.size);
 
             // Not in redraw? Try to cleanup non redraw segments to make ways
-            if (redraw_segments_.clean_old_nonredraw_segments()) {
-                // With no redraw store, segments aging is ineffective. So just ignore...
-                if (!client->get_ws().no_redraw_storing_enabled())
-                    invalidate(full_size_rect);
+            if (retains_pixels) {
+                // Without a redraw store the client is never asked to repaint, so aged draws keep their pixels.
+                redraw_segments_.clean_old_nonredraw_segments([this](const std::unique_ptr<gdi_store_command_segment> *segments,
+                    const std::size_t count) {
+                    return flatten_segments(segments, count);
+                });
+            } else if (redraw_segments_.clean_old_nonredraw_segments()) {
+                invalidate(full_size_rect);
             }
 
             gdi_store_command_segment *current_segment = redraw_segments_.get_current_segment();
@@ -1460,7 +1540,6 @@ namespace eka2l1::epoc {
         }
 
         gdi_store_command_segment *current_segment = redraw_segments_.get_current_segment();
-        const bool retains_pixels = client->get_ws().no_redraw_storing_enabled();
         if (!retains_pixels) {
             // Symbian redraw stores retain bitmap handles, not copies of their pixels.
             current_segment->add_command(command);
@@ -1470,7 +1549,7 @@ namespace eka2l1::epoc {
             current_segment->add_command(command);
         }
         // Without redraw storing, earlier pixels may exist only in the screen bitmap.
-        if ((created_non_redraw_segment && !client->get_ws().no_redraw_storing_enabled()) || (flags & flags_enable_alpha)) {
+        if ((created_non_redraw_segment && !retains_pixels) || (flags & flags_enable_alpha)) {
             scr->flags_ |= screen::FLAG_SERVER_REDRAW_PENDING;
         }
     }

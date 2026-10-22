@@ -27,6 +27,7 @@
 #include <system/epoc.h>
 
 #include <services/fbs/fbs.h>
+#include <services/fbs/palette.h>
 #include <services/fs/std.h>
 
 #include <common/cvt.h>
@@ -310,7 +311,7 @@ namespace eka2l1 {
         , bmp_font_vtab(0)
         , session_cache_list(nullptr) {
         // Host icon decoding reads the palette from frontend threads, possibly before any client connects.
-        initialize_palette();
+        palette_256_ = epoc::get_suitable_palette_256(sys->get_symbian_version_use());
     }
 
     static void compressor_thread_func(compress_queue *queue) {

@@ -113,6 +113,9 @@ namespace eka2l1::epoc {
         void do_command_draw_bitmap(service::ipc_context &ctx, void *bitmap, eka2l1::rect source_rect, eka2l1::rect dest_rect, const std::uint8_t flags);
         bool get_brush_color(eka2l1::vec4 &color_brush);
         bool make_brush_fill_command(const eka2l1::rect &area, gdi_store_command &cmd);
+
+        // True when the draw mode replays as gdi_store_command_xor_rect; adjusts the colour to what that blend needs.
+        bool resolve_xor_color(eka2l1::vec4 &color) const;
         void set_brush_pattern(fbsbitmap *bitmap);
         bool get_pen_color_and_style(eka2l1::vec4 &pen_color, drivers::pen_style &style);
 

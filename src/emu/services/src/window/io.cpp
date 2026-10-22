@@ -25,10 +25,6 @@
 #include <kernel/kernel.h>
 
 namespace eka2l1::epoc {
-    void window_pointer_focus_walker::add_new_event(const epoc::event &evt) {
-        evts_.emplace_back(evt, false);
-    }
-
     static void prepare_event_for_window(epoc::canvas_base *user, const eka2l1::vec2 &scr_coord, epoc::event &evt) {
         evt.adv_pointer_evt_.pos = scr_coord - user->absolute_position();
 
@@ -43,89 +39,46 @@ namespace eka2l1::epoc {
         evt.handle = user->get_client_handle();
     }
 
-    void window_pointer_focus_walker::process_event_to_target_window(epoc::window *win, epoc::event &evt) {
-        assert(win->type == epoc::window_kind::client);
-
-        epoc::canvas_base *user = reinterpret_cast<epoc::canvas_base *>(win);
-        // Stop, we found it!
-        // Send it right now
-        prepare_event_for_window(user, scr_coord_, evt);
-
-        kernel_system *kern = win->client->get_ws().get_kernel_system();
-
-        kern->lock();
-        if ((evt.adv_pointer_evt_.evtype == epoc::event_type::button1down) && (user->flags & epoc::window::flags_allow_pointer_grab)) {
-            grab_windows_[evt.adv_pointer_evt_.ptr_num] = user;
-        }
-
-        win->queue_event(evt);
-        kern->unlock();
-    }
-
-    bool window_pointer_focus_walker::do_it(epoc::window *win) {
-        if (evts_.empty()) {
-            return true;
-        }
-
-        if (win->type != epoc::window_kind::client) {
+    static bool base_area_contains(epoc::canvas_base *win, const eka2l1::vec2 &pos) {
+        if (!win->abs_rect.contains(pos)) {
             return false;
         }
 
-        epoc::canvas_base *user = reinterpret_cast<epoc::canvas_base *>(win);
+        return !(win->flags & epoc::window::flag_shape_region) || win->shape_region.contains(pos);
+    }
 
-        std::optional<eka2l1::rect> contain_area;
-        auto contain_rect_this_mode_ite = user->scr->pointer_areas_.find(user->scr->crr_mode);
+    // Descend a window group front to back, entering every visible client window that accepts the pointer.
+    template <typename F>
+    static epoc::canvas_base *descend_group(epoc::window *group, F &&accept) {
+        epoc::canvas_base *result = nullptr;
+        epoc::window *win = group->child;
 
-        if (contain_rect_this_mode_ite != user->scr->pointer_areas_.end()) {
-            contain_area = contain_rect_this_mode_ite->second;
-        }
-
-        for (auto &[evt, sent_to_highest_z] : evts_) {
-            // Is this event really in the pointer area, if area exists. If not, pass
-            if (contain_area && !contain_area->contains(evt.adv_pointer_evt_.pos)) {
+        while (win) {
+            if (win->type == epoc::window_kind::top_client) {
+                win = win->child;
                 continue;
             }
 
-            const bool filter_enter_exit = ((evt.type == epoc::event_code::touch_enter) || (evt.type == epoc::event_code::touch_exit))
-                && (user->filter & epoc::pointer_filter_type::pointer_enter);
+            if (win->type == epoc::window_kind::client) {
+                epoc::canvas_base *canvas = reinterpret_cast<epoc::canvas_base *>(win);
 
-            const bool filter_drag = (evt.adv_pointer_evt_.evtype == epoc::event_type::drag) && (user->filter & epoc::pointer_filter_type::pointer_drag);
-            const bool filter_move = (evt.adv_pointer_evt_.evtype == epoc::event_type::move) && (user->filter & epoc::pointer_filter_type::pointer_move);
-
-            // Filter out events, assuming move event never exist (phone)
-            // When you use touch on your phone, you drag your finger. Move your mouse (2023 correct:) is on PC (~~simply doesn't exist~~ is on mobile).
-            if (filter_enter_exit || filter_drag || filter_move) {
-                continue;
-            }
-
-            if (!sent_to_highest_z) {
-                if (user->visible_region.contains(evt.adv_pointer_evt_.pos)) {
-                    scr_coord_ = evt.adv_pointer_evt_.pos;
-
-                    process_event_to_target_window(win, evt);
-                    sent_to_highest_z = true;
+                if (canvas->is_visible() && accept(canvas)) {
+                    result = canvas;
+                    win = win->child;
+                    continue;
                 }
-
-                continue;
-            } else {
-                // Check to see if capture flag is enabled
-                // TODO:
             }
+
+            win = win->sibling;
         }
 
-        return false;
+        return result;
     }
 
-    void window_pointer_focus_walker::clear() {
-        evts_.clear();
-    }
-
-    bool window_pointer_focus_walker::deliver_to_grab_window(kernel_system *kern, epoc::event &evt) {
-        const std::lock_guard<kernel_system> guard(*kern);
-
+    epoc::canvas_base *window_pointer_focus_walker::take_grab_window(const epoc::event &evt) {
         auto grab_ite = grab_windows_.find(evt.adv_pointer_evt_.ptr_num);
         if (grab_ite == grab_windows_.end()) {
-            return false;
+            return nullptr;
         }
 
         epoc::canvas_base *grab_window = grab_ite->second;
@@ -133,17 +86,94 @@ namespace eka2l1::epoc {
         // A down with the grab still held means the matching up was lost; hit-test afresh.
         if (evt.adv_pointer_evt_.evtype == epoc::event_type::button1down) {
             grab_windows_.erase(grab_ite);
-            return false;
+            return nullptr;
         }
 
         if (evt.adv_pointer_evt_.evtype == epoc::event_type::button1up) {
             grab_windows_.erase(grab_ite);
         }
 
-        prepare_event_for_window(grab_window, evt.adv_pointer_evt_.pos, evt);
-        grab_window->queue_event(evt);
+        return grab_window;
+    }
 
-        return true;
+    void window_pointer_focus_walker::deliver(kernel_system *kern, epoc::window *first_group, epoc::window *focus, epoc::event &evt) {
+        const std::lock_guard<kernel_system> guard(*kern);
+        const eka2l1::vec2 pos = evt.adv_pointer_evt_.pos;
+
+        // CWsRootWindow::PointerWindow: first find the window the pointer is really over, ignoring capture.
+        epoc::canvas_base *actual = nullptr;
+        epoc::window *actual_group = nullptr;
+
+        for (epoc::window *group = first_group; group && !actual; group = group->sibling) {
+            actual = descend_group(group, [&](epoc::canvas_base *win) {
+                return base_area_contains(win, pos);
+            });
+
+            actual_group = actual ? group : nullptr;
+        }
+
+        epoc::canvas_base *target = take_grab_window(evt);
+
+        if (!target) {
+            // Then search again, letting capturing windows claim the pointer outside their area.
+            const std::int32_t actual_priority = actual ? actual->pointer_capture_priority_ : 0;
+
+            for (epoc::window *group = first_group; group && !target; group = group->sibling) {
+                const bool same_group = (group == actual_group);
+
+                target = descend_group(group, [&](epoc::canvas_base *win) {
+                    if (base_area_contains(win, pos)) {
+                        return true;
+                    }
+
+                    if (!(win->flags & epoc::window::flags_pointer_capture)) {
+                        return false;
+                    }
+
+                    if (same_group) {
+                        return win->pointer_capture_priority_ >= actual_priority;
+                    }
+
+                    return (win->flags & epoc::window::flags_pointer_capture_all_groups) || (!actual_group && (group == focus));
+                });
+            }
+
+            if (!target) {
+                return;
+            }
+
+            auto contain_area = target->scr->pointer_areas_.find(target->scr->crr_mode);
+            if ((contain_area != target->scr->pointer_areas_.end()) && !contain_area->second.contains(pos)) {
+                return;
+            }
+
+            if ((evt.adv_pointer_evt_.evtype == epoc::event_type::button1down) && (target->flags & epoc::window::flags_allow_pointer_grab)) {
+                grab_windows_[evt.adv_pointer_evt_.ptr_num] = target;
+            }
+        }
+
+        // WsPointer::ProcessEvent filters against the receiving window, grabbed or not.
+        const bool filter_enter_exit = ((evt.type == epoc::event_code::touch_enter) || (evt.type == epoc::event_code::touch_exit))
+            && (target->filter & epoc::pointer_filter_type::pointer_enter);
+
+        const bool filter_drag = (evt.adv_pointer_evt_.evtype == epoc::event_type::drag) && (target->filter & epoc::pointer_filter_type::pointer_drag);
+        const bool filter_move = (evt.adv_pointer_evt_.evtype == epoc::event_type::move) && (target->filter & epoc::pointer_filter_type::pointer_move);
+
+        if (filter_enter_exit || filter_drag || filter_move) {
+            return;
+        }
+
+        epoc::event drag_drop = evt;
+
+        prepare_event_for_window(target, pos, evt);
+        target->queue_event(evt);
+
+        // WsPointer::ProcessPointerEvent: a drag-drop capture also reports the event to the window under the pointer.
+        if ((target->flags & epoc::window::flags_pointer_capture_drag_drop) && actual) {
+            drag_drop.type = epoc::event_code::drag_and_drop;
+            prepare_event_for_window(actual, pos, drag_drop);
+            actual->queue_event(drag_drop);
+        }
     }
 
     void window_pointer_focus_walker::release_grab(epoc::window *win) {
