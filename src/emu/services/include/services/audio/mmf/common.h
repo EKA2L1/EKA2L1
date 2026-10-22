@@ -95,7 +95,9 @@ namespace eka2l1::epoc {
         std::int32_t priority_;
         std::int32_t pref_;
         mmf_state state_;
+        std::int32_t reserved_;
     };
+    static_assert(sizeof(mmf_priority_settings) == 16);
 
     enum mmf_dev_server_opcode {
         mmf_dev_init0 = 0,
@@ -128,7 +130,8 @@ namespace eka2l1::epoc {
         mmf_dev_get_supported_input_data_types = 38,
         mmf_dev_copy_fourcc_array = 40,
         mmf_dev_samples_played = 42,
-        mmf_dev_set_priority_settings = 44
+        mmf_dev_set_priority_settings = 44,
+        mmf_dev_v91_set_priority_settings = 46
     };
 
     // Should/near the same as the one on Symbian OSS
