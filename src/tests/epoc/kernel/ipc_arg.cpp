@@ -21,6 +21,7 @@
 
 #include <common/types.h>
 #include <kernel/ipc.h>
+#include <kernel/svc.h>
 
 using namespace eka2l1;
 
@@ -71,4 +72,15 @@ TEST_CASE("legacy_ipc_args_carry_no_per_slot_types", "ipc_arg") {
     REQUIRE(typed.get_arg_type(1) == ipc_arg_type::des8);
     REQUIRE(typed.get_arg_type(2) == ipc_arg_type::desc16);
     REQUIRE(typed.get_arg_type(3) == ipc_arg_type::unspecified);
+}
+
+TEST_CASE("message_completion_svc_numbers_follow_the_rom_abi", "[kernel_svc]") {
+    const auto &modern = epoc::svc_register_funcs_v10;
+    const auto &legacy = epoc::svc_register_funcs_v94;
+
+    REQUIRE(modern.at(0x41).name == "message_complete");
+    REQUIRE(modern.at(0x42).name == "message_complete_handle");
+    REQUIRE(modern.count(0x43) == 0);
+    REQUIRE(legacy.at(0x42).name == "message_complete");
+    REQUIRE(legacy.at(0x43).name == "message_complete_handle");
 }
