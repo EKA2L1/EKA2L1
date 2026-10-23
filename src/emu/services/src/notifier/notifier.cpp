@@ -66,10 +66,25 @@ namespace eka2l1 {
         : service::typical_session(serv, ss_id, client_version) {
     }
 
+    notifier_client_session::~notifier_client_session() {
+        cancel_message_query();
+    }
+
     void notifier_client_session::start_notifier(service::ipc_context *ctx) {
         std::optional<epoc::uid> plugin_uid = ctx->get_argument_value<epoc::uid>(0);
         if (!plugin_uid) {
             ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        if (*plugin_uid == epoc::notifier::global_message_query_uid) {
+            if (ctx->msg->function == notfiier_start_and_get_response) {
+                start_message_query(ctx);
+            } else if (ctx->msg->function == notifier_start) {
+                ctx->complete(epoc::error_none);
+            } else {
+                ctx->complete(epoc::error_not_supported);
+            }
             return;
         }
 
@@ -237,7 +252,9 @@ namespace eka2l1 {
 
         case notifier_cancel:
             if (const std::optional<epoc::uid> plugin_uid = ctx->get_argument_value<epoc::uid>(0)) {
-                if (epoc::notifier::plugin_base *plug = server<notifier_server>()->get_plugin(*plugin_uid)) {
+                if (*plugin_uid == epoc::notifier::global_message_query_uid) {
+                    cancel_message_query();
+                } else if (epoc::notifier::plugin_base *plug = server<notifier_server>()->get_plugin(*plugin_uid)) {
                     plug->cancel();
                 }
             }

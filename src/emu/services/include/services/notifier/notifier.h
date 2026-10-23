@@ -21,6 +21,7 @@
 #pragma once
 
 #include <kernel/server.h>
+#include <drivers/ui/input_dialog.h>
 #include <services/framework.h>
 #include <services/notifier/plugin.h>
 
@@ -42,22 +43,30 @@ namespace eka2l1 {
 
     class notifier_server : public service::typical_server {
         std::vector<epoc::notifier::plugin_instance> plugins_;
+        std::weak_ptr<epoc::notify_info> message_query_;
 
     public:
         explicit notifier_server(eka2l1::system *sys);
 
         epoc::notifier::plugin_base *get_plugin(const epoc::uid id);
+        bool acquire_message_query(const std::shared_ptr<epoc::notify_info> &query);
         void connect(service::ipc_context &context) override;
     };
 
     struct notifier_client_session : public service::typical_session {
         std::shared_ptr<epoc::notify_info> pending_dialog_;
+        std::shared_ptr<epoc::notify_info> message_query_;
+        kernel::uid message_query_requester_ = 0;
+        drivers::ui::dialog_cancel_callback cancel_message_query_dialog_;
 
         explicit notifier_client_session(service::typical_server *serv, const kernel::uid ss_id, epoc::version client_version);
+        ~notifier_client_session() override;
 
         void fetch(service::ipc_context *ctx) override;
         void start_notifier(service::ipc_context *ctx);
         void info_print(service::ipc_context *ctx);
         void notify(service::ipc_context *ctx);
+        void start_message_query(service::ipc_context *ctx);
+        void cancel_message_query();
     };
 }

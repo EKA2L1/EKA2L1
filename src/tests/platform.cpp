@@ -34,10 +34,11 @@ namespace eka2l1::drivers::ui {
     void close_input_view() {
     }
 
-    void show_yes_no_dialog(const std::u16string &, const std::u16string &, const std::u16string &,
+    dialog_cancel_callback show_yes_no_dialog(const std::u16string &, const std::u16string &, const std::u16string &,
         yes_no_dialog_complete_callback complete_callback) {
         if (complete_callback) {
             complete_callback(1);
         }
+        return []() {};
     }
 }

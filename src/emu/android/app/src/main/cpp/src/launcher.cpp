@@ -55,7 +55,6 @@ namespace eka2l1::android {
         , kern(sys->get_kernel_system())
         , alserv(nullptr)
         , input_complete_callback_(nullptr)
-        , yes_no_complete_callback_(nullptr)
         , is_s80(false)
         , background_img_(0)
         , background_img_opacity_(0.0f)
@@ -631,18 +630,24 @@ namespace eka2l1::android {
         env->CallStaticVoidMethod(clazz, input_method);
     }
 
-    bool launcher::open_question_dialog(const std::u16string &text, const std::u16string &button1_text,
+    drivers::ui::dialog_cancel_callback launcher::open_question_dialog(const std::u16string &text, const std::u16string &button1_text,
                               const std::u16string &button2_text,
                               drivers::ui::yes_no_dialog_complete_callback complete_callback) {
-        if (yes_no_complete_callback_) {
-            return false;
+        static std::atomic<std::uint64_t> next_id{0};
+        const auto pending = std::make_shared<question_dialog_request>();
+        pending->id = ++next_id;
+        pending->complete = std::move(complete_callback);
+        {
+            const std::lock_guard<std::mutex> guard(question_dialog_mutex_);
+            if (question_dialog_ && !question_dialog_->finished) {
+                return {};
+            }
+            question_dialog_ = pending;
         }
-
-        yes_no_complete_callback_ = complete_callback;
 
         JNIEnv *env = common::jni::environment();
         jclass clazz = common::jni::find_class("com/github/eka2l1/emu/Emulator");
-        jmethodID open_method = env->GetStaticMethodID(clazz, "showQuestionDialog", "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
+        jmethodID open_method = env->GetStaticMethodID(clazz, "showQuestionDialog", "(JLjava/lang/String;Ljava/lang/String;Ljava/lang/String;)V");
         std::string question_text_utf8 = common::ucs2_to_utf8(text);
         std::string yes_text_utf8 = common::ucs2_to_utf8(button1_text);
         std::string no_text_utf8 = common::ucs2_to_utf8(button2_text);
@@ -651,8 +656,18 @@ namespace eka2l1::android {
         jstring jtext_yes = env->NewStringUTF(yes_text_utf8.c_str());
         jstring jtext_no = env->NewStringUTF(no_text_utf8.c_str());
 
-        env->CallStaticVoidMethod(clazz, open_method, jtext_question, jtext_yes, jtext_no);
-        return true;
+        env->CallStaticVoidMethod(clazz, open_method, static_cast<jlong>(pending->id), jtext_question, jtext_yes, jtext_no);
+        env->DeleteLocalRef(jtext_question);
+        env->DeleteLocalRef(jtext_yes);
+        env->DeleteLocalRef(jtext_no);
+        return [pending]() {
+            if (!pending->finished.exchange(true)) {
+                JNIEnv *env = common::jni::environment();
+                jclass clazz = common::jni::find_class("com/github/eka2l1/emu/Emulator");
+                jmethodID close_method = env->GetStaticMethodID(clazz, "closeQuestionDialog", "(J)V");
+                env->CallStaticVoidMethod(clazz, close_method, static_cast<jlong>(pending->id));
+            }
+        };
     }
 
     void launcher::on_finished_text_input(const std::string &text, const bool force_close) {
@@ -662,10 +677,17 @@ namespace eka2l1::android {
         }
     }
 
-    void launcher::on_question_dialog_finished(const int result) {
-        if (yes_no_complete_callback_) {
-            yes_no_complete_callback_(result);
-            yes_no_complete_callback_ = nullptr;
+    void launcher::on_question_dialog_finished(std::uint64_t id, int result) {
+        std::shared_ptr<question_dialog_request> pending;
+        {
+            const std::lock_guard<std::mutex> guard(question_dialog_mutex_);
+            if (!question_dialog_ || question_dialog_->id != id) {
+                return;
+            }
+            pending = std::move(question_dialog_);
+        }
+        if (!pending->finished.exchange(true) && pending->complete) {
+            pending->complete(result);
         }
     }
 

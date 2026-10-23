@@ -26,10 +26,12 @@
 namespace eka2l1::drivers::ui {
     using input_dialog_complete_callback = std::function<void(const std::u16string &)>;
     using yes_no_dialog_complete_callback = std::function<void(int)>;
+    using dialog_cancel_callback = std::function<void()>;
 
     bool open_input_view(const std::u16string &initial_text, const int max_len, input_dialog_complete_callback complete_callback);
     void close_input_view();
 
-    void show_yes_no_dialog(const std::u16string &text, const std::u16string &button1_text, const std::u16string &button2_text,
+    // Returns a cancellation function; completions use button indices, or -1 for dismissal.
+    dialog_cancel_callback show_yes_no_dialog(const std::u16string &text, const std::u16string &button1_text, const std::u16string &button2_text,
         yes_no_dialog_complete_callback complete_callback);
 }
