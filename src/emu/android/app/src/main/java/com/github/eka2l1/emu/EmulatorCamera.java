@@ -62,6 +62,12 @@ public class EmulatorCamera {
     private static final int FLASH_MODE_DRIVER_FORCED = 0x02;
     private static final int FLASH_MODE_DRIVER_VIDEO_LIGHT = 0x80;
 
+    private static final Size[] IMAGE_SIZE_CANDIDATES = {
+            new Size(2592, 1944), new Size(2048, 1536), new Size(1600, 1200),
+            new Size(1280, 960), new Size(1024, 768), new Size(640, 480),
+            new Size(320, 240), new Size(160, 120)
+    };
+
     private static HashMap<Integer, EmulatorCamera> cameraWrappers;
     private static int cameraIdCounter = 1;
 
@@ -263,8 +269,33 @@ public class EmulatorCamera {
         // Retrieve possible output sizes
         characteristics = Camera2CameraInfo.extractCameraCharacteristics(getCameraSelector().filter(cameraProvider.getAvailableCameraInfos()).get(0));
         StreamConfigurationMap streamConfigurationMap = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
-        outputImageSizes = streamConfigurationMap.getOutputSizes(ImageFormat.JPEG);
+        outputImageSizes = buildImageSizeLadder(streamConfigurationMap.getOutputSizes(ImageFormat.JPEG));
         cameraExecutor = Executors.newSingleThreadExecutor();
+    }
+
+    // Symbian-era capture sizes clamped to the sensor, largest first, as the iOS and Qt backends advertise.
+    private static Size[] buildImageSizeLadder(Size[] sensorSizes) {
+        Size maxSize = new Size(640, 480);
+
+        if (sensorSizes != null) {
+            for (Size size : sensorSizes) {
+                if ((long) size.getWidth() * size.getHeight() > (long) maxSize.getWidth() * maxSize.getHeight()) {
+                    maxSize = size;
+                }
+            }
+        }
+
+        List<Size> sizes = new ArrayList<>();
+        sizes.add(maxSize);
+
+        for (Size candidate : IMAGE_SIZE_CANDIDATES) {
+            if ((candidate.getWidth() <= maxSize.getWidth()) && (candidate.getHeight() <= maxSize.getHeight()) &&
+                    !candidate.equals(maxSize)) {
+                sizes.add(candidate);
+            }
+        }
+
+        return sizes.toArray(new Size[0]);
     }
 
     public void handleOrientationChange() {
