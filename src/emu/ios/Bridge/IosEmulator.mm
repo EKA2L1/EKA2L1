@@ -54,6 +54,7 @@
 #include <drivers/camera/camera_collection.h>
 #include <drivers/sensor/sensor.h>
 #include <drivers/sensor/backend/ios/controller_motion.h>
+#include <drivers/sensor/backend/ios/motion_override.h>
 #include <services/window/screen.h>
 #include <kernel/kernel.h>
 #include <kernel/process.h>
@@ -2385,6 +2386,16 @@ namespace eka2l1::ios {
     eka2l1::drivers::set_controller_motion_source(_state->sensor_driver.get(),
         motion ? (__bridge void *)controller : nullptr);
     eka2l1::drivers::hwrm::set_controller_haptic_source(vibration ? (__bridge void *)controller : nullptr);
+}
+
+- (void)setAccelerationOverride:(NSArray<NSNumber *> *)acceleration {
+    if (!_state) return;
+    if (acceleration.count != 3) {
+        eka2l1::drivers::set_motion_acceleration_override(_state->sensor_driver.get(), nullptr);
+        return;
+    }
+    const double values[3] = { acceleration[0].doubleValue, acceleration[1].doubleValue, acceleration[2].doubleValue };
+    eka2l1::drivers::set_motion_acceleration_override(_state->sensor_driver.get(), values);
 }
 
 - (void)submitPointerEventAtX:(CGFloat)x
