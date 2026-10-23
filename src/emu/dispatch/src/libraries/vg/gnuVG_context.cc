@@ -522,7 +522,12 @@ namespace gnuVG {
 		case VG_FILL_RULE:
 		case VG_IMAGE_QUALITY:
 		case VG_RENDERING_QUALITY:
+			break;
 		case VG_IMAGE_MODE:
+			if (value == VG_DRAW_IMAGE_NORMAL || value == VG_DRAW_IMAGE_MULTIPLY || value == VG_DRAW_IMAGE_STENCIL)
+				image_mode = static_cast<VGImageMode>(value);
+			else
+				set_error(VG_ILLEGAL_ARGUMENT_ERROR);
 			break;
 
 		case VG_BLEND_MODE:
@@ -836,8 +841,9 @@ namespace gnuVG {
 		case VG_FILL_RULE:
 		case VG_IMAGE_QUALITY:
 		case VG_RENDERING_QUALITY:
-		case VG_IMAGE_MODE:
 			break;
+		case VG_IMAGE_MODE:
+			return image_mode;
 
 		case VG_BLEND_MODE:
 			switch(blend_mode) {
@@ -1205,7 +1211,7 @@ namespace gnuVG {
 						 int gaussian_height,
 						 VGTilingMode tiling_mode,
 						 const FrameBufferSubsetInfo *subset_info,
-						 bool do_glyph) {
+						 bool do_glyph, bool paint_alpha) {
 		VGfloat w, h;
 
 		if(subset_info && (subset_info->subset_width >= 0)) {
@@ -1223,6 +1229,8 @@ namespace gnuVG {
 		}
 
 		int matrix_select = (do_glyph ? GNUVG_MATRIX_GLYPH_USER_TO_SURFACE : GNUVG_MATRIX_IMAGE_USER_TO_SURFACE);
+		paint_alpha = paint_alpha && matrix[matrix_select].c == 0.0f
+			&& matrix[matrix_select].f == 0.0f && matrix[matrix_select].i == 1.0f;
 
 		// calculate corners of image
 		auto c1_p = matrix[matrix_select].map_point(Point(x, y));
@@ -1271,11 +1279,18 @@ namespace gnuVG {
 			c4.x, c4.y,
 		};
 
+		float left = 0.0f, bottom = 0.0f, right = 1.0f, top = 1.0f;
+		if (paint_alpha && subset_info && subset_info->subset_x >= 0) {
+			left = static_cast<float>(subset_info->subset_x) / framebuffer->width;
+			bottom = static_cast<float>(subset_info->subset_y) / framebuffer->height;
+			right = static_cast<float>(subset_info->subset_x + subset_info->subset_width) / framebuffer->width;
+			top = static_cast<float>(subset_info->subset_y + subset_info->subset_height) / framebuffer->height;
+		}
 		float texture_coords[] = {
-			0.0f, 0.0f,
-			0.0f, 1.0f,
-			1.0f, 1.0f,
-			1.0f, 0.0f
+			left, bottom,
+			left, top,
+			right, top,
+			right, bottom
 		};
 
         std::uint32_t indices[] = {
@@ -1300,50 +1315,61 @@ namespace gnuVG {
 		}
 
 		apply_state_changes(state);
+		if (paint_alpha)
+			select_conversion_matrix(static_cast<MatrixMode>(matrix_select));
 		prepare_framebuffer_matrix(framebuffer, subset_info, do_glyph ? GNUVG_MATRIX_GLYPH_USER_TO_SURFACE : GNUVG_MATRIX_IMAGE_USER_TO_SURFACE);
 
-		auto f = [this, vertices, vertices_full, mat, mat_full, indices, texture_coords, wrap_mode, state, do_glyph]
+		auto f = [this, vertices, vertices_full, mat, mat_full, indices, texture_coords, wrap_mode, state, do_glyph, paint_alpha]
 			(const FrameBuffer *fbuffer,
 			 bool do_horizontal_gauss,
 			 int kern_diameter) {
-			int caps = (do_glyph ? Shader::do_texture : Shader::do_pattern);
-			if(kern_diameter > 1) {
-				caps |= do_horizontal_gauss ?
-					Shader::do_horizontal_gaussian :
-					Shader::do_vertical_gaussian;
-				caps |= (kern_diameter << Shader::gauss_krn_diameter_shift) &
-					Shader::gauss_krn_diameter_mask;
-			}
-			if(do_color_transform)
-				caps |= Shader::do_color_transform;
-
-			active_shader = state.shaderman->get_shader(
-				state.driver,
-				caps
-				);
-			active_shader->set_current_graphics_command_builder(cmd_builder_);
-			active_shader->use_shader();
-			active_shader->set_matrix(mat);
-
-			if(do_color_transform)
-				active_shader->set_color_transform(
-					color_transform_scale,
-					color_transform_bias);
-
-			if (do_glyph) {
+			if (paint_alpha) {
+				use_pipeline(state, GNUVG_SIMPLE_PIPELINE, VG_FILL_PATH,
+					image_mode == VG_DRAW_IMAGE_STENCIL ? Shader::do_alpha_stencil : Shader::do_alpha_multiply);
+				active_shader->set_matrix(mat);
 				active_shader->set_texture(fbuffer->color_buffer);
-
 				setup_buffers_and_descriptors(state.driver, vertices, 8 * sizeof(float), 0,
 					texture_coords, 8 * sizeof(float), 0);
 			} else {
-				active_shader->set_pattern_texture(fbuffer->color_buffer, wrap_mode);
-				active_shader->set_pattern_matrix(do_horizontal_gauss ?
-								mat_full :
-								image_matrix_data);
-				active_shader->set_pattern_size(fbuffer->width, fbuffer->height);
+				int caps = (do_glyph ? Shader::do_texture : Shader::do_pattern);
+				if(kern_diameter > 1) {
+					caps |= do_horizontal_gauss ?
+						Shader::do_horizontal_gaussian :
+						Shader::do_vertical_gaussian;
+					caps |= (kern_diameter << Shader::gauss_krn_diameter_shift) &
+						Shader::gauss_krn_diameter_mask;
+				}
+				if(do_color_transform)
+					caps |= Shader::do_color_transform;
 
-				setup_buffers_and_descriptors(state.driver, do_horizontal_gauss ? vertices_full : vertices,
-					8 * sizeof(float), 0, nullptr, 0, 0);
+				active_shader = state.shaderman->get_shader(
+					state.driver,
+					caps
+					);
+				active_shader->set_current_graphics_command_builder(cmd_builder_);
+				active_shader->use_shader();
+				active_shader->set_matrix(mat);
+
+				if(do_color_transform)
+					active_shader->set_color_transform(
+						color_transform_scale,
+						color_transform_bias);
+
+				if (do_glyph) {
+					active_shader->set_texture(fbuffer->color_buffer);
+
+					setup_buffers_and_descriptors(state.driver, vertices, 8 * sizeof(float), 0,
+						texture_coords, 8 * sizeof(float), 0);
+				} else {
+					active_shader->set_pattern_texture(fbuffer->color_buffer, wrap_mode);
+					active_shader->set_pattern_matrix(do_horizontal_gauss ?
+									mat_full :
+									image_matrix_data);
+					active_shader->set_pattern_size(fbuffer->width, fbuffer->height);
+
+					setup_buffers_and_descriptors(state.driver, do_horizontal_gauss ? vertices_full : vertices,
+						8 * sizeof(float), 0, nullptr, 0, 0);
+				}
 			}
 
 			if (!index_buffer_pusher.is_initialized()) {
@@ -1546,13 +1572,15 @@ namespace gnuVG {
 		}
 	}
 
-	void Context::use_pipeline(const GraphicState &state, gnuVGPipeline new_pipeline, VGPaintMode _mode) {
+	void Context::use_pipeline(const GraphicState &state, gnuVGPipeline new_pipeline, VGPaintMode _mode, int extra_shader_caps) {
 		pipeline_mode = _mode;
 		active_pipeline = new_pipeline;
 
 		auto active_paint =
 			pipeline_mode == VG_STROKE_PATH ? stroke_paint : fill_paint;
-		int caps = Shader::do_flat_color | Shader::do_pretranslate;
+		int caps = Shader::do_flat_color | extra_shader_caps;
+		if (!(extra_shader_caps & Shader::alpha_image_modes_mask))
+			caps |= Shader::do_pretranslate;
 
 		bool gradient_enabled = false;
 		switch(active_paint->ptype) {
@@ -1599,7 +1627,8 @@ namespace gnuVG {
 		active_shader->set_current_graphics_command_builder(cmd_builder_);
 		active_shader->use_shader();
 		active_shader->set_matrix(conversion_matrix_data);
-		active_shader->set_pre_translation(pre_translation);
+		if (caps & Shader::do_pretranslate)
+			active_shader->set_pre_translation(pre_translation);
 
 		if(do_color_transform)
 			active_shader->set_color_transform(

@@ -169,7 +169,7 @@ namespace gnuVG {
 				"out vec4 p_textureCoord;\n"
 				;
 
-		if ((caps & primary_mode_mask) == do_texture)
+		if ((caps & primary_mode_mask) == do_texture || (caps & alpha_image_modes_mask))
 			vshad <<
 				"layout (location = 1) in vec2 a_textureCoord;\n"
 				"uniform mat3 u_textureMatrix;\n"
@@ -203,7 +203,7 @@ namespace gnuVG {
 				"  p_textureCoord = p_projection * vec4(gl_Position.xy, 0.0, 1.0);\n"
 				;
 
-		if((caps & primary_mode_mask) == do_texture)
+		if((caps & primary_mode_mask) == do_texture || (caps & alpha_image_modes_mask))
 			vshad <<
 				"  v_textureCoord = a_textureCoord;\n"
 //				"  v_textureCoord = a_textureCoord.xy;\n"
@@ -286,7 +286,7 @@ namespace gnuVG {
 				"uniform vec4 v_color;\n"
 				;
 
-		if(primary_mode == do_texture)
+		if(primary_mode == do_texture || (caps & alpha_image_modes_mask))
 			fshad <<
 				"in vec2 v_textureCoord;\n"
 				"uniform sampler2D u_textureSampler;\n";
@@ -326,7 +326,7 @@ namespace gnuVG {
 					;
 			else
 				fshad <<
-					"  vec2 dxy = coord - radial.xy;\n"
+					"  vec2 dxy = gradient_coord - radial.xy;\n"
 					"  float g = dot(dxy, radial.zw);\n"
 					"  float h = dxy.x * radial.w - dxy.y * radial.z;\n"
 					"  g += sqrt(radius2 * dot(dxy, dxy) - h*h);\n"
@@ -388,6 +388,9 @@ namespace gnuVG {
 			break;
 		}
 
+		if(caps & do_alpha_multiply)
+			fshad << "  c.a *= texture(u_textureSampler, v_textureCoord).a;\n";
+
 		if(caps & do_mask)
 			fshad << "  c = m.a * c;\n";
 
@@ -402,6 +405,10 @@ namespace gnuVG {
 			fshad <<
 				"  o_color = c;\n"
 				;
+
+		// Keep stencil coverage outside the paint transform, including any alpha bias.
+		if(caps & do_alpha_stencil)
+			fshad << "  o_color.a = clamp(o_color.a, 0.0, 1.0) * texture(u_textureSampler, v_textureCoord).a;\n";
 
 		fshad <<
 			"}\n"
