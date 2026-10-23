@@ -391,6 +391,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     connect(ui_->app_config_time_delay_slider, &QSlider::valueChanged, this, &settings_dialog::on_time_delay_value_changed);
     connect(ui_->app_config_inherit_settings_child_checkbox, &QCheckBox::toggled, this, &settings_dialog::on_inherit_settings_toggled);
     connect(ui_->app_config_screen_scale_combo_box, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_upscale_factor_choose);
+    connect(ui_->app_config_screen_mode_combo_box, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_guest_screen_mode_choose);
     connect(ui_->app_config_enable_upscale_use_shader, &QCheckBox::toggled, this, &settings_dialog::on_use_shader_for_upscale_toggled);
     connect(ui_->app_config_list_shaders_upscale, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_upscale_shader_choose);
 
@@ -996,6 +997,22 @@ void settings_dialog::refresh_configuration_for_who(const bool clear) {
             }
 
             eka2l1::config::app_setting *setting = app_settings_->get_setting(info->app_uid_);
+
+            // Entry 0 lets the app pick; entry i + 1 pins guest screen mode i.
+            ui_->app_config_screen_mode_combo_box->clear();
+            ui_->app_config_screen_mode_combo_box->addItem(tr("Decided by app"));
+            if (scr) {
+                for (int mode = 0; mode < scr->total_screen_mode(); mode++) {
+                    const eka2l1::vec2 size = scr->mode_info(mode)->size;
+                    ui_->app_config_screen_mode_combo_box->addItem(tr("Mode %1 (%2×%3)").arg(mode).arg(size.x).arg(size.y));
+                }
+            }
+            int mode_index = setting ? setting->screen_mode + 1 : 0;
+            if ((mode_index < 0) || (mode_index >= ui_->app_config_screen_mode_combo_box->count())) {
+                mode_index = 0;
+            }
+            ui_->app_config_screen_mode_combo_box->setCurrentIndex(mode_index);
+
             if (setting) {
                 ui_->app_config_list_shaders_upscale->setCurrentIndex(0);
                 if (!setting->filter_shader_path.empty()) {
@@ -1389,6 +1406,32 @@ void settings_dialog::on_upscale_factor_choose(const int index) {
     }
 
     scr->requested_ui_scale_factor = ((index == 0) ? -1.0f : static_cast<float>(1 << (index - 1)));
+    emit active_app_setting_changed();
+}
+
+void settings_dialog::on_guest_screen_mode_choose(const int index) {
+    std::optional<eka2l1::akn_running_app_info> info = ::get_active_app_info(system_);
+    eka2l1::epoc::screen *scr = get_current_active_screen(system_);
+    eka2l1::kernel_system *kernel = system_->get_kernel_system();
+    if (!info.has_value() || !scr || !kernel) {
+        return;
+    }
+
+    const int mode = index - 1;
+
+    kernel->lock();
+    if ((mode >= 0) && (mode < scr->total_screen_mode())) {
+        scr->set_screen_mode(get_window_server_through_system(system_), system_->get_graphics_driver(), mode);
+    }
+
+    eka2l1::config::app_setting setting;
+    if (eka2l1::config::app_setting *existing = app_settings_->get_setting(info->app_uid_)) {
+        setting = *existing;
+    }
+    setting.screen_mode = mode;
+    app_settings_->add_or_replace_setting(info->app_uid_, setting);
+    kernel->unlock();
+
     emit active_app_setting_changed();
 }
 

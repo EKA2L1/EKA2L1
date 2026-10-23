@@ -132,6 +132,7 @@ private slots:
     void on_use_shader_for_upscale_toggled(bool checked);
     void on_upscale_shader_choose(const int index);
     void on_upscale_factor_choose(const int index);
+    void on_guest_screen_mode_choose(const int index);
     void on_theme_changed(int value);
     void on_cpu_backend_changed(int value);
     void on_ui_clear_all_configs_clicked();

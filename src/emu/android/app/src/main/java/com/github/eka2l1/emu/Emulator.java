@@ -789,6 +789,8 @@ public class Emulator {
 
     public static native void updateAppSetting(int uid);
 
+    public static native int[] getScreenModeSizes();
+
     public static native Bitmap getAppIcon(long uid);
 
     public static native String[] getLanguageIds();

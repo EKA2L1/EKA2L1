@@ -290,6 +290,31 @@
                 app:layout_constraintVertical_bias="0.475" />
 
             <TextView
+                android:id="@+id/tvScreenMode"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/height_config_row"
+                android:layout_marginStart="5dp"
+                android:gravity="center_vertical"
+                android:text="@string/pref_guest_screen_mode"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textColor="?attr/textColorSecondary"
+                android:textSize="15sp"
+                app:layout_constraintEnd_toStartOf="@+id/barrierScreenConfig"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/textView4"
+                app:layout_constraintWidth_min="wrap" />
+
+            <Spinner
+                android:id="@+id/spScreenMode"
+                android:layout_width="0dp"
+                android:layout_height="@dimen/height_config_row"
+                android:textColor="?attr/textColorSecondary"
+                android:textSize="15sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@+id/barrierScreenConfig"
+                app:layout_constraintTop_toBottomOf="@+id/textView4" />
+
+            <TextView
                 android:id="@+id/tvScreenGravity"
                 android:layout_width="0dp"
                 android:layout_height="@dimen/height_config_row"
@@ -301,7 +326,7 @@
                 android:textSize="15sp"
                 app:layout_constraintEnd_toStartOf="@+id/barrierScreenConfig"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/textView4"
+                app:layout_constraintTop_toBottomOf="@+id/tvScreenMode"
                 app:layout_constraintWidth_min="wrap" />
 
             <Spinner
@@ -313,7 +338,7 @@
                 android:textSize="15sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@+id/barrierScreenConfig"
-                app:layout_constraintTop_toBottomOf="@+id/textView4" />
+                app:layout_constraintTop_toBottomOf="@+id/tvScreenMode" />
 
             <TextView
                 android:id="@+id/tvScaleType"
@@ -404,7 +429,7 @@
                 android:layout_width="10dp"
                 android:layout_height="match_parent"
                 app:barrierDirection="end"
-                app:constraint_referenced_ids="cmdScreenBack,textView4,tvScaleType,tvScreenGravity"
+                app:constraint_referenced_ids="cmdScreenBack,textView4,tvScreenMode,tvScaleType,tvScreenGravity"
                 tools:layout_editor_absoluteX="114dp"
                 tools:layout_editor_absoluteY="5dp" />
 
