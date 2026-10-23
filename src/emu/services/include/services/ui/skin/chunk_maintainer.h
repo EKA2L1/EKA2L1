@@ -98,7 +98,8 @@ namespace eka2l1::epoc {
         // Remember to sort this
         std::vector<akn_skin_chunk_area> areas_;
 
-        std::uint32_t level_;
+        // Offset added to a skin's filename IDs so successive imports don't collide.
+        std::uint32_t filename_id_base_;
         std::uint32_t flags_;
 
         std::unique_ptr<akn_skin_bitmap_store> bitmap_store_;
@@ -283,6 +284,10 @@ namespace eka2l1::epoc {
          */
         bool update_definition_hash(epoc::akns_item_def *def, const std::int32_t index);
 
+        // Item definitions are v1-sized in the chunk unless the linked-list lookup is used.
+        std::uint32_t definition_size() const;
+        akns_item_def *item_definition_at(const std::int32_t index);
+
         /**
          * \brief   Get item definition index with its ID.
          * 
@@ -329,8 +334,8 @@ namespace eka2l1::epoc {
 
         bool inject_skin_background(const std::u16string &path, const std::u16string &base_path);
 
-        const std::uint32_t level() const {
-            return level_;
+        const std::uint32_t filename_id_base() const {
+            return filename_id_base_;
         }
     };
 }

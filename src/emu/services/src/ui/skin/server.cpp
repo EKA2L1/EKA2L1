@@ -209,11 +209,27 @@ namespace eka2l1 {
             }
         }
 
+        // Like AknsSrv, lay the S60 default skin down first so items a theme leaves out still resolve.
+        if (skin_pid != DEFAULT_ALWAYS_EXIST_SKIN_PID) {
+            std::optional<std::u16string> default_skin_path = epoc::find_skin_file(io, DEFAULT_ALWAYS_EXIST_SKIN_PID);
+            if (default_skin_path.has_value()) {
+                import_skin(io, DEFAULT_ALWAYS_EXIST_SKIN_PID, default_skin_path.value());
+            }
+        }
+
+        import_skin(io, skin_pid, skin_path.value());
+    }
+
+    void akn_skin_server::import_skin(eka2l1::io_system *io, const epoc::pid skin_pid, const std::u16string &skin_path) {
         std::optional<std::u16string> resource_path = epoc::get_resource_path_of_skin(io, skin_pid);
 
-        symfile skin_file_obj = io->open_file(skin_path.value(), READ_MODE | BIN_MODE);
-        eka2l1::ro_file_stream skin_file_stream(skin_file_obj.get());
+        symfile skin_file_obj = io->open_file(skin_path, READ_MODE | BIN_MODE);
+        if (!skin_file_obj) {
+            LOG_ERROR(SERVICE_UI, "Unable to open skin file {}", common::ucs2_to_utf8(skin_path));
+            return;
+        }
 
+        eka2l1::ro_file_stream skin_file_stream(skin_file_obj.get());
         epoc::skn_file skin_parser(reinterpret_cast<common::ro_stream *>(&skin_file_stream));
 
         chunk_maintainer_->import(skin_parser, resource_path.value_or(u""));

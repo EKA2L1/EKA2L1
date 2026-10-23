@@ -92,6 +92,7 @@ namespace eka2l1 {
          * \param io Pointer to the IO system.
          */
         void merge_active_skin(eka2l1::io_system *io);
+        void import_skin(eka2l1::io_system *io, const epoc::pid skin_pid, const std::u16string &skin_path);
 
     public:
         explicit akn_skin_server(eka2l1::system *sys);
