@@ -1550,6 +1550,15 @@ namespace eka2l1::ios {
                     eka2l1::ios::submit_screen_frame(st, scr);
                 });
             _state->screen_redraw_handles.push_back(handle);
+            screens->add_screen_mode_change_callback(nullptr,
+                [](void * /*userdata*/, eka2l1::epoc::screen *scr, const int /*old_mode*/) {
+                    const NSInteger mode = scr->crr_mode;
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [[NSNotificationCenter defaultCenter] postNotificationName:@"eka2l1GuestScreenModeChanged"
+                                                                            object:nil
+                                                                          userInfo:@{ @"mode": @(mode) }];
+                    });
+                });
             screens = screens->next;
         }
     }

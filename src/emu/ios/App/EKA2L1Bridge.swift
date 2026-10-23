@@ -62,6 +62,8 @@ struct EKA2L1LanguageItem: Identifiable, Hashable {
 // Settings signals the home surface to reload captions after a language change.
 extension Notification.Name {
     static let eka2l1AppListInvalidated = Notification.Name("eka2l1AppListInvalidated")
+    // Posted by the bridge whenever a guest screen changes mode; userInfo["mode"] is the new mode.
+    static let eka2l1GuestScreenModeChanged = Notification.Name("eka2l1GuestScreenModeChanged")
 }
 
 @MainActor

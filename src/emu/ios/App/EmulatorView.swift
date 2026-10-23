@@ -262,6 +262,13 @@ struct EmulatorView: View {
             isEditingDisplay = false
             DisplayOrientation.unlock()
         }
+        .onReceive(NotificationCenter.default.publisher(for: .eka2l1GuestScreenModeChanged)) { note in
+            // A saved per-app mode is only applied once the app takes focus, after onAppLaunch.
+            refreshGuestScreenModes()
+            if let mode = note.userInfo?["mode"] as? Int {
+                guestScreenMode = mode
+            }
+        }
         .onReceive(NotificationCenter.default.publisher(for: .eka2l1RemoteCloseApp)) { _ in
             guestFatalDetails = nil
             EKA2L1Bridge.shared.closeRunningApp()
