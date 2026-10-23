@@ -426,7 +426,7 @@
 105 121         ; _ZN24CMdaAudioRecorderUtility9OpenFileLERK7TDesC164TUidS3_S3_7TFourCC
 
 [epoc81a]
-2 70            ; SetPriority__22CMdaAudioPlayerUtilityi22TMdaPriorityPreference
+2 72            ; SetPriority__22CMdaAudioPlayerUtilityi22TMdaPriorityPreference
 3 107           ; Close__22CMdaAudioPlayerUtility
 4 84            ; ControllerImplementationInformationL__22CMdaAudioPlayerUtility
 5 86            ; CustomCommandAsync__22CMdaAudioPlayerUtilityRCt8TPckgBuf1Z22TMMFMessageDestinationiRC6TDesC8T3R14TRequestStatus
@@ -503,7 +503,7 @@
 76 57           ; SetBalanceL__20CMdaAudioToneUtilityi
 
 [epoc80]
-2 70            ; SetPriority__22CMdaAudioPlayerUtilityi22TMdaPriorityPreference
+2 72            ; SetPriority__22CMdaAudioPlayerUtilityi22TMdaPriorityPreference
 3 107           ; Close__22CMdaAudioPlayerUtility
 4 84            ; ControllerImplementationInformationL__22CMdaAudioPlayerUtility
 5 86            ; CustomCommandAsync__22CMdaAudioPlayerUtilityRCt8TPckgBuf1Z22TMMFMessageDestinationiRC6TDesC8T3R14TRequestStatus

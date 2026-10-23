@@ -354,13 +354,14 @@ namespace eka2l1::dispatch {
         bool supplied = eplayer->impl_ && eplayer->impl_->open_custom(custom_good_stream);
         if (!supplied) {
             drivers::audio_driver *driver = sys->get_audio_driver();
-            std::vector<drivers::player_type> types = driver->get_suitable_player_types("");
+            std::vector<drivers::player_type> types = driver->get_suitable_player_types(*custom_good_stream);
 
             for (std::size_t i = 0; i < types.size(); i++) {
                 if (eplayer->impl_ && (eplayer->impl_->get_player_type() == types[i])) {
                     continue;
                 }
                 auto new_player = drivers::new_audio_player(driver, types[i]);
+                custom_good_stream->seek(0, common::seek_where::beg);
                 if (new_player && new_player->open_custom(custom_good_stream)) {
                     eplayer->impl_ = std::move(new_player);
                     supplied = true;
