@@ -267,6 +267,7 @@ add_library(epocservs
         src/notifier/notifier.cpp
         src/notifier/bluetooth.cpp
         src/notifier/queries.cpp
+        src/notifier/message_query.cpp
         src/posix/posix.cpp
         src/redir/redir.cpp
         src/remcon/common.cpp

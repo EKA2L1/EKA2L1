@@ -20,12 +20,28 @@
 #pragma once
 
 #include <services/notifier/plugin.h>
+#include <array>
 #include <vector>
 
 namespace eka2l1 {
     class kernel_system;
 
     namespace epoc::notifier {
+        constexpr epoc::uid global_message_query_uid = 0x100059CB;
+
+        struct message_query {
+            std::int32_t softkeys = 0;
+            std::u16string text;
+            std::u16string header;
+        };
+
+        struct message_query_button {
+            std::int16_t command = -1;
+            std::u16string text;
+        };
+
+        bool read_message_query(std::uint8_t *data, std::size_t size, message_query &query);
+        bool read_message_query_buttons(std::uint8_t *data, std::size_t size, std::array<message_query_button, 2> &buttons);
         void add_builtin_plugins(kernel_system *kern, std::vector<plugin_instance> &plugins);
     }
 };

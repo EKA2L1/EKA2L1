@@ -124,11 +124,6 @@ private:
     eka2l1::vec2 previous_background_image_size_;
     std::string previous_background_image_path_;
     
-    std::u16string question_dialog_text_;
-    std::u16string question_dialog_button1_text_;
-    std::u16string question_dialog_button2_text_;
-    eka2l1::drivers::ui::yes_no_dialog_complete_callback question_dialog_complete_callback_;
-
     QSystemTrayIcon *tray_icon_;
     QIcon emu_icon_;
 
@@ -209,7 +204,6 @@ private slots:
     void on_action_netplay_configure_triggered();
     void on_btnet_friends_dialog_requested_from_conf();
     void on_action_stretch_to_fill_toggled(bool checked);
-    void on_question_dialog_open_request();
     void on_app_exited(const int exit_type, const int exit_reason, const QString exit_category);
 
 signals:
@@ -224,7 +218,6 @@ signals:
     void input_dialog_delay_launch_asked();
     void input_dialog_close_request();
     void install_ngage_game_name_available(QString name);
-    void question_dialog_open_request();
     void app_exited(const int exit_type, const int exit_reason, const QString exit_category);
 
 public:
@@ -253,7 +246,7 @@ public:
     bool controller_event_handler(eka2l1::drivers::input_event &event);
 
     bool input_dialog_open(const std::u16string &inital_text, const int max_length, eka2l1::drivers::ui::input_dialog_complete_callback complete_callback);
-    void question_dialog_open(const std::u16string &text, const std::u16string &button1_text, const std::u16string &button2_text,
+    eka2l1::drivers::ui::dialog_cancel_callback question_dialog_open(const std::u16string &text, const std::u16string &button1_text, const std::u16string &button2_text,
         eka2l1::drivers::ui::yes_no_dialog_complete_callback complete_callback);
 
     void input_dialog_close();

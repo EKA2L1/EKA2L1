@@ -32,9 +32,8 @@ message_box_asyncable_close::message_box_asyncable_close(QWidget *parent,
     , complete_callback_(complete_callback) {
     setText(QString::fromStdU16String(text));
 
-    if (button2_text.empty()) {
-        yes_button_ = addButton(QMessageBox::Yes);
-    } else {
+    yes_button_ = nullptr;
+    if (!button2_text.empty()) {
         yes_button_ = addButton(QString::fromStdU16String(button2_text), QMessageBox::YesRole);
     }
 
@@ -47,7 +46,9 @@ message_box_asyncable_close::message_box_asyncable_close(QWidget *parent,
     setModal(true);
     setAttribute(Qt::WA_DeleteOnClose, true);
 
-    connect(yes_button_, &QPushButton::pressed, this, &message_box_asyncable_close::on_yes_button_clicked);
+    if (yes_button_) {
+        connect(yes_button_, &QPushButton::pressed, this, &message_box_asyncable_close::on_yes_button_clicked);
+    }
     connect(no_button_, &QPushButton::pressed, this, &message_box_asyncable_close::on_no_button_clicked);
 }
 

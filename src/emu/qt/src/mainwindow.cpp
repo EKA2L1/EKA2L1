@@ -441,7 +441,6 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
 
     connect(this, &main_window::input_dialog_delay_launch_asked, this, &main_window::on_input_dialog_delay_launch_asked);
     connect(this, &main_window::input_dialog_close_request, this, &main_window::on_input_dialog_close_request);
-    connect(this, &main_window::question_dialog_open_request, this, &main_window::on_question_dialog_open_request, Qt::QueuedConnection);
     connect(this, &main_window::app_exited, this, &main_window::on_app_exited, Qt::QueuedConnection);
 
     connect(editor_widget_, &editor_widget::editor_hidden, this, &main_window::on_mapping_editor_hidden);
@@ -1935,19 +1934,39 @@ eka2l1::drivers::handle main_window::get_background_image() {
     return background_image_texture_;
 }
 
-void main_window::on_question_dialog_open_request() {
-    message_box_asyncable_close *msg_box = new message_box_asyncable_close(this, question_dialog_text_, question_dialog_button1_text_,
-        question_dialog_button2_text_, question_dialog_complete_callback_);
-
-    msg_box->show();
-}
-
-void main_window::question_dialog_open(const std::u16string &text, const std::u16string &button1_text, const std::u16string &button2_text,
+eka2l1::drivers::ui::dialog_cancel_callback main_window::question_dialog_open(const std::u16string &text, const std::u16string &button1_text, const std::u16string &button2_text,
     eka2l1::drivers::ui::yes_no_dialog_complete_callback complete_callback) {
-    question_dialog_text_ = text;
-    question_dialog_button1_text_ = button1_text;
-    question_dialog_button2_text_ = button2_text;
-    question_dialog_complete_callback_ = complete_callback;
+    struct request {
+        QPointer<message_box_asyncable_close> dialog;
+        bool finished = false;
+    };
+    const auto pending = std::make_shared<request>();
+    QMetaObject::invokeMethod(this, [this, pending, text, button1_text, button2_text, complete_callback]() {
+        if (pending->finished) {
+            return;
+        }
+        const auto complete = [pending, complete_callback](int result) {
+            if (!pending->finished) {
+                pending->finished = true;
+                if (complete_callback) {
+                    complete_callback(result);
+                }
+            }
+        };
+        pending->dialog = new message_box_asyncable_close(this, text, button1_text, button2_text, complete);
+        connect(pending->dialog, &QDialog::rejected, this, [complete]() { complete(-1); });
+        pending->dialog->show();
+    }, Qt::QueuedConnection);
 
-    emit question_dialog_open_request();
+    const QPointer<main_window> window(this);
+    return [window, pending]() {
+        if (window) {
+            QMetaObject::invokeMethod(window, [pending]() {
+                pending->finished = true;
+                if (pending->dialog) {
+                    pending->dialog->close();
+                }
+            }, Qt::QueuedConnection);
+        }
+    };
 }

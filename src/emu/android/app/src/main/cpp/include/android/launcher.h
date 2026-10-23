@@ -33,6 +33,8 @@
 #include <utils/apacmd.h>
 
 #include <string>
+#include <atomic>
+#include <mutex>
 
 namespace eka2l1 {
     class fbs_server;
@@ -61,7 +63,13 @@ namespace eka2l1::android {
         std::uint32_t scale_type_;
         std::uint32_t gravity_;
         eka2l1::drivers::ui::input_dialog_complete_callback input_complete_callback_;
-        eka2l1::drivers::ui::yes_no_dialog_complete_callback yes_no_complete_callback_;
+        struct question_dialog_request {
+            std::uint64_t id;
+            std::atomic<bool> finished{false};
+            drivers::ui::yes_no_dialog_complete_callback complete;
+        };
+        std::mutex question_dialog_mutex_;
+        std::shared_ptr<question_dialog_request> question_dialog_;
 
         eka2l1::drivers::handle background_img_;
         std::string background_img_path_;
@@ -111,10 +119,10 @@ namespace eka2l1::android {
                              drivers::ui::input_dialog_complete_callback complete_callback);
         void close_input_view();
         void on_finished_text_input(const std::string &text, const bool force_close);
-        bool open_question_dialog(const std::u16string &text, const std::u16string &button1_text,
+        drivers::ui::dialog_cancel_callback open_question_dialog(const std::u16string &text, const std::u16string &button1_text,
                                   const std::u16string &button2_text,
                                   drivers::ui::yes_no_dialog_complete_callback complete_callback);
-        void on_question_dialog_finished(const int result);
+        void on_question_dialog_finished(std::uint64_t id, int result);
         int install_ngage_game(const std::string &path);
         bool install_ng2_game_licenses(const std::string &content);
         void set_current_mmc_id(const std::string &new_mmc_id);

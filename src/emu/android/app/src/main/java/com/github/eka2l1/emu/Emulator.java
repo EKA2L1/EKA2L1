@@ -116,6 +116,7 @@ public class Emulator {
     private static AlertDialog inputDialog;
 
     private static AlertDialog questionDialog;
+    private static long questionDialogId;
 
     private static String emulatorDir;
     private static String persistentDataDir;
@@ -628,7 +629,14 @@ public class Emulator {
         });
     }
 
-    public static void showQuestionDialog(String text, String yesText, String noText) {
+    private static void finishQuestionDialog(long id, int result) {
+        if (questionDialog != null && questionDialogId == id) {
+            questionDialog = null;
+            submitQuestionDialogResponse(id, result);
+        }
+    }
+
+    public static void showQuestionDialog(long id, String text, String yesText, String noText) {
         new Handler(Looper.getMainLooper()).post(() -> {
             if (questionDialog == null) {
                 LinearLayout linearLayout = new LinearLayout(context);
@@ -650,30 +658,33 @@ public class Emulator {
 
                 if ((yesText == null) || (yesText.length() == 0)) {
                     builder = builder.setPositiveButton(android.R.string.ok, (dialogInterface, i) -> {
-                        Emulator.submitQuestionDialogResponse(1);
-                        questionDialog = null;
+                        finishQuestionDialog(id, 0);
                     });
                 } else {
                     builder = builder.setPositiveButton(yesText, (dialogInterface, i) -> {
-                        Emulator.submitQuestionDialogResponse(1);
-                        questionDialog = null;
+                        finishQuestionDialog(id, 0);
                     });
                 }
 
-                if ((noText == null) || (noText.length() == 0)) {
-                    builder = builder.setNegativeButton(android.R.string.cancel, (dialogInterface, i) -> {
-                        Emulator.submitQuestionDialogResponse(0);
-                        questionDialog = null;
-                    });
-                } else {
+                if (noText != null && !noText.isEmpty()) {
                     builder = builder.setNegativeButton(noText, (dialogInterface, i) -> {
-                        Emulator.submitQuestionDialogResponse(0);
-                        questionDialog = null;
+                        finishQuestionDialog(id, 1);
                     });
                 }
 
                 questionDialog = builder.create();
+                questionDialogId = id;
+                questionDialog.setOnCancelListener(dialog -> finishQuestionDialog(id, -1));
                 questionDialog.show();
+            }
+        });
+    }
+
+    public static void closeQuestionDialog(long id) {
+        new Handler(Looper.getMainLooper()).post(() -> {
+            if (questionDialog != null && questionDialogId == id) {
+                questionDialog.dismiss();
+                questionDialog = null;
             }
         });
     }
@@ -791,7 +802,7 @@ public class Emulator {
     public static native void submitInput(String text);
 
 
-    public static native void submitQuestionDialogResponse(int value);
+    public static native void submitQuestionDialogResponse(long id, int value);
 
     public static native String[] getSuccessInstalledLicenseGames();
     public static native String[] getFailedInstalledLicenseGames();
