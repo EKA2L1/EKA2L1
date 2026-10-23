@@ -156,6 +156,7 @@ namespace eka2l1::dispatch {
         if (cam->cached_frame_sizes_[format_casted].size() <= size_index) {
             LOG_TRACE(HLE_DISPATCHER, "Camera size index is out of range ([0..{}], value asked={})",
                       cam->cached_frame_sizes_[format_casted].size(), size_index);
+            return epoc::error_argument;
         }
         *size = cam->cached_frame_sizes_[format_casted][static_cast<std::uint32_t>(size_index)];
         return epoc::error_none;
