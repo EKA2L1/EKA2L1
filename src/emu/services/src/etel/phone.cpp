@@ -137,6 +137,24 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void etel_phone_subsession::notify_mode_change(service::ipc_context *ctx) {
+        if (!mode_change_nof_.empty()) {
+            ctx->complete(epoc::error_in_use);
+            return;
+        }
+        if (!ctx->get_descriptor_argument_ptr(0)
+            || ctx->get_argument_max_data_size(0) < sizeof(std::uint32_t)) {
+            ctx->complete(epoc::error_bad_descriptor);
+            return;
+        }
+        mode_change_nof_ = epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr);
+    }
+
+    void etel_phone_subsession::notify_mode_change_cancel(service::ipc_context *ctx) {
+        mode_change_nof_.complete(epoc::error_cancel);
+        ctx->complete(epoc::error_none);
+    }
+
     void etel_phone_subsession::get_network_registration_status(eka2l1::service::ipc_context *ctx) {
         LOG_TRACE(SERVICE_ETEL, "Get network registration status hardcoded");
         const std::uint32_t network_registration_status = epoc::etel_mobile_phone_registered_on_home_network;
@@ -430,6 +448,14 @@ namespace eka2l1 {
 
             case epoc::etel_mobile_phone_get_current_mode:
                 get_current_mode(ctx);
+                break;
+
+            case epoc::etel_mobile_phone_notify_mode_change:
+                notify_mode_change(ctx);
+                break;
+
+            case epoc::etel_mobile_phone_notify_mode_change_cancel:
+                notify_mode_change_cancel(ctx);
                 break;
 
             case epoc::etel_mobile_phone_get_network_registration_status:

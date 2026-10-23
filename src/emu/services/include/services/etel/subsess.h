@@ -65,6 +65,7 @@ namespace eka2l1 {
         epoc::notify_info network_registration_status_change_nof_;
         epoc::notify_info signal_strength_change_nof_;
         epoc::notify_info current_network_change_nof_;
+        epoc::notify_info mode_change_nof_;
         epoc::notify_info nitz_info_change_nof_;
         epoc::notify_info indicator_change_nof_;
         epoc::notify_info battery_info_change_nof_;
@@ -79,6 +80,8 @@ namespace eka2l1 {
         void get_indicator(service::ipc_context *ctx);
         void get_network_caps(service::ipc_context *ctx);
         void get_current_mode(service::ipc_context *ctx);
+        void notify_mode_change(service::ipc_context *ctx);
+        void notify_mode_change_cancel(service::ipc_context *ctx);
         void get_network_registration_status(eka2l1::service::ipc_context *ctx);
         void get_home_network(eka2l1::service::ipc_context *ctx);
         void get_phone_id(eka2l1::service::ipc_context *ctx);
