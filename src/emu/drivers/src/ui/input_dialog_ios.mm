@@ -221,12 +221,33 @@ namespace eka2l1::drivers::ui {
         });
     }
 
-    void show_yes_no_dialog(const std::u16string &text, const std::u16string &button1_text,
+    dialog_cancel_callback show_yes_no_dialog(const std::u16string &text, const std::u16string &button1_text,
         const std::u16string &button2_text, yes_no_dialog_complete_callback complete_callback) {
+        struct request {
+            __weak UIAlertController *alert = nil;
+            bool finished = false;
+        };
+        const auto pending = std::make_shared<request>();
         const std::u16string text_copy = text;
         const std::u16string button1_text_copy = button1_text;
         const std::u16string button2_text_copy = button2_text;
+        const auto complete = [pending, complete_callback](int selected) {
+            if (pending->finished) {
+                return;
+            }
+            pending->finished = true;
+            if (g_active_alert == pending->alert) {
+                g_active_alert = nil;
+                notify_input_available();
+            }
+            if (complete_callback) {
+                complete_callback(selected);
+            }
+        };
         dispatch_async(dispatch_get_main_queue(), ^{
+            if (pending->finished) {
+                return;
+            }
             close_input_view_on_main();
 
             UIAlertController *alert = [UIAlertController alertControllerWithTitle:nil
@@ -235,25 +256,33 @@ namespace eka2l1::drivers::ui {
             [alert addAction:[UIAlertAction actionWithTitle:to_ns_string(button1_text_copy)
                                                       style:UIAlertActionStyleDefault
                                                     handler:^(__unused UIAlertAction *action) {
-                if (complete_callback) {
-                    complete_callback(0);
-                }
-                g_active_alert = nil;
-                notify_input_available();
+                complete(0);
             }]];
-            [alert addAction:[UIAlertAction actionWithTitle:to_ns_string(button2_text_copy)
-                                                      style:UIAlertActionStyleCancel
-                                                    handler:^(__unused UIAlertAction *action) {
-                if (complete_callback) {
-                    complete_callback(1);
-                }
-                g_active_alert = nil;
-                notify_input_available();
-            }]];
+            if (!button2_text_copy.empty()) {
+                [alert addAction:[UIAlertAction actionWithTitle:to_ns_string(button2_text_copy)
+                                                          style:UIAlertActionStyleCancel
+                                                        handler:^(__unused UIAlertAction *action) {
+                    complete(1);
+                }]];
+            }
 
+            pending->alert = alert;
             g_active_alert = alert;
             notify_input_available();
             [top_view_controller() presentViewController:alert animated:YES completion:nil];
         });
+        return [pending]() {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                pending->finished = true;
+                UIAlertController *alert = pending->alert;
+                if (alert) {
+                    [alert dismissViewControllerAnimated:NO completion:nil];
+                    if (g_active_alert == alert) {
+                        g_active_alert = nil;
+                        notify_input_available();
+                    }
+                }
+            });
+        };
     }
 }
