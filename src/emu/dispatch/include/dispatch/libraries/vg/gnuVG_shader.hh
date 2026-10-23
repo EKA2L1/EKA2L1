@@ -55,6 +55,9 @@ namespace gnuVG {
 			do_horizontal_gaussian	= 0x00000400,
 			do_vertical_gaussian	= 0x00000800,
 			do_color_transform	= 0x01000000,
+			do_alpha_multiply	= 0x00001000,
+			do_alpha_stencil		= 0x00002000,
+			alpha_image_modes_mask = do_alpha_multiply | do_alpha_stencil,
 
 			// gaussian kernel configuration
 			gauss_krn_diameter_mask = 0x00ff0000,

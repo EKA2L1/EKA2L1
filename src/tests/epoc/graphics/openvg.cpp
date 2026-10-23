@@ -215,3 +215,18 @@ TEST_CASE("openvg_context_starts_without_an_error_and_clears_reported_errors", "
     REQUIRE(reported == VG_ILLEGAL_ARGUMENT_ERROR);
     REQUIRE(cleared == VG_NO_ERROR);
 }
+
+TEST_CASE("OpenVG image modes default to normal and reject invalid modes", "[openvg]") {
+    gnuVG::Context context;
+    const gnuVG::GraphicState state{};
+    REQUIRE(context.vgGeti(VG_IMAGE_MODE) == VG_DRAW_IMAGE_NORMAL);
+    REQUIRE(context.vgGetVectorSize(VG_IMAGE_MODE) == 1);
+    for (const VGImageMode mode : {VG_DRAW_IMAGE_STENCIL, VG_DRAW_IMAGE_MULTIPLY, VG_DRAW_IMAGE_NORMAL}) {
+        context.vgSeti(state, VG_IMAGE_MODE, mode);
+        REQUIRE(context.get_error() == VG_NO_ERROR);
+        REQUIRE(context.vgGeti(VG_IMAGE_MODE) == mode);
+        context.vgSeti(state, VG_IMAGE_MODE, 0x7fffffff);
+        REQUIRE(context.get_error() == VG_ILLEGAL_ARGUMENT_ERROR);
+        REQUIRE(context.vgGeti(VG_IMAGE_MODE) == mode);
+    }
+}

@@ -172,8 +172,11 @@ namespace gnuVG {
 	}
 
 	void Image::vgDrawImage(const GraphicState &state, const bool for_glyph) {
-		if(context)
-			context->trivial_render_framebuffer(state, framebuffer, 1, 1, VG_TILE_FILL, &subset_info, for_glyph);
+		if(context) {
+			const bool paint_alpha = framebuffer->format == VG_A_8
+				&& context->vgGeti(VG_IMAGE_MODE) != VG_DRAW_IMAGE_NORMAL;
+			context->trivial_render_framebuffer(state, framebuffer, 1, 1, VG_TILE_FILL, &subset_info, for_glyph, paint_alpha);
+		}
 	}
 
 	void Image::vgSetPixels(const GraphicState &state, VGint dx, VGint dy,
