@@ -31,6 +31,10 @@
 #include <mutex>
 #include <optional>
 
+namespace eka2l1::common {
+    class ro_stream;
+}
+
 namespace eka2l1::drivers {
     using master_audio_volume_change_callback = std::function<void(const std::uint32_t old, const std::uint32_t newv)>;
     using bank_change_callback = std::function<void(const midi_bank_type type, const std::string &new_path)>;
@@ -100,6 +104,7 @@ namespace eka2l1::drivers {
         void master_volume(const std::uint32_t value);
 
         std::vector<player_type> get_suitable_player_types(const std::string &url);
+        std::vector<player_type> get_suitable_player_types(common::ro_stream &stream);
         void set_preferred_midi_backend(const player_type type);
 
         std::optional<std::string> get_bank_path(const midi_bank_type type) const;

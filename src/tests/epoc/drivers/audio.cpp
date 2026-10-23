@@ -142,6 +142,41 @@ namespace {
     };
 }
 
+TEST_CASE("Descriptor MIDI selects the configured synthesizer without consuming its header", "[audio]") {
+    queued_audio_driver driver;
+    std::uint8_t midi[] = {'M', 'T', 'h', 'd', 0, 0, 0, 6, 0, 0, 0, 1, 0, 96};
+    eka2l1::common::ro_buf_stream source(midi, sizeof(midi));
+    source.seek(8, eka2l1::common::seek_where::beg);
+
+    for (auto backend : {eka2l1::drivers::player_type_tsf, eka2l1::drivers::player_type_minibae}) {
+        driver.set_preferred_midi_backend(backend);
+        const auto types = driver.get_suitable_player_types(source);
+        REQUIRE(types.size() >= 2);
+        REQUIRE(types.front() == backend);
+        REQUIRE(source.tell() == 8);
+    }
+
+    SECTION("Probing after an unsuccessful decoder reached EOF still recognizes MIDI") {
+        source.seek(sizeof(midi), eka2l1::common::seek_where::beg);
+        REQUIRE(driver.get_suitable_player_types(source).front() == eka2l1::drivers::player_type_minibae);
+        REQUIRE(source.tell() == sizeof(midi));
+    }
+
+    SECTION("A truncated header does not select a synthesizer") {
+        eka2l1::common::ro_buf_stream truncated(midi, 3);
+        const auto types = driver.get_suitable_player_types(truncated);
+        REQUIRE(types.size() == 1);
+        REQUIRE(truncated.tell() == 0);
+    }
+
+    SECTION("Other audio formats keep the general player") {
+        std::uint8_t wav[] = {'R', 'I', 'F', 'F'};
+        eka2l1::common::ro_buf_stream other(wav, sizeof(wav));
+        REQUIRE(driver.get_suitable_player_types(other).size() == 1);
+        REQUIRE(other.tell() == 0);
+    }
+}
+
 TEST_CASE("Clip completion follows output drain and resets its position", "[audio]") {
     memory_audio_stream source;
     const std::uint8_t wav[] = {

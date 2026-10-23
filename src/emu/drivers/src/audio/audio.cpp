@@ -32,9 +32,7 @@
 #endif
 
 #include <common/algorithm.h>
-#include <common/fileutils.h>
-#include <common/path.h>
-#include <cstdio>
+#include <common/buffer.h>
 #include <cstring>
 
 namespace eka2l1::drivers {
@@ -47,21 +45,23 @@ namespace eka2l1::drivers {
     }
 
     std::vector<player_type> audio_driver::get_suitable_player_types(const std::string &url) {
+        common::ro_std_file_stream stream(url, true);
+        return get_suitable_player_types(stream);
+    }
+
+    std::vector<player_type> audio_driver::get_suitable_player_types(common::ro_stream &stream) {
         std::vector<player_type> res;
 
-        if (!url.empty()) {
-            FILE *target_file = common::open_c_file(url, "rb");
-    
-            if (target_file) {
-                char header_magic[MIDI_HEADER_MAGIC_LENGTH];
-                if ((fread(header_magic, 1, MIDI_HEADER_MAGIC_LENGTH, target_file) == MIDI_HEADER_MAGIC_LENGTH) &&
-                    (strncmp(header_magic, MIDI_HEADER_MAGIC, MIDI_HEADER_MAGIC_LENGTH) == 0)) {
-                    res.push_back(preferred_midi_backend_);
-                }
-
-                fclose(target_file);
+        const std::uint64_t position = stream.tell();
+        stream.seek(0, common::seek_where::beg);
+        if (stream.valid()) {
+            char header_magic[MIDI_HEADER_MAGIC_LENGTH];
+            if ((stream.read(header_magic, sizeof(header_magic)) == sizeof(header_magic)) &&
+                (std::memcmp(header_magic, MIDI_HEADER_MAGIC, sizeof(header_magic)) == 0)) {
+                res.push_back(preferred_midi_backend_);
             }
         }
+        stream.seek(position, common::seek_where::beg);
 
 #if EKA2L1_PLATFORM(WIN32)
         if (loader::init_mf()) {
