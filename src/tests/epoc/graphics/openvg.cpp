@@ -19,6 +19,8 @@
 
 #include <algorithm>
 #include <cstdint>
+#include <cstring>
+#include <new>
 #include <vector>
 
 namespace {
@@ -197,4 +199,19 @@ TEST_CASE("openvg_patterns_follow_the_path_and_paint_matrices", "[openvg]") {
         REQUIRE(m[0] - m[4] + m[12] == Approx(20 / scale));
         REQUIRE(m[1] - m[5] + m[13] == Approx(20 / scale));
     }
+}
+
+TEST_CASE("openvg_context_starts_without_an_error_and_clears_reported_errors", "[openvg]") {
+    alignas(gnuVG::Context) unsigned char storage[sizeof(gnuVG::Context)];
+    std::memset(storage, 0xCD, sizeof(storage));
+    auto *context = new (storage) gnuVG::Context;
+    const auto initial = context->get_error();
+    context->set_error(VG_ILLEGAL_ARGUMENT_ERROR);
+    const auto reported = context->get_error();
+    const auto cleared = context->get_error();
+    context->~Context();
+
+    REQUIRE(initial == VG_NO_ERROR);
+    REQUIRE(reported == VG_ILLEGAL_ARGUMENT_ERROR);
+    REQUIRE(cleared == VG_NO_ERROR);
 }
