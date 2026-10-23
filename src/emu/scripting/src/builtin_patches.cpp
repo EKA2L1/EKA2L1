@@ -96,6 +96,33 @@ namespace eka2l1::manager {
         skip_empty_avkon_menu(0x12C);
     }
 
+    // An empty menu must not expose a CBA and interrupt direct screen access.
+    static void rm92_defer_menu_cba() {
+        // The positioning scratch slot is unused until after menu validation.
+        scripting::write_dword(scripting::cpu::get_register(13) + 0xC, scripting::cpu::get_register(6));
+        scripting::cpu::set_register(15, scripting::cpu::get_pc() + 0x14);
+    }
+
+    static void rm92_skip_empty_avkon_menu() {
+        skip_empty_avkon_menu(0xD2);
+    }
+
+    static void rm92_create_menu_cba() {
+        if (scripting::cpu::get_register(0) != 0) {
+            scripting::write_dword(scripting::cpu::get_register(13), 1);
+            scripting::cpu::set_register(0, 3);
+            scripting::cpu::set_register(1, 1);
+            scripting::cpu::set_register(2, scripting::cpu::get_register(4) + 0x58);
+            scripting::cpu::set_register(3, scripting::read_dword(scripting::cpu::get_register(13) + 0xC));
+            scripting::cpu::set_register(15, scripting::cpu::get_pc() - 0x118);
+        }
+    }
+
+    static void rm92_finish_menu_cba() {
+        scripting::write_dword(scripting::cpu::get_register(4) + 0x64, scripting::cpu::get_register(0));
+        scripting::cpu::set_register(15, scripting::cpu::get_pc() + 0x134);
+    }
+
     // --- Qt font extras fix (qt_font_extras_fix.lua) ---
     // Qt 4.7.4+ dereferences QApplication::instance() on the first font lookup,
     // which is NULL in apps that paint text without a QApplication.
@@ -192,6 +219,14 @@ namespace eka2l1::manager {
             0x182, 0, 0x1000489E, rm409_skip_empty_avkon_menu);
         register_rom_export_breakpoint("eikcoctl.dll", 70, 0x1595EE13,
             0x17E, 0, 0x1000489E, rm320_skip_empty_avkon_menu);
+        register_rom_export_breakpoint("eikcoctl.dll", 70, 0x5903C871,
+            0x116, 0, 0x1000489E, rm92_defer_menu_cba);
+        register_rom_export_breakpoint("eikcoctl.dll", 70, 0x5903C871,
+            0x16C, 0, 0x1000489E, rm92_skip_empty_avkon_menu);
+        register_rom_export_breakpoint("eikcoctl.dll", 70, 0x5903C871,
+            0x23C, 0, 0x1000489E, rm92_create_menu_cba);
+        register_rom_export_breakpoint("eikcoctl.dll", 70, 0x5903C871,
+            0x128, 0, 0x1000489E, rm92_finish_menu_cba);
 
         // QSymbianFontDatabaseExtrasImplementation::extras() in Qt 4.7.4 and 4.8.0
         register_breakpoint("qtgui.dll", 0x001570B5, 0, 0x2001B2DD, 0x8E4B3F71, qt_skip_font_extras_thread_check);
