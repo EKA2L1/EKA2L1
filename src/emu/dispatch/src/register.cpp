@@ -449,7 +449,7 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x140e, vg_set_parameteriv_emu, "vgSetParameteriv"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x140f, vg_get_parameterf_emu, "vgGetParameterf"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1410, vg_get_parameteri_emu, "vgGetParameteri"),
-        BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1411, vg_get_paremeter_vector_size_emu, "vgGetParemeterVectorSize"),
+        BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1411, vg_get_paremeter_vector_size_emu, "vgGetParameterVectorSize"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1412, vg_get_parameterfv_emu, "vgGetParameterfv"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1413, vg_get_parameteriv_emu, "vgGetParameteriv"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1414, vg_load_matrix_emu, "vgLoadMatrix"),
@@ -524,5 +524,8 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1458, vg_draw_path_emu, "vgDrawPath"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1459, egl_query_profiling_data_nok_emu, "eglQueryProfilingDataNOK"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x145A, vg_flush_emu, "vgFlush"),
+        BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x145B, vg_finish_emu, "vgFinish"),
+        BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x145C, vg_get_error_emu, "vgGetError"),
+        BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x145D, vg_hardware_query_emu, "vgHardwareQuery"),
     };
 }
