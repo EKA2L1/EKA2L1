@@ -104,9 +104,30 @@ namespace eka2l1::epoc::cap {
         reinterpret_cast<sgc_server *>(userdata)->update_screen_state_from_wg(group);
     }
 
+    static void sync_hardware_layout_state_callback(void *userdata, epoc::screen *scr, const int old_mode) {
+        reinterpret_cast<sgc_server *>(userdata)->sync_hardware_layout_state(scr);
+    }
+
+    // Guest servers such as AknIconServer may define these keys before this server is set up.
+    static service::property *get_or_define_int_prop(kernel_system *kern, const epoc::uid category, const std::uint32_t key) {
+        service::property *prop = kern->get_prop(category, key);
+        if (!prop) {
+            prop = kern->create<service::property>();
+            if (!prop) {
+                return nullptr;
+            }
+
+            prop->first = category;
+            prop->second = key;
+        }
+
+        prop->define(service::property_type::int_data, 0);
+        return prop;
+    }
+
     bool sgc_server::init(kernel_system *kern, drivers::graphics_driver *driver) {
-        orientation_prop_ = kern->create<service::property>();
-        hardware_layout_prop_ = kern->create<service::property>();
+        orientation_prop_ = get_or_define_int_prop(kern, UIKON_UID, UIK_PREFERRED_ORIENTATION_KEY);
+        hardware_layout_prop_ = get_or_define_int_prop(kern, UIKON_UID, UIK_CURRENT_HARDWARE_LAYOUT_STATE);
 
         if (!orientation_prop_ || !hardware_layout_prop_) {
             return false;
@@ -114,14 +135,7 @@ namespace eka2l1::epoc::cap {
 
         graphics_driver_ = driver;
 
-        orientation_prop_->define(service::property_type::int_data, 0);
-        orientation_prop_->first = UIKON_UID;
-        orientation_prop_->second = UIK_PREFERRED_ORIENTATION_KEY;
         orientation_prop_->set_int(UIK_ORIENTATION_NORMAL);
-
-        hardware_layout_prop_->define(service::property_type::int_data, 0);
-        hardware_layout_prop_->first = UIKON_UID;
-        hardware_layout_prop_->second = UIK_CURRENT_HARDWARE_LAYOUT_STATE;
         hardware_layout_prop_->set_int(0);
 
         winserv_ = reinterpret_cast<window_server *>(kern->get_by_name<service::server>(
@@ -132,6 +146,8 @@ namespace eka2l1::epoc::cap {
 
         while (screens) {
             focus_callback_handles_.push_back(screens->add_focus_change_callback(this, update_screen_state_from_wg_callback));
+            mode_change_callback_handles_.push_back(screens->add_screen_mode_change_callback(this, sync_hardware_layout_state_callback));
+            sync_hardware_layout_state(screens);
             screens = screens->next;
         }
 
@@ -203,6 +219,26 @@ namespace eka2l1::epoc::cap {
 
         if (final_mode >= 0) {
             group->scr->set_screen_mode(winserv_, graphics_driver_, final_mode);
+        }
+    }
+
+    void sgc_server::sync_hardware_layout_state(epoc::screen *scr) {
+        if (!scr || (scr->number != 0)) {
+            return;
+        }
+
+        // Avkon only relayouts on a screen change event when this state differs from
+        // the one it cached, so it must be updated before the event reaches the apps.
+        const int mode_number = scr->current_mode().mode_number;
+
+        for (const epoc::config::hardware_state &state : scr->scr_config.hardware_states) {
+            if (state.mode_normal == mode_number) {
+                if (hardware_layout_prop_->get_int() != state.state_number) {
+                    hardware_layout_prop_->set_int(state.state_number);
+                }
+
+                return;
+            }
         }
     }
 

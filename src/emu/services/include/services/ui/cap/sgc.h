@@ -32,6 +32,7 @@ namespace eka2l1 {
 
     namespace epoc {
         struct window_group;
+        struct screen;
     }
 
     namespace drivers {
@@ -86,6 +87,7 @@ namespace eka2l1::epoc::cap {
     private:
         std::vector<wg_state> states_;
         std::vector<std::size_t> focus_callback_handles_;
+        std::vector<std::size_t> mode_change_callback_handles_;
 
         // Properties
         service::property *orientation_prop_;
@@ -103,6 +105,7 @@ namespace eka2l1::epoc::cap {
             const std::int32_t sp_flags, const std::int32_t app_screen_mode);
 
         void update_screen_state_from_wg(epoc::window_group *group);
+        void sync_hardware_layout_state(epoc::screen *scr);
 
         wg_state *get_wg_state(const std::uint32_t wg_id, const bool new_one_if_not_exist);
     };
