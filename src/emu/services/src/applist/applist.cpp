@@ -1281,27 +1281,44 @@ namespace eka2l1 {
             return;
         }
 
-        auto executable_map_result = uids_app_to_executable.find(app_uid.value());
-        if (executable_map_result != uids_app_to_executable.end()) {
-            ctx.write_arg(0, kernel::BRIDAGED_EXECUTABLE_NAME);
-            ctx.write_arg(1, executable_map_result->second);
+        get_app_executable_name(ctx, *app_uid);
+    }
 
-            // Return value is opaque data length. Nothing like that at the moment
-            ctx.complete(0);
+    void applist_server::get_app_executable_name_given_document(service::ipc_context &ctx) {
+        const auto name = ctx.get_argument_value<std::u16string>(2);
+        auto *data = ctx.get_descriptor_argument_ptr(3);
+        const auto size = ctx.get_argument_data_size(3);
+        if (!name || (!data && size != 0)) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+
+        std::uint8_t empty = 0;
+        common::ro_buf_stream stream(data ? data : &empty, size);
+        auto recognised = recognize_data_impl(stream, *name);
+        get_app_executable_name(ctx, find_data_type_handler(regs, recognised.type_.type_name_.to_std_string(nullptr), 0));
+    }
+
+    void applist_server::get_app_executable_name(service::ipc_context &ctx, epoc::uid app_uid) {
+        auto executable_map_result = uids_app_to_executable.find(app_uid);
+        if (executable_map_result != uids_app_to_executable.end()) {
+            const bool written = ctx.write_arg(0, kernel::BRIDAGED_EXECUTABLE_NAME)
+                && ctx.write_arg(1, executable_map_result->second);
+            ctx.complete(written ? 0 : epoc::error_bad_descriptor);
             
             return;
         }
 
-        apa_app_registry *reg = get_registration(app_uid.value());
+        apa_app_registry *reg = get_registration(app_uid);
 
         if (!reg) {
             ctx.complete(epoc::error_not_found);
             return;
         }
 
-        // Return value is opaque data length. Nothing like that at the moment
-        ctx.write_arg(0, reg->mandatory_info.app_path.to_std_string(nullptr));
-        ctx.complete(0);
+        // Native apps leave slot 0 empty; completion carries the opaque-data length.
+        ctx.complete(ctx.write_arg(1, reg->mandatory_info.app_path.to_std_string(nullptr))
+            ? 0 : epoc::error_bad_descriptor);
     }
 
     applist_session::applist_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_ver)
@@ -1503,6 +1520,10 @@ namespace eka2l1 {
 
             case applist_request_get_executable_name_given_app_uid:
                 server<applist_server>()->get_app_executable_name_given_app_uid(*ctx);
+                break;
+
+            case applist_request_get_executable_name_given_document:
+                server<applist_server>()->get_app_executable_name_given_document(*ctx);
                 break;
 
             case applist_request_get_data_types_phase1:

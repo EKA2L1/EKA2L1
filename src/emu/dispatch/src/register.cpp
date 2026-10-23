@@ -485,7 +485,7 @@ namespace eka2l1::dispatch {
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1432, vg_fill_mask_layer_emu, "vgFillMaskLayer"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1433, vg_copy_mask_emu, "vgCopyMask"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1434, vg_mask_emu, "vgMask"),
-        //BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1435, vg_render_to_mask_emu, "vgRenderToMask"),
+        BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1435, vg_render_to_mask_emu, "vgRenderToMask"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1436, vg_create_path_emu, "vgCreatePath"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1437, vg_destroy_path_emu, "vgDestroyPath"),
         BRIDGE_REGISTER_DISPATCHER_SYMBOL(0x1438, vg_clear_path_emu, "vgClearPath"),
