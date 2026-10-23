@@ -173,9 +173,13 @@ namespace eka2l1::dispatch {
         color_attrib_ = vertex_attrib_;
         color_attrib_.size_ = 4;
 
+        matrix_index_attrib_ = { 0, GL_UNSIGNED_BYTE_EMU, 0, 0, 0 };
+        weight_attrib_ = { 0, GL_FLOAT_EMU, 0, 0, 0 };
+
         // Matrix
         model_view_mat_stack_.push(glm::identity<glm::mat4>());
         proj_mat_stack_.push(glm::identity<glm::mat4>());
+        palette_mats_.fill(glm::identity<glm::mat4>());
 
         for (std::size_t i = 0; i < GLES1_EMU_MAX_TEXTURE_COUNT; i++) {
             texture_units_[i].index_ = i;
@@ -3152,6 +3156,8 @@ namespace eka2l1::dispatch {
                 }
                 cmd_builder_.set_dynamic_uniform(var_info->palette_mat_loc_, drivers::shader_var_type::mat4,
                     palette_mats_data.data(), palette_mats_data.size());
+                const float weight_scale = weight_attrib_.data_type_ == GL_FIXED_EMU ? 1.0f / 65536.0f : 1.0f;
+                cmd_builder_.set_dynamic_uniform(var_info->weight_scale_loc_, drivers::shader_var_type::real, &weight_scale, sizeof(weight_scale));
             } else {
                 cmd_builder_.set_dynamic_uniform(var_info->view_model_mat_loc_, drivers::shader_var_type::mat4,
                     glm::value_ptr(model_view_mat_stack_.top()), 64);
@@ -3373,11 +3379,8 @@ namespace eka2l1::dispatch {
                         temp_desc.stride = weight_attrib_.stride_;
 
                         gl_enum_to_drivers_data_format(weight_attrib_.data_type_, temp_format);
-                        temp_desc.set_format(weight_attrib_.size_, temp_format);
-
-                        if (temp_format == drivers::data_format::fixed) {
-                            temp_desc.set_normalized(true);
-                        }
+                        temp_desc.set_format(weight_attrib_.size_, weight_attrib_.data_type_ == GL_FIXED_EMU
+                            ? drivers::data_format::sint : temp_format);
 
                         descs.push_back(temp_desc);
                     }
@@ -3550,7 +3553,7 @@ namespace eka2l1::dispatch {
         dispatcher *dp = sys->get_dispatcher();
         dispatch::egl_controller &controller = dp->get_egl_controller();
 
-        if ((stride < 0) || ((type != GL_FIXED_EMU) && (type != GL_FLOAT_EMU)) || (size == 0) || (size > GLES1_EMU_MAX_WEIGHTS_PER_VERTEX)) {
+        if ((stride < 0) || ((type != GL_FIXED_EMU) && (type != GL_FLOAT_EMU)) || (size < 1) || (size > GLES1_EMU_MAX_WEIGHTS_PER_VERTEX)) {
             controller.push_error(ctx, GL_INVALID_VALUE);
             return;
         }
@@ -3572,7 +3575,7 @@ namespace eka2l1::dispatch {
         dispatcher *dp = sys->get_dispatcher();
         dispatch::egl_controller &controller = dp->get_egl_controller();
 
-        if ((stride < 0) || (type != GL_UNSIGNED_BYTE_EMU) || (size == 0) || (size > GLES1_EMU_MAX_WEIGHTS_PER_VERTEX)) {
+        if ((stride < 0) || (type != GL_UNSIGNED_BYTE_EMU) || (size < 1) || (size > GLES1_EMU_MAX_WEIGHTS_PER_VERTEX)) {
             controller.push_error(ctx, GL_INVALID_VALUE);
             return;
         }
@@ -3582,9 +3585,8 @@ namespace eka2l1::dispatch {
             return;
         }
 
-        // According to the documentation: the number of N is indicated by value passed to glMatrixIndexPointerOES
-        // The whole extension document is not too strict.
-        ctx->vertex_statuses_ |= ((size & 0b11) << egl_context_es1::VERTEX_STATE_SKIN_WEIGHTS_PER_VERTEX_BITS_POS);
+        ctx->vertex_statuses_ &= ~egl_context_es1::VERTEX_STATE_SKIN_WEIGHTS_PER_VERTEX_MASK;
+        ctx->vertex_statuses_ |= static_cast<std::uint64_t>(size - 1) << egl_context_es1::VERTEX_STATE_SKIN_WEIGHTS_PER_VERTEX_BITS_POS;
         ctx->attrib_changed_ = true;
     }
 }

@@ -94,19 +94,16 @@ namespace eka2l1::dispatch {
 
         main_body += "void main() {\n";
         if (skinning) {
-            input_decl += fmt::format("layout (location = {}) in uint uMatrixIndices[{}];\n", static_cast<int>(GLES1_EMU_MATRIX_INDEX_ATTRIBUTE), static_cast<int>(GLES1_EMU_MAX_WEIGHTS_PER_VERTEX));
-            input_decl += fmt::format("layout (location = {}) in float uWeights[{}];\n", static_cast<int>(GLES1_EMU_WEIGHT_ATTRIBUTE), static_cast<int>(GLES1_EMU_MAX_WEIGHTS_PER_VERTEX));
+            input_decl += fmt::format("layout (location = {}) in vec4 inMatrixIndices;\n", static_cast<int>(GLES1_EMU_MATRIX_INDEX_ATTRIBUTE));
+            input_decl += fmt::format("layout (location = {}) in vec4 inWeights;\n", static_cast<int>(GLES1_EMU_WEIGHT_ATTRIBUTE));
+            uni_decl += "uniform float uWeightScale;\n";
 
-            std::uint32_t weights_per_vertex_count = (vertex_statuses & egl_context_es1::VERTEX_STATE_SKIN_WEIGHTS_PER_VERTEX_MASK) 
-                >> egl_context_es1::VERTEX_STATE_SKIN_WEIGHTS_PER_VERTEX_BITS_POS;
+            const std::uint32_t weights_per_vertex_count = 1 + ((vertex_statuses & egl_context_es1::VERTEX_STATE_SKIN_WEIGHTS_PER_VERTEX_MASK)
+                >> egl_context_es1::VERTEX_STATE_SKIN_WEIGHTS_PER_VERTEX_BITS_POS);
 
-            main_body += "\tmat4 uViewModelMat = (";
+            main_body += "\tmat4 uViewModelMat = mat4(0.0);\n";
             for (std::uint32_t i = 0; i < weights_per_vertex_count; i++) {
-                main_body += "uWeights[{}] * uPaletteMat[uMatrixIndicies[{}]] ";
-                if (i != weights_per_vertex_count - 1) {
-                    main_body += "+ ";
-                }
-                main_body += ");\n";
+                main_body += fmt::format("\tuViewModelMat += (inWeights[{0}] * uWeightScale) * uPaletteMat[int(inMatrixIndices[{0}])];\n", i);
             }
         }
 

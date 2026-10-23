@@ -614,3 +614,53 @@ TEST_CASE("Logic draws preserve strip winding, fan order, loop closure and incom
     REQUIRE(gles1_logic_op_indices(mode::triangle_strip, 4, reinterpret_cast<const std::uint8_t *>(words), 2)
         == std::vector<std::uint32_t>{500,400,300, 300,400,200});
 }
+
+TEST_CASE("GLES1 matrix palettes start with identity transforms and undefined arrays", "[gles1][skinning]") {
+    egl_context_es1 context;
+    REQUIRE(context.matrix_index_attrib_.size_ == 0);
+    REQUIRE(context.matrix_index_attrib_.data_type_ == GL_UNSIGNED_BYTE_EMU);
+    REQUIRE(context.weight_attrib_.size_ == 0);
+    REQUIRE(context.weight_attrib_.data_type_ == GL_FLOAT_EMU);
+    for (const auto &matrix : context.palette_mats_) {
+        REQUIRE(matrix == glm::mat4(1.0f));
+    }
+}
+
+TEST_CASE("GLES1 skinning arrays preserve byte indices and signed fixed weights", "[gles1][skinning]") {
+    using namespace eka2l1::drivers;
+    for (const auto type : { GL_FLOAT_EMU, GL_FIXED_EMU }) {
+        for (int units = 1; units <= GLES1_EMU_MAX_WEIGHTS_PER_VERTEX; ++units) {
+            point_draw_driver driver;
+            egl_controller controller(&driver);
+            point_buffer_context context;
+            const std::uint32_t name = 1;
+            REQUIRE(context.bind_buffer(GL_ARRAY_BUFFER_EMU, name) == 0);
+            context.binded_buffer(true)->assign_handle(42);
+            context.vertex_attrib_ = { 3, GL_FLOAT_EMU, 32, 0, name };
+            context.matrix_index_attrib_ = { units, GL_UNSIGNED_BYTE_EMU, 32, 12, name };
+            context.weight_attrib_ = { units, static_cast<std::uint32_t>(type), 32, 16, name };
+            context.vertex_statuses_ |= egl_context_es1::VERTEX_STATE_CLIENT_VERTEX_ARRAY
+                | egl_context_es1::VERTEX_STATE_SKINNING_ENABLE
+                | egl_context_es1::VERTEX_STATE_CLIENT_MATRIX_INDEX_ARRAY
+                | egl_context_es1::VERTEX_STATE_CLIENT_WEIGHT_ARRAY
+                | (static_cast<std::uint64_t>(units - 1) << egl_context_es1::VERTEX_STATE_SKIN_WEIGHTS_PER_VERTEX_BITS_POS);
+            REQUIRE(context.prepare_for_draw(&driver, controller, nullptr, 3, 5, graphics_primitive_mode::triangles));
+            REQUIRE(driver.inputs.size() == 3);
+            const auto &indices = driver.inputs[1];
+            const auto &weights = driver.inputs[2];
+            REQUIRE(indices.location == GLES1_EMU_MATRIX_INDEX_ATTRIBUTE);
+            REQUIRE(indices.offset == 108);
+            REQUIRE_FALSE(indices.is_normalized());
+            input_descriptor expected;
+            expected.set_format(units, data_format::byte);
+            REQUIRE(indices.format == expected.format);
+            REQUIRE(weights.location == GLES1_EMU_WEIGHT_ATTRIBUTE);
+            REQUIRE(weights.offset == 112);
+            REQUIRE_FALSE(weights.is_normalized());
+            expected.set_format(units, type == GL_FIXED_EMU ? data_format::sint : data_format::sfloat);
+            REQUIRE(weights.format == expected.format);
+            auto commands = context.cmd_builder_.retrieve_command_list();
+            driver.submit_command_list(commands);
+        }
+    }
+}

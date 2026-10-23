@@ -209,6 +209,7 @@ namespace eka2l1::dispatch {
                 info_inst->view_model_mat_loc_ = metadata.get_uniform_binding("uViewModelMat");
             } else {
                 info_inst->palette_mat_loc_ = metadata.get_uniform_binding("uPaletteMat");
+                info_inst->weight_scale_loc_ = metadata.get_uniform_binding("uWeightScale");
             }
 
             info_inst->point_size_loc_ = metadata.get_uniform_binding("uPointSize");
