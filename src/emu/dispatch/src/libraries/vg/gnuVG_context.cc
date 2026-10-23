@@ -28,6 +28,7 @@
 #include <dispatch/libraries/vg/gnuVG_image.hh>
 #include <dispatch/libraries/vg/gnuVG_emuutils.hh>
 #include <dispatch/libraries/egl/def.h>
+#include <dispatch/libraries/egl/egl.h>
 
 #include <system/epoc.h>
 #include <dispatch/dispatcher.h>
@@ -803,8 +804,10 @@ namespace gnuVG {
 		case VG_MAX_IMAGE_HEIGHT:
 		case VG_MAX_IMAGE_PIXELS:
 		case VG_MAX_IMAGE_BYTES:
+			return static_cast<VGfloat>(vgGeti(paramType));
+
 		case VG_MAX_GAUSSIAN_STD_DEVIATION:
-			break;
+			return GNUVG_MAX_GAUSSIAN_STD_DEVIATION;
 		}
 
 		// illegal argument (/not implemented)
@@ -928,9 +931,15 @@ namespace gnuVG {
 			return vgGeti(VG_MAX_IMAGE_PIXELS) * 4;
 
 		case VG_MAX_KERNEL_SIZE:
+			return GNUVG_MAX_KERNEL_SIZE;
+
 		case VG_MAX_SEPARABLE_KERNEL_SIZE:
-		case VG_MAX_FLOAT:
+			return GNUVG_MAX_SEPARABLE_KERNEL_SIZE;
+
 		case VG_MAX_GAUSSIAN_STD_DEVIATION:
+			return GNUVG_MAX_GAUSSIAN_STD_DEVIATION;
+
+		case VG_MAX_FLOAT:
 			break;
 		case VG_MAX_DASH_COUNT:
 			return 128;
@@ -2635,12 +2644,35 @@ namespace eka2l1::dispatch {
 	 *  Getters and Setters
 	 *
 	 *********************/
-	BRIDGE_FUNC_LIBRARY(VGErrorCode, vg_get_error_emu) {
+	BRIDGE_FUNC_LIBRARY(VGint, vg_get_error_emu) {
 		gnuVG::Context *ctx = get_active_context(sys);
 		if (!ctx) {
 			return VG_NO_CONTEXT_ERROR;
 		}
 		return ctx->get_error();
+	}
+
+	BRIDGE_FUNC_LIBRARY(void, vg_finish_emu) {
+		vg_flush_emu(sys);
+		egl_wait_gl_emu(sys);
+	}
+
+	BRIDGE_FUNC_LIBRARY(VGint, vg_hardware_query_emu, VGHardwareQueryType key, VGint setting) {
+		gnuVG::Context *ctx = get_active_context(sys);
+		if (!ctx) {
+			return VG_HARDWARE_UNACCELERATED;
+		}
+		bool valid = false;
+		if (key == VG_IMAGE_FORMAT_QUERY) {
+			valid = !(setting & ~0xFF) && ((setting & 0x3F) <= VG_A_4);
+		} else if (key == VG_PATH_DATATYPE_QUERY) {
+			valid = (setting >= VG_PATH_DATATYPE_S_8) && (setting <= VG_PATH_DATATYPE_F);
+		}
+		if (!valid) {
+			ctx->set_error(VG_ILLEGAL_ARGUMENT_ERROR);
+			return VG_HARDWARE_UNACCELERATED;
+		}
+		return VG_HARDWARE_ACCELERATED;
 	}
 
 	BRIDGE_FUNC_LIBRARY(void, vg_setf_emu, VGParamType type, VGfloat value) {

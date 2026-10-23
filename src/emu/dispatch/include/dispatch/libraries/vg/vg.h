@@ -6,7 +6,9 @@
 namespace eka2l1::dispatch {
     BRIDGE_FUNC_LIBRARY(void, vg_flush_emu);
     BRIDGE_FUNC_LIBRARY(void, vg_gaussian_blur_emu, VGImage dst, VGImage src, VGfloat stdDeviationX, VGfloat stdDeviationY, VGTilingMode tilingMode);
-	BRIDGE_FUNC_LIBRARY(VGErrorCode, vg_get_error_emu);
+	BRIDGE_FUNC_LIBRARY(VGint, vg_get_error_emu);
+	BRIDGE_FUNC_LIBRARY(void, vg_finish_emu);
+	BRIDGE_FUNC_LIBRARY(VGint, vg_hardware_query_emu, VGHardwareQueryType key, VGint setting);
 	BRIDGE_FUNC_LIBRARY(void, vg_setf_emu, VGParamType type, VGfloat value);
 	BRIDGE_FUNC_LIBRARY(void, vg_seti_emu, VGParamType type, VGint value);
     BRIDGE_FUNC_LIBRARY(void, vg_setfv_emu, VGParamType type, VGint count, const VGfloat * values);

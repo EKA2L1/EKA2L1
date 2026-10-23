@@ -22,4 +22,9 @@
 
 #define GNUVG_MAX_COLOR_RAMP_STOPS 32
 
+// Filters are unimplemented; report the OpenVG 1.1 minimum limits.
+#define GNUVG_MAX_KERNEL_SIZE 7
+#define GNUVG_MAX_SEPARABLE_KERNEL_SIZE 15
+#define GNUVG_MAX_GAUSSIAN_STD_DEVIATION 16
+
 #endif
