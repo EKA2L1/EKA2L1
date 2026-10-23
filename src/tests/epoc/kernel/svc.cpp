@@ -26,3 +26,11 @@ TEST_CASE("symbian3_flash_support_svcs_use_the_sdk_numbers", "[kernel_svc]") {
     REQUIRE(epoc::svc_register_funcs_v10.at(0x79).name == "process_rename");
     REQUIRE(epoc::svc_register_funcs_v10.at(0x5B).name == "set_exception_handler");
 }
+
+TEST_CASE("symbian91_locked_atomics_use_the_rom_fast_exec_numbers", "[kernel_svc]") {
+    const auto &symbian91 = epoc::svc_register_funcs_v91_diff;
+    REQUIRE(symbian91.at(0x0080000A).name == "locked_inc_32");
+    REQUIRE(symbian91.at(0x0080000B).name == "locked_dec_32");
+    REQUIRE(epoc::svc_register_funcs_v10.at(0x0080000A).name == "debug_mask");
+    REQUIRE(epoc::svc_register_funcs_v10.at(0x0080000B).name == "debug_mask_index");
+}
