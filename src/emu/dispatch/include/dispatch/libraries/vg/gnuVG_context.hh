@@ -249,6 +249,8 @@ namespace gnuVG {
 
 		void get_pixelsize(VGint& width, VGint& height);
 		void switch_mask_to(gnuVGFrameBuffer to_this_temporary);
+		bool ensure_mask_buffers(const GraphicState &state);
+		void render_to_mask(const GraphicState &state, VGPath path, VGbitfield paint_modes, VGMaskOperation operation);
 
 		bool create_framebuffer(const GraphicState &state,
 					FrameBuffer* destination,

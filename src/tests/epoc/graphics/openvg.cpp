@@ -11,6 +11,7 @@
 
 #include <catch2/catch.hpp>
 #include <dispatch/libraries/vg/gnuVG_context.hh>
+#include <drivers/graphics/graphics.h>
 #include <dispatch/libraries/vg/gnuVG_image.hh>
 #include <dispatch/libraries/vg/register.h>
 #include <dispatch/register.h>
@@ -24,6 +25,38 @@
 #include <vector>
 
 namespace {
+    class mask_test_driver : public eka2l1::drivers::graphics_driver {
+    public:
+        std::uint64_t next_handle = 1;
+        std::vector<eka2l1::vec2> texture_sizes;
+        mask_test_driver() : graphics_driver(eka2l1::drivers::graphic_api::opengl) {}
+        void run() override {}
+        void abort() override {}
+        void update_bitmap(eka2l1::drivers::handle, std::size_t, const eka2l1::vec2 &, const eka2l1::vec2 &, const void *, std::size_t) override {}
+        void set_viewport(const eka2l1::rect &) override {}
+        void update_surface(void *) override {}
+        void update_surface_size(const eka2l1::vec2 &) override {}
+        void set_upscale_shader(const std::string &) override {}
+        std::string get_active_upscale_shader() const override { return {}; }
+        bool support_extension(eka2l1::drivers::graphics_driver_extension) override { return false; }
+        bool query_extension_value(eka2l1::drivers::graphics_driver_extension_query, void *) override { return false; }
+        void submit_command_list(eka2l1::drivers::command_list &list) override {
+            for (std::size_t i = 0; i < list.size_; ++i) {
+                auto &command = list.base_[i];
+                if (command.opcode_ == eka2l1::drivers::graphics_driver_create_texture) {
+                    texture_sizes.emplace_back(static_cast<std::uint32_t>(command.data_[5]), command.data_[5] >> 32);
+                    *reinterpret_cast<std::uint64_t *>(command.data_[8]) = next_handle++;
+                } else if (command.opcode_ == eka2l1::drivers::graphcis_driver_create_framebuffer) {
+                    *reinterpret_cast<std::uint64_t *>(command.data_[6]) = next_handle++;
+                }
+                if (command.status_) {
+                    *command.status_ = 0;
+                }
+            }
+            delete[] list.base_;
+        }
+    };
+
     struct stroke_mesh {
         std::vector<VGfloat> vertices;
         std::vector<unsigned int> indices;
@@ -229,4 +262,64 @@ TEST_CASE("OpenVG image modes default to normal and reject invalid modes", "[ope
         REQUIRE(context.get_error() == VG_ILLEGAL_ARGUMENT_ERROR);
         REQUIRE(context.vgGeti(VG_IMAGE_MODE) == mode);
     }
+}
+
+TEST_CASE("OpenVG render-to-mask validates paths and paint modes", "[openvg]") {
+    gnuVG::Context context;
+    const gnuVG::GraphicState state{};
+    context.render_to_mask(state, VG_INVALID_HANDLE, VG_FILL_PATH, VG_SET_MASK);
+    REQUIRE(context.get_error() == VG_BAD_HANDLE_ERROR);
+
+    const auto paint = context.create<gnuVG::Paint>();
+    context.render_to_mask(state, paint->get_handle(), VG_FILL_PATH, VG_SET_MASK);
+    REQUIRE(context.get_error() == VG_BAD_HANDLE_ERROR);
+
+    const auto path = context.create<gnuVG::Path>(VG_PATH_DATATYPE_F, 1.0f, 0.0f, VG_PATH_CAPABILITY_ALL);
+    context.render_to_mask(state, path->get_handle(), 0x80000000, VG_SET_MASK);
+    REQUIRE(context.get_error() == VG_ILLEGAL_ARGUMENT_ERROR);
+    context.render_to_mask(state, path->get_handle(), VG_FILL_PATH, static_cast<VGMaskOperation>(0));
+    REQUIRE(context.get_error() == VG_ILLEGAL_ARGUMENT_ERROR);
+    context.render_to_mask(state, path->get_handle(), 0, VG_SET_MASK);
+    REQUIRE(context.get_error() == VG_NO_ERROR);
+}
+
+TEST_CASE("OpenVG render-to-mask is patched at the SDK ordinal", "[openvg]") {
+    const auto &patches = eka2l1::dispatch::LIBOPENVG11_PATCH_INFOS;
+    const auto entry = std::find_if(std::begin(patches), std::end(patches), [](const auto &patch) {
+        return patch.ordinal_number_ == 86;
+    });
+    REQUIRE(entry != std::end(patches));
+    REQUIRE(std::string(eka2l1::dispatch::dispatch_funcs.at(entry->dispatch_number_).second) == "vgRenderToMask");
+}
+
+TEST_CASE("OpenVG mask storage follows the drawing surface and preserves its target", "[openvg]") {
+    mask_test_driver driver;
+    gnuVG::Context context;
+    const gnuVG::GraphicState state{ &driver, nullptr };
+    eka2l1::dispatch::egl_surface surface(nullptr, nullptr, { 360, 640 }, 99, eka2l1::dispatch::egl_config(0));
+    context.draw_surface_ = &surface;
+    context.on_surface_changed(&driver, nullptr, nullptr);
+    auto *target = context.get_internal_framebuffer(gnuVG::Context::GNUVG_CURRENT_FRAMEBUFFER);
+    REQUIRE(driver.texture_sizes.empty());
+    REQUIRE(context.ensure_mask_buffers(state));
+    auto *mask = context.get_internal_framebuffer(gnuVG::Context::GNUVG_MASK_BUFFER);
+    REQUIRE(mask->width == 360);
+    REQUIRE(mask->height == 640);
+    REQUIRE(mask->color_buffer != 0);
+    REQUIRE(mask->framebuffer != 0);
+    REQUIRE(context.get_internal_framebuffer(gnuVG::Context::GNUVG_TEMPORARY_A)->color_buffer != 0);
+    REQUIRE(context.get_internal_framebuffer(gnuVG::Context::GNUVG_CURRENT_FRAMEBUFFER) == target);
+    const auto allocations = driver.texture_sizes.size();
+    REQUIRE(context.ensure_mask_buffers(state));
+    REQUIRE(driver.texture_sizes.size() == allocations);
+
+    surface.dimension_ = { 640, 360 };
+    context.on_draw_surface_resized(&driver);
+    REQUIRE(context.ensure_mask_buffers(state));
+    REQUIRE(mask->width == 640);
+    REQUIRE(mask->height == 360);
+    REQUIRE(context.get_internal_framebuffer(gnuVG::Context::GNUVG_CURRENT_FRAMEBUFFER) == target);
+    REQUIRE(context.vgGeti(VG_MASKING) == VG_FALSE);
+    const auto commands = context.cmd_builder_.retrieve_command_list();
+    delete[] commands.base_;
 }

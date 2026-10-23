@@ -77,8 +77,8 @@ namespace eka2l1::dispatch {
 		VGint sx, VGint sy, VGint width, VGint height);
 	BRIDGE_FUNC_LIBRARY(void, vg_mask_emu, VGHandle mask, VGMaskOperation operation, VGint x, VGint y,
 		VGint width, VGint height);
-	/*BRIDGE_FUNC_LIBRARY(void, vg_render_to_mask_emu, VGPath path, VGbitfield paintModes,
-		VGMaskOperation operation);*/
+	BRIDGE_FUNC_LIBRARY(void, vg_render_to_mask_emu, VGPath path, VGbitfield paintModes,
+		VGMaskOperation operation);
 	BRIDGE_FUNC_LIBRARY(VGPath, vg_create_path_emu, VGint pathFormat, VGPathDatatype datatype,
 		VGfloat scale, VGfloat bias, VGint segmentCapacityHint, VGint coordCapacityHint,
 		VGbitfield capabilities);

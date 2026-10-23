@@ -619,6 +619,9 @@ namespace gnuVG {
 
 			/* Enable/disable alpha masking and scissoring */
 		case VG_MASKING:
+			if (value == VG_TRUE && !ensure_mask_buffers(graphic_state)) {
+				return;
+			}
 			mask_is_active = (((VGboolean)value) == VG_TRUE) ? true : false;
 			break;
 
@@ -1157,7 +1160,7 @@ namespace gnuVG {
 
 	void Context::recreate_buffers(const GraphicState &state) {
 		// Then the mask
-		if(mask.framebuffer != 0)
+		if(mask.color_buffer != 0)
 			delete_framebuffer(state, &mask);
 		if(!create_framebuffer(state, &mask, VG_sRGBA_8888,
 				       current_framebuffer->width, current_framebuffer->height,
@@ -1165,18 +1168,35 @@ namespace gnuVG {
 			GNUVG_ERROR("failed to create framebuffer for mask.\n");
 
 		// Then two temporary buffers
-		if(temporary_a.framebuffer != 0)
+		if(temporary_a.color_buffer != 0)
 			delete_framebuffer(state, &temporary_a);
 		if(!create_framebuffer(state, &temporary_a, VG_sRGBA_8888,
 				       current_framebuffer->width, current_framebuffer->height,
 				       VG_IMAGE_QUALITY_FASTER))
 			GNUVG_ERROR("failed to create framebuffer for temporary_a.\n");
-		if(temporary_b.framebuffer != 0)
+		if(temporary_b.color_buffer != 0)
 			delete_framebuffer(state, &temporary_b);
 		if(!create_framebuffer(state, &temporary_b, VG_sRGBA_8888,
 				       current_framebuffer->width, current_framebuffer->height,
 				       VG_IMAGE_QUALITY_FASTER))
 			GNUVG_ERROR("failed to create framebuffer for temporary_b.\n");
+	}
+
+	bool Context::ensure_mask_buffers(const GraphicState &state) {
+		if (mask.color_buffer && mask.width == draw_surface_->dimension_.x && mask.height == draw_surface_->dimension_.y) {
+			return true;
+		}
+		recreate_buffers(state);
+		if (!mask.color_buffer || !temporary_a.color_buffer || !temporary_b.color_buffer) {
+			set_error(VG_OUT_OF_MEMORY_ERROR);
+			return false;
+		}
+		save_current_framebuffer();
+		render_to_framebuffer(state, &mask);
+		cmd_builder_.set_color_mask(0b1111);
+		cmd_builder_.clear({ 0.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f }, eka2l1::drivers::draw_buffer_bit_color_buffer);
+		restore_current_framebuffer(state);
+		return true;
 	}
 
 	void Context::resize(const GraphicState &state, VGint pxlw, VGint pxlh) {
@@ -1185,6 +1205,9 @@ namespace gnuVG {
 
 		if(current_framebuffer == &screen_buffer)
 			render_to_framebuffer(state, &screen_buffer);
+		if (mask.color_buffer) {
+			ensure_mask_buffers(state);
+		}
 	}
 
 	void Context::clear(const GraphicState &state, VGint x, VGint y,
