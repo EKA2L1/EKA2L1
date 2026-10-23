@@ -279,8 +279,9 @@ namespace eka2l1::epoc::socket {
 
     void socket_connection_proxy::start(service::ipc_context *ctx, bool with_preferences) {
         std::uint32_t iap = 0;
-        if (with_preferences) {
-            const auto preferences = ctx->get_argument_value<std::string>(0);
+        auto preferences = with_preferences ? ctx->get_argument_value<std::string>(0) : std::move(start_preferences_);
+        start_preferences_.reset();
+        if (with_preferences || preferences) {
             if (!preferences || preferences->size() < 24) {
                 ctx->complete(epoc::error_argument);
                 return;
@@ -411,6 +412,28 @@ namespace eka2l1::epoc::socket {
         } else {
             if (ctx->sys->get_symbian_version_use() >= epocver::epoc95) {
                 switch (ctx->msg->function) {
+                case socket_reform_cn_set_start_preferences:
+                    start_preferences_ = ctx->get_argument_value<std::string>(0);
+                    ctx->complete(start_preferences_ ? epoc::error_none : epoc::error_argument);
+                    break;
+
+                case socket_reform_cn_start:
+                    start(ctx, false);
+                    break;
+
+                case socket_reform_cn_get_int_setting:
+                    get_int_setting(ctx);
+                    break;
+
+                case socket_reform_cn_get_des_setting:
+                    get_des_setting(ctx);
+                    break;
+
+                case socket_reform_cn_close:
+                    parent_->subsessions_.remove(id_);
+                    ctx->complete(epoc::error_none);
+                    break;
+
                 case socket_reform_cn_name:
                     name(ctx);
                     break;

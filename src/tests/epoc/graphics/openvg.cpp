@@ -11,11 +11,16 @@
 
 #include <catch2/catch.hpp>
 #include <dispatch/libraries/vg/gnuVG_context.hh>
+#include <dispatch/libraries/vg/gnuVG_image.hh>
+#include <dispatch/libraries/vg/register.h>
+#include <dispatch/register.h>
 #include <dispatch/libraries/vg/gnuVG_path.hh>
 #include <dispatch/libraries/vg/gnuVG_simplified_path.hh>
 
 #include <algorithm>
 #include <cstdint>
+#include <cstring>
+#include <new>
 #include <vector>
 
 namespace {
@@ -134,4 +139,79 @@ TEST_CASE("OpenVG round and miter joins add their required outer geometry", "[op
     REQUIRE(round.indices.size() > bevel.indices.size());
     REQUIRE(miter.vertices.size() == bevel.vertices.size() + 2);
     REQUIRE(miter.indices.size() == bevel.indices.size() + 3);
+}
+
+TEST_CASE("openvg_image_limits_are_positive_and_consistent", "[openvg]") {
+    gnuVG::Context context;
+    const VGint width = context.vgGeti(VG_MAX_IMAGE_WIDTH);
+    const VGint height = context.vgGeti(VG_MAX_IMAGE_HEIGHT);
+    const VGint pixels = context.vgGeti(VG_MAX_IMAGE_PIXELS);
+    const VGint bytes = context.vgGeti(VG_MAX_IMAGE_BYTES);
+
+    REQUIRE(width >= 256);
+    REQUIRE(height >= 256);
+    REQUIRE(pixels >= 65536);
+    REQUIRE(bytes >= 65536);
+    REQUIRE(static_cast<std::int64_t>(pixels) <= static_cast<std::int64_t>(width) * height);
+    REQUIRE(static_cast<std::int64_t>(bytes) >= static_cast<std::int64_t>(pixels) * 4);
+    REQUIRE(context.get_error() == VG_NO_ERROR);
+
+    const gnuVG::GraphicState state{};
+    REQUIRE_THROWS_AS(gnuVG::Image(&context, state, VG_sRGBA_8888, width + 1, 1, VG_IMAGE_QUALITY_FASTER),
+        gnuVG::Image::FailedToCreateImageException);
+    REQUIRE(context.get_error() == VG_ILLEGAL_ARGUMENT_ERROR);
+}
+
+TEST_CASE("openvg_flush_is_patched_at_the_sdk_ordinal", "[openvg]") {
+    const auto &patches = eka2l1::dispatch::LIBOPENVG11_PATCH_INFOS;
+    const auto entry = std::find_if(std::begin(patches), std::end(patches), [](const auto &patch) {
+        return patch.ordinal_number_ == 21;
+    });
+    REQUIRE(entry != std::end(patches));
+    REQUIRE(std::string(eka2l1::dispatch::dispatch_funcs.at(entry->dispatch_number_).second) == "vgFlush");
+}
+
+TEST_CASE("openvg_patterns_follow_the_path_and_paint_matrices", "[openvg]") {
+    struct pattern_context : gnuVG::Context {
+        using gnuVG::Context::matrix_resize;
+        using gnuVG::Context::image_matrix_data;
+    } context;
+    const gnuVG::GraphicState state{};
+    context.matrix_resize(360, 640);
+    context.vgSeti(state, VG_MATRIX_MODE, VG_MATRIX_PATH_USER_TO_SURFACE);
+    const VGfloat path_matrix[] = { 0.05f, 0, 0, 0, -0.05f, 0, 0, 640, 1 };
+    context.vgLoadMatrix(path_matrix);
+    context.select_conversion_matrix(gnuVG::Context::GNUVG_MATRIX_PATH_USER_TO_SURFACE);
+
+    gnuVG::Context::FrameBuffer image;
+    image.width = 360;
+    image.height = 640;
+    for (const auto mode : { VG_MATRIX_FILL_PAINT_TO_USER, VG_MATRIX_STROKE_PAINT_TO_USER }) {
+        context.vgSeti(state, VG_MATRIX_MODE, mode);
+        const VGfloat scale = mode == VG_MATRIX_FILL_PAINT_TO_USER ? 20 : 40;
+        const VGfloat paint_matrix[] = { scale, 0, 0, 0, scale, 0, 0, 0, 1 };
+        context.vgLoadMatrix(paint_matrix);
+        context.prepare_framebuffer_matrix(&image, nullptr, mode == VG_MATRIX_FILL_PAINT_TO_USER
+            ? gnuVG::Context::GNUVG_MATRIX_FILL_PAINT_TO_USER : gnuVG::Context::GNUVG_MATRIX_STROKE_PAINT_TO_USER);
+        const auto &m = context.image_matrix_data;
+        REQUIRE(-m[0] + m[4] + m[12] == Approx(0));
+        REQUIRE(-m[1] + m[5] + m[13] == Approx(0));
+        REQUIRE(m[0] - m[4] + m[12] == Approx(20 / scale));
+        REQUIRE(m[1] - m[5] + m[13] == Approx(20 / scale));
+    }
+}
+
+TEST_CASE("openvg_context_starts_without_an_error_and_clears_reported_errors", "[openvg]") {
+    alignas(gnuVG::Context) unsigned char storage[sizeof(gnuVG::Context)];
+    std::memset(storage, 0xCD, sizeof(storage));
+    auto *context = new (storage) gnuVG::Context;
+    const auto initial = context->get_error();
+    context->set_error(VG_ILLEGAL_ARGUMENT_ERROR);
+    const auto reported = context->get_error();
+    const auto cleared = context->get_error();
+    context->~Context();
+
+    REQUIRE(initial == VG_NO_ERROR);
+    REQUIRE(reported == VG_ILLEGAL_ARGUMENT_ERROR);
+    REQUIRE(cleared == VG_NO_ERROR);
 }

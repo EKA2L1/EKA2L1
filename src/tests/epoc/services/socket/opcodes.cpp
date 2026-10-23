@@ -32,6 +32,11 @@ TEST_CASE("RConnection named opens retain the client ABI", "[internet][connectio
     REQUIRE(socket_reform_cn_open_with_name == 73);
     REQUIRE(socket_reform_cn_name == 152);
     REQUIRE(socket_reform_cn_control == 16);
+    REQUIRE(socket_reform_cn_start == 74);
+    REQUIRE(socket_reform_cn_set_start_preferences == 75);
+    REQUIRE(socket_reform_cn_get_int_setting == 77);
+    REQUIRE(socket_reform_cn_get_des_setting == 80);
+    REQUIRE(socket_reform_cn_close == 151);
     REQUIRE(sizeof(epoc::security_policy) == 8);
     // rm-409 esock.dll export 56 packages these three words before sending opcode 83.
     REQUIRE(sizeof(epoc::socket::connection_control_description) == 12);
