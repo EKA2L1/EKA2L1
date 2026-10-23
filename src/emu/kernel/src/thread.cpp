@@ -984,7 +984,10 @@ namespace eka2l1 {
                 kernel::codeseg::attached_info *info = E_LOFF(first, kernel::codeseg::attached_info, closing_lib_link);
 
                 info->parent_seg->detaching_report(info->attached_process);
-                results.push_back(info->parent_seg->get_entry_point(info->attached_process));
+                const address entry_point = info->parent_seg->get_entry_point(info->attached_process);
+                if (entry_point) {
+                    results.push_back(entry_point);
+                }
 
                 first = first->next;
             } while (first != end);
@@ -1002,7 +1005,8 @@ namespace eka2l1 {
             if (*count) {
                 std::memcpy(addrs, cached_detach_eps.data(), *count * sizeof(address));
                 cached_detach_eps.erase(cached_detach_eps.begin(), cached_detach_eps.begin() + *count);
-
+            }
+            if (*count || !closing_libs.empty()) {
                 return epoc::error_none;
             }
 

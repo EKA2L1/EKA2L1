@@ -6352,6 +6352,8 @@ namespace eka2l1::epoc {
 
     // Register 9.1 ABI differences before the shared 9.3 table.
     const eka2l1::hle::func_map svc_register_funcs_v91_diff = {
+        BRIDGE_REGISTER(0x0080000A, locked_inc_32),
+        BRIDGE_REGISTER(0x0080000B, locked_dec_32),
         BRIDGE_REGISTER(0x4D, dll_tls_eka1),
         BRIDGE_REGISTER(0x75, dll_set_tls_no_uid)
     };
