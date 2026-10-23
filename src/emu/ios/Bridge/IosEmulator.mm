@@ -350,6 +350,7 @@ namespace eka2l1::ios {
         // Guarded by session_mutex; firmware identity survives device-list reordering.
         std::string mounted_card_path;
         std::string mounted_card_firmware;
+        std::string mounted_card_mmc_id;
         std::uint32_t mounted_card_attrib{0};
         // Nonblocking mount status for the main thread.
         std::atomic<bool> card_mounted{false};
@@ -510,7 +511,9 @@ namespace eka2l1::ios {
     }
 
     // Call under session_mutex to keep the main-thread snapshot in sync.
-    static void set_mounted_card(emulator *state, std::string path, const std::uint32_t attrib) {
+    static void set_mounted_card(emulator *state, std::string path, const std::uint32_t attrib,
+        std::string mmc_id = {}) {
+        state->mounted_card_mmc_id = std::move(mmc_id);
         state->mounted_card_path = std::move(path);
         state->mounted_card_attrib = attrib;
         const auto *device = state->mounted_card_path.empty() ? nullptr
@@ -1445,7 +1448,7 @@ namespace eka2l1::ios {
     const std::string card_path = _state->mounted_card_path;
     const std::string card_firmware = _state->mounted_card_firmware;
     const std::uint32_t card_attrib = _state->mounted_card_attrib;
-    const std::string card_mmc_id = _state->conf.current_mmc_id;
+    const std::string card_mmc_id = _state->mounted_card_mmc_id;
     eka2l1::ios::set_mounted_card(_state.get(), {}, 0);
     _state->conf.current_mmc_id = _state->conf.mmc_id;
 
@@ -1501,8 +1504,8 @@ namespace eka2l1::ios {
         && eka2l1::common::is_dir(card_path)
         && sys->get_io_system()->mount_physical_path(drive_e, drive_media::physical,
             card_attrib, eka2l1::common::utf8_to_ucs2(card_path))) {
-        eka2l1::ios::set_mounted_card(_state.get(), card_path, card_attrib);
-        _state->conf.current_mmc_id = card_mmc_id;
+        eka2l1::ios::set_mounted_card(_state.get(), card_path, card_attrib, card_mmc_id);
+        _state->conf.current_mmc_id = card_mmc_id.empty() ? _state->conf.mmc_id : card_mmc_id;
     } else {
         sys->mount_device_drive(drive_e);
     }
@@ -2020,19 +2023,16 @@ namespace eka2l1::ios {
     eka2l1::io_system *io = _state->symsys->get_io_system();
     io->unmount(drive_e);
 
+    const std::uint32_t attrib = io_attrib_removeable | io_attrib_write_protected;
     if (is_folder) {
-        // The folder is the user's own dump, so it is mounted read-only; an
-        // archive lands in a throwaway cache copy the guest may write to.
-        const std::uint32_t attrib = io_attrib_removeable | io_attrib_write_protected;
-
         if (io->mount_physical_path(drive_e, drive_media::physical, attrib,
                 eka2l1::common::utf8_to_ucs2(card_path))) {
-            eka2l1::ios::set_mounted_card(_state.get(), card_path, attrib);
+            eka2l1::ios::set_mounted_card(_state.get(), card_path, attrib, mmc_id);
             report.result = EKA2L1MountResultSuccess;
         }
     } else {
         const eka2l1::zip_mount_error err = _state->symsys->mount_game_zip(drive_e,
-            drive_media::physical, card_path);
+            drive_media::physical, card_path, io_attrib_write_protected);
         switch (err) {
         case eka2l1::zip_mount_error_none:
             report.result = EKA2L1MountResultSuccess;
@@ -2051,7 +2051,7 @@ namespace eka2l1::ios {
         if (report.result == EKA2L1MountResultSuccess) {
             std::optional<eka2l1::drive> entry = io->get_drive_entry(drive_e);
             eka2l1::ios::set_mounted_card(_state.get(),
-                entry.has_value() ? entry->real_path : std::string(), io_attrib_removeable);
+                entry.has_value() ? entry->real_path : std::string(), attrib, mmc_id);
         }
     }
 
@@ -2717,6 +2717,7 @@ static constexpr std::uint8_t k_unlimited_refresh_rate = 240;
         @"performanceMode": [NSString stringWithUTF8String:_state->conf.ios_performance_mode.c_str()],
         @"deviceDisplayName": [NSString stringWithUTF8String:_state->conf.device_display_name.c_str()],
         @"imei": [NSString stringWithUTF8String:_state->conf.imei.c_str()],
+        @"mmcId": [NSString stringWithUTF8String:_state->conf.mmc_id.c_str()],
         @"logFilter": [NSString stringWithUTF8String:_state->conf.log_filter.c_str()],
         @"btnetDiscoveryMode": @(_state->conf.btnet_discovery_mode),
         @"btnetListenPort": @(_state->conf.internet_bluetooth_port),
@@ -2730,6 +2731,23 @@ static constexpr std::uint8_t k_unlimited_refresh_rate = 240;
 - (BOOL)applyConfigSnapshot:(NSDictionary<NSString *, id> *)snapshot {
     if (!_state) {
         return NO;
+    }
+
+    std::optional<std::string> mmc_id;
+    if (id value = snapshot[@"mmcId"]) {
+        if (![value isKindOfClass:NSString.class]) {
+            return NO;
+        }
+        NSString *trimmed = [value stringByTrimmingCharactersInSet:NSCharacterSet.whitespaceAndNewlineCharacterSet];
+        const std::string input = trimmed.UTF8String;
+        static const std::regex cid_regex("([0-9a-fA-F]{32}|[0-9a-fA-F]{8}(-[0-9a-fA-F]{8}){3})");
+        if (!std::regex_match(input, cid_regex)) {
+            return NO;
+        }
+        NSString *digits = [[trimmed stringByReplacingOccurrencesOfString:@"-" withString:@""] lowercaseString];
+        mmc_id = [NSString stringWithFormat:@"%@-%@-%@-%@", [digits substringWithRange:NSMakeRange(0, 8)],
+            [digits substringWithRange:NSMakeRange(8, 8)], [digits substringWithRange:NSMakeRange(16, 8)],
+            [digits substringWithRange:NSMakeRange(24, 8)]].UTF8String;
     }
 
     std::optional<eka2l1::config::host_map> hosts;
@@ -2749,6 +2767,18 @@ static constexpr std::uint8_t k_unlimited_refresh_rate = 240;
                 || !hosts->emplace(hostname, address).second) {
                 return NO;
             }
+        }
+    }
+
+    if (mmc_id) {
+        std::lock_guard<std::recursive_mutex> session_lock(_state->session_mutex);
+        std::optional<eka2l1::kernel_lock> kernel_lock;
+        if (_state->symsys && _state->symsys->get_kernel_system()) {
+            kernel_lock.emplace(_state->symsys->get_kernel_system());
+        }
+        _state->conf.mmc_id = *mmc_id;
+        if (_state->mounted_card_mmc_id.empty()) {
+            _state->conf.current_mmc_id = *mmc_id;
         }
     }
 

@@ -3661,6 +3661,38 @@
         }
       }
     },
+    "settings.mmcId.hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use 32 hexadecimal digits, with optional hyphens between groups of eight. A CID in the card name takes priority. Restart the game after changing this value."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "输入 32 位十六进制值，可每 8 位用连字符分隔。卡名称中的 CID 优先使用。修改后请重新启动游戏。"
+          }
+        }
+      }
+    },
+    "settings.mmcId.invalid" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invalid MMC ID. Enter 32 hexadecimal digits; this value has not been saved."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "MMC ID 无效。请输入 32 位十六进制值；当前输入尚未保存。"
+          }
+        }
+      }
+    },
     "settings.netplay" : {
       "localizations" : {
         "en" : {

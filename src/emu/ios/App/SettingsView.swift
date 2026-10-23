@@ -21,6 +21,7 @@ struct SettingsView: View {
 
     @State private var friendlyPhoneName = ""
     @State private var imei = ""
+    @State private var mmcId = ""
 
     // BT netplay. Mirrors the Android BTNetplaySettingsFragment surface; the
     // bluetooth midman reads these at device boot, so edits apply from the
@@ -35,6 +36,13 @@ struct SettingsView: View {
 
     private var logURL: URL {
         URL(fileURLWithPath: documentsRoot()).appendingPathComponent("data/EKA2L1.log")
+    }
+
+    private var normalizedMMCId: String? {
+        let input = mmcId.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard input.range(of: "^([0-9a-fA-F]{32}|[0-9a-fA-F]{8}(-[0-9a-fA-F]{8}){3})$",
+                          options: .regularExpression) != nil else { return nil }
+        return input.replacingOccurrences(of: "-", with: "").lowercased()
     }
 
     var body: some View {
@@ -83,6 +91,16 @@ struct SettingsView: View {
                     Text("settings.performanceMode.high").tag("high-performance")
                     Text("settings.performanceMode.balanced").tag("balanced")
                 }
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(verbatim: "MMC ID")
+                    TextField(String("00000000-00000000-00000000-00000000"), text: $mmcId)
+                        .font(.callout.monospaced())
+                        .keyboardType(.asciiCapable)
+                        .autocorrectionDisabled()
+                        .textInputAutocapitalization(.never)
+                        .accessibilityLabel(Text(verbatim: "MMC ID"))
+                        .accessibilityIdentifier("settings.mmcId")
+                }
                 Toggle("settings.hideSystemApps", isOn: $hideSystemApps)
                 if EKA2L1Bridge.shared.jitCompiledIn {
                     Toggle("settings.jit", isOn: $useJIT)
@@ -90,6 +108,13 @@ struct SettingsView: View {
             } header: {
                 Text("settings.system")
             } footer: {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("settings.mmcId.hint")
+                    if normalizedMMCId == nil {
+                        Text("settings.mmcId.invalid")
+                            .foregroundStyle(.red)
+                    }
+                }
                 if EKA2L1Bridge.shared.jitCompiledIn {
                     if !EKA2L1Bridge.shared.jitAvailable {
                         Text("settings.jit.unavailable")
@@ -237,6 +262,11 @@ struct SettingsView: View {
                 imei = digits
             }
         }
+        .onChange(of: mmcId) { _ in
+            if let normalizedMMCId {
+                _ = EKA2L1Bridge.shared.applyConfigSnapshot(["mmcId": normalizedMMCId])
+            }
+        }
         .onChange(of: useJIT) { _ in save() }
         .onChange(of: performanceMode) { _ in save() }
         .onChange(of: extensiveLogging) { _ in save() }
@@ -299,6 +329,7 @@ struct SettingsView: View {
         performanceMode = snapshot["performanceMode"] as? String == "high-performance" ? "high-performance" : "balanced"
         friendlyPhoneName = snapshot["deviceDisplayName"] as? String ?? ""
         imei = snapshot["imei"] as? String ?? ""
+        mmcId = snapshot["mmcId"] as? String ?? "00000000-00000000-00000000-00000000"
         availableLanguages = EKA2L1Bridge.shared.availableLanguages()
         systemLanguageCode = EKA2L1Bridge.shared.currentLanguageCode()
         if let value = snapshot["btnetDiscoveryMode"] as? NSNumber {
