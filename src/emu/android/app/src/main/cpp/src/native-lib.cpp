@@ -314,6 +314,19 @@ Java_com_github_eka2l1_emu_Emulator_updateAppSetting(JNIEnv *env, jclass clazz, 
     state->launcher->update_app_setting(uid);
 }
 
+extern "C" JNIEXPORT jintArray JNICALL
+Java_com_github_eka2l1_emu_Emulator_getScreenModeSizes(JNIEnv *env, jclass clazz) {
+    std::vector<eka2l1::vec2> sizes = state->launcher->get_screen_mode_sizes();
+    std::vector<jint> flat;
+    for (const eka2l1::vec2 &size : sizes) {
+        flat.push_back(size.x);
+        flat.push_back(size.y);
+    }
+    jintArray result = env->NewIntArray(static_cast<jsize>(flat.size()));
+    env->SetIntArrayRegion(result, 0, static_cast<jsize>(flat.size()), flat.data());
+    return result;
+}
+
 extern "C" JNIEXPORT jobject JNICALL
 Java_com_github_eka2l1_emu_Emulator_getAppIcon(JNIEnv *env, jclass clazz, jlong uid) {
     return state->launcher->get_app_icon(env, uid);

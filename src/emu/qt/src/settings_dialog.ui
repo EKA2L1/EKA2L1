@@ -183,6 +183,35 @@
               </widget>
              </item>
              <item>
+              <layout class="QHBoxLayout" name="app_config_screen_mode_layout">
+               <property name="spacing">
+                <number>11</number>
+               </property>
+               <property name="leftMargin">
+                <number>11</number>
+               </property>
+               <property name="topMargin">
+                <number>0</number>
+               </property>
+               <property name="rightMargin">
+                <number>11</number>
+               </property>
+               <property name="bottomMargin">
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QLabel" name="app_config_screen_mode_label">
+                 <property name="text">
+                  <string>Guest screen mode</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QComboBox" name="app_config_screen_mode_combo_box"/>
+               </item>
+              </layout>
+             </item>
+             <item>
               <layout class="QHBoxLayout" name="app_config_screen_scale_edit_widget">
                <property name="spacing">
                 <number>11</number>

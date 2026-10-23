@@ -371,6 +371,17 @@ namespace eka2l1::android {
         kern->get_app_settings()->update_setting(uid);
     }
 
+    std::vector<vec2> launcher::get_screen_mode_sizes() {
+        std::vector<vec2> sizes;
+        epoc::screen *scr = winserv ? winserv->get_screens() : nullptr;
+        if (scr) {
+            for (int mode = 0; mode < scr->total_screen_mode(); mode++) {
+                sizes.push_back(scr->mode_info(mode)->size);
+            }
+        }
+        return sizes;
+    }
+
     void launcher::draw(drivers::graphics_command_builder &builder, epoc::screen *scr,
                         std::uint32_t window_width, std::uint32_t window_height) {
         eka2l1::rect viewport;

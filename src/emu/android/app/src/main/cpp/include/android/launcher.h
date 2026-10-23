@@ -107,6 +107,7 @@ namespace eka2l1::android {
         void set_language(std::uint32_t language_id);
         void set_rtos_level(std::uint32_t level);
         void update_app_setting(std::uint32_t uid);
+        std::vector<vec2> get_screen_mode_sizes();
         void draw(drivers::graphics_command_builder &builder, epoc::screen *scr,
                   std::uint32_t width, std::uint32_t height);
         std::vector<std::string> get_language_ids();

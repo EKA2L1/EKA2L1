@@ -1301,6 +1301,11 @@
     </message>
     <message>
         <location filename="../src/settings_dialog.ui" line="205"/>
+        <source>Guest screen mode</source>
+        <translation>客户机屏幕模式</translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.ui" line="205"/>
         <source>Screen scale factor</source>
         <translation>屏幕缩放系数</translation>
     </message>
@@ -1988,6 +1993,16 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</source>
         <location filename="../src/settings_dialog.cpp" line="964"/>
         <source>&lt;b&gt;Configuration for:&lt;/b&gt; %1</source>
         <translation>&lt;b&gt;配置为：&lt;/b&gt; %1</translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.cpp" line="1003"/>
+        <source>Decided by app</source>
+        <translation>由应用决定</translation>
+    </message>
+    <message>
+        <location filename="../src/settings_dialog.cpp" line="1007"/>
+        <source>Mode %1 (%2×%3)</source>
+        <translation>模式 %1（%2×%3）</translation>
     </message>
     <message>
         <location filename="../src/settings_dialog.cpp" line="967"/>

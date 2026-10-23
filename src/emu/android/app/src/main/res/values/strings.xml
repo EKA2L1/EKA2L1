@@ -170,6 +170,10 @@
     <string name="pref_orientation_auto">Auto</string>
     <string name="pref_orientation_port">Portrait</string>
     <string name="pref_orientation_land">Landscape</string>
+    <string name="pref_guest_screen_mode">Guest screen mode</string>
+    <string name="pref_guest_screen_mode_app">Decided by app</string>
+    <string name="pref_guest_screen_mode_entry">Mode %1$d</string>
+    <string name="pref_guest_screen_mode_entry_size">Mode %1$d (%2$d×%3$d)</string>
     <string name="pref_vk_type">Keyboard type</string>
     <string name="pref_vk_type_custom">Custom</string>
     <string name="pref_vk_type_phone">Phone</string>
