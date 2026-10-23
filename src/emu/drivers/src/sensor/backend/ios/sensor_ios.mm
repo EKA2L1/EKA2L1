@@ -22,6 +22,7 @@
 
 #include "sensor_ios.h"
 #include <drivers/sensor/backend/ios/controller_motion.h>
+#include <drivers/sensor/backend/ios/motion_override.h>
 #include <drivers/sensor/magnetometer.h>
 
 #include <common/log.h>
@@ -404,6 +405,19 @@ namespace eka2l1::drivers {
         if (driver) static_cast<sensor_driver_ios *>(driver)->set_controller_rotation(degrees);
     }
 
+    void set_motion_acceleration_override(sensor_driver *driver, const double *acceleration_ms2) {
+        if (driver) static_cast<sensor_driver_ios *>(driver)->set_acceleration_override(acceleration_ms2);
+    }
+
+    void sensor_driver_ios::set_acceleration_override(const double *acceleration_ms2) {
+        const std::lock_guard<std::mutex> hold(list_lock_);
+        if (acceleration_ms2) {
+            acceleration_override_ = std::array<double, 3>{ acceleration_ms2[0], acceleration_ms2[1], acceleration_ms2[2] };
+        } else {
+            acceleration_override_.reset();
+        }
+    }
+
     void sensor_driver_ios::set_controller(void *controller) {
         const std::lock_guard<std::mutex> hold(list_lock_);
         GCController *source = (__bridge GCController *)controller;
@@ -523,11 +537,17 @@ namespace eka2l1::drivers {
         std::array<double, 3> &acceleration = sample.acceleration_;
         std::array<double, 3> &gravity = sample.gravity_;
         int rotation;
+        bool overridden;
         {
             const std::lock_guard<std::mutex> hold(list_lock_);
+            overridden = acceleration_override_.has_value();
             if (paused_ || listening_list_.empty()) return;
             GCMotion *motion = pump_->controller_.motion;
-            if (motion) {
+            if (acceleration_override_) {
+                acceleration = *acceleration_override_;
+                gravity = acceleration;
+                rotation = 0;
+            } else if (motion) {
                 const GCAcceleration a = motion.acceleration;
                 const GCAcceleration g = motion.hasGravityAndUserAcceleration ? motion.gravity : a;
                 acceleration = { a.x, a.y, a.z };
@@ -573,9 +593,10 @@ namespace eka2l1::drivers {
 #endif
         }
         // Apple reports gravity in g; Symbian reports reaction force in m/s².
+        const double to_symbian = overridden ? 1.0 : -STANDARD_GRAVITY_MS2;
         for (int axis = 0; axis < 3; ++axis) {
-            acceleration[axis] *= -STANDARD_GRAVITY_MS2;
-            gravity[axis] *= -STANDARD_GRAVITY_MS2;
+            acceleration[axis] *= to_symbian;
+            gravity[axis] *= to_symbian;
             if (!std::isfinite(acceleration[axis]) || !std::isfinite(gravity[axis])) return;
             if (!std::isfinite(sample.magnetic_raw_[axis]) || !std::isfinite(sample.magnetic_calibrated_[axis])) {
                 sample.has_magnetic_ = false;

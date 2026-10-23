@@ -160,6 +160,7 @@ elseif (EKA2L1_IOS)
         src/location/backend/ios/location_ios.mm
         src/sensor/backend/ios/sensor_ios.h
         include/drivers/sensor/backend/ios/controller_motion.h
+        include/drivers/sensor/backend/ios/motion_override.h
         src/sensor/backend/ios/sensor_ios.mm)
 else()
     target_sources(drivers PRIVATE

@@ -251,6 +251,10 @@ final class EKA2L1Bridge {
         emulator.setGameController(controller, motion: motion, vibration: vibration)
     }
 
+    func setAccelerationOverride(_ acceleration: [Double]?) {
+        emulator.setAccelerationOverride(acceleration.map { $0.map { NSNumber(value: $0) } })
+    }
+
     func detachLayer() {
         emulator.detachLayer()
     }

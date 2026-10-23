@@ -284,6 +284,9 @@ typedef NS_ENUM(NSInteger, EKA2L1PointerPhase) {
 - (void)tapRawKey:(uint32_t)scanCode;
 - (CGRect)guestDisplayRect;
 - (void)setGameController:(nullable GCController *)controller motion:(BOOL)motion vibration:(BOOL)vibration;
+// Fixed accelerometer reading in the emulated device's own axes, in m/s^2
+// (Symbian convention: flat face up reads +9.81 z); nil returns to real motion.
+- (void)setAccelerationOverride:(nullable NSArray<NSNumber *> *)acceleration;
 
 // YES when the booted device's Symbian version drives its UI by touch
 // (S60v5 / Symbian^3 and later). The frontend uses it to pick the fullscreen

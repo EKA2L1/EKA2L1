@@ -27,6 +27,7 @@
 #include <array>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <vector>
 
 namespace eka2l1::drivers {
@@ -108,6 +109,9 @@ namespace eka2l1::drivers {
         std::atomic<int> controller_rotation_deg_{0};
         std::atomic<bool> controller_motion_available_{false};
 
+        // Guarded by list_lock_.
+        std::optional<std::array<double, 3>> acceleration_override_;
+
         void track_active_listener(common::double_linked_queue_element *link);
         void untrack_active_listener(common::double_linked_queue_element *link);
 
@@ -138,6 +142,7 @@ namespace eka2l1::drivers {
         void set_motion_rotation(const int degrees) override;
         void set_controller(void *controller);
         void set_controller_rotation(int degrees);
+        void set_acceleration_override(const double *acceleration_ms2);
 
         bool accelerometer_available() const;
         bool magnetometer_available() const;
