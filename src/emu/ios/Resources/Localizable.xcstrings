@@ -2125,6 +2125,22 @@
         }
       }
     },
+    "home.ngage2.invalidFilename %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cannot import “%@”. Symbian filenames cannot contain < > : \" / \\ | * ?. Rename the file and try again."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法导入“%@”。Symbian 文件名不能包含 < > : \" / \\ | * ?。请重命名文件后重试。"
+          }
+        }
+      }
+    },
     "home.noDevice.title" : {
       "localizations" : {
         "en" : {

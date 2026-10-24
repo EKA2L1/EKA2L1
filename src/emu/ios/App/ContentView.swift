@@ -93,6 +93,7 @@ struct ContentView: View {
     @StateObject private var store = DeviceStore()
     @State private var bootError: String?
     @State private var banner: String?
+    @State private var invalidNGageFilename: String?
     // Device the previous run crashed on while booting (corrupt ROM/RPKG).
     // Auto-boot skipped it, so say why instead of leaving the user wondering
     // which device they ended up on.
@@ -221,6 +222,13 @@ struct ContentView: View {
                           allowedContentTypes: homeImporterTypes,
                           allowsMultipleSelection: homeImporterAllowsMultipleSelection) {
                 handleHomeImport($0)
+            }
+            .alert(String(localized: "common.error"),
+                   isPresented: Binding(get: { invalidNGageFilename != nil },
+                                        set: { if !$0 { invalidNGageFilename = nil } })) {
+                Button("common.ok", role: .cancel) { invalidNGageFilename = nil }
+            } message: {
+                Text("home.ngage2.invalidFilename \(invalidNGageFilename ?? "")")
             }
         }
         .onAppear {
@@ -751,6 +759,14 @@ struct ContentView: View {
         case .failure(let err):
             banner = String(localized: "home.ngage.importFailed \(err.localizedDescription)")
         case .success(let urls):
+            let invalidCharacters = CharacterSet(charactersIn: "<>:\"/\\|*?\0")
+            if let invalid = urls.first(where: {
+                $0.pathExtension.lowercased() == "n-gage"
+                    && $0.lastPathComponent.rangeOfCharacter(from: invalidCharacters) != nil
+            }) {
+                invalidNGageFilename = invalid.lastPathComponent
+                return
+            }
             banner = String(localized: "home.ngage2.importing \(urls.count)")
             Task {
                 let outcome = await store.perform { () -> Result<Int, Error> in
