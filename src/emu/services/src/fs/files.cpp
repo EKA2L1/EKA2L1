@@ -30,9 +30,16 @@
 #include <common/log.h>
 #include <common/path.h>
 #include <common/random.h>
+#include <common/virtualmem.h>
+#include <kernel/chunk.h>
+#include <kernel/thread.h>
+#include <mem/mem.h>
+
+#include <limits>
 #include <utils/err.h>
 
 #include <services/fs/sec.h>
+#include <services/fs/op.h>
 
 namespace eka2l1 {
     // Whether the directory is exactly the calling process's own private directory,
@@ -618,11 +625,166 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    struct fs_file_mapping : epoc::ref_count_object {
+        fs_node *source_;
+        kernel::chunk *chunk_;
+        void *backing_;
+        std::size_t size_;
+
+        fs_file_mapping(fs_node *source, kernel::chunk *chunk, void *backing, const std::size_t size,
+            file_attrib *attrib)
+            : source_(source), chunk_(chunk), backing_(backing), size_(size) {
+            source_->ref();
+            attrib->increment_use(source_->process);
+        }
+
+        ~fs_file_mapping() override {
+            chunk_->get_kernel_object_owner()->destroy(chunk_);
+            source_->deref();
+            common::unmap_memory(backing_, size_);
+        }
+    };
+
+    struct fs_file_map_settings {
+        std::uint64_t offset_;
+        std::uint64_t size_;
+        std::uint32_t file_mode_;
+        std::uint32_t map_mode_;
+    };
+    static_assert(sizeof(fs_file_map_settings) == 24);
+
+    static constexpr std::uint32_t FILE_MAP_WRITE = 1;
+    static constexpr std::uint32_t FILE_MAP_REMOVABLE_MEDIA = 2;
+
+    void fs_server_client::file_map_open(service::ipc_context *ctx) {
+        const auto settings = ctx->get_argument_data_from_descriptor<fs_file_map_settings>(1);
+        if (!settings || (ctx->get_argument_max_data_size(2) < sizeof(address))
+            || (ctx->get_argument_max_data_size(3) < sizeof(epoc::handle))) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        if (settings->map_mode_ & ~(FILE_MAP_WRITE | FILE_MAP_REMOVABLE_MEDIA)) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+        // Writable mappings need shared file-cache coherence, not a private copy.
+        if (settings->map_mode_ & FILE_MAP_WRITE) {
+            ctx->complete(epoc::error_not_supported);
+            return;
+        }
+
+        const auto page_size = ctx->sys->get_memory_system()->get_page_size();
+        if (!settings->size_ || (settings->offset_ % page_size)
+            || (settings->size_ > std::numeric_limits<std::int32_t>::max() - page_size)) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        int source_handle = 0;
+        const bool opened_by_name = (ctx->msg->function & 0xFF) == epoc::fs_msg_file_map_open_name;
+        if (opened_by_name) {
+            const auto path = ctx->get_argument_value<std::u16string>(0);
+            if (!path) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+            source_handle = new_node(ctx->sys->get_io_system(), ctx->msg->own_thr,
+                get_full_symbian_path(ss_path, *path), settings->file_mode_);
+            if (source_handle <= 0) {
+                ctx->complete(source_handle);
+                return;
+            }
+        } else {
+            source_handle = ctx->get_argument_value<std::int32_t>(0).value_or(0);
+        }
+
+        auto finish = [&](const std::int32_t result) {
+            if (opened_by_name) {
+                obj_table_.remove(source_handle);
+            }
+            ctx->complete(result);
+        };
+        fs_node *source = get_file_node(source_handle);
+        if (!source || source->vfs_node->type != io_component_type::file) {
+            finish(epoc::error_bad_handle);
+            return;
+        }
+
+        auto *source_file = static_cast<file *>(source->vfs_node.get());
+        if (!(source->open_mode & READ_MODE)) {
+            finish(epoc::error_access_denied);
+            return;
+        }
+        if (settings->offset_ >= source_file->size()
+            || settings->size_ > source_file->size() - settings->offset_) {
+            finish(epoc::error_argument);
+            return;
+        }
+
+        const std::size_t mapped_size = common::align(static_cast<std::size_t>(settings->size_), page_size);
+        void *backing = common::map_memory(mapped_size);
+        if (!backing || !common::commit(backing, mapped_size, prot_read_write)) {
+            if (backing) {
+                common::unmap_memory(backing, mapped_size);
+            }
+            finish(epoc::error_no_memory);
+            return;
+        }
+
+        auto *kern = ctx->sys->get_kernel_system();
+        auto *process = ctx->msg->own_thr->owning_process();
+        auto *chunk = kern->create<kernel::chunk>(ctx->sys->get_memory_system(), process, "FileMapping", 0,
+            mapped_size, mapped_size, prot_read, kernel::chunk_type::normal,
+            kernel::chunk_access::local, kernel::chunk_attrib::anonymous, 0, false, 0, backing);
+        if (!chunk || !chunk->valid()) {
+            if (chunk) {
+                kern->destroy(chunk);
+            }
+            common::unmap_memory(backing, mapped_size);
+            finish(epoc::error_no_memory);
+            return;
+        }
+
+        const auto read = source_file->read_file(settings->offset_, backing, 1, static_cast<std::uint32_t>(settings->size_));
+        if (read != settings->size_) {
+            kern->destroy(chunk);
+            common::unmap_memory(backing, mapped_size);
+            finish(epoc::error_general);
+            return;
+        }
+
+        auto &attrib = server<fs_server>()->attribs[canonical_file_attrib_path(source_file->file_name())];
+        auto *mapping = make_new<fs_file_mapping>(source, chunk, backing, mapped_size, &attrib);
+        const auto handle = obj_table_.add(mapping);
+        const address base = chunk->base(process).ptr_address();
+        int error = epoc::error_none;
+        if (!ctx->write_data_to_descriptor_argument(2, base, &error)
+            || !ctx->write_data_to_descriptor_argument(3, handle, &error)) {
+            obj_table_.remove(handle);
+            finish(error);
+            return;
+        }
+        finish(epoc::error_none);
+    }
+
+    void fs_server_client::file_map_flush(service::ipc_context *ctx) {
+        const auto handle = ctx->get_argument_value<std::int32_t>(3).value_or(0);
+        ctx->complete(dynamic_cast<fs_file_mapping *>(obj_table_.get_raw(handle))
+            ? epoc::error_none : epoc::error_bad_handle);
+    }
+
     void fs_server_client::file_close(service::ipc_context *ctx) {
         std::optional<std::int32_t> handle_res = ctx->get_argument_value<std::int32_t>(3);
 
         if (!handle_res) {
             ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        if (dynamic_cast<fs_file_mapping *>(obj_table_.get_raw(*handle_res))) {
+            obj_table_.remove(*handle_res);
+            ctx->complete(epoc::error_none);
             return;
         }
 

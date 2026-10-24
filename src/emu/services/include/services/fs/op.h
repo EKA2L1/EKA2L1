@@ -165,6 +165,9 @@ namespace eka2l1::epoc {
         fs_msg_notification_add = 140,
         fs_msg_notification_remove = 141,
         fs_msg_load_code_page = 142,
+        fs_msg_file_map_open_name = 146,
+        fs_msg_file_map_open_handle = 147,
+        fs_msg_file_map_flush = 148,
         fs_msg_max_client_operations
     };
 

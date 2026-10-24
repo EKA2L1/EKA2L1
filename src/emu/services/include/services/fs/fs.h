@@ -106,7 +106,7 @@ namespace eka2l1 {
         std::u16string ss_path;
 
         fs_node *get_file_node(const int handle) {
-            return obj_table_.get<fs_node>(handle);
+            return dynamic_cast<fs_node *>(obj_table_.get_raw(handle));
         }
 
         explicit fs_server_client(service::typical_server *srv, kernel::uid suid, epoc::version client_version, kernel::thread *own_thr);
@@ -119,6 +119,8 @@ namespace eka2l1 {
         void file_replace(service::ipc_context *ctx);
         void file_temp(service::ipc_context *ctx);
         void file_flush(service::ipc_context *ctx);
+        void file_map_open(service::ipc_context *ctx);
+        void file_map_flush(service::ipc_context *ctx);
         void file_close(service::ipc_context *ctx);
         void file_duplicate(service::ipc_context *ctx);
         void file_adopt(service::ipc_context *ctx);
