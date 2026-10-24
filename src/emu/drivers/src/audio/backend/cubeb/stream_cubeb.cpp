@@ -52,6 +52,7 @@ namespace eka2l1::drivers {
         params.channels = channels;
         params.layout = (channels == 1) ? CUBEB_LAYOUT_MONO : CUBEB_LAYOUT_STEREO;
         params.prefs = CUBEB_STREAM_PREF_NONE;
+        params.input_params = CUBEB_INPUT_PROCESSING_PARAM_NONE;
 
         std::uint32_t minimum_latency;
 #ifdef EKA2L1_PLATFORM_ANDROID
