@@ -314,6 +314,8 @@ jobs:
 
     - name: Build
       run: ./scripts/build_ios.sh device
+      env:
+        EKA2L1_IOS_UNFILTERED_IMPORT: ON
 
     - name: Compute git short sha
       id: git_short_sha

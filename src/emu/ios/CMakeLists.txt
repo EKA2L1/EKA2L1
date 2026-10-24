@@ -217,4 +217,13 @@ else()
     message(STATUS "EKA2L1 iOS: signed build for team ${EKA2L1_IOS_DEVELOPMENT_TEAM}")
 endif()
 
+# For the sideload IPA: TrollStore can leave the app's type declarations
+# unregistered, and a filtered picker then greys out every file.
+option(EKA2L1_IOS_UNFILTERED_IMPORT "Let the import pickers offer every file" OFF)
+if (EKA2L1_IOS_UNFILTERED_IMPORT)
+    set_target_properties(${EKA2L1_IOS_APP} PROPERTIES
+        XCODE_ATTRIBUTE_SWIFT_ACTIVE_COMPILATION_CONDITIONS "$(inherited) EKA2L1_UNFILTERED_IMPORT")
+    message(STATUS "EKA2L1 iOS: import pickers unfiltered")
+endif()
+
 message(STATUS "EKA2L1 iOS frontend skeleton: bundle ${EKA2L1_IOS_BUNDLE_ID}, deployment ${EKA2L1_IOS_DEPLOYMENT_TARGET}")

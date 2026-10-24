@@ -45,7 +45,7 @@ private let ngage2Types: [UTType] =
 // where the device only understands that one. Symbian's own .gdr bitmap fonts
 // are deliberately not offered — they would only ever suit the devices whose
 // fonts are already .gdr, and only at the sizes they happen to carry.
-private let fontTypes: [UTType] = ["ttf"].compactMap {
+private let fontTypes: [UTType] = unfilteredImport ? [.item] : ["ttf"].compactMap {
     UTType(filenameExtension: $0)
 }
 
@@ -851,6 +851,12 @@ struct ContentView: View {
     }
 }
 
+#if EKA2L1_UNFILTERED_IMPORT
+private let unfilteredImport = true
+#else
+private let unfilteredImport = false
+#endif
+
 // Content types an importer accepts for one file extension. The declared
 // identifier (Info.plist UTImportedTypeDeclarations) comes first, plus any other
 // declared type the system associates with the extension.
@@ -859,7 +865,7 @@ struct ContentView: View {
 // itself), no type filter matches the file, so the picker is left unfiltered and
 // the import handlers check the extension instead.
 private func importTypes(extension ext: String, declaredAs identifier: String) -> [UTType] {
-    guard let declared = UTType(identifier) else { return [.item] }
+    guard !unfilteredImport, let declared = UTType(identifier) else { return [.item] }
     var types = [declared]
     for type in UTType.types(tag: ext, tagClass: .filenameExtension, conformingTo: nil)
     where !type.isDynamic && !types.contains(type) {

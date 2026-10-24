@@ -30,6 +30,9 @@
 #                                  binaries never carry JIT code. Runtime
 #                                  still requires the sideloaded process to
 #                                  have JIT permission.
+#   EKA2L1_IOS_UNFILTERED_IMPORT   ON: the import pickers offer every file
+#                                  instead of filtering by type. CI sets it
+#                                  for the unsigned IPA (TrollStore installs).
 #   EKA2L1_SANITIZER               address | thread: build with ASan or TSan.
 #                                  Forces the dynarmic JIT off (sanitizers
 #                                  cannot see into JIT-emitted code), so the
@@ -79,6 +82,7 @@ configure_one() {
         -DEKA2L1_IOS_DEVELOPMENT_TEAM="${team}" \
         -DEKA2L1_IOS_ENABLE_FFMPEG=ON \
         -DEKA2L1_IOS_DYNARMIC="${jit}" \
+        -DEKA2L1_IOS_UNFILTERED_IMPORT="${EKA2L1_IOS_UNFILTERED_IMPORT:-OFF}" \
         -DEKA2L1_SANITIZER="${EKA2L1_SANITIZER:-}" \
         -DCMAKE_POLICY_VERSION_MINIMUM=3.5 \
         -DCMAKE_XCODE_ATTRIBUTE_SKIP_INSTALL=YES
