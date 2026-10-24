@@ -254,6 +254,9 @@ public:
 
     int map_mouse_id_to_touch_index(int mouse_id, const bool on_release);
     eka2l1::drivers::handle get_background_image();
+    eka2l1::vec2 get_background_image_size() const {
+        return previous_background_image_size_;
+    }
 
     std::function<void(eka2l1::kernel::process *)> get_process_exit_callback();
 

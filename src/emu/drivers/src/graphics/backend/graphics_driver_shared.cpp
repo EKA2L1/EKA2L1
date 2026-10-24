@@ -22,6 +22,7 @@
 #include <common/platform.h>
 
 #include <cstdint>
+#include <cstring>
 #include <limits>
 #include <vector>
 
@@ -329,6 +330,36 @@ namespace eka2l1::drivers {
             bmp->tex->update_data(this, 0, eka2l1::vec3(offset.x, offset.y, 0), eka2l1::vec3(dim.x, dim.y, 0), 0,
                 texture_format::rgba, texture_data_type::ubyte, expanded_rgba.data(), 0, 4);
         } else
+#else
+        // 12bpp Symbian pixels are 0x0RGB, which GL reads as R=0, G=R, B=G, A=B; a channel swizzle
+        // undoes that, but some drivers ignore it on RGBA4 textures (Mesa freedreno on Adreno 6xx shows
+        // every 4096-colour game shifted to green and blue). Repack them as 0xRGBF instead, GL's own
+        // RGBA4444 order, so no swizzle is needed.
+        if ((bmp->bpp == 12) && data && (dim.x > 0) && (dim.y > 0)) {
+            const std::size_t src_pixels_per_line = (pixels_per_line != 0) ? pixels_per_line : static_cast<std::size_t>(dim.x);
+            const std::size_t src_row_bytes = ((src_pixels_per_line * 2) + 3) & ~std::size_t(3);
+            const std::size_t dst_pixels_per_line = (static_cast<std::size_t>(dim.x) + 1) & ~std::size_t(1);
+            const std::size_t source_end = (static_cast<std::size_t>(dim.y) - 1) * src_row_bytes + static_cast<std::size_t>(dim.x) * 2;
+
+            if (!size || (source_end <= size)) {
+                const std::uint8_t *src = reinterpret_cast<const std::uint8_t *>(data);
+                std::vector<std::uint16_t> repacked(dst_pixels_per_line * static_cast<std::size_t>(dim.y));
+
+                for (int y = 0; y < dim.y; y++) {
+                    for (int x = 0; x < dim.x; x++) {
+                        std::uint16_t pixel = 0;
+                        std::memcpy(&pixel, src + static_cast<std::size_t>(y) * src_row_bytes + static_cast<std::size_t>(x) * 2, 2);
+                        repacked[static_cast<std::size_t>(y) * dst_pixels_per_line + x] = static_cast<std::uint16_t>((pixel << 4) | 0xF);
+                    }
+                }
+
+                bmp->tex->update_data(this, 0, eka2l1::vec3(offset.x, offset.y, 0), eka2l1::vec3(dim.x, dim.y, 0), dst_pixels_per_line,
+                    data_format, data_type, repacked.data(), 0, 4);
+                bmp->tex->set_channel_swizzle({ channel_swizzle::red, channel_swizzle::green,
+                    channel_swizzle::blue, channel_swizzle::alpha });
+                return;
+            }
+        }
 #endif
         bmp->tex->update_data(this, 0, eka2l1::vec3(offset.x, offset.y, 0), eka2l1::vec3(dim.x, dim.y, 0), pixels_per_line,
             data_format, data_type, data, 0, 4);

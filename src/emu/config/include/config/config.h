@@ -186,6 +186,8 @@ namespace eka2l1::config {
 		std::uint32_t btnet_discovery_mode{ 0 };
         bool extensive_logging{ false };
         int background_image_opacity{ 255 };
+        bool background_image_keep_aspect{ false };
+        int screen_scale_ratio{ 100 };
 
         std::string current_mmc_id;
 

@@ -71,6 +71,7 @@
 #include <QDropEvent>
 #include <QEventLoop>
 #include <QFileDialog>
+#include <QFileSystemWatcher>
 #include <QFuture>
 #include <QFutureWatcher>
 #include <QInputDialog>
@@ -82,6 +83,9 @@
 #include <QtConcurrent/QtConcurrent>
 
 #include <stb_image.h>
+
+#include <cstdio>
+#include <cstdlib>
 
 static constexpr const char *LAST_UI_WINDOW_GEOMETRY_SETTING = "lastWindowGeometry";
 static constexpr const char *LAST_UI_WINDOW_STATE = "lastWindowState";
@@ -191,11 +195,21 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     builder.set_feature(eka2l1::drivers::graphics_feature::clipping, false);
     builder.set_viewport(viewport);
 
+    // The screen is laid out inside this area: the whole window, or the background image when it keeps its aspect
+    eka2l1::rect area;
+    area.size = swapchain_size;
+
     eka2l1::drivers::handle background_image = state_ptr->ui_main->get_background_image();
     builder.clear({ color_clear.z / 255.0f, color_clear.y / 255.0f, color_clear.x / 255.0f, color_clear.w / 255.0f, 0.0f, 0.0f }, eka2l1::drivers::draw_buffer_bit_color_buffer);
     if (background_image != 0) {
-        eka2l1::rect draw_image_rect;
-        draw_image_rect.size = swapchain_size;
+        const eka2l1::vec2 image_size = state_ptr->ui_main->get_background_image_size();
+        if (state.conf.background_image_keep_aspect && (image_size.x > 0) && (image_size.y > 0)) {
+            const float image_scale = std::min(static_cast<float>(swapchain_size.x) / image_size.x, static_cast<float>(swapchain_size.y) / image_size.y);
+            area.size = eka2l1::vec2(static_cast<int>(image_size.x * image_scale), static_cast<int>(image_size.y * image_scale));
+            area.top = eka2l1::vec2((swapchain_size.x - area.size.x) / 2, (swapchain_size.y - area.size.y) / 2);
+        }
+
+        eka2l1::rect draw_image_rect = area;
 
         builder.set_feature(eka2l1::drivers::graphics_feature::blend, true);
         builder.blend_formula(eka2l1::drivers::blend_equation::add, eka2l1::drivers::blend_equation::add,
@@ -218,22 +232,31 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
         std::swap(size.x, size.y);
     }
 
-    float mult_x = scr->requested_ui_scale_factor > 0.0f ? scr->requested_ui_scale_factor : (static_cast<float>(window_width) / size.x);
-    float mult_y = scr->requested_ui_scale_factor > 0.0f ? scr->requested_ui_scale_factor : (state.stretch_to_fill_display ? (static_cast<float>(window_height) / size.y) : mult_x);
+    float mult_x = scr->requested_ui_scale_factor > 0.0f ? scr->requested_ui_scale_factor : (static_cast<float>(area.size.x) / size.x);
+    float mult_y = scr->requested_ui_scale_factor > 0.0f ? scr->requested_ui_scale_factor : (state.stretch_to_fill_display ? (static_cast<float>(area.size.y) / size.y) : mult_x);
     float width = size.x * mult_x;
     float height = size.y * mult_y;
     std::uint32_t x = 0;
     std::uint32_t y = 0;
     if (!state.stretch_to_fill_display) {
-        if (height > swapchain_size.y) {
-            height = swapchain_size.y;
+        if (height > area.size.y) {
+            height = area.size.y;
             mult_x = mult_y = height / size.y;
             width = size.x * mult_y;
         }
     }
 
-    x = (swapchain_size.x - width) / 2;
-    y = (swapchain_size.y - height) / 2;
+    // Shrink the screen to fit the one drawn on the background, like the Android screen scale
+    if (scr->requested_ui_scale_factor <= 0.0f) {
+        const float ratio = eka2l1::common::clamp<int>(10, 100, state.conf.screen_scale_ratio) / 100.0f;
+        mult_x *= ratio;
+        mult_y *= ratio;
+        width *= ratio;
+        height *= ratio;
+    }
+
+    x = area.top.x + (area.size.x - width) / 2;
+    y = area.top.y + (area.size.y - height) / 2;
 
     scr->set_native_scale_factor(state_ptr->graphics_driver.get(), mult_x, mult_y);
     scr->absolute_pos.x = static_cast<int>(x);
@@ -357,6 +380,22 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     if (server) {
         server->init_key_mappings();
     }
+
+    // Reload the key profile when it changes while a game runs, for instance from a frontend's remapping tool
+    QFileSystemWatcher *bindings_watcher = new QFileSystemWatcher(this);
+    bindings_watcher->addPath(QDir::current().absoluteFilePath(QStringLiteral("bindings")));
+    connect(bindings_watcher, &QFileSystemWatcher::directoryChanged, this, [this](const QString &) {
+        const std::lock_guard<std::mutex> guard(emulator_state_.lockdown);
+        const std::string profile_path = "bindings/" + emulator_state_.conf.current_keybind_profile + ".yml";
+        if (!eka2l1::common::exists(profile_path)) {
+            return;
+        }
+
+        emulator_state_.conf.keybinds.deserialize(profile_path);
+        if (eka2l1::window_server *ws = get_window_server_through_system(emulator_state_.symsys.get())) {
+            ws->init_key_mappings();
+        }
+    });
 
     rotate_group_ = new QActionGroup(this);
     rotate_group_->addAction(ui_->action_rotate_0);
@@ -1121,7 +1160,11 @@ void main_window::on_app_exited(const int exit_type, const int exit_reason, cons
     }
 
     if (emulator_state_.app_launch_from_command_line) {
-        close();
+        // Started for one app (by a frontend): leave as soon as it is gone, like --runng does. Closing
+        // the window tears the emulator down, which can stall on its threads and leave the frontend
+        // waiting on a black screen. The app has closed its files by now.
+        std::fflush(nullptr);
+        std::_Exit(0);
     } else {
         on_restart_requested();
     }
@@ -1340,7 +1383,9 @@ void main_window::closeEvent(QCloseEvent *event) {
 
 bool main_window::controller_event_handler(eka2l1::drivers::input_event &event) {
     emit controller_button_press(event);
-    if (displayer_ && displayer_->isVisible() && displayer_->hasFocus()) {
+    // A game started from the command line (by a frontend) gets the pad without needing a click on
+    // the display first: under some compositors a fullscreen window never reports the focus.
+    if (displayer_ && displayer_->isVisible() && (displayer_->hasFocus() || emulator_state_.app_launch_from_command_line)) {
         if (editor_widget_->isVisible() && editor_widget_->handle_controller_event(event)) {
             return false;
         }
