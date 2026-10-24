@@ -172,25 +172,37 @@ TEST_CASE("flexible_large_heap_and_global_chunks_have_distinct_mappings", "mem")
     REQUIRE(global->commit(0, 0x1000) != 0);
 
     // The hybrid heap reserves twice the maximum heap plus its bookkeeping space.
-    info.size = 0x44000000;
+    info.size = 0x66000000;
     info.flags = mem::MEM_MODEL_CHUNK_TYPE_DISCONNECT | mem::MEM_MODEL_CHUNK_REGION_USER_LOCAL;
     mem::mem_model_chunk *heap = nullptr;
     REQUIRE(fixture.process->create_chunk(heap, info) == mem::MEM_MODEL_CHUNK_ERR_OK);
     REQUIRE(heap->commit(0, 0x1000) != 0);
     REQUIRE(heap->commit(info.size - 0x1000, 0x1000) != 0);
 
-    info.size = 0x1000;
+    info.size = 0x02000000;
+    info.flags = mem::MEM_MODEL_CHUNK_TYPE_NORMAL | mem::MEM_MODEL_CHUNK_REGION_USER_LOCAL;
+    mem::mem_model_chunk *native_heap = nullptr;
+    REQUIRE(fixture.process->create_chunk(native_heap, info) == mem::MEM_MODEL_CHUNK_ERR_OK);
+
+    info.size = 0x08000000;
     info.flags = mem::MEM_MODEL_CHUNK_TYPE_NORMAL | mem::MEM_MODEL_CHUNK_REGION_USER_GLOBAL;
     mem::mem_model_chunk *second_global = nullptr;
     REQUIRE(fixture.process->create_chunk(second_global, info) == mem::MEM_MODEL_CHUNK_ERR_OK);
     REQUIRE(second_global->commit(0, 0x1000) != 0);
+    REQUIRE(second_global->commit(info.size - 0x1000, 0x1000) != 0);
 
     const auto heap_base = heap->base(fixture.process.get());
     for (auto *chunk : { global, second_global }) {
         const auto base = chunk->base(fixture.process.get());
         REQUIRE((base + chunk->max() <= heap_base || base >= heap_base + heap->max()));
     }
-    REQUIRE(heap_base + heap->max() <= mem::ram_code_addr);
+    REQUIRE(heap_base + heap->max() <= mem::dll_static_data_flexible);
+    REQUIRE(second_global->base(fixture.process.get()) + second_global->max() <= mem::dll_static_data_flexible);
+    REQUIRE(second_global->base(fixture.process.get()) + second_global->max() > mem::ram_code_addr);
+    const auto last_page = second_global->base(fixture.process.get()) + second_global->max() - 0x1000;
+    REQUIRE(fixture.control->get_host_pointer(fixture.process->address_space_id(), last_page)
+        == fixture.process->get_pointer(last_page));
+    REQUIRE(fixture.process->get_pointer(last_page) != nullptr);
 
     auto *heap_start = static_cast<std::uint32_t *>(fixture.process->get_pointer(heap_base));
     auto *heap_end = static_cast<std::uint32_t *>(fixture.process->get_pointer(heap_base + heap->max() - 0x1000));
@@ -209,6 +221,41 @@ TEST_CASE("flexible_large_heap_and_global_chunks_have_distinct_mappings", "mem")
 
     REQUIRE(opener->detach_chunk(second_global));
     fixture.process->delete_chunk(second_global);
+    fixture.process->delete_chunk(native_heap);
     fixture.process->delete_chunk(heap);
     fixture.process->delete_chunk(global);
+}
+
+TEST_CASE("flexible_loaded_code_shares_the_global_area_with_rom", "mem") {
+    mem_model_fixture fixture(mem::mem_model_type::flexible);
+    auto opener = mem::make_new_mem_model_process(fixture.control.get(), mem::mem_model_type::flexible);
+
+    mem::mem_model_chunk_creation_info info;
+    info.size = 0x1000;
+    info.flags = mem::MEM_MODEL_CHUNK_TYPE_NORMAL | mem::MEM_MODEL_CHUNK_REGION_USER_ROM;
+    info.perm = prot_read_write_exec;
+    mem::mem_model_chunk *rom_chunk = nullptr;
+    REQUIRE(fixture.process->create_chunk(rom_chunk, info) == mem::MEM_MODEL_CHUNK_ERR_OK);
+    REQUIRE(rom_chunk->commit(0, info.size) != 0);
+
+    info.flags = mem::MEM_MODEL_CHUNK_TYPE_NORMAL | mem::MEM_MODEL_CHUNK_REGION_USER_CODE;
+    mem::mem_model_chunk *code_chunk = nullptr;
+    REQUIRE(fixture.process->create_chunk(code_chunk, info) == mem::MEM_MODEL_CHUNK_ERR_OK);
+    REQUIRE(code_chunk->commit(0, info.size) != 0);
+
+    const auto rom_base = rom_chunk->base(nullptr);
+    const auto code_base = code_chunk->base(nullptr);
+    REQUIRE(rom_base >= mem::rom);
+    REQUIRE(code_base >= mem::rom);
+    REQUIRE(code_base != rom_base);
+    REQUIRE(code_base == code_chunk->base(opener.get()));
+
+    auto *code = static_cast<std::uint32_t *>(fixture.control->get_host_pointer(fixture.process->address_space_id(), code_base));
+    REQUIRE(code != nullptr);
+    *code = 0xE12FFF1E;
+    REQUIRE(fixture.control->get_host_pointer(opener->address_space_id(), code_base) == code);
+    REQUIRE(fixture.control->get_host_pointer(opener->address_space_id(), rom_base) != code);
+
+    fixture.process->delete_chunk(code_chunk);
+    fixture.process->delete_chunk(rom_chunk);
 }
