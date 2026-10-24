@@ -23,6 +23,9 @@
 #include <drivers/audio/backend/cubeb/stream_cubeb.h>
 #include <drivers/audio/backend/baeplat_impl.h>
 
+#include <cstdarg>
+#include <cstdio>
+
 #if EKA2L1_PLATFORM(WIN32)
 #include <objbase.h>
 #elif EKA2L1_PLATFORM(ANDROID)
@@ -30,15 +33,30 @@
 #endif
 
 namespace eka2l1::drivers {
+    static void cubeb_log_redirector(const char *fmt, ...) {
+        char message[512];
+
+        va_list args;
+        va_start(args, fmt);
+        std::vsnprintf(message, sizeof(message), fmt, args);
+        va_end(args);
+
+        LOG_INFO(DRIVER_AUD, "cubeb: {}", message);
+    }
+
     cubeb_audio_driver::cubeb_audio_driver(const std::uint32_t initial_master_volume, const player_type preferred_midi_backend)
         : audio_driver(initial_master_volume, preferred_midi_backend)
         , context_(nullptr)
         , init_(false) {
+        // Fails harmlessly if another driver instance already registered it; cubeb_destroy unregisters it.
+        cubeb_set_log_callback(CUBEB_LOG_NORMAL, cubeb_log_redirector);
+
         if (cubeb_init(&context_, "EKA2L1 Audio Driver", nullptr) != CUBEB_OK) {
             LOG_CRITICAL(DRIVER_AUD, "Can't initialize Cubeb audio driver!");
             return;
         }
 
+        LOG_INFO(DRIVER_AUD, "Cubeb audio driver initialized with the {} backend", cubeb_get_backend_id(context_));
         init_ = true;
     }
 
