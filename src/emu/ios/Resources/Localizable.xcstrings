@@ -3682,13 +3682,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Use 32 hexadecimal digits, with optional hyphens between groups of eight. A CID in the card name takes priority. Restart the game after changing this value."
+            "value" : "Enter 32 hexadecimal digits (hyphens optional)."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "输入 32 位十六进制值，可每 8 位用连字符分隔。卡名称中的 CID 优先使用。修改后请重新启动游戏。"
+            "value" : "输入32位十六进制值（可带连字符）。"
           }
         }
       }
