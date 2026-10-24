@@ -325,6 +325,10 @@ target_link_libraries(Vulkan INTERFACE ${Vulkan_LIBRARIES})
 # Cubeb
 option (BUILD_TOOLS "Build tools" OFF)
 option (BUILD_TESTS "Build cubeb tests" OFF)
+# Keep the resampler in the binary instead of linking a system speexdsp if one is found
+option (BUNDLE_SPEEX "Bundle the speex library" ON)
+# Sanitizers come from the global compiler flags, not cubeb's sanitizers-cmake
+option (USE_SANITIZERS "Use sanitizers" OFF)
 
 # Forcefully disable AAudio (we build with API target 21 minimum)
 set (USE_AAUDIO FALSE CACHE INTERNAL "" FORCE)
