@@ -30,6 +30,8 @@ public:
 
     void Play();
     void Pause();
+    void Stop();
+    void Close();
     
     const TVideoPlayerState CurrentState() const {
         return iCurrentState;
