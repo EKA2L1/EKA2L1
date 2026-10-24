@@ -211,7 +211,14 @@ void CMMFMdaAudioUtility::SupplyUrlL(const TDesC &aFilename) {
     iOpener.FixupActiveStatus();
 
     TUint64 localDuration = 0;
-    User::LeaveIfError(EAudioPlayerSupplyUrl(0, iDispatchInstance, aFilename.Ptr(), aFilename.Length(), &localDuration));
+    const TInt err = EAudioPlayerSupplyUrl(0, iDispatchInstance, aFilename.Ptr(), aFilename.Length(), &localDuration);
+
+    // MMF never leaves on an unopenable source; the error arrives through the open callback.
+    if (err != KErrNone) {
+        iDuration = TTimeIntervalMicroSeconds(0);
+        iOpener.Complete(this, EMdaStateIdle, err);
+        return;
+    }
 
 #ifndef EKA2
     iDuration = TTimeIntervalMicroSeconds(MakeSoftwareInt64FromHardwareUint64(localDuration));
@@ -243,7 +250,13 @@ void CMMFMdaAudioUtility::SupplyDataL(const TDesC8 &aData) {
     iOpener.FixupActiveStatus();
 
     TUint64 localDuration = 0;
-    User::LeaveIfError(EAudioPlayerSupplyData(0, iDispatchInstance, aData, &localDuration));
+    const TInt err = EAudioPlayerSupplyData(0, iDispatchInstance, aData, &localDuration);
+
+    if (err != KErrNone) {
+        iDuration = TTimeIntervalMicroSeconds(0);
+        iOpener.Complete(this, EMdaStateIdle, err);
+        return;
+    }
 
 #ifndef EKA2
     iDuration = TTimeIntervalMicroSeconds(MakeSoftwareInt64FromHardwareUint64(localDuration));
@@ -486,6 +499,13 @@ CMMFMdaAudioPlayerUtility *CMMFMdaAudioPlayerUtility::NewL(MMdaAudioPlayerCallba
 
 void CMMFMdaAudioPlayerUtility::OnStateChanged(const TMdaState aCurrentState, const TMdaState aPrevState, const TInt aErr) {
     switch (aCurrentState) {
+    case EMdaStateIdle:
+        if (aErr < KErrNone) {
+            iCallback.MapcInitComplete(aErr, iDuration);
+        }
+
+        break;
+
     case EMdaStateReady:
         if (aPrevState != EMdaStateIdle) {
             if (aErr < 1) {
