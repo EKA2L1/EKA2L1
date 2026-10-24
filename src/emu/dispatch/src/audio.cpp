@@ -269,13 +269,15 @@ namespace eka2l1::dispatch {
         return epoc::error_none;
     }
 
+    static bool is_local_audio_url(const std::u16string &url) {
+        const std::u16string root = eka2l1::root_path(url, true);
+        return (root.length() >= 2) && (root[1] == u':');
+    }
+
     static std::u16string resolve_audio_url(system *sys, const std::uint16_t *url, const std::uint32_t url_length) {
         std::u16string url_str(reinterpret_cast<const char16_t *>(url), url_length);
 
-        // Check if the URL references to a local path (drive)
-        const std::u16string root = eka2l1::root_path(url_str, true);
-
-        if ((root.length() >= 2) && (root[1] == u':')) {
+        if (is_local_audio_url(url_str)) {
             // It should be a local path. Transform it to host path
             std::optional<std::u16string> host_path = sys->get_io_system()->get_raw_path(url_str);
 
@@ -289,6 +291,11 @@ namespace eka2l1::dispatch {
 
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_supply_url, eka2l1::ptr<void> handle,
         const std::uint16_t *url, const std::uint32_t url_length, std::uint64_t *duration_us) {
+        const std::u16string guest_url(reinterpret_cast<const char16_t *>(url), url_length);
+        if (is_local_audio_url(guest_url) && !sys->get_io_system()->exist(guest_url)) {
+            return epoc::error_not_found;
+        }
+
         std::u16string url_str = resolve_audio_url(sys, url, url_length);
 
         // Proceed with the current URL
