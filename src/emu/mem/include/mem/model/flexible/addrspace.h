@@ -40,7 +40,6 @@ namespace eka2l1::mem::flexible {
         control_flexible *control_;
 
         linear_section local_data_sec_;
-        linear_section shared_data_sec_;
         linear_section ram_code_sec_;
         linear_section dll_static_data_sec_;
 

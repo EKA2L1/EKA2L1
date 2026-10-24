@@ -23,6 +23,7 @@
 #include <mem/allocator/std_page_allocator.h>
 #include <mem/chunk.h>
 #include <mem/control.h>
+#include <mem/page.h>
 #include <mem/process.h>
 
 using namespace eka2l1;
@@ -155,4 +156,59 @@ TEST_CASE("disconnected_chunk_committed_size_counts_each_page_once", "mem") {
 
         fixture.process->delete_chunk(chunk);
     }
+}
+
+TEST_CASE("flexible_large_heap_and_global_chunks_have_distinct_mappings", "mem") {
+    mem_model_fixture fixture(mem::mem_model_type::flexible);
+    auto opener = mem::make_new_mem_model_process(fixture.control.get(), mem::mem_model_type::flexible);
+
+    mem::mem_model_chunk_creation_info info;
+    info.size = 0x1000;
+    info.flags = mem::MEM_MODEL_CHUNK_TYPE_NORMAL | mem::MEM_MODEL_CHUNK_REGION_USER_GLOBAL;
+    info.perm = prot_read_write;
+
+    mem::mem_model_chunk *global = nullptr;
+    REQUIRE(fixture.process->create_chunk(global, info) == mem::MEM_MODEL_CHUNK_ERR_OK);
+    REQUIRE(global->commit(0, 0x1000) != 0);
+
+    // The hybrid heap reserves twice the maximum heap plus its bookkeeping space.
+    info.size = 0x44000000;
+    info.flags = mem::MEM_MODEL_CHUNK_TYPE_DISCONNECT | mem::MEM_MODEL_CHUNK_REGION_USER_LOCAL;
+    mem::mem_model_chunk *heap = nullptr;
+    REQUIRE(fixture.process->create_chunk(heap, info) == mem::MEM_MODEL_CHUNK_ERR_OK);
+    REQUIRE(heap->commit(0, 0x1000) != 0);
+    REQUIRE(heap->commit(info.size - 0x1000, 0x1000) != 0);
+
+    info.size = 0x1000;
+    info.flags = mem::MEM_MODEL_CHUNK_TYPE_NORMAL | mem::MEM_MODEL_CHUNK_REGION_USER_GLOBAL;
+    mem::mem_model_chunk *second_global = nullptr;
+    REQUIRE(fixture.process->create_chunk(second_global, info) == mem::MEM_MODEL_CHUNK_ERR_OK);
+    REQUIRE(second_global->commit(0, 0x1000) != 0);
+
+    const auto heap_base = heap->base(fixture.process.get());
+    for (auto *chunk : { global, second_global }) {
+        const auto base = chunk->base(fixture.process.get());
+        REQUIRE((base + chunk->max() <= heap_base || base >= heap_base + heap->max()));
+    }
+    REQUIRE(heap_base + heap->max() <= mem::ram_code_addr);
+
+    auto *heap_start = static_cast<std::uint32_t *>(fixture.process->get_pointer(heap_base));
+    auto *heap_end = static_cast<std::uint32_t *>(fixture.process->get_pointer(heap_base + heap->max() - 0x1000));
+    REQUIRE(heap_start != nullptr);
+    REQUIRE(heap_end != nullptr);
+    *heap_start = 0x12345678;
+    *heap_end = 0x87654321;
+
+    REQUIRE(opener->attach_chunk(second_global));
+    auto *shared = static_cast<std::uint32_t *>(opener->get_pointer(second_global->base(opener.get())));
+    REQUIRE(shared != nullptr);
+    *shared = 0xABCDEF01;
+    REQUIRE(*static_cast<std::uint32_t *>(fixture.process->get_pointer(second_global->base(fixture.process.get()))) == 0xABCDEF01);
+    REQUIRE(*heap_start == 0x12345678);
+    REQUIRE(*heap_end == 0x87654321);
+
+    REQUIRE(opener->detach_chunk(second_global));
+    fixture.process->delete_chunk(second_global);
+    fixture.process->delete_chunk(heap);
+    fixture.process->delete_chunk(global);
 }

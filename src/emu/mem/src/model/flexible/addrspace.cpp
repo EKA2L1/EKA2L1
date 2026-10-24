@@ -23,8 +23,7 @@
 namespace eka2l1::mem::flexible {
     address_space::address_space(control_flexible *control)
         : control_(control)
-        , local_data_sec_(local_data, shared_data, control->page_size())
-        , shared_data_sec_(shared_data, ram_drive, control->page_size())
+        , local_data_sec_(local_data, ram_code_addr, control->page_size())
         , ram_code_sec_(ram_code_addr, dll_static_data_flexible, control->page_size())
         , dll_static_data_sec_(dll_static_data_flexible, rom, control->page_size()) {
         dir_ = control->dir_mngr_->allocate(control);
@@ -52,12 +51,8 @@ namespace eka2l1::mem::flexible {
             return &fl_mmu->code_sec_;
         }
 
-        if (flags & MEM_MODEL_CHUNK_REGION_USER_GLOBAL) {
-            return &shared_data_sec_;
-            ;
-        }
-
-        if (flags & MEM_MODEL_CHUNK_REGION_USER_LOCAL) {
+        // Global chunks have per-process mappings and share the local data address range.
+        if (flags & (MEM_MODEL_CHUNK_REGION_USER_LOCAL | MEM_MODEL_CHUNK_REGION_USER_GLOBAL)) {
             return &local_data_sec_;
         }
 
