@@ -664,7 +664,9 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::stop() {
-        stream_->stop();
+        if (stream_) {
+            stream_->stop();
+        }
         stream_state_ = epoc::mmf_state_idle;
 
         mmf_dev_server *serv = server<mmf_dev_server>();
