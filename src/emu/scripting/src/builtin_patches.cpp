@@ -135,6 +135,13 @@ namespace eka2l1::manager {
         scripting::write_byte(scripting::cpu::get_register(0) + 0xB4, 0);
     }
 
+    // --- Happy Cats (Finsite Games) startup fix (happycats_startup_fix.lua) ---
+    // The game widget leaves its sounds and focus flags uninitialized until a 3s splash timer.
+    // A focus gain before that resumes music on a garbage QSound unless +0x3B happens to be nonzero.
+    static void happycats_init_focus_flag() {
+        scripting::write_byte(scripting::cpu::get_register(9) + 0x3B, 1);
+    }
+
     void scripts::register_builtin_patches() {
         // The kernel-level hooks must be live for breakpoints to fire.
         register_kernel_hooks();
@@ -205,6 +212,8 @@ namespace eka2l1::manager {
         register_breakpoint("cboxapp_0x20041fae.exe", 0x1D44F, 0, 0x20041FAE, 0xCB7985E9, wave_skip_zero_fire_period);
 
         register_breakpoint("pottery.exe", 0x187410, 0, 0x20042DDE, 0x58A29E91, pottery_clear_device_close_flag);
+
+        register_breakpoint("happycats.exe", 0xB24F, 0, 0x200394B9, 0xD9FD7A4C, happycats_init_focus_flag);
 
         current_module = nullptr;
 
