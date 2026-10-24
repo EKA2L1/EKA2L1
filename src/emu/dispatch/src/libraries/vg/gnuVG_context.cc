@@ -2980,10 +2980,6 @@ namespace eka2l1::dispatch {
 			return;
 		}
 		ctx->clear(state, x, y, width, height);
-
-        if (ctx->cmd_builder_.need_flush()) {
-            ctx->flush_to_driver(sys->get_dispatcher()->get_egl_controller(), state.driver);
-        }
 	}
 
     BRIDGE_FUNC_LIBRARY(address, vg_get_string_emu, std::uint32_t pname) {

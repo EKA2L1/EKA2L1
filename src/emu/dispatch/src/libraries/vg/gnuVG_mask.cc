@@ -234,10 +234,6 @@ namespace eka2l1::dispatch {
 			context->set_error(VG_BAD_HANDLE_ERROR);
 			return;
 		}
-
-        if (context->cmd_builder_.need_flush()) {
-            context->flush_to_driver(sys->get_dispatcher()->get_egl_controller(), state.driver);
-        }
 	}
 
 	BRIDGE_FUNC_LIBRARY(void, vg_render_to_mask_emu, VGPath path, VGbitfield paintModes,
@@ -248,9 +244,6 @@ namespace eka2l1::dispatch {
 			return;
 		}
 		context->render_to_mask(state, path, paintModes, operation);
-		if (context->cmd_builder_.need_flush()) {
-			context->flush_to_driver(sys->get_dispatcher()->get_egl_controller(), state.driver);
-		}
 	}
 }
 

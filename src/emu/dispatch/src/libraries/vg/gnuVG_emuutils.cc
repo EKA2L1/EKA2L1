@@ -18,6 +18,7 @@
  */
 
 #include <dispatch/libraries/vg/gnuVG_emuutils.hh>
+#include <dispatch/libraries/vg/gnuVG_context.hh>
 #include <dispatch/libraries/vg/consts.h>
 
 #include <dispatch/dispatcher.h>
@@ -60,11 +61,18 @@ namespace gnuVG {
             return nullptr;
         }
 
+        Context *vg_context = reinterpret_cast<Context*>(context);
+
+        // Draw calls only append to the command list; submit it between calls before it overruns.
+        if (vg_context->cmd_builder_.need_flush()) {
+            vg_context->flush_to_driver(controller, sys->get_graphics_driver());
+        }
+
         if (graphic_state != nullptr) {
             graphic_state->driver = sys->get_graphics_driver();
             graphic_state->shaderman = &controller.get_vg_shaderman();
         }
 
-        return reinterpret_cast<Context*>(context);
+        return vg_context;
     }
 }
