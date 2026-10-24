@@ -330,9 +330,6 @@ option (BUNDLE_SPEEX "Bundle the speex library" ON)
 # Sanitizers come from the global compiler flags, not cubeb's sanitizers-cmake
 option (USE_SANITIZERS "Use sanitizers" OFF)
 
-# Forcefully disable AAudio (we build with API target 21 minimum)
-set (USE_AAUDIO FALSE CACHE INTERNAL "" FORCE)
-
 if (NOT EKA2L1_IOS)
     # iOS uses a native AURemoteIO audio_driver (see
     # src/emu/drivers/.../audiounit_ios). cubeb's bundled cubeb_audiounit.cpp
