@@ -851,29 +851,19 @@ struct ContentView: View {
     }
 }
 
-// Content types an importer accepts for one file extension. The identifier
-// comes first and has to be one this app declares (Info.plist
-// UTImportedTypeDeclarations): a document picker only matches declared types,
-// so filtering on the dynamic type the system synthesises for an unregistered
-// extension greys out every file it was supposed to offer. types(tag:) then
-// adds anything else the system already associates with the extension, so a
-// file typed by another app's declaration still comes through. Extension lookup
-// is case-insensitive — .ROM and .rom land on the same types.
+// Content types an importer accepts for one file extension. The declared
+// identifier (Info.plist UTImportedTypeDeclarations) comes first, plus any other
+// declared type the system associates with the extension.
 //
-// Never fall back to .data: that re-enables every file in the picker, which is
-// exactly what filtering is meant to prevent. If our declaration never reached
-// LaunchServices (TrollStore registers apps itself), the picker types the file
-// as the extension's data-conforming dynamic type. types(tag:) answers with a
-// different dynamic type that matches nothing, so dynamic results are dropped.
+// When the declaration never reached LaunchServices (TrollStore registers apps
+// itself), no type filter matches the file, so the picker is left unfiltered and
+// the import handlers check the extension instead.
 private func importTypes(extension ext: String, declaredAs identifier: String) -> [UTType] {
-    var types: [UTType] = []
-    if let declared = UTType(identifier) { types.append(declared) }
+    guard let declared = UTType(identifier) else { return [.item] }
+    var types = [declared]
     for type in UTType.types(tag: ext, tagClass: .filenameExtension, conformingTo: nil)
     where !type.isDynamic && !types.contains(type) {
         types.append(type)
-    }
-    if types.isEmpty, let fallback = UTType(filenameExtension: ext, conformingTo: .data) {
-        types.append(fallback)
     }
     return types
 }
