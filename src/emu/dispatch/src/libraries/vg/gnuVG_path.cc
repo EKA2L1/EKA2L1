@@ -581,10 +581,6 @@ namespace eka2l1::dispatch {
 		context->apply_state_changes(state);
 
 		p->vgDrawPath(state, paintModes);
-
-        if (context->cmd_builder_.need_flush()) {
-            context->flush_to_driver(sys->get_dispatcher()->get_egl_controller(), state.driver);
-        }
 	}
 
 }

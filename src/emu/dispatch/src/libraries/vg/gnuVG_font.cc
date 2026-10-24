@@ -209,6 +209,11 @@ namespace gnuVG {
 				}
 
 				context->adjust_glyph_origin(adjustment);
+
+				// A long string can outgrow the command list within a single call.
+				if (context->cmd_builder_.need_flush()) {
+					context->flush_to_driver(state);
+				}
 			}
 		}
 	}
@@ -292,7 +297,7 @@ namespace eka2l1::dispatch {
 	BRIDGE_FUNC_LIBRARY(void, vg_draw_glyph_emu, VGFont font, VGuint glyphIndex, VGbitfield paintModes,
 		VGboolean allowAutoHinting) {
 		GraphicState state;
-		Context *context = gnuVG::get_active_context(sys);
+		Context *context = gnuVG::get_active_context(sys, &state);
 
 		if (!context) {
 			return;
