@@ -279,6 +279,19 @@ namespace eka2l1::dispatch {
         surface_->publish_pixels(buffer_data, buffer_size, video_player_->get_video_size());
     }
 
+    void epoc_video_player::pause() {
+        video_player_->pause();
+        surface_->set_streaming(false);
+    }
+
+    void epoc_video_player::set_position(std::uint64_t position) {
+        video_player_->set_position(position);
+    }
+
+    std::uint64_t epoc_video_player::duration() const {
+        return video_player_->duration();
+    }
+
     std::uint64_t epoc_video_player::position() const {
         return video_player_ ? video_player_->position() : 0;
     }
@@ -598,6 +611,46 @@ namespace eka2l1::dispatch {
         return epoc::error_none;
     }
     
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_pause, const std::uint32_t handle) {
+        auto *player = sys->get_dispatcher()->video_player_container_.get_object(handle);
+        if (!player) {
+            return epoc::error_bad_handle;
+        }
+        kernel_system *kern = sys->get_kernel_system();
+        kern->unlock();
+        player->pause();
+        kern->lock();
+        return epoc::error_none;
+    }
+
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_set_position, const std::uint32_t handle, const std::uint64_t *position_us) {
+        auto *player = sys->get_dispatcher()->video_player_container_.get_object(handle);
+        if (!player) {
+            return epoc::error_bad_handle;
+        }
+        if (!position_us) {
+            return epoc::error_argument;
+        }
+        const auto position = *position_us;
+        kernel_system *kern = sys->get_kernel_system();
+        kern->unlock();
+        player->set_position(position);
+        kern->lock();
+        return epoc::error_none;
+    }
+
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_duration, const std::uint32_t handle, std::uint64_t *duration_us) {
+        auto *player = sys->get_dispatcher()->video_player_container_.get_object(handle);
+        if (!player) {
+            return epoc::error_bad_handle;
+        }
+        if (!duration_us) {
+            return epoc::error_argument;
+        }
+        *duration_us = player->duration();
+        return epoc::error_none;
+    }
+
     BRIDGE_FUNC_DISPATCHER(std::int32_t, evideo_player_position, const std::uint32_t handle, std::uint64_t *position_us) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
         dispatch::epoc_video_player *player = dispatcher->video_player_container_.get_object(handle);

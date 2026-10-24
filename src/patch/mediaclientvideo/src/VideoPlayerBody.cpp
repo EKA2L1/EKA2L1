@@ -39,6 +39,14 @@ void CVideoPlayerFeedbackHandler::Pause() {
     iCurrentState = EVideoPlayerStatePaused;
 }
 
+void CVideoPlayerFeedbackHandler::Stop() {
+    iCurrentState = EVideoPlayerStatePrepared;
+}
+
+void CVideoPlayerFeedbackHandler::Close() {
+    iCurrentState = EVideoPlayerStateIdle;
+}
+
 void CVideoPlayerFeedbackHandler::Play() {
     iCurrentState = EVideoPlayerStatePlaying;
 }
@@ -287,6 +295,7 @@ void CVideoPlayerUtility::CBody::Pause() {
         return;
     }
 
+    Cancel();
     EVideoPlayerPause(0, iDispatchInstance);
     iFeedbackHandler.Pause();
 }
@@ -296,7 +305,9 @@ void CVideoPlayerUtility::CBody::Stop() {
         return;
     }
 
+    Cancel();
     EVideoPlayerStop(0, iDispatchInstance);
+    iFeedbackHandler.Stop();
 }
 
 void CVideoPlayerUtility::CBody::Close() {
@@ -304,7 +315,9 @@ void CVideoPlayerUtility::CBody::Close() {
         return;
     }
     
+    Cancel();
     EVideoPlayerClose(0, iDispatchInstance);
+    iFeedbackHandler.Close();
 }
 
 void CVideoPlayerUtility::CBody::SetPositionL(const TTimeIntervalMicroSeconds &aWhere) {
