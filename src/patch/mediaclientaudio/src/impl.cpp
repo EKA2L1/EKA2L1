@@ -402,7 +402,8 @@ void CMMFMdaAudioUtility::Stop() {
 }
 
 void CMMFMdaAudioUtility::Close() {
-    iOpener.DiscardNotify();
+    // Closing also cancels a pending open, as MMF does; its result must not reach the observer.
+    iOpener.FixupActiveStatus();
     iState = EMdaStateIdle;
     EAudioPlayerStop(0, iDispatchInstance);
     Cancel();
