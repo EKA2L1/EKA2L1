@@ -91,29 +91,31 @@ struct SettingsView: View {
                     Text("settings.performanceMode.high").tag("high-performance")
                     Text("settings.performanceMode.balanced").tag("balanced")
                 }
-                VStack(alignment: .leading, spacing: 8) {
+                Toggle("settings.hideSystemApps", isOn: $hideSystemApps)
+                if EKA2L1Bridge.shared.jitCompiledIn {
+                    Toggle("settings.jit", isOn: $useJIT)
+                }
+                HStack {
                     Text(verbatim: "MMC ID")
+                    Spacer()
                     TextField(String("00000000-00000000-00000000-00000000"), text: $mmcId)
-                        .font(.callout.monospaced())
+                        .multilineTextAlignment(.trailing)
+                        .foregroundStyle(.secondary)
+                        .monospacedDigit()
                         .keyboardType(.asciiCapable)
                         .autocorrectionDisabled()
                         .textInputAutocapitalization(.never)
                         .accessibilityLabel(Text(verbatim: "MMC ID"))
                         .accessibilityIdentifier("settings.mmcId")
                 }
-                Toggle("settings.hideSystemApps", isOn: $hideSystemApps)
-                if EKA2L1Bridge.shared.jitCompiledIn {
-                    Toggle("settings.jit", isOn: $useJIT)
-                }
             } header: {
                 Text("settings.system")
             } footer: {
-                VStack(alignment: .leading, spacing: 4) {
+                if normalizedMMCId == nil {
+                    Text("settings.mmcId.invalid")
+                        .foregroundStyle(.red)
+                } else {
                     Text("settings.mmcId.hint")
-                    if normalizedMMCId == nil {
-                        Text("settings.mmcId.invalid")
-                            .foregroundStyle(.red)
-                    }
                 }
                 if EKA2L1Bridge.shared.jitCompiledIn {
                     if !EKA2L1Bridge.shared.jitAvailable {
