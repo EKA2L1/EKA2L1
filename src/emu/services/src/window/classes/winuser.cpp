@@ -202,7 +202,7 @@ namespace eka2l1::epoc {
         }
         attachment.last_revision = source.prepared_revision();
 
-        const int native_rotation = (flags & flag_fix_native_orientation) ? (scr->current_mode().rotation + 180) % 360 : 0;
+        const int native_rotation = (flags & flag_fix_native_orientation) ? (360 - scr->current_mode().rotation) % 360 : 0;
         const auto placement = place_surface(attachment.config, abs_rect, source.size(), scr->display_scale_factor, native_rotation);
         common::region clip;
         clip.add_rect(placement.clip);
