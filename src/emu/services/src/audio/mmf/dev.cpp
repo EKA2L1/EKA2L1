@@ -547,10 +547,8 @@ namespace eka2l1 {
     epoc::mmf_capabilities mmf_dev_server_session::get_caps() {
         epoc::mmf_capabilities caps;
 
-        // Fill our preferred settings. Recording is mono: a handset microphone is
-        // a single channel, so advertising stereo capture lets clients negotiate a
-        // configuration no real device would have given them.
-        caps.channels_ = is_recording_stream() ? 1 : 2;
+        // Capabilities use a mono/stereo bitmask, unlike the configured channel count.
+        caps.channels_ = is_recording_stream() ? 1 : (1 | 2);
         caps.encoding_ = epoc::mmf_encoding_16bit_pcm;
         caps.rate_ = epoc::mmf_sample_rate_8000hz | epoc::mmf_sample_rate_11025hz | 
             epoc::mmf_sample_rate_12000hz | epoc::mmf_sample_rate_16000hz | epoc::mmf_sample_rate_22050hz |
