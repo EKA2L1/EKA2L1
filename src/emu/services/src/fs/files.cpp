@@ -716,6 +716,11 @@ namespace eka2l1 {
             finish(epoc::error_access_denied);
             return;
         }
+        const auto drive = ctx->sys->get_io_system()->get_drive_entry(char16_to_drive(source_file->file_name()[0]));
+        if (drive && (drive->attribute & io_attrib_removeable) && !(settings->map_mode_ & FILE_MAP_REMOVABLE_MEDIA)) {
+            finish(epoc::error_not_supported);
+            return;
+        }
         if (settings->offset_ >= source_file->size()
             || settings->size_ > source_file->size() - settings->offset_) {
             finish(epoc::error_argument);
