@@ -2570,7 +2570,7 @@ namespace eka2l1 {
 
         // Tchhh... Im referencing a game...
         window_group_tree_moonwalker walker(scr, nullptr, 0, pri, -1);
-        scr->root->child->walk_tree(&walker, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
+        scr->root->walk_tree(&walker, epoc::window_tree_walk_style::bonjour_children);
 
         return walker.total;
     }
@@ -2584,7 +2584,7 @@ namespace eka2l1 {
         }
 
         window_group_tree_moonwalker walker(scr, ids, 0, pri, max);
-        scr->root->child->walk_tree(&walker, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
+        scr->root->walk_tree(&walker, epoc::window_tree_walk_style::bonjour_children);
 
         return walker.total;
     }
@@ -2598,7 +2598,7 @@ namespace eka2l1 {
         }
 
         window_group_tree_moonwalker walker(scr, infos, window_group_tree_moonwalker::FLAGS_GET_CHAIN, pri, max);
-        scr->root->child->walk_tree(&walker, epoc::window_tree_walk_style::bonjour_children_and_previous_siblings);
+        scr->root->walk_tree(&walker, epoc::window_tree_walk_style::bonjour_children);
 
         return walker.total;
     }
