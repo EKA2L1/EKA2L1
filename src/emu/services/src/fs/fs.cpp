@@ -258,6 +258,9 @@ namespace eka2l1 {
             HANDLE_CLIENT_IPC(file_read, epoc::fs_msg_file_read, "Fs::FileRead");
             HANDLE_CLIENT_IPC(file_write, epoc::fs_msg_file_write, "Fs::FileWrite");
             HANDLE_CLIENT_IPC(file_flush, epoc::fs_msg_file_flush, "Fs::FileFlush");
+            HANDLE_CLIENT_IPC(file_map_open, epoc::fs_msg_file_map_open_name, "Fs::FileMapOpenName");
+            HANDLE_CLIENT_IPC(file_map_open, epoc::fs_msg_file_map_open_handle, "Fs::FileMapOpenHandle");
+            HANDLE_CLIENT_IPC(file_map_flush, epoc::fs_msg_file_map_flush, "Fs::FileMapFlush");
             HANDLE_CLIENT_IPC(file_temp, epoc::fs_msg_file_temp, "Fs::FileTemp");
             HANDLE_CLIENT_IPC(file_duplicate, epoc::fs_msg_file_duplicate, "Fs::FileDuplicate");
             HANDLE_CLIENT_IPC(file_adopt, epoc::fs_msg_file_adopt, "Fs::FileAdopt");
