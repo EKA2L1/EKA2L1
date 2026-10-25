@@ -1468,34 +1468,31 @@ namespace eka2l1 {
 
         common::ini_node_ptr window_mode_node = ws_config.find("WINDOWMODE");
         epoc::display_mode scr_mode_global = epoc::display_mode::color16ma;
+        bool use_in_ini = true;
 
-        if (window_mode_node) {
+        // The ROM header has the real display depth on EKA1 phones. Read it even without a WINDOWMODE:
+        // their wsini.ini often lives inside the ROM image only, and is not found in an extracted Z drive
+        // (an N-Gage then ran its 4096-colour games as 32-bit, and direct screen access read them as 16-bit).
+        if (kern->get_epoc_version() <= epocver::epoc6) {
+            loader::rom *rom_info = kern->get_rom_info();
+            const epoc::display_mode conv_res = rom_info
+                ? epoc::get_display_mode_from_bpp(rom_info->header.eka1_diff1.bits_per_pixel, true)
+                : epoc::display_mode::color_last;
+
+            if (conv_res != epoc::display_mode::color_last) {
+                scr_mode_global = conv_res;
+                use_in_ini = false;
+            }
+        }
+
+        if (window_mode_node && use_in_ini) {
             common::ini_pair *window_mode_pair = window_mode_node->get_as<common::ini_pair>();
 
             std::vector<std::string> modes;
             modes.resize(1);
 
             window_mode_pair->get(modes);
-
-            device_manager *mngr = sys->get_device_manager();
-            device *current_dvc = mngr->get_current();
-
-            bool use_in_ini = true;
-
-            if (kern->get_epoc_version() <= epocver::epoc6) {
-                loader::rom *rom_info = kern->get_rom_info();
-                const epoc::display_mode conv_res = epoc::get_display_mode_from_bpp(rom_info->header.eka1_diff1.bits_per_pixel, true);
-
-                if (conv_res != epoc::display_mode::color_last) {
-                    scr_mode_global = conv_res;
-                    use_in_ini = false;
-                }
-            }
-
-            if (use_in_ini) {
-                scr_mode_global = epoc::string_to_display_mode(modes[0]);
-            }
-
+            scr_mode_global = epoc::string_to_display_mode(modes[0]);
         }
 
         // WSERV's default when the ini leaves it out.
@@ -2332,9 +2329,9 @@ namespace eka2l1 {
 
         config::state *conf = kern->get_config();
 
+        // The maps start empty, so every bind of the profile is kept: one phone key can have
+        // several sources (a keyboard key, the D-pad and a stick, more than one pad).
         for (auto &kb : conf->keybinds.keybinds) {
-            delete_key_mapping(kb.target);
-
             bool is_mouse = (kb.source.type == config::KEYBIND_TYPE_MOUSE);
 
             if ((kb.source.type == config::KEYBIND_TYPE_KEY) || is_mouse) {
