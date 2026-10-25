@@ -98,6 +98,8 @@ namespace eka2l1::epoc {
         etel_line_enumerate_call = 34,
         etel_line_get_call_info = 35,
         etel_line_get_status = 39,
+        etel_line_notify_status_change = 44,
+        etel_line_notify_status_change_cancel = 45,
         etel_phone_enumerate_lines = 46,
         etel_phone_get_line_info = 49,
         etel_enumerate_phones = 54,
