@@ -99,7 +99,25 @@ namespace eka2l1 {
         bool operator()(const utf16_str &x, const utf16_str &y) const;
     };
 
+    enum class file_name_error : std::uint32_t {
+        none,
+        bad_character,
+        bad_name,
+        too_long
+    };
+
+    // RFs::TNameValidParam is packaged in IPC slot 3.
+    struct file_name_validation_params {
+        file_name_error error_;
+        std::int32_t use_session_path_;
+        std::uint32_t invalid_char_pos_;
+    };
+
+    static_assert(sizeof(file_name_validation_params) == 12);
+
     std::u16string get_full_symbian_path(const std::u16string &session_path, const std::u16string &target_path);
+    std::int32_t validate_file_name(const std::u16string &name, const std::u16string &session_path,
+        char16_t &bad_character, file_name_validation_params *params = nullptr);
     bool check_path_capabilities_pass(const std::u16string &path, kernel::process *pr, epoc::security_policy &private_policy, epoc::security_policy &sys_policy, epoc::security_policy &resource_policy);
 
     struct fs_server_client : public service::typical_session {
