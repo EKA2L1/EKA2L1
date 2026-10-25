@@ -28,6 +28,7 @@
 #include <clocale>
 #include <cwctype>
 #include <memory>
+#include <string_view>
 
 #include <common/algorithm.h>
 #include <common/cvt.h>
@@ -44,7 +45,6 @@
 #include <utils/err.h>
 
 #include <services/fs/sec.h>
-#include <re2/re2.h>
 
 namespace eka2l1 {
     bool check_path_capabilities_pass(const std::u16string &path, kernel::process *pr, epoc::security_policy &private_policy, epoc::security_policy &sys_policy, epoc::security_policy &resource_policy) {
@@ -643,6 +643,107 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    std::int32_t validate_file_name(const std::u16string &name, const std::u16string &session_path,
+        char16_t &bad_character, file_name_validation_params *params) {
+        const auto invalid = [&](const char16_t character, const file_name_error error = file_name_error::bad_character) {
+            bad_character = character;
+            if (params) {
+                params->error_ = error;
+                const std::size_t pos = (character == u'.') ? name.find(character) : name.rfind(character);
+                params->invalid_char_pos_ = (error == file_name_error::bad_character && pos != std::u16string::npos)
+                    ? static_cast<std::uint32_t>(pos + 1) : 0;
+            }
+            return epoc::error_bad_name;
+        };
+        const auto valid = [&]() {
+            bad_character = 0;
+            if (params) {
+                params->error_ = file_name_error::none;
+                params->invalid_char_pos_ = 0;
+            }
+            return epoc::error_none;
+        };
+
+        if (name.empty()) {
+            return invalid(u' ', file_name_error::bad_name);
+        }
+        const bool use_session_path = !params || params->use_session_path_;
+        if (name.size() + ((params && use_session_path) ? session_path.size() : 0) > 256) {
+            return invalid(u' ', file_name_error::too_long);
+        }
+
+        constexpr std::u16string_view illegal_characters(u"<>:\"/|\0", 7);
+        const std::size_t drive_end = (name.size() >= 2 && name[1] == u':') ? 2 : 0;
+        if (drive_end && !((name[0] >= u'A' && name[0] <= u'Z') || (name[0] >= u'a' && name[0] <= u'z'))) {
+            return invalid(u':');
+        }
+        const std::u16string_view remainder(name.data() + drive_end, name.size() - drive_end);
+        // TParse accepts rooted paths and bare filenames, but not relative directories.
+        if (!remainder.empty() && remainder.front() != u'\\' && remainder.find(u'\\') != std::u16string_view::npos) {
+            const std::size_t pos = name.find_last_of(illegal_characters);
+            return (pos == std::u16string::npos) ? invalid(u' ', file_name_error::bad_name) : invalid(name[pos]);
+        }
+
+        const std::size_t filename_start = name.find_last_of(u'\\');
+        const std::u16string_view filename = std::u16string_view(name).substr(
+            filename_start == std::u16string::npos ? drive_end : filename_start + 1);
+        for (const char16_t wildcard : { u'*', u'?' }) {
+            if (filename.find(wildcard) != std::u16string_view::npos) {
+                return invalid(wildcard);
+            }
+        }
+        for (const char16_t wildcard : { u'?', u'*' }) {
+            if (name.find(wildcard) != std::u16string::npos) {
+                return invalid(wildcard);
+            }
+        }
+
+        std::u16string path = name;
+        if (use_session_path) {
+            const std::size_t first_separator = session_path.find(u'\\');
+            const std::size_t last_separator = session_path.rfind(u'\\');
+            path = drive_end ? name.substr(0, 2) : eka2l1::root_name(session_path, true);
+            if ((remainder.empty() || remainder.front() != u'\\') && first_separator != std::u16string::npos) {
+                path += session_path.substr(first_separator, last_separator - first_separator + 1);
+            }
+            path += remainder;
+        }
+        if (path.size() > 256) {
+            return invalid(u' ', file_name_error::too_long);
+        }
+        std::size_t start = (path.size() >= 2 && path[1] == u':') ? 2 : 0;
+        if (start < path.size() && path[start] == u'\\') {
+            ++start;
+        }
+        // TChar::IsSpace includes separator categories and U+0009..U+000D.
+        constexpr std::u16string_view spaces = u" \t\n\r\f\v\u00a0\u1680\u180e"
+            u"\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000";
+        while (start < path.size()) {
+            const std::size_t separator = path.find(u'\\', start);
+            const std::size_t end = (separator == std::u16string::npos) ? path.size() : separator;
+            if (start == end) {
+                return invalid(u'\\');
+            }
+            const std::u16string_view component(path.data() + start, end - start);
+            const std::size_t last = component.find_last_not_of(spaces);
+            if (last == std::u16string_view::npos) {
+                return invalid(u' ', file_name_error::bad_name);
+            }
+            if (component[last] == u'.') {
+                return invalid(u'.');
+            }
+            const std::size_t pos = component.find_last_of(illegal_characters);
+            if (pos != std::u16string_view::npos) {
+                return invalid(component[pos]);
+            }
+            if (separator == std::u16string::npos) {
+                return valid();
+            }
+            start = separator + 1;
+        }
+        return (params && path.back() == u'\\') ? valid() : invalid(u' ', file_name_error::bad_name);
+    }
+
     void fs_server_client::is_valid_name(service::ipc_context *ctx) {
         std::optional<utf16_str> path = ctx->get_argument_value<utf16_str>(0);
 
@@ -651,12 +752,27 @@ namespace eka2l1 {
             return;
         }
 
-        RE2 pattern("[<>:\"/|*?]+");
-        std::string path_utf8 = common::ucs2_to_utf8(path.value());
-        std::uint32_t valid = !(RE2::PartialMatch(path_utf8, pattern) || path->empty());
+        char16_t bad_character = 0;
+        if (ctx->msg->args.args[3]) {
+            auto params = ctx->get_argument_data_from_descriptor<file_name_validation_params>(3);
+            if (!params) {
+                ctx->complete(epoc::error_argument);
+                return;
+            }
+            const std::int32_t result = validate_file_name(*path, ss_path, bad_character, &*params);
+            ctx->write_data_to_descriptor_argument(3, *params);
+            ctx->complete(result);
+            return;
+        }
 
-        ctx->write_data_to_descriptor_argument<std::uint32_t>(1, valid);
-        ctx->complete(epoc::error_none);
+        const std::int32_t result = validate_file_name(*path, ss_path, bad_character);
+        const auto return_bad_character = ctx->get_argument_data_from_descriptor<std::uint32_t>(1);
+        if (return_bad_character && *return_bad_character) {
+            ctx->write_data_to_descriptor_argument<char16_t>(2, bad_character);
+        }
+
+        // RFs::IsValidName derives its boolean result from the IPC completion code.
+        ctx->complete(result);
     }
 
     void fs_server_client::notify_change(service::ipc_context *ctx) {
