@@ -71,7 +71,6 @@ namespace eka2l1::epoc {
     public:
         surface_id add(const std::shared_ptr<window_surface> &surface);
         std::shared_ptr<window_surface> find(const surface_id &id) const;
-        void remove(const surface_id &id);
     };
 
     struct surface_configuration {

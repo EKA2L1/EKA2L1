@@ -43,10 +43,6 @@ namespace eka2l1::epoc {
         return it == surfaces_.end() ? nullptr : it->second.lock();
     }
 
-    void surface_registry::remove(const surface_id &id) {
-        surfaces_.erase(id);
-    }
-
     window_surface::~window_surface() {
         if (handle_) {
             drivers::graphics_command_builder builder;

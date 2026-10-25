@@ -245,11 +245,6 @@ namespace eka2l1::dispatch {
         }
         surface_created_ = false;
         playback_completed_ = false;
-        if (surface_registry_) {
-            surface_registry_->remove(surface_id_);
-            surface_registry_ = nullptr;
-            surface_id_ = {};
-        }
         surface_.reset();
         custom_stream_.reset();
     }
@@ -318,13 +313,11 @@ namespace eka2l1::dispatch {
         return video_player_->duration();
     }
 
-    epoc::surface_id epoc_video_player::export_surface(const std::shared_ptr<epoc::surface_registry> &registry) {
+    epoc::surface_id epoc_video_player::export_surface(epoc::surface_registry &registry) {
         if (!surface_) {
             surface_ = std::make_shared<epoc::window_surface>();
         }
-        surface_registry_ = registry;
-        surface_id_ = registry->add(surface_);
-        return surface_id_;
+        return registry.add(surface_);
     }
 
     eka2l1::vec2 epoc_video_player::frame_size() const {
@@ -401,7 +394,7 @@ namespace eka2l1::dispatch {
         if (!dispatcher->winserv_ || player->frame_size().x <= 0) {
             return epoc::error_not_ready;
         }
-        *id = player->export_surface(dispatcher->winserv_->surface_registry());
+        *id = player->export_surface(dispatcher->winserv_->surfaces());
         return epoc::error_none;
     }
 
@@ -683,8 +676,8 @@ namespace eka2l1::dispatch {
 
         kern->unlock();
         player->stop();
-        player->set_position(0);
         kern->lock();
+        player->set_position(0);
 
         return epoc::error_none;
     }

@@ -393,7 +393,7 @@ namespace eka2l1 {
         epoc::pointer_cursor_mode cursor_mode_{ epoc::pointer_cursor_mode::fixed };
 
         epoc::bitmap_cache bmp_cache;
-        std::shared_ptr<epoc::surface_registry> surface_registry_ = std::make_shared<epoc::surface_registry>();
+        epoc::surface_registry surface_registry_;
         epoc::animation_scheduler anim_sched;
 
         fbs_server *fbss{ nullptr };
@@ -461,12 +461,8 @@ namespace eka2l1 {
             return ++obj_uid;
         }
 
-        std::shared_ptr<epoc::surface_registry> surface_registry() {
-            return surface_registry_;
-        }
-
         epoc::surface_registry &surfaces() {
-            return *surface_registry_;
+            return surface_registry_;
         }
 
         epoc::bitmap_cache *get_bitmap_cache() {

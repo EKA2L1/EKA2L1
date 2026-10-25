@@ -663,15 +663,15 @@ TEST_CASE("Registered surface IDs survive lookup without retaining producers", "
     REQUIRE(registry.add(surface) == first);
     REQUIRE(registry.find(first) == surface);
 
-    registry.remove(first);
-    REQUIRE_FALSE(registry.find(first));
-    const auto second = registry.add(surface);
-    REQUIRE(second != first);
-    REQUIRE(registry.find(second) == surface);
-
+    epoc::window_surface_attachment window;
+    window.attach(surface, {});
     std::weak_ptr<epoc::window_surface> producer = surface;
     surface.reset();
+    REQUIRE_FALSE(producer.expired());
+    REQUIRE(registry.find(first) == window.surface);
+    REQUIRE(registry.add(window.surface) == first);
+    window.detach(window.surface);
     REQUIRE(producer.expired());
-    REQUIRE_FALSE(registry.find(second));
+    REQUIRE_FALSE(registry.find(first));
     REQUIRE_FALSE(registry.find(epoc::surface_id{}));
 }

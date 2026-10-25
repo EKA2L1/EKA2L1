@@ -1181,7 +1181,8 @@ namespace eka2l1::epoc {
             }
             guest_surface_configuration config{};
             const auto config_size = *static_cast<const std::uint32_t *>(cmd.data_ptr);
-            if ((config_size != 56 && config_size < sizeof(config)) || cmd.header.cmd_len < config_size) {
+            if ((config_size != 56 && config_size < sizeof(config))
+                || cmd.header.cmd_len < std::min<std::uint32_t>(config_size, sizeof(config))) {
                 ctx.complete(epoc::error_argument);
                 break;
             }
@@ -1227,7 +1228,9 @@ namespace eka2l1::epoc {
                 ctx.complete(epoc::error_argument);
                 break;
             }
-            const bool redraw = *reinterpret_cast<const std::int32_t *>(static_cast<const std::uint8_t *>(cmd.data_ptr) + config_size) != 0;
+            // The wire object can be larger than its negotiated Size() field.
+            const auto redraw_offset = cmd.header.cmd_len - sizeof(std::int32_t);
+            const bool redraw = *reinterpret_cast<const std::int32_t *>(static_cast<const std::uint8_t *>(cmd.data_ptr) + redraw_offset) != 0;
             const std::lock_guard<std::mutex> guard(scr->screen_mutex);
             background_surface_.attach(surface, placement);
             if (surface_transparent_) {
@@ -1896,6 +1899,7 @@ namespace eka2l1::epoc {
                 client->get_ws().get_graphics_driver()->submit_command_list(commands);
                 surface_ui_ = 0;
             }
+            invalidate(bounding_rect());
             surface_damage();
             ctx.complete(epoc::error_none);
             break;

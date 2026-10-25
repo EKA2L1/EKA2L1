@@ -74,7 +74,6 @@ CVideoPlayerUtility::CBody::~CBody() {
     delete iCompleteIdle;
     iWindowInfos.Close();
 #ifndef MCV_EKA1
-    RemoveSurface();
     iDisplayObservers.Close();
 #endif
     if (iDispatchInstance) {
@@ -145,7 +144,7 @@ void CVideoPlayerUtility::CBody::AddDisplayWindowL(RWsSession &aSession, RWindow
     info.iWindow = &aWindow;
     info.iGeometry.iExtent = aExtent;
     info.iGeometry.iClip = aClipRect;
-    info.iRotation = EVideoRotationNone;
+    info.iRotation = iCurrentRotation;
     info.iScaleWidth = info.iScaleHeight = 100.0f;
     info.iHasScale = EFalse;
     info.iManagedHandle = EVideoPlayerRegisterWindow(0, iDispatchInstance, aSession.Handle(), aWindow.WsHandle());
@@ -176,7 +175,9 @@ void CVideoPlayerUtility::CBody::UpdateDisplayWindowL(const TDisplayWindowInfo &
         TSize size;
         FrameSizeL(size);
         if (!iCropRegion.IsEmpty()) {
-            size = iCropRegion.Size();
+            TRect viewport(TPoint(0, 0), size);
+            viewport.Intersection(iCropRegion);
+            size = viewport.Size();
         }
         if (aInfo.iRotation == EVideoRotationClockwise90 || aInfo.iRotation == EVideoRotationClockwise270) {
             size = TSize(size.iHeight, size.iWidth);
@@ -395,7 +396,8 @@ void CVideoPlayerUtility::CBody::Close() {
     
     Cancel();
 #ifndef MCV_EKA1
-    RemoveSurface();
+    iDisplayObservers.Reset();
+    iSurfaceId = TSurfaceId::CreateNullId();
 #endif
     for (TInt i = 0; i < iWindowInfos.Count(); i++) {
         EVideoPlayerUnregisterWindow(0, iDispatchInstance, iWindowInfos[i].iManagedHandle);
@@ -479,8 +481,15 @@ TInt CVideoPlayerUtility::CBody::AudioBitRate() {
 }
 
 void CVideoPlayerUtility::CBody::SetRotationL(TVideoRotation aRotation) {
+    if (aRotation < EVideoRotationNone || aRotation > EVideoRotationClockwise270) {
+        User::Leave(KErrArgument);
+    }
     User::LeaveIfError(EVideoPlayerSetRotation(0, iDispatchInstance, (TInt)aRotation));
     iCurrentRotation = aRotation;
+    for (TInt i = 0; i < iWindowInfos.Count(); i++) {
+        iWindowInfos[i].iRotation = aRotation;
+        UpdateDisplayWindowL(iWindowInfos[i]);
+    }
 }
 
 TVideoRotation CVideoPlayerUtility::CBody::Rotation() const {
@@ -731,6 +740,11 @@ EXPORT_C void CVideoPlayerUtility::GetCropRegionL(TRect& aCropRegion) const {
 void CVideoPlayerUtility::CBody::SetCropRegionL(const TRect &aCrop) {
     User::LeaveIfError(EVideoPlayerSetCropRegion(0, iDispatchInstance, &aCrop));
     iCropRegion = aCrop;
+    for (TInt i = 0; i < iWindowInfos.Count(); i++) {
+        if (iWindowInfos[i].iHasScale) {
+            UpdateDisplayWindowL(iWindowInfos[i]);
+        }
+    }
 }
 
 EXPORT_C TInt CVideoPlayerUtility::NumberOfMetaDataEntriesL() const {
@@ -900,9 +914,7 @@ EXPORT_C void CVideoPlayerUtility2::SetScaleFactorL(const RWindow &aWindow, TRea
 EXPORT_C void CVideoPlayerUtility2::GetScaleFactorL(const RWindow &aWindow, TReal32 &aWidth, TReal32 &aHeight) {
     iBody->GetWindowScaleFactorL(aWindow, aWidth, aHeight);
 }
-#endif
 
-#ifndef MCV_EKA1
 EXPORT_C void CVideoPlayerUtility2::AddDisplayL(RWsSession &aWs, TInt aDisplay, MMMFSurfaceEventHandler &aHandler) {
     iBody->AddDisplayL(aDisplay, aHandler);
 }
@@ -910,9 +922,7 @@ EXPORT_C void CVideoPlayerUtility2::AddDisplayL(RWsSession &aWs, TInt aDisplay, 
 EXPORT_C void CVideoPlayerUtility2::RemoveDisplay(TInt aDisplay) {
     iBody->RemoveDisplay(aDisplay);
 }
-#endif
 
-#ifndef MCV_EKA1
 void CVideoPlayerUtility::CBody::AddDisplayL(TInt aDisplay, MMMFSurfaceEventHandler &aHandler) {
     TSize size;
     FrameSizeL(size);
@@ -932,25 +942,10 @@ void CVideoPlayerUtility::CBody::AddDisplayL(TInt aDisplay, MMMFSurfaceEventHand
 void CVideoPlayerUtility::CBody::RemoveDisplay(TInt aDisplay) {
     for (TInt i = 0; i < iDisplayObservers.Count(); i++) {
         if (iDisplayObservers[i].iDisplay == aDisplay) {
-            MMMFSurfaceEventHandler *handler = iDisplayObservers[i].iHandler;
             iDisplayObservers.Remove(i);
-            if (!iSurfaceId.IsNull()) {
-                handler->MmsehRemoveSurface(iSurfaceId);
-            }
             return;
         }
     }
 }
 
-void CVideoPlayerUtility::CBody::RemoveSurface() {
-    const TSurfaceId surface = iSurfaceId;
-    iSurfaceId = TSurfaceId::CreateNullId();
-    while (iDisplayObservers.Count()) {
-        MMMFSurfaceEventHandler *handler = iDisplayObservers[iDisplayObservers.Count() - 1].iHandler;
-        iDisplayObservers.Remove(iDisplayObservers.Count() - 1);
-        if (!surface.IsNull()) {
-            handler->MmsehRemoveSurface(surface);
-        }
-    }
-}
 #endif

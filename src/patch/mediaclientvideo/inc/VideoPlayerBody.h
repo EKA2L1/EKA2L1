@@ -80,9 +80,6 @@ private:
 
     void ConstructL(RWsSession &aWsSession, RWindowBase &aWindow, const TRect &aWindowRect, const TRect &aClipRect);
     void Construct2L();
-#ifndef MCV_EKA1
-    void RemoveSurface();
-#endif
     TDisplayWindowInfo &DisplayWindowL(const RWindow &aWindow);
     void UpdateDisplayWindowL(const TDisplayWindowInfo &aInfo);
     

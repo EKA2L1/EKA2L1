@@ -57,8 +57,6 @@ namespace eka2l1::dispatch {
         std::shared_ptr<epoc::window_surface> surface_;
         bool surface_created_ = false;
         bool playback_completed_ = false;
-        std::shared_ptr<epoc::surface_registry> surface_registry_;
-        epoc::surface_id surface_id_{};
         bool legacy_display_;
         std::optional<eka2l1::rect> crop_region_;
         drivers::video_player_instance video_player_;
@@ -108,7 +106,7 @@ namespace eka2l1::dispatch {
         void set_position(std::uint64_t position);
         std::uint64_t duration() const;
         eka2l1::vec2 frame_size() const;
-        epoc::surface_id export_surface(const std::shared_ptr<epoc::surface_registry> &registry);
+        epoc::surface_id export_surface(epoc::surface_registry &registry);
 
         bool set_done_notify(epoc::notify_info &info);
         void cancel_done_notify();
