@@ -123,3 +123,15 @@ EVideoPlayerCreateForVersion:
 
 EVideoPlayerSetCropRegion:
 	CallHleDispatch 0x99
+
+.global EVideoPlayerGetFrameSize
+EVideoPlayerGetFrameSize:
+    CallHleDispatch 0x9A
+
+.global EVideoPlayerSetWindowRotation
+EVideoPlayerSetWindowRotation:
+    CallHleDispatch 0x9B
+
+.global EVideoPlayerGetSurfaceId
+EVideoPlayerGetSurfaceId:
+    CallHleDispatch 0x9C

@@ -64,12 +64,18 @@ CVideoPlayerUtility::CBody::CBody(MVideoPlayerUtilityObserver &aObserver, TInt a
         , iCurrentRotation(EVideoRotationNone)
         , iCompleteIdle(NULL)
         , iVersion(aVersion) {
+#ifndef MCV_EKA1
+    iSurfaceId = TSurfaceId::CreateNullId();
+#endif
 }
 
 CVideoPlayerUtility::CBody::~CBody() {
     Cancel();
     delete iCompleteIdle;
     iWindowInfos.Close();
+#ifndef MCV_EKA1
+    iDisplayObservers.Close();
+#endif
     if (iDispatchInstance) {
         EVideoPlayerDestroy(0, iDispatchInstance);
     }
@@ -138,6 +144,9 @@ void CVideoPlayerUtility::CBody::AddDisplayWindowL(RWsSession &aSession, RWindow
     info.iWindow = &aWindow;
     info.iGeometry.iExtent = aExtent;
     info.iGeometry.iClip = aClipRect;
+    info.iRotation = iCurrentRotation;
+    info.iScaleWidth = info.iScaleHeight = 100.0f;
+    info.iHasScale = EFalse;
     info.iManagedHandle = EVideoPlayerRegisterWindow(0, iDispatchInstance, aSession.Handle(), aWindow.WsHandle());
     User::LeaveIfError(info.iManagedHandle);
     TInt error = EVideoPlayerSetGeometry(0, iDispatchInstance, info.iManagedHandle, &info.iGeometry);
@@ -150,33 +159,103 @@ void CVideoPlayerUtility::CBody::AddDisplayWindowL(RWsSession &aSession, RWindow
     }
 }
 
-void CVideoPlayerUtility::CBody::SetDisplayRectForWindowL(const RWindow &aWindow, const TRect &aClipRect) {
-    if (iVersion < 2) {
-        User::Leave(KErrNotSupported);
-    }
+CVideoPlayerUtility::CBody::TDisplayWindowInfo &CVideoPlayerUtility::CBody::DisplayWindowL(const RWindow &aWindow) {
     for (TInt i = 0; i < iWindowInfos.Count(); i++) {
         if (iWindowInfos[i].iWindow == &aWindow) {
-            TVideoWindowGeometry geometry = iWindowInfos[i].iGeometry;
-            geometry.iClip = aClipRect;
-            User::LeaveIfError(EVideoPlayerSetGeometry(0, iDispatchInstance, iWindowInfos[i].iManagedHandle, &geometry));
-            iWindowInfos[i].iGeometry = geometry;
-            return;
+            return iWindowInfos[i];
         }
     }
     User::Leave(KErrNotFound);
+    return iWindowInfos[0];
+}
+
+void CVideoPlayerUtility::CBody::UpdateDisplayWindowL(const TDisplayWindowInfo &aInfo) {
+    TVideoWindowGeometry geometry = aInfo.iGeometry;
+    if (aInfo.iHasScale) {
+        TSize size;
+        FrameSizeL(size);
+        if (!iCropRegion.IsEmpty()) {
+            TRect viewport(TPoint(0, 0), size);
+            viewport.Intersection(iCropRegion);
+            size = viewport.Size();
+        }
+        if (aInfo.iRotation == EVideoRotationClockwise90 || aInfo.iRotation == EVideoRotationClockwise270) {
+            size = TSize(size.iHeight, size.iWidth);
+        }
+        const TReal width = size.iWidth * static_cast<TReal>(aInfo.iScaleWidth) / 100.0;
+        const TReal height = size.iHeight * static_cast<TReal>(aInfo.iScaleHeight) / 100.0;
+        if (!(width > 0.0 && width < KMaxTInt && height > 0.0 && height < KMaxTInt)) {
+            User::Leave(KErrArgument);
+        }
+        const TPoint center = geometry.iExtent.Center();
+        const TSize scaled(static_cast<TInt>(width), static_cast<TInt>(height));
+        geometry.iExtent = TRect(TPoint(center.iX - scaled.iWidth / 2, center.iY - scaled.iHeight / 2), scaled);
+        geometry.iClip.Intersection(aInfo.iGeometry.iExtent);
+    }
+    User::LeaveIfError(EVideoPlayerSetGeometry(0, iDispatchInstance, aInfo.iManagedHandle, &geometry));
+}
+
+void CVideoPlayerUtility::CBody::SetDisplayRectForWindowL(const RWindow &aWindow, const TRect &aClipRect) {
+    TDisplayWindowInfo &info = DisplayWindowL(aWindow);
+    const TRect previous = info.iGeometry.iClip;
+    info.iGeometry.iClip = aClipRect;
+    TRAPD(error, UpdateDisplayWindowL(info));
+    if (error != KErrNone) {
+        info.iGeometry.iClip = previous;
+        User::Leave(error);
+    }
 }
 
 void CVideoPlayerUtility::CBody::SetVideoExtentL(const RWindow &aWindow, const TRect &aExtent) {
-    for (TInt i = 0; i < iWindowInfos.Count(); i++) {
-        if (iWindowInfos[i].iWindow == &aWindow) {
-            TVideoWindowGeometry geometry = iWindowInfos[i].iGeometry;
-            geometry.iExtent = aExtent;
-            User::LeaveIfError(EVideoPlayerSetGeometry(0, iDispatchInstance, iWindowInfos[i].iManagedHandle, &geometry));
-            iWindowInfos[i].iGeometry = geometry;
-            return;
-        }
+    TDisplayWindowInfo &info = DisplayWindowL(aWindow);
+    const TRect previous = info.iGeometry.iExtent;
+    info.iGeometry.iExtent = aExtent;
+    TRAPD(error, UpdateDisplayWindowL(info));
+    if (error != KErrNone) {
+        info.iGeometry.iExtent = previous;
+        User::Leave(error);
     }
-    User::Leave(KErrNotFound);
+}
+
+void CVideoPlayerUtility::CBody::SetWindowRotationL(const RWindow &aWindow, TVideoRotation aRotation) {
+    TDisplayWindowInfo &info = DisplayWindowL(aWindow);
+    if (aRotation < EVideoRotationNone || aRotation > EVideoRotationClockwise270) {
+        User::Leave(KErrArgument);
+    }
+    const TVideoRotation previous = info.iRotation;
+    info.iRotation = aRotation;
+    TRAPD(error, UpdateDisplayWindowL(info));
+    if (error != KErrNone) {
+        info.iRotation = previous;
+        User::Leave(error);
+    }
+    User::LeaveIfError(EVideoPlayerSetWindowRotation(0, iDispatchInstance, info.iManagedHandle, aRotation));
+}
+
+TVideoRotation CVideoPlayerUtility::CBody::WindowRotationL(const RWindow &aWindow) {
+    return DisplayWindowL(aWindow).iRotation;
+}
+
+void CVideoPlayerUtility::CBody::SetWindowScaleFactorL(const RWindow &aWindow, TReal32 aWidth, TReal32 aHeight) {
+    TDisplayWindowInfo &info = DisplayWindowL(aWindow);
+    if (!(aWidth > 0.0f && aHeight > 0.0f)) {
+        User::Leave(KErrArgument);
+    }
+    const TDisplayWindowInfo previous = info;
+    info.iScaleWidth = aWidth;
+    info.iScaleHeight = aHeight;
+    info.iHasScale = ETrue;
+    TRAPD(error, UpdateDisplayWindowL(info));
+    if (error != KErrNone) {
+        info = previous;
+        User::Leave(error);
+    }
+}
+
+void CVideoPlayerUtility::CBody::GetWindowScaleFactorL(const RWindow &aWindow, TReal32 &aWidth, TReal32 &aHeight) {
+    const TDisplayWindowInfo &info = DisplayWindowL(aWindow);
+    aWidth = info.iScaleWidth;
+    aHeight = info.iScaleHeight;
 }
 
 void CVideoPlayerUtility::CBody::RemoveDisplayWindow(const RWindow &aWindow) {
@@ -316,6 +395,14 @@ void CVideoPlayerUtility::CBody::Close() {
     }
     
     Cancel();
+#ifndef MCV_EKA1
+    iDisplayObservers.Reset();
+    iSurfaceId = TSurfaceId::CreateNullId();
+#endif
+    for (TInt i = 0; i < iWindowInfos.Count(); i++) {
+        EVideoPlayerUnregisterWindow(0, iDispatchInstance, iWindowInfos[i].iManagedHandle);
+    }
+    iWindowInfos.Reset();
     EVideoPlayerClose(0, iDispatchInstance);
     iFeedbackHandler.Close();
 }
@@ -351,6 +438,10 @@ TInt CVideoPlayerUtility::CBody::Volume() {
 
 TInt CVideoPlayerUtility::CBody::MaxVolume() const {
     return EVideoPlayerMaxVolume(0, iDispatchInstance);
+}
+
+void CVideoPlayerUtility::CBody::FrameSizeL(TSize &aSize) const {
+    User::LeaveIfError(EVideoPlayerGetFrameSize(0, iDispatchInstance, &aSize));
 }
 
 void CVideoPlayerUtility::CBody::SetFpsL(const TReal32 aFps) {
@@ -390,8 +481,15 @@ TInt CVideoPlayerUtility::CBody::AudioBitRate() {
 }
 
 void CVideoPlayerUtility::CBody::SetRotationL(TVideoRotation aRotation) {
+    if (aRotation < EVideoRotationNone || aRotation > EVideoRotationClockwise270) {
+        User::Leave(KErrArgument);
+    }
     User::LeaveIfError(EVideoPlayerSetRotation(0, iDispatchInstance, (TInt)aRotation));
     iCurrentRotation = aRotation;
+    for (TInt i = 0; i < iWindowInfos.Count(); i++) {
+        iWindowInfos[i].iRotation = aRotation;
+        UpdateDisplayWindowL(iWindowInfos[i]);
+    }
 }
 
 TVideoRotation CVideoPlayerUtility::CBody::Rotation() const {
@@ -559,7 +657,7 @@ EXPORT_C void CVideoPlayerUtility::SetVideoFrameRateL(TReal32 aFramesPerSecond) 
 }
 
 EXPORT_C void CVideoPlayerUtility::VideoFrameSizeL(TSize& aSize) const {
-    LogOut(KMcvCat, _L("Video Player's video frame size is not yet implemented!"));
+    iBody->FrameSizeL(aSize);
 }
 
 EXPORT_C const TDesC8& CVideoPlayerUtility::VideoFormatMimeType() const {
@@ -642,6 +740,11 @@ EXPORT_C void CVideoPlayerUtility::GetCropRegionL(TRect& aCropRegion) const {
 void CVideoPlayerUtility::CBody::SetCropRegionL(const TRect &aCrop) {
     User::LeaveIfError(EVideoPlayerSetCropRegion(0, iDispatchInstance, &aCrop));
     iCropRegion = aCrop;
+    for (TInt i = 0; i < iWindowInfos.Count(); i++) {
+        if (iWindowInfos[i].iHasScale) {
+            UpdateDisplayWindowL(iWindowInfos[i]);
+        }
+    }
 }
 
 EXPORT_C TInt CVideoPlayerUtility::NumberOfMetaDataEntriesL() const {
@@ -794,3 +897,55 @@ EXPORT_C void Reserved1() {
 EXPORT_C void Reserved2() {
     
 }
+
+#ifndef MCV_EKA1
+EXPORT_C void CVideoPlayerUtility2::SetRotationL(const RWindow &aWindow, TVideoRotation aRotation) {
+    iBody->SetWindowRotationL(aWindow, aRotation);
+}
+
+EXPORT_C TVideoRotation CVideoPlayerUtility2::RotationL(const RWindow &aWindow) {
+    return iBody->WindowRotationL(aWindow);
+}
+
+EXPORT_C void CVideoPlayerUtility2::SetScaleFactorL(const RWindow &aWindow, TReal32 aWidth, TReal32 aHeight) {
+    iBody->SetWindowScaleFactorL(aWindow, aWidth, aHeight);
+}
+
+EXPORT_C void CVideoPlayerUtility2::GetScaleFactorL(const RWindow &aWindow, TReal32 &aWidth, TReal32 &aHeight) {
+    iBody->GetWindowScaleFactorL(aWindow, aWidth, aHeight);
+}
+
+EXPORT_C void CVideoPlayerUtility2::AddDisplayL(RWsSession &aWs, TInt aDisplay, MMMFSurfaceEventHandler &aHandler) {
+    iBody->AddDisplayL(aDisplay, aHandler);
+}
+
+EXPORT_C void CVideoPlayerUtility2::RemoveDisplay(TInt aDisplay) {
+    iBody->RemoveDisplay(aDisplay);
+}
+
+void CVideoPlayerUtility::CBody::AddDisplayL(TInt aDisplay, MMMFSurfaceEventHandler &aHandler) {
+    TSize size;
+    FrameSizeL(size);
+    for (TInt i = 0; i < iDisplayObservers.Count(); i++) {
+        if (iDisplayObservers[i].iDisplay == aDisplay) {
+            User::Leave(KErrInUse);
+        }
+    }
+    User::LeaveIfError(EVideoPlayerGetSurfaceId(0, iDispatchInstance, iSurfaceId.iInternal));
+    TDisplayObserver observer;
+    observer.iDisplay = aDisplay;
+    observer.iHandler = &aHandler;
+    User::LeaveIfError(iDisplayObservers.Append(observer));
+    aHandler.MmsehSurfaceCreated(aDisplay, iSurfaceId, TRect(TPoint(0, 0), size), TVideoAspectRatio(1, 1));
+}
+
+void CVideoPlayerUtility::CBody::RemoveDisplay(TInt aDisplay) {
+    for (TInt i = 0; i < iDisplayObservers.Count(); i++) {
+        if (iDisplayObservers[i].iDisplay == aDisplay) {
+            iDisplayObservers.Remove(i);
+            return;
+        }
+    }
+}
+
+#endif

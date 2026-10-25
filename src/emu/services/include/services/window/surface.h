@@ -14,6 +14,8 @@
 #include <drivers/graphics/common.h>
 
 #include <atomic>
+#include <array>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <optional>
@@ -58,6 +60,17 @@ namespace eka2l1::epoc {
         bool streaming() const { return streaming_.load(); }
         void set_streaming(bool streaming) { streaming_ = streaming; }
         const eka2l1::vec2 &size() const { return size_; }
+    };
+
+    using surface_id = std::array<std::uint32_t, 4>;
+
+    class surface_registry {
+        std::map<surface_id, std::weak_ptr<window_surface>> surfaces_;
+        std::uint64_t next_id_ = 1;
+
+    public:
+        surface_id add(const std::shared_ptr<window_surface> &surface);
+        std::shared_ptr<window_surface> find(const surface_id &id) const;
     };
 
     struct surface_configuration {

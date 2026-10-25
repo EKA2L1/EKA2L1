@@ -997,7 +997,9 @@ namespace eka2l1::epoc {
                         // The region that window can render is the region intersects with the current available left region
                         // Eliminating the intersected region that is reserved for this window, we got the next region left to go on.
                         winuser->visible_region = winuser->visible_region.intersect(visible_left_region_);
-                        visible_left_region_.eliminate(winuser->visible_region);
+                        if (!winuser->is_translucent()) {
+                            visible_left_region_.eliminate(winuser->visible_region);
+                        }
                     }
                 }
 

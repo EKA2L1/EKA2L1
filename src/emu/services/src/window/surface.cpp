@@ -16,6 +16,33 @@
 #include <limits>
 
 namespace eka2l1::epoc {
+    surface_id surface_registry::add(const std::shared_ptr<window_surface> &surface) {
+        if (!surface) {
+            return {};
+        }
+        for (auto it = surfaces_.begin(); it != surfaces_.end();) {
+            auto existing = it->second.lock();
+            if (existing == surface) {
+                return it->first;
+            }
+            if (!existing) {
+                it = surfaces_.erase(it);
+            } else {
+                ++it;
+            }
+        }
+        const std::uint64_t value = next_id_++;
+        // TSurfaceId types from 33 onward belong to the graphics adaptation.
+        const surface_id id{ static_cast<std::uint32_t>(value), static_cast<std::uint32_t>(value >> 32), 0, 33u << 24 };
+        surfaces_[id] = surface;
+        return id;
+    }
+
+    std::shared_ptr<window_surface> surface_registry::find(const surface_id &id) const {
+        const auto it = surfaces_.find(id);
+        return it == surfaces_.end() ? nullptr : it->second.lock();
+    }
+
     window_surface::~window_surface() {
         if (handle_) {
             drivers::graphics_command_builder builder;

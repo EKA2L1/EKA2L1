@@ -81,6 +81,7 @@ namespace eka2l1::epoc {
 
         bool resize_needed;
         bool clear_color_enable;
+        bool surface_transparent_ = false;
 
         common::roundabout attached_contexts;
 
@@ -165,6 +166,7 @@ namespace eka2l1::epoc {
         void report_visiblity_change(const bool forced = false);
 
         bool is_visible() const;
+        bool is_translucent() const;
         bool can_be_physically_seen() const;
 
         bool is_faded() const {

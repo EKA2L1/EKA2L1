@@ -48,6 +48,7 @@
 #include <services/window/protocol.h>
 #include <services/window/scheduler.h>
 #include <services/window/screen.h>
+#include <services/window/surface.h>
 
 #include <kernel/server.h>
 #include <mem/ptr.h>
@@ -392,6 +393,7 @@ namespace eka2l1 {
         epoc::pointer_cursor_mode cursor_mode_{ epoc::pointer_cursor_mode::fixed };
 
         epoc::bitmap_cache bmp_cache;
+        epoc::surface_registry surface_registry_;
         epoc::animation_scheduler anim_sched;
 
         fbs_server *fbss{ nullptr };
@@ -457,6 +459,10 @@ namespace eka2l1 {
 
         epoc::ws::uid next_uid() {
             return ++obj_uid;
+        }
+
+        epoc::surface_registry &surfaces() {
+            return surface_registry_;
         }
 
         epoc::bitmap_cache *get_bitmap_cache() {
