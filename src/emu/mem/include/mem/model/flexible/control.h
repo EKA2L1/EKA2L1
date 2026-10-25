@@ -43,7 +43,6 @@ namespace eka2l1::mem::flexible {
 
         linear_section rom_sec_; ///< ROM linear section.
         linear_section kernel_mapping_sec_; ///< Kernel mapping linear section.
-        linear_section code_sec_; ///< Code section.
 
         std::vector<std::unique_ptr<mmu_flexible>> mmus_;
 
