@@ -46,9 +46,21 @@ private:
         const RWindowBase *iWindow;
         TInt iManagedHandle;
         TVideoWindowGeometry iGeometry;
+        TVideoRotation iRotation;
+        TReal32 iScaleWidth;
+        TReal32 iScaleHeight;
+        TBool iHasScale;
     };
 
     RArray<TDisplayWindowInfo> iWindowInfos;
+#ifndef MCV_EKA1
+    struct TDisplayObserver {
+        TInt iDisplay;
+        MMMFSurfaceEventHandler *iHandler;
+    };
+    RArray<TDisplayObserver> iDisplayObservers;
+    TSurfaceId iSurfaceId;
+#endif
     RWindowBase *iActiveWindow;
     TInt iActiveWindowHandle;
     TRect iActiveClipRect;
@@ -68,6 +80,11 @@ private:
 
     void ConstructL(RWsSession &aWsSession, RWindowBase &aWindow, const TRect &aWindowRect, const TRect &aClipRect);
     void Construct2L();
+#ifndef MCV_EKA1
+    void RemoveSurface();
+#endif
+    TDisplayWindowInfo &DisplayWindowL(const RWindow &aWindow);
+    void UpdateDisplayWindowL(const TDisplayWindowInfo &aInfo);
     
 public:
     static CBody *NewL(MVideoPlayerUtilityObserver &aObserver, RWsSession &aWsSession, RWindowBase &aWindow, const TRect &aWindowRect, const TRect &aClipRect);
@@ -75,6 +92,14 @@ public:
 
     ~CBody();
 
+#ifndef MCV_EKA1
+    void AddDisplayL(TInt aDisplay, MMMFSurfaceEventHandler &aHandler);
+    void RemoveDisplay(TInt aDisplay);
+#endif
+    void SetWindowRotationL(const RWindow &aWindow, TVideoRotation aRotation);
+    TVideoRotation WindowRotationL(const RWindow &aWindow);
+    void SetWindowScaleFactorL(const RWindow &aWindow, TReal32 aWidth, TReal32 aHeight);
+    void GetWindowScaleFactorL(const RWindow &aWindow, TReal32 &aWidth, TReal32 &aHeight);
     void SetOwnedWindowL(RWsSession &aSession, RWindowBase &aWindow);
     void SetDisplayRectL(const TRect &aWindowRect, const TRect &aClipRect);
     void AddDisplayWindowL(RWsSession &aSession, RWindowBase &aWindow, const TRect &aExtent, const TRect &aClipRect);
@@ -98,6 +123,7 @@ public:
     TTimeIntervalMicroSeconds PositionL() const;
     TTimeIntervalMicroSeconds DurationL() const;
     
+    void FrameSizeL(TSize &aSize) const;
     void SetFpsL(const TReal32 aFps);
     TReal32 Fps();
     

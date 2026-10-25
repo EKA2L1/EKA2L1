@@ -156,6 +156,9 @@ namespace eka2l1::epoc {
 
     void canvas_base::attach_surface(const std::shared_ptr<window_surface> &surface, const surface_configuration &config, bool direct) {
         (direct ? direct_surface_ : background_surface_).attach(surface, config);
+        if (surface_transparent_ && !direct) {
+            scr->need_update_visible_regions(true);
+        }
         surface_damage();
     }
 
@@ -163,6 +166,9 @@ namespace eka2l1::epoc {
         const bool detached_background = background_surface_.detach(surface);
         const bool detached_direct = direct_surface_.detach(surface);
         if (detached_background || detached_direct) {
+            if (surface_transparent_ && detached_background) {
+                scr->need_update_visible_regions(true);
+            }
             surface_damage();
         }
     }
@@ -211,12 +217,19 @@ namespace eka2l1::epoc {
             return false;
         }
 
-        builder.set_feature(drivers::graphics_feature::blend, false);
+        const bool blend = surface_transparent_ && (&attachment == &background_surface_);
+        builder.set_feature(drivers::graphics_feature::blend, blend);
+        if (blend) {
+            builder.blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
+                drivers::blend_factor::one, drivers::blend_factor::one_minus_frag_out_alpha,
+                drivers::blend_factor::one, drivers::blend_factor::one_minus_frag_out_alpha);
+        }
         builder.set_feature(drivers::graphics_feature::depth_test, false);
         builder.clip_bitmap_region(clip, scr->display_scale_factor);
         builder.set_texture_filter(handle, false, drivers::filter_option::linear);
         builder.set_texture_filter(handle, true, drivers::filter_option::linear);
         builder.draw_bitmap(handle, 0, placement.destination, placement.source, { 0, 0 }, static_cast<float>(placement.rotation));
+        builder.set_feature(drivers::graphics_feature::blend, false);
         return true;
     }
 
@@ -326,6 +339,10 @@ namespace eka2l1::epoc {
         }
 
         pending_segment_->add_command(command);
+    }
+
+    bool canvas_base::is_translucent() const {
+        return (flags & flags_enable_alpha) || (surface_transparent_ && background_surface_.surface);
     }
 
     bool canvas_base::can_be_physically_seen() const {
@@ -654,6 +671,8 @@ namespace eka2l1::epoc {
 
     void canvas_base::set_transparency_alpha_channel(service::ipc_context &context, ws_cmd &cmd) {
         flags |= flags_enable_alpha;
+        scr->need_update_visible_regions(true);
+        surface_damage();
         LOG_TRACE(SERVICE_WINDOW, "Enable alpha for window {}", id);
         context.complete(epoc::error_none);
     }
@@ -1108,7 +1127,130 @@ namespace eka2l1::epoc {
             fix_native_orientation(ctx, cmd);
             break;
 
+        case EWsWinOpSetBackgroundSurface: {
+            if (cmd.header.cmd_len < sizeof(surface_id)) {
+                ctx.complete(epoc::error_argument);
+                break;
+            }
+            const auto id = *static_cast<const surface_id *>(cmd.data_ptr);
+            auto surface = client->get_ws().surfaces().find(id);
+            if (!surface) {
+                ctx.complete(epoc::error_not_found);
+                break;
+            }
+            const std::lock_guard<std::mutex> guard(scr->screen_mutex);
+            attach_surface(surface, surface_configuration{});
+            ctx.complete(epoc::error_none);
+            break;
+        }
+
+        case EWsWinOpRemoveBackgroundSurface: {
+            if (cmd.header.cmd_len < sizeof(std::int32_t)) {
+                ctx.complete(epoc::error_argument);
+                break;
+            }
+            const bool redraw = *static_cast<const std::int32_t *>(cmd.data_ptr) != 0;
+            const std::lock_guard<std::mutex> guard(scr->screen_mutex);
+            if (background_surface_.surface) {
+                background_surface_.detach(background_surface_.surface);
+                if (surface_transparent_) {
+                    scr->need_update_visible_regions(true);
+                }
+                if (redraw) {
+                    surface_damage();
+                }
+            }
+            ctx.complete(epoc::error_none);
+            break;
+        }
+
+        case EWsWinOpGetBackgroundSurfaceConfig:
+        case EWsWinOpSetBackgroundSurfaceConfig: {
+            struct guest_surface_configuration {
+                std::uint32_t size;
+                surface_id id;
+                std::int32_t orientation;
+                eka2l1::rect extent;
+                eka2l1::rect viewport;
+                std::uint32_t flip;
+            };
+            static_assert(sizeof(guest_surface_configuration) == 60);
+            if (cmd.header.cmd_len < sizeof(std::uint32_t)) {
+                ctx.complete(epoc::error_argument);
+                break;
+            }
+            guest_surface_configuration config{};
+            const auto config_size = *static_cast<const std::uint32_t *>(cmd.data_ptr);
+            if ((config_size != 56 && config_size < sizeof(config)) || cmd.header.cmd_len < config_size) {
+                ctx.complete(epoc::error_argument);
+                break;
+            }
+            if (cmd.header.op == EWsWinOpGetBackgroundSurfaceConfig) {
+                const std::lock_guard<std::mutex> guard(scr->screen_mutex);
+                auto surface = background_surface_.surface;
+                if (!surface) {
+                    ctx.complete(epoc::error_not_found);
+                    break;
+                }
+                config.size = std::min<std::uint32_t>(config_size, sizeof(config));
+                config.id = client->get_ws().surfaces().add(surface);
+                config.orientation = ((-background_surface_.config.rotation / 90) % 4 + 4) % 4;
+                config.extent = background_surface_.config.extent.value_or(eka2l1::rect({ 0, 0 }, size()));
+                config.viewport = background_surface_.config.viewport.value_or(eka2l1::rect({ 0, 0 }, surface->size()));
+                config.extent.transform_to_symbian_rectangle();
+                config.viewport.transform_to_symbian_rectangle();
+                ctx.write_data_to_descriptor_argument(reply_slot, reinterpret_cast<const std::uint8_t *>(&config), config.size);
+                ctx.complete(epoc::error_none);
+                break;
+            }
+            std::memcpy(&config, cmd.data_ptr, std::min<std::uint32_t>(config_size, sizeof(config)));
+            auto surface = client->get_ws().surfaces().find(config.id);
+            if (!surface || config.orientation < 0 || config.orientation > 3) {
+                ctx.complete(surface ? epoc::error_argument : epoc::error_not_found);
+                break;
+            }
+            if (config.flip) {
+                ctx.complete(epoc::error_not_supported);
+                break;
+            }
+            config.extent.transform_from_symbian_rectangle();
+            config.viewport.transform_from_symbian_rectangle();
+            surface_configuration placement;
+            placement.rotation = (4 - config.orientation) % 4 * 90;
+            if (!config.extent.empty()) {
+                placement.extent = config.extent;
+            }
+            if (!config.viewport.empty()) {
+                placement.viewport = config.viewport;
+            }
+            if (cmd.header.cmd_len < config_size + sizeof(std::int32_t)) {
+                ctx.complete(epoc::error_argument);
+                break;
+            }
+            const bool redraw = *reinterpret_cast<const std::int32_t *>(static_cast<const std::uint8_t *>(cmd.data_ptr) + config_size) != 0;
+            const std::lock_guard<std::mutex> guard(scr->screen_mutex);
+            background_surface_.attach(surface, placement);
+            if (surface_transparent_) {
+                scr->need_update_visible_regions(true);
+            }
+            if (redraw) {
+                surface_damage();
+            }
+            ctx.complete(epoc::error_none);
+            break;
+        }
+
         case EWsWinOpSetSurfaceTransparency:
+            if (cmd.header.cmd_len < sizeof(std::int32_t)) {
+                ctx.complete(epoc::error_argument);
+                break;
+            }
+            surface_transparent_ = *static_cast<const std::int32_t *>(cmd.data_ptr) != 0;
+            scr->need_update_visible_regions(true);
+            surface_damage();
+            ctx.complete(epoc::error_none);
+            break;
+
         case EWsWinOpSendEffectCommand:
             ctx.complete(epoc::error_none);
             break;
@@ -1299,7 +1441,7 @@ namespace eka2l1::epoc {
         update_surface_ui(builder);
         builder.set_feature(drivers::graphics_feature::blend, false);
         builder.clip_bitmap_region(visible_region, scr->display_scale_factor);
-        if (clear_color_enable) {
+        if (clear_color_enable && !(surface_transparent_ && background_surface_.surface)) {
             auto color = common::rgba_to_vec(clear_color);
             if (!is_display_mode_alpha(display_mode())) {
                 color.w = 255;
@@ -1742,6 +1884,22 @@ namespace eka2l1::epoc {
         case EWsWinOpStoreDrawCommands:
             store_draw_commands(ctx, cmd);
             break;
+
+        case EWsWinOpClearRedrawStore: {
+            const std::lock_guard<std::mutex> guard(scr->screen_mutex);
+            redraw_segments_ = gdi_store_command_collection();
+            pending_segment_.reset();
+            if (surface_ui_) {
+                drivers::graphics_command_builder cleanup;
+                cleanup.destroy_bitmap(surface_ui_);
+                auto commands = cleanup.retrieve_command_list();
+                client->get_ws().get_graphics_driver()->submit_command_list(commands);
+                surface_ui_ = 0;
+            }
+            surface_damage();
+            ctx.complete(epoc::error_none);
+            break;
+        }
 
         default:
             LOG_WARN(SERVICE_WINDOW, "Unimplemented redraw canvas opcode 0x{:X}!", cmd.header.op);

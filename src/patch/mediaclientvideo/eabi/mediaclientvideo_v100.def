@@ -141,12 +141,12 @@ EXPORTS
 	_ZN20CVideoPlayerUtility24NewLER27MVideoPlayerUtilityObserverii @ 140 NONAME
 	_ZTI20CVideoPlayerUtility2 @ 141 NONAME
 	_ZTV20CVideoPlayerUtility2 @ 142 NONAME
-	_ZN20CVideoPlayerUtility212SetRotationLERK7RWindow14TVideoRotation @ 143 NONAME ABSENT
+	_ZN20CVideoPlayerUtility212SetRotationLERK7RWindow14TVideoRotation @ 143 NONAME
 	_ZN20CVideoPlayerUtility213SetAutoScaleLERK7RWindow14TAutoScaleType @ 144 NONAME ABSENT
 	_ZN20CVideoPlayerUtility213SetAutoScaleLERK7RWindow14TAutoScaleTypeii @ 145 NONAME ABSENT
-	_ZN20CVideoPlayerUtility215GetScaleFactorLERK7RWindowRfS3_ @ 146 NONAME ABSENT
-	_ZN20CVideoPlayerUtility215SetScaleFactorLERK7RWindowff @ 147 NONAME ABSENT
-	_ZN20CVideoPlayerUtility29RotationLERK7RWindow @ 148 NONAME ABSENT
+	_ZN20CVideoPlayerUtility215GetScaleFactorLERK7RWindowRfS3_ @ 146 NONAME
+	_ZN20CVideoPlayerUtility215SetScaleFactorLERK7RWindowff @ 147 NONAME
+	_ZN20CVideoPlayerUtility29RotationLERK7RWindow @ 148 NONAME
 	_ZN20CVideoPlayerUtility214RedrawSubtitleER7RWindowRK5TRect @ 149 NONAME ABSENT
 	_ZN20CVideoPlayerUtility216DisableSubtitlesEv @ 150 NONAME ABSENT
 	_ZN20CVideoPlayerUtility216EnableSubtitlesLEv @ 151 NONAME ABSENT
@@ -154,8 +154,8 @@ EXPORTS
 	_ZN20CVideoPlayerUtility218SubtitlesAvailableEv @ 153 NONAME ABSENT
 	_ZN20CVideoPlayerUtility220SetSubtitleLanguageLE9TLanguage @ 154 NONAME ABSENT
 	_ZN20CVideoPlayerUtility227SupportedSubtitleLanguagesLEv @ 155 NONAME ABSENT
-	_ZN20CVideoPlayerUtility211AddDisplayLER10RWsSessioniR23MMMFSurfaceEventHandler @ 156 NONAME ABSENT
-	_ZN20CVideoPlayerUtility213RemoveDisplayEi @ 157 NONAME ABSENT
+	_ZN20CVideoPlayerUtility211AddDisplayLER10RWsSessioniR23MMMFSurfaceEventHandler @ 156 NONAME
+	_ZN20CVideoPlayerUtility213RemoveDisplayEi @ 157 NONAME
 	_ZN19CVideoPlayerUtility28SetExternalDisplaySwitchingLEii @ 158 NONAME ABSENT
 	_ZN20CVideoPlayerUtility228SetExternalDisplaySwitchingLEii @ 159 NONAME ABSENT
 	_ZN38CExtDisplayConnectionProviderInterfaceC2Ev @ 160 NONAME ABSENT

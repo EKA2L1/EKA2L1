@@ -43,6 +43,9 @@ HLE_DISPATCH_FUNC(TInt, EVideoPlayerPlay, TAny *aInstance, const TTimeIntervalMi
 HLE_DISPATCH_FUNC(TInt, EVideoPlayerPause, TAny *aInstance);
 HLE_DISPATCH_FUNC(TInt, EVideoPlayerStop, TAny *aInstance);
 HLE_DISPATCH_FUNC(TInt, EVideoPlayerDestroy, TAny *aInstance);
+HLE_DISPATCH_FUNC(TInt, EVideoPlayerSetWindowRotation, TAny *aInstance, TInt aManagedWindowHandle, TInt aRotation);
+HLE_DISPATCH_FUNC(TInt, EVideoPlayerGetSurfaceId, TAny *aInstance, TUint32 *aId);
+HLE_DISPATCH_FUNC(TInt, EVideoPlayerGetFrameSize, TAny *aInstance, TSize *aSize);
 HLE_DISPATCH_FUNC(TInt, EVideoPlayerGetVideoFps, TAny *aInstance, TReal32 *aFps);
 HLE_DISPATCH_FUNC(TInt, EVideoPlayerSetVideoFps, TAny *aInstance, const TReal32 *aFps);
 HLE_DISPATCH_FUNC(TInt, EVideoPlayerGetBitrate, TAny *aInstance, TBool aIsAudio);

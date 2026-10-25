@@ -2,6 +2,7 @@
 #define __VIDEOPLAYER_H__
 
 #include <w32std.h>
+#include "VideoSurface.h"
 #include <fbs.h>
 #include <f32file.h>
 #include <mmf/common/mmfbase.h>
@@ -32,6 +33,7 @@ public:
 
 class CMMFVideoPlayerCallback;
 class CVideoPlayerUtility2;
+class MMMFSurfaceEventHandler;
 class TVideoPlayRateCapabilities;
 
 class CVideoPlayerUtility : public CBase, public MMMFClientUtility {
@@ -195,6 +197,8 @@ private:
 
 class CVideoPlayerUtility2 : public CVideoPlayerUtility {
 public:
+    EXPORT_C void AddDisplayL(RWsSession &aWs, TInt aDisplay, MMMFSurfaceEventHandler &aHandler);
+    EXPORT_C void RemoveDisplay(TInt aDisplay);
 	~CVideoPlayerUtility2();
 
 	EXPORT_C static CVideoPlayerUtility2* NewL(MVideoPlayerUtilityObserver& aObserver,
