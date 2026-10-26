@@ -25,12 +25,16 @@ EXPORT_C TInt CCamera::CamerasAvailable() {
     return ECamGetNumberOfCameras(0);
 }
 
+#ifdef EKA2
 EXPORT_C TInt CCamera::CameraVersion() {
     return 0;
 }
+#endif
 
+#ifdef EKA2
 EXPORT_C CCamera::CCamera() {
 }
+#endif
 
 CCameraPlugin::CCameraPlugin(MCameraObserver *aObserver) 
     : CCamera()
@@ -42,6 +46,7 @@ CCameraPlugin::CCameraPlugin(MCameraObserver *aObserver)
     , iJpegQuality(1) {
 }
 
+#ifdef EKA2
 CCameraPlugin::CCameraPlugin(MCameraObserver2 *aObserver) 
     : CCamera()
     , iDispatchInstance(NULL)
@@ -51,6 +56,7 @@ CCameraPlugin::CCameraPlugin(MCameraObserver2 *aObserver)
     , iVideoCaptureSizeIndex(-1)
     , iJpegQuality(1) {
 }
+#endif
 
 CCameraPlugin::~CCameraPlugin() {
     delete iEventCompleteIdle;
@@ -95,28 +101,34 @@ void CCameraPlugin::HandleReserveCompleteV1(TInt aError) {
     observer->ReserveComplete(aError);
 }
 
+#ifdef EKA2
 void CCameraPlugin::HandleReserveCompleteV2(TInt aError) {
     TECAMEvent reserveEvent(KUidECamEventReserveComplete, aError);
     MCameraObserver2 *observer = (MCameraObserver2*)iObserver;
     observer->HandleEvent(reserveEvent);
 }
+#endif
 
 void CCameraPlugin::HandlePowerOnCompleteV1(TInt aError) {
     MCameraObserver *observer = (MCameraObserver*)iObserver;
     observer->PowerOnComplete(aError);
 }
 
+#ifdef EKA2
 void CCameraPlugin::HandlePowerOnCompleteV2(TInt aError) {
     TECAMEvent reserveEvent(KUidECamEventPowerOnComplete, aError);
     MCameraObserver2 *observer = (MCameraObserver2*)iObserver;
     observer->HandleEvent(reserveEvent);
 }
+#endif
 
 void CCameraPlugin::HandleReserveComplete(TInt aError) {
     if (iVersion == 1) {
         HandleReserveCompleteV1(aError);
+#ifdef EKA2
     } else {
         HandleReserveCompleteV2(aError);
+#endif
     }
 }
 
@@ -124,8 +136,10 @@ void CCameraPlugin::HandlePowerOnComplete(TInt aError) {
     LogOut(KCameraCat, _L("Power on active object!"));
     if (iVersion == 1) {
         HandlePowerOnCompleteV1(aError);
+#ifdef EKA2
     } else {
         HandlePowerOnCompleteV2(aError);
+#endif
     }
 }
 
@@ -248,24 +262,33 @@ TAny* CCameraPlugin::CustomInterface(TUid aInterface) {
     return NULL;
 }
 
+#ifdef EKA2
 EXPORT_C TECAMEvent::TECAMEvent(TUid aEventType, TInt aErrorCode)
     : iEventType(aEventType)
     , iErrorCode(aErrorCode) {
 }
+#endif
 
+#ifdef EKA2
 EXPORT_C TECAMEvent::TECAMEvent() {
 }
+#endif
 
+#ifdef EKA2
 EXPORT_C TECAMEvent2::TECAMEvent2(TUid aEventType, TInt aErrorCode, TInt aParam)
     : TECAMEvent(aEventType, aErrorCode)
     , iEventClassUsed(KUidECamEventClass2)
     , iParam(aParam) {	
 }
+#endif
 
+#ifdef EKA2
 EXPORT_C const TUid& TECAMEvent2::EventClassUsed() const {
     return iEventClassUsed;
 }
+#endif
 
+#ifdef EKA2
 EXPORT_C TBool TECAMEvent2::IsEventEncapsulationValid(const TECAMEvent& aEvent) {
     if ((aEvent.iEventType.iUid >= KECamUidEvent2RangeBegin) && (aEvent.iEventType.iUid <= KECamUidEvent2RangeEnd)) {
         TECAMEvent2 eventv2 = static_cast<const TECAMEvent2&>(aEvent);
@@ -298,7 +321,9 @@ EXPORT_C TBool TECAMEvent2::IsEventEncapsulationValid(const TECAMEvent& aEvent) 
 
     return EFalse;
 }
+#endif
 
+#ifdef EKA2
 EXPORT_C CCamera* CCamera::New2L(MCameraObserver2& aObserver,TInt aCameraIndex,TInt aPriority) {
     CCameraPlugin *camera = new (ELeave) CCameraPlugin(&aObserver);
     CleanupStack::PushL(camera);
@@ -308,10 +333,13 @@ EXPORT_C CCamera* CCamera::New2L(MCameraObserver2& aObserver,TInt aCameraIndex,T
     
     return camera;
 }
+#endif
 
+#ifdef EKA2
 EXPORT_C CCamera* CCamera::NewL(MCameraObserver2& aObserver,TInt aCameraIndex,TInt aPriority) {
     return New2L(aObserver, aCameraIndex, aPriority);
 }
+#endif
 
 EXPORT_C CCamera* CCamera::NewL(MCameraObserver& aObserver,TInt aCameraIndex) {
     CCameraPlugin *camera = new (ELeave) CCameraPlugin(&aObserver);
@@ -323,6 +351,7 @@ EXPORT_C CCamera* CCamera::NewL(MCameraObserver& aObserver,TInt aCameraIndex) {
     return camera;
 }
 
+#ifdef EKA2
 EXPORT_C CCamera* CCamera::NewDuplicate2L(MCameraObserver2& aObserver,TInt aCameraHandle) {
     CCameraPlugin *camera = new (ELeave) CCameraPlugin(&aObserver);
     CleanupStack::PushL(camera);
@@ -332,10 +361,13 @@ EXPORT_C CCamera* CCamera::NewDuplicate2L(MCameraObserver2& aObserver,TInt aCame
     
     return camera;
 }
+#endif
 
+#ifdef EKA2
 EXPORT_C CCamera* CCamera::NewDuplicateL(MCameraObserver2& aObserver,TInt aCameraHandle) {
     return NewDuplicate2L(aObserver, aCameraHandle);
 }
+#endif
 
 EXPORT_C CCamera* CCamera::NewDuplicateL(MCameraObserver& aObserver,TInt aCameraHandle) {
     CCameraPlugin *camera = new (ELeave) CCameraPlugin(&aObserver);
@@ -346,3 +378,9 @@ EXPORT_C CCamera* CCamera::NewDuplicateL(MCameraObserver& aObserver,TInt aCamera
     
     return camera;
 }
+
+#ifndef EKA2
+EXPORT_C TInt E32Dll(TDllReason) {
+    return KErrNone;
+}
+#endif

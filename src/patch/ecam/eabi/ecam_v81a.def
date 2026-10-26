@@ -1,0 +1,5 @@
+EXPORTS
+    CamerasAvailable__7CCamera @ 1 NONAME
+    NewDuplicateL__7CCameraR15MCameraObserveri @ 2 NONAME
+    NewL__7CCameraR15MCameraObserveri @ 3 NONAME
+    E32Dll__F10TDllReason @ 4 NONAME

@@ -1,0 +1,21 @@
+TARGET		  ecam_v81a.dll
+TARGETTYPE	  dll
+UID			 0x10003B19 0xee000006
+
+USERINCLUDE	    ..\..\inc
+SYSTEMINCLUDE   \epoc32\include ..\..\..\priv\inc
+
+SOURCEPATH	    ..\..\src
+
+SOURCE          camcappic.cpp
+SOURCE          camcapvid.cpp
+SOURCE          camgeneral.cpp
+SOURCE          camviewfinder.cpp
+SOURCE          dispatch.s
+
+nostrictdef
+
+LIBRARY		    euser.lib fbscli.lib ws32.lib
+STATICLIBRARY   priv.lib
+
+DEFFILE ..\..\eabi\ecam_v81a.def
