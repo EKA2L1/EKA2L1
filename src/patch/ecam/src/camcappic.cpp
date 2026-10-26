@@ -21,7 +21,9 @@
 #include <dispatch.h>
 #include <Log.h>
 
+#ifdef EKA2
 #include <e32err.h>
+#endif
 #include <e32std.h>
 #include <fbs.h>
 
@@ -86,7 +88,7 @@ TDesC8 *CCameraImageBufferImpl::DataL(TInt aFrameIndex) {
 
 TUint8 *CCameraImageBufferImpl::DataPtr() {
     if (iDataBitmap) {
-        iDataBitmap->BeginDataAccess();
+        BeginCameraBitmapAccess(*iDataBitmap);
         return (TUint8*)iDataBitmap->DataAddress();
     }
 
@@ -95,7 +97,7 @@ TUint8 *CCameraImageBufferImpl::DataPtr() {
 
 void CCameraImageBufferImpl::EndDataAccess() {
     if (iDataBitmap) {
-        iDataBitmap->EndDataAccess();
+        EndCameraBitmapAccess(*iDataBitmap);
     }
 }
 
@@ -262,9 +264,9 @@ void CCameraImageCaptureObject::HandleCompleteV1() {
                     iDataBuffer->Des().SetLength(imageBufferSize);
                 }
             } else {
-                iDataBitmap->BeginDataAccess();
+                BeginCameraBitmapAccess(*iDataBitmap);
                 error = ECamReceiveImage(0, iDispatch, &imageBufferSize, (TUint8*)iDataBitmap->DataAddress(), EImageStackCaptureImage);
-                iDataBitmap->EndDataAccess();
+                EndCameraBitmapAccess(*iDataBitmap);
             }
 
             if (error != KErrNone) {
@@ -277,6 +279,7 @@ void CCameraImageCaptureObject::HandleCompleteV1() {
     }
 }
 
+#ifdef EKA2
 void CCameraImageCaptureObject::HandleCompleteV2() {
 	MCameraObserver2 *observer = (MCameraObserver2*)iObserver;
     CCameraImageBufferImpl *buffer = NULL;
@@ -332,12 +335,15 @@ void CCameraImageCaptureObject::HandleCompleteV2() {
         }
     }
 }
+#endif
 
 void CCameraImageCaptureObject::RunL() {
     if (iObserverVersion == 1) {
         HandleCompleteV1();
+#ifdef EKA2
     } else {
         HandleCompleteV2();
+#endif
     }
 }
 

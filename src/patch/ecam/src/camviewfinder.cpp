@@ -115,9 +115,9 @@ void CCameraViewfinderBitmapObject::HandleCompleteV1() {
         if (error != KErrNone) {
             LogOut(KCameraCat, _L("Failed to receive viewfinder frame data (image size can't be get)!"));
         } else {
-            iDataBitmap->BeginDataAccess();
+            BeginCameraBitmapAccess(*iDataBitmap);
             error = ECamReceiveImage(0, iDispatch, &imageBufferSize, (TUint8*)iDataBitmap->DataAddress(), EImageStackViewfinderFrame);
-            iDataBitmap->EndDataAccess();
+            EndCameraBitmapAccess(*iDataBitmap);
 
             if (error != KErrNone) {
                 LogOut(KCameraCat, _L("Failed to receive viewfinder frame data!"));
@@ -128,6 +128,7 @@ void CCameraViewfinderBitmapObject::HandleCompleteV1() {
     }
 }
 
+#ifdef EKA2
 void CCameraViewfinderBitmapObject::HandleCompleteV2() {
     MCameraObserver2 *observer = (MCameraObserver2*)iObserver;
     CCameraImageBufferImpl *buffer = NULL;
@@ -172,12 +173,15 @@ void CCameraViewfinderBitmapObject::HandleCompleteV2() {
         }
     }
 }
+#endif
 
 void CCameraViewfinderBitmapObject::RunL() {
     if (iObserverVersion == 1) {
         HandleCompleteV1();
+#ifdef EKA2
     } else {
         HandleCompleteV2();
+#endif
     }
 
     iStatus = KRequestPending;

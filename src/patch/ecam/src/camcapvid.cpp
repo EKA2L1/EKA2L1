@@ -242,6 +242,7 @@ void CCameraVideoCaptureObject::HandleCompleteV1() {
     observer->FrameBufferReady((MFrameBuffer*)buffer, KErrNone);
 }
 
+#ifdef EKA2
 void CCameraVideoCaptureObject::HandleCompleteV2() {
     CCameraVideoChunkBufferBase *buffer = PickFreeBuffer();
     MCameraObserver2 *observer = (MCameraObserver2*)iObserver;
@@ -272,12 +273,15 @@ void CCameraVideoCaptureObject::HandleCompleteV2() {
 
     observer->VideoBufferReady((MCameraBuffer&)*buffer, KErrNone);
 }
+#endif
 
 void CCameraVideoCaptureObject::RunL() {
     if (iVersion == 1) {
         HandleCompleteV1();
+#ifdef EKA2
     } else {
         HandleCompleteV2();
+#endif
     }
 }
 
