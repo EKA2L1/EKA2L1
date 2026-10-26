@@ -771,6 +771,7 @@ namespace eka2l1 {
             bws_bmp->header_.bitmap_size = static_cast<std::uint32_t>(bws_bmp->header_.header_len + size_when_decomp);
 
             bws_bmp->header_.compression = epoc::bitmap_file_no_compression;
+            bws_bmp->compressed_in_ram_ = false;
             bws_bmp->post_construct(fbss);
 
             bmp = make_new<fbsbitmap>(fbss, bws_bmp, static_cast<bool>(load_options->share), support_dirty_bitmap);
