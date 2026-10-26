@@ -357,6 +357,29 @@ namespace eka2l1::epoc {
                 clip_rects.push_back(eka2l1::rect(eka2l1::vec2(0, 0), screen_size));
             }
 
+            // Direct writes bypass draw-device dirty tracking; a client may only
+            // draw a one-pixel line to trigger Update() for its mapped pixels.
+            if (direct_framebuffer_mapped && active_dsa_count_ > 0) {
+                const auto &rows = direct_framebuffer.written_rows();
+                for (int y = 0; y < static_cast<int>(rows.size());) {
+                    if (!rows[y]) {
+                        ++y;
+                        continue;
+                    }
+                    const int first = y++;
+                    while (y < static_cast<int>(rows.size()) && rows[y]) {
+                        ++y;
+                    }
+                    const eka2l1::rect area(eka2l1::vec2(0, first), eka2l1::vec2(screen_size.x, y - first));
+                    for (const eka2l1::rect &clip : clip_rects) {
+                        const eka2l1::rect clipped = area.intersect(clip);
+                        if (clipped.valid()) {
+                            draw_area(clipped);
+                        }
+                    }
+                }
+            }
+
             for (std::uint32_t i = 0; i < rect_count; i++) {
                 eka2l1::rect area = symbian_rects[i];
                 area.transform_from_symbian_rectangle();
