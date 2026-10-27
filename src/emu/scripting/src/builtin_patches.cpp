@@ -31,10 +31,13 @@
 #include <common/types.h>
 
 #include <scripting/cpu.h>
+#include <scripting/instance.h>
 #include <scripting/mem.h>
 #include <scripting/manager.h>
 
+#include <kernel/kernel.h>
 #include <kernel/libmanager.h>
+#include <kernel/process.h>
 #include <system/epoc.h>
 
 namespace eka2l1::manager {
@@ -135,6 +138,10 @@ namespace eka2l1::manager {
         scripting::write_byte(scripting::cpu::get_register(0) + 0xB4, 0);
     }
 
+    static void worms_mask_clock() {
+        scripting::get_current_instance()->get_kernel_system()->crr_process()->set_tick_count_mask(~1U);
+    }
+
     void scripts::register_builtin_patches() {
         // The kernel-level hooks must be live for breakpoints to fire.
         register_kernel_hooks();
@@ -205,6 +212,8 @@ namespace eka2l1::manager {
         register_breakpoint("cboxapp_0x20041fae.exe", 0x1D44F, 0, 0x20041FAE, 0xCB7985E9, wave_skip_zero_fire_period);
 
         register_breakpoint("pottery.exe", 0x187410, 0, 0x20042DDE, 0x58A29E91, pottery_clear_device_close_flag);
+
+        register_breakpoint("mophun.dll", 0x10011B74, 0x101FD3F3, 0, 0x086E4D44, worms_mask_clock);
 
         current_module = nullptr;
 

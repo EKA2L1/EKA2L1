@@ -3002,8 +3002,6 @@ namespace eka2l1::epoc {
         timer->cancel_request();
     }
 
-    static constexpr std::uint32_t TICK_MASK = ~0b1;
-
     BRIDGE_FUNC(std::uint32_t, fast_counter) {
         const std::uint64_t DEFAULT_FAST_COUNTER_PERIOD = (common::microsecs_per_sec / epoc::HIGH_RES_TIMER_HZ);
 
@@ -3022,16 +3020,9 @@ namespace eka2l1::epoc {
         const std::uint64_t DEFAULT_TICK_PERIOD = (common::microsecs_per_sec / epoc::TICK_TIMER_HZ);
 
         ntimer *timing = kern->get_ntimer();
-        std::uint32_t res = static_cast<std::uint32_t>((timing->microseconds() / DEFAULT_TICK_PERIOD));
-
-        if (kern->is_eka1()) {
-            // TODO: This is unverified mask used for compatible with Worms War party
-            // At least because the check is pretty non-sense that I think it's intentional behaviour.
-            // Two checks: if tick count is odd and then the actual check for unrelated category. Lol
-            res &= TICK_MASK;
-        }
-
-        return res;
+        const std::uint32_t count = static_cast<std::uint32_t>(timing->microseconds() / DEFAULT_TICK_PERIOD);
+        const kernel::process *process = kern->crr_process();
+        return process ? (count & process->get_tick_count_mask()) : count;
     }
 
     /**********************/

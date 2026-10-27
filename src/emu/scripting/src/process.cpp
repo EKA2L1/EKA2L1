@@ -175,6 +175,10 @@ EKA2L1_EXPORT bool eka2l1_process_write_memory(eka2l1::scripting::process *pr, c
     return true;
 }
 
+EKA2L1_EXPORT void eka2l1_process_set_tick_count_mask(eka2l1::scripting::process *pr, const std::uint32_t mask) {
+    pr->get_process_handle()->set_tick_count_mask(mask);
+}
+
 EKA2L1_EXPORT const char *eka2l1_process_name(eka2l1::scripting::process *pr) {
     std::string data = pr->get_name();
     char *ret_val = new char[data.length() + 1];
