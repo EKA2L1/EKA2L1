@@ -27,6 +27,34 @@
 #include <freetype/tttables.h>
 
 namespace eka2l1::epoc::adapter {
+    static bool has_truetype_glyph_tables(FT_Face face) {
+        FT_ULong length = 0;
+        if (FT_Load_Sfnt_Table(face, FT_MAKE_TAG('g', 'l', 'y', 'f'), 0, nullptr, &length)) {
+            return true;
+        }
+
+        const auto *head = static_cast<TT_Header *>(FT_Get_Sfnt_Table(face, FT_SFNT_HEAD));
+        const auto *maxp = static_cast<TT_MaxProfile *>(FT_Get_Sfnt_Table(face, FT_SFNT_MAXP));
+        const auto *hhea = static_cast<TT_HoriHeader *>(FT_Get_Sfnt_Table(face, FT_SFNT_HHEA));
+        if (!head || !maxp || !hhea || (hhea->number_Of_HMetrics > maxp->numGlyphs)) {
+            return false;
+        }
+
+        // Compact ROM fonts retain SFNT headers but compress these tables in a
+        // format FreeType does not decode. Accepting them exposes empty glyphs.
+        const FT_ULong loca_size = (static_cast<FT_ULong>(maxp->numGlyphs) + 1)
+            * (head->Index_To_Loc_Format == 0 ? 2 : 4);
+        length = 0;
+        if (FT_Load_Sfnt_Table(face, FT_MAKE_TAG('l', 'o', 'c', 'a'), 0, nullptr, &length) || (length < loca_size)) {
+            return false;
+        }
+
+        const FT_ULong hmtx_size = static_cast<FT_ULong>(hhea->number_Of_HMetrics) * 4
+            + static_cast<FT_ULong>(maxp->numGlyphs - hhea->number_Of_HMetrics) * 2;
+        length = 0;
+        return !FT_Load_Sfnt_Table(face, FT_MAKE_TAG('h', 'm', 't', 'x'), 0, nullptr, &length) && (length >= hmtx_size);
+    }
+
     struct freetype_lib_raii {
         FT_Library lib_{};
 
@@ -115,6 +143,10 @@ namespace eka2l1::epoc::adapter {
             err = FT_New_Memory_Face(get_ft_lib(), data_.data(), static_cast<FT_Long>(data_.size()), i, &face);
             if (err) {
                 LOG_ERROR(SERVICE_FBS, "FreeType failed to read face from memory, error: {}", FT_Error_String(err));
+                continue;
+            }
+            if (!has_truetype_glyph_tables(face)) {
+                FT_Done_Face(face);
                 continue;
             }
             faces_.push_back(face);
