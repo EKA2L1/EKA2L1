@@ -116,6 +116,7 @@ namespace eka2l1::epoc {
         etel_mobile_phone_transition_get_identity_caps = 3015,
         etel_mobile_phone_transition_get_phone_id = 3016,
         etel_mobile_phone_transition_get_subscriber_id = 3017,
+        etel_mobile_phone_transition_get_current_network = 3030,
         etel_mobile_line_get_mobile_line_status = 20023,
         etel_mobile_line_notify_status_change = 20024,
         etel_mobile_phone_get_battery_info = 20030,
@@ -342,7 +343,7 @@ namespace eka2l1::epoc {
         std::uint32_t cell_id_;
     };
 
-    struct etel_phone_network_info : etel_multimode_type {
+    struct etel_phone_network_info_v1 : etel_multimode_type {
         etel_mobile_phone_network_mode mode_;
         etel_mobile_phone_network_status status_;
         etel_mobile_phone_network_band_info band_info_;
@@ -353,16 +354,23 @@ namespace eka2l1::epoc {
         epoc::buf_static<char16_t, 30> display_tag_;
         epoc::buf_static<char16_t, 10> short_name_;
         epoc::buf_static<char16_t, 20> long_name_;
+    };
+
+    static_assert(sizeof(etel_phone_network_info_v1) == 0xF8);
+
+    struct etel_phone_network_info : etel_phone_network_info_v1 {
         etel_phone_network_access_ access_;
         bool hsdpa_available_indicator;
         bool egprs_available_indicator;
     };
 
     struct etel_phone_location_area : etel_multimode_type {
-        bool area_known_;
+        std::int32_t area_known_;
         std::uint32_t location_area_code_;
         std::uint32_t cell_id_;
     };
+
+    static_assert(sizeof(etel_phone_location_area) == 0x10);
 
     struct etel_line_info_from_phone {
         etel_line_status sts_;
