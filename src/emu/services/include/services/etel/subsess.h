@@ -88,6 +88,7 @@ namespace eka2l1 {
         void get_subscriber_id(eka2l1::service::ipc_context *ctx);
         void get_subscriber_id_old(eka2l1::service::ipc_context *ctx);
         void get_current_network(eka2l1::service::ipc_context *ctx);
+        void get_current_network_transition(eka2l1::service::ipc_context *ctx);
         void get_signal_strength(eka2l1::service::ipc_context *ctx);
         void get_battery_info(eka2l1::service::ipc_context *ctx);
         void notify_network_registration_status_change(eka2l1::service::ipc_context *ctx);

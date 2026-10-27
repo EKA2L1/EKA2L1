@@ -234,6 +234,32 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void etel_phone_subsession::get_current_network_transition(eka2l1::service::ipc_context *ctx) {
+        if (ctx->get_argument_data_size(0) != sizeof(epoc::etel_phone_network_info_v1)
+            || ctx->get_argument_data_size(2) != sizeof(epoc::etel_phone_location_area)) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+        auto network = ctx->get_argument_data_from_descriptor<epoc::etel_phone_network_info_v1>(0);
+        auto location = ctx->get_argument_data_from_descriptor<epoc::etel_phone_location_area>(2);
+        if (!network || !location) {
+            ctx->complete(epoc::error_bad_descriptor);
+            return;
+        }
+        network->mode_ = phone_->network_info_.mode_;
+        network->status_ = phone_->network_info_.status_;
+        network->band_info_ = phone_->network_info_.band_info_;
+        location->area_known_ = false;
+        location->location_area_code_ = 0;
+        location->cell_id_ = 0;
+        if (!ctx->write_data_to_descriptor_argument(0, *network)
+            || !ctx->write_data_to_descriptor_argument(2, *location)) {
+            ctx->complete(epoc::error_bad_descriptor);
+            return;
+        }
+        ctx->complete(epoc::error_none);
+    }
+
     void etel_phone_subsession::get_current_network_info_old(eka2l1::service::ipc_context *ctx) {
         LOG_TRACE(SERVICE_ETEL, "Get current network hardcoded");
         std::optional<epoc::etel_old_phone_network_info> network_info = ctx->get_argument_data_from_descriptor<epoc::etel_old_phone_network_info>(0);
@@ -393,6 +419,10 @@ namespace eka2l1 {
 
             case epoc::etel_mobile_phone_transition_get_subscriber_id:
                 get_subscriber_id(ctx);
+                break;
+
+            case epoc::etel_mobile_phone_transition_get_current_network:
+                get_current_network_transition(ctx);
                 break;
 
             case epoc::etel_mobile_phone_transition_get_identity_caps:
@@ -557,7 +587,8 @@ namespace eka2l1 {
     }
 
     etel_phone::etel_phone(const epoc::etel_phone_info &info)
-        : info_(info) {
+        : info_(info)
+        , network_info_{} {
         // Initialize default mode
         status_.detect_ = epoc::etel_modem_detect_not_present;
         status_.mode_ = epoc::etel_phone_mode_idle;
