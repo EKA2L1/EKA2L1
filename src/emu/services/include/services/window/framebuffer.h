@@ -10,11 +10,30 @@
 
 #pragma once
 
+#include <common/region.h>
+
 #include <cstdint>
 #include <cstring>
 #include <vector>
 
 namespace eka2l1::epoc {
+    inline common::region explicit_framebuffer_update_region(const eka2l1::rect *symbian_rects,
+        const std::uint32_t rect_count, const common::region &visible_region, const bool mapped_dsa) {
+        // A mapped panel already contains the pixels being scanned out; draw-device
+        // dirty rectangles do not describe writes made directly through that mapping.
+        if (mapped_dsa) {
+            return visible_region;
+        }
+
+        common::region dirty_region;
+        for (std::uint32_t i = 0; i < rect_count; ++i) {
+            eka2l1::rect area = symbian_rects[i];
+            area.transform_from_symbian_rectangle();
+            dirty_region.add_rect(area);
+        }
+        return dirty_region.intersect(visible_region);
+    }
+
     // Observe a mapped panel without treating any pixel value as an unwritten marker.
     class framebuffer_observer {
         std::vector<std::uint8_t> previous_;

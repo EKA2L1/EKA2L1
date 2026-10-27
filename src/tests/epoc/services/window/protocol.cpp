@@ -74,3 +74,37 @@ TEST_CASE("Mapped framebuffer tracks writes without a sentinel pixel value", "[w
     REQUIRE(observer.written_rows() == std::vector<bool>{false, false});
     REQUIRE_FALSE(observer.update(pixels.data(), 8, 2));
 }
+
+TEST_CASE("Mapped panel updates scan the visible DSA region independently of dirty rectangles", "[window][framebuffer]") {
+    const rect dirty_column(vec2(0, 0), vec2(1, 208)); // Symbian top-left and bottom-right.
+    common::region visible;
+    visible.add_rect(rect(vec2(0, 0), vec2(176, 208)));
+    visible.eliminate(rect(vec2(40, 50), vec2(30, 20)));
+
+    auto update = epoc::explicit_framebuffer_update_region(&dirty_column, 1, visible, true);
+    REQUIRE(update.contains(vec2(100, 100)));
+    REQUIRE(update.contains(vec2(0, 207)));
+    REQUIRE_FALSE(update.contains(vec2(50, 60)));
+    REQUIRE_FALSE(update.contains(vec2(177, 100)));
+
+    common::region covered;
+    REQUIRE(epoc::explicit_framebuffer_update_region(&dirty_column, 1, covered, true).empty());
+    covered.add_rect(rect(vec2(80, 90), vec2(20, 30)));
+    auto restarted = epoc::explicit_framebuffer_update_region(&dirty_column, 1, covered, true);
+    REQUIRE(restarted.contains(vec2(85, 100)));
+    REQUIRE_FALSE(restarted.contains(vec2(20, 100)));
+}
+
+TEST_CASE("Unmapped explicit updates retain dirty-rectangle clipping", "[window][framebuffer]") {
+    const rect dirty(vec2(12, 20), vec2(30, 40)); // Symbian top-left and bottom-right.
+    common::region visible;
+    visible.add_rect(rect(vec2(0, 0), vec2(25, 100)));
+    auto update = epoc::explicit_framebuffer_update_region(&dirty, 1, visible, false);
+    REQUIRE(update.bounding_rect() == rect(vec2(12, 20), vec2(13, 20)));
+    REQUIRE(update.contains(vec2(12, 20)));
+    REQUIRE(update.contains(vec2(24, 39)));
+    REQUIRE_FALSE(update.contains(vec2(26, 30)));
+    REQUIRE_FALSE(update.contains(vec2(20, 41)));
+    REQUIRE_FALSE(update.contains(vec2(10, 30)));
+    REQUIRE(epoc::explicit_framebuffer_update_region(&dirty, 0, visible, false).empty());
+}
