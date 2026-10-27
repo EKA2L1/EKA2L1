@@ -346,50 +346,19 @@ namespace eka2l1::epoc {
                 draw_rows(first, y);
             }
         } else if (symbian_rects && rect_count) {
-            // A DSA client only writes inside its region; elsewhere the buffer holds stale pixels
-            // that must not cover the windows now on top of it.
-            std::vector<eka2l1::rect> clip_rects;
+            common::region visible_region;
             if (active_dsa_count_ > 0) {
                 window_dsa_region_walker dsa_walker;
                 root->walk_tree(&dsa_walker, epoc::window_tree_walk_style::bonjour_children);
-                clip_rects = std::move(dsa_walker.region_.rects_);
+                visible_region = std::move(dsa_walker.region_);
             } else {
-                clip_rects.push_back(eka2l1::rect(eka2l1::vec2(0, 0), screen_size));
+                visible_region.add_rect(eka2l1::rect(eka2l1::vec2(0, 0), screen_size));
             }
 
-            // Direct writes bypass draw-device dirty tracking; a client may only
-            // draw a one-pixel line to trigger Update() for its mapped pixels.
-            if (direct_framebuffer_mapped && active_dsa_count_ > 0) {
-                const auto &rows = direct_framebuffer.written_rows();
-                for (int y = 0; y < static_cast<int>(rows.size());) {
-                    if (!rows[y]) {
-                        ++y;
-                        continue;
-                    }
-                    const int first = y++;
-                    while (y < static_cast<int>(rows.size()) && rows[y]) {
-                        ++y;
-                    }
-                    const eka2l1::rect area(eka2l1::vec2(0, first), eka2l1::vec2(screen_size.x, y - first));
-                    for (const eka2l1::rect &clip : clip_rects) {
-                        const eka2l1::rect clipped = area.intersect(clip);
-                        if (clipped.valid()) {
-                            draw_area(clipped);
-                        }
-                    }
-                }
-            }
-
-            for (std::uint32_t i = 0; i < rect_count; i++) {
-                eka2l1::rect area = symbian_rects[i];
-                area.transform_from_symbian_rectangle();
-
-                for (const eka2l1::rect &clip : clip_rects) {
-                    const eka2l1::rect clipped = area.intersect(clip);
-                    if (clipped.valid()) {
-                        draw_area(clipped);
-                    }
-                }
+            const common::region update_region = explicit_framebuffer_update_region(symbian_rects, rect_count,
+                visible_region, direct_framebuffer_mapped && active_dsa_count_ > 0);
+            for (const eka2l1::rect &area : update_region.rects_) {
+                draw_area(area);
             }
         } else {
             draw_rows(0, screen_size.y);
