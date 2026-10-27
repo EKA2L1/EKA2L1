@@ -1123,14 +1123,10 @@ namespace eka2l1::dispatch {
             return epoc::error_general;
         }
 
-        // Return value >= 0 indicates the behaviour of calling MaoscPlayComplete. 0 means call.
-        // See the impl.cpp file for a more detailed explaination on why
-        if (sys->get_symbian_version_use() <= epocver::epoc6) {
-            return 1;
-        }
-
         manager.audio_renderer_semaphore()->release(stream);
-        return epoc::error_none;
+
+        // The guest patch defers MaoscPlayComplete for pre-MMF MDA.
+        return (sys->get_symbian_version_use() <= epocver::epoc6) ? 1 : epoc::error_none;
     }
 
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_dsp_out_stream_write, eka2l1::ptr<void> handle, const std::uint8_t *data, const std::uint32_t data_size) {

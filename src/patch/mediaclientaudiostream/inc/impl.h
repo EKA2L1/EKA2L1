@@ -147,6 +147,9 @@ class CMMFMdaAudioOutputStream : public CMMFMdaAudioStream {
 
     CMMFMdaOutputBufferQueue iBufferQueue;
     CPeriodic *iWaitBufferEndTimer;
+    CAsyncCallBack *iLegacyStopComplete;
+
+    static TInt LegacyStopComplete(TAny *aSelf);
 
 public:
     MMdaAudioOutputStreamCallback &iCallback;
