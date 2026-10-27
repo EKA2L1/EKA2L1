@@ -148,19 +148,20 @@ class CMMFMdaAudioOutputStream : public CMMFMdaAudioStream {
     CMMFMdaOutputBufferQueue iBufferQueue;
     CPeriodic *iWaitBufferEndTimer;
     CAsyncCallBack *iLegacyStopComplete;
+    const TBool iLegacyMda;
 
     static TInt LegacyStopComplete(TAny *aSelf);
 
 public:
     MMdaAudioOutputStreamCallback &iCallback;
 
-    CMMFMdaAudioOutputStream(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref, TInt aBufferPriority);
+    CMMFMdaAudioOutputStream(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref, TInt aBufferPriority, TBool aLegacyMda = EFalse);
     
     virtual ~CMMFMdaAudioOutputStream();
     virtual void NotifyOpenComplete();
 
     static CMMFMdaAudioOutputStream *NewL(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref);
-    static CMMFMdaAudioOutputStream *NewL(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref, TInt aBufferPriority);
+    static CMMFMdaAudioOutputStream *NewL(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref, TInt aBufferPriority, TBool aLegacyMda = EFalse);
 
     void Stop();
     void ConstructL();

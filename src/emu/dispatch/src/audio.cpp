@@ -1125,7 +1125,8 @@ namespace eka2l1::dispatch {
 
         manager.audio_renderer_semaphore()->release(stream);
 
-        // The guest patch defers MaoscPlayComplete for pre-MMF MDA.
+        // Preserve the input-stream completion selector. Output streams choose
+        // legacy MDA or MMF callback semantics in their guest factory instead.
         return (sys->get_symbian_version_use() <= epocver::epoc6) ? 1 : epoc::error_none;
     }
 

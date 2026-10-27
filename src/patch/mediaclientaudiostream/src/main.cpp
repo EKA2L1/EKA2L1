@@ -34,7 +34,7 @@ CMdaAudioOutputStream *CMdaAudioOutputStream::NewLegacyL(MMdaAudioOutputStreamCa
     CMdaAudioOutputStream *stream = new (ELeave) CMdaAudioOutputStream();
     CleanupStack::PushL(stream);
     // Pre-MMF MDA completes copied buffers above standard-priority animation timers.
-    stream->iProperties = CMMFMdaAudioOutputStream::NewL(aCallBack, 0, EMdaPriorityPreferenceTimeAndQuality, 20);
+    stream->iProperties = CMMFMdaAudioOutputStream::NewL(aCallBack, 0, EMdaPriorityPreferenceTimeAndQuality, 20, ETrue);
     CleanupStack::Pop(stream);
 
     return stream;

@@ -372,11 +372,12 @@ void CMMFMdaAudioStream::SetPriorityUnimplNotified() {
 /// AUDIO OUTPUT STREAM
 static const TInt KLegacyPlayCompletePriority = 19;
 
-CMMFMdaAudioOutputStream::CMMFMdaAudioOutputStream(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref, TInt aBufferPriority)
+CMMFMdaAudioOutputStream::CMMFMdaAudioOutputStream(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref, TInt aBufferPriority, TBool aLegacyMda)
     : CMMFMdaAudioStream(aPriority, aPref)
     , iBufferQueue(this, aBufferPriority)
     , iWaitBufferEndTimer(NULL)
     , iLegacyStopComplete(NULL)
+    , iLegacyMda(aLegacyMda)
     , iCallback(aCallback) {
 }
 
@@ -392,8 +393,8 @@ CMMFMdaAudioOutputStream *CMMFMdaAudioOutputStream::NewL(MMdaAudioOutputStreamCa
     return NewL(aCallback, aPriority, aPref, KMMFMdaOutputBufferPriority);
 }
 
-CMMFMdaAudioOutputStream *CMMFMdaAudioOutputStream::NewL(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref, TInt aBufferPriority) {
-    CMMFMdaAudioOutputStream *newStream = new (ELeave) CMMFMdaAudioOutputStream(aCallback, aPriority, aPref, aBufferPriority);
+CMMFMdaAudioOutputStream *CMMFMdaAudioOutputStream::NewL(MMdaAudioOutputStreamCallback &aCallback, const TInt aPriority, const TMdaPriorityPreference aPref, TInt aBufferPriority, TBool aLegacyMda) {
+    CMMFMdaAudioOutputStream *newStream = new (ELeave) CMMFMdaAudioOutputStream(aCallback, aPriority, aPref, aBufferPriority, aLegacyMda);
     CleanupStack::PushL(newStream);
     newStream->ConstructL();
     CleanupStack::Pop(newStream);
@@ -440,10 +441,10 @@ void CMMFMdaAudioOutputStream::Stop() {
         iState = EMdaStateStop;
 
         // Legacy MDA completes playback through a separate active object.
-        if (result == KErrNone) {
-            iCallback.MaoscPlayComplete(KErrCancel);
-        } else {
+        if (iLegacyMda) {
             iLegacyStopComplete->CallBack();
+        } else {
+            iCallback.MaoscPlayComplete(KErrCancel);
         }
     }
 }
