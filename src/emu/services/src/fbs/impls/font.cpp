@@ -1150,11 +1150,8 @@ namespace eka2l1 {
             return persistent_font_store.add_fonts(buf, epoc::adapter::font_file_adapter_kind::gdr, user_font);
         }
 
-        // CFontStore::AddFileL offers the file to every rasterizer and keeps
-        // whichever one recognises it, so the extension is only ever a hint. A
-        // ROM font really can be named something else: the 5320 carries its
-        // Chinese font as s60sc.ccc, a TrueType file all the same, and skipping
-        // it leaves the device with no CJK glyphs at all.
+        // CFontStore::AddFileL tries every rasterizer; extensions are only hints
+        // and do not establish that the font's tables use a supported format.
         for (const auto kind : { epoc::adapter::font_file_adapter_kind::freetype,
                  epoc::adapter::font_file_adapter_kind::gdr }) {
             if (persistent_font_store.add_fonts(buf, kind, user_font)) {

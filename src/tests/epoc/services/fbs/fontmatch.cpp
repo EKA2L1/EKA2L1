@@ -20,6 +20,9 @@
 #include <catch2/catch.hpp>
 
 #include <services/fbs/font_store.h>
+#include <algorithm>
+#include <fstream>
+#include <iterator>
 
 using namespace eka2l1;
 
@@ -146,4 +149,42 @@ TEST_CASE("bitmap_font_fallback_preserves_symbol_and_monospace_flags", "fbs") {
     spec.tf.name.assign(nullptr, u"Calculator");
     spec.tf.flags = 0;
     REQUIRE(store.seek_the_open_font(spec) == symbol);
+}
+
+TEST_CASE("freetype_rejects_compacted_truetype_glyph_tables", "fbs") {
+    std::ifstream file("fontassets/overlay_font.ttf", std::ios::binary);
+    REQUIRE(file.is_open());
+    const std::vector<std::uint8_t> original((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+
+    for (const std::string table : {"loca", "hmtx"}) {
+        auto data = original;
+        {
+            epoc::font_store valid(nullptr);
+            REQUIRE(valid.add_fonts(data, epoc::adapter::font_file_adapter_kind::freetype));
+        }
+
+        const std::size_t count = (data[4] << 8) | data[5];
+        bool found = false;
+        for (std::size_t i = 0; i < count; i++) {
+            const std::size_t offset = 12 + i * 16;
+            if (std::equal(table.begin(), table.end(), data.begin() + offset)) {
+                // SFNT requires full-width entries; compressed ROM fonts keep
+                // the header fields but store fewer bytes in these tables.
+                std::uint32_t length = 0;
+                for (int byte = 12; byte < 16; byte++) {
+                    length = (length << 8) | data[offset + byte];
+                }
+                length = table == "loca" ? length * 5 / 8 : length * 9 / 16;
+                for (int byte = 15; byte >= 12; byte--) {
+                    data[offset + byte] = static_cast<std::uint8_t>(length);
+                    length >>= 8;
+                }
+                found = true;
+                break;
+            }
+        }
+        REQUIRE(found);
+        epoc::font_store compacted(nullptr);
+        REQUIRE_FALSE(compacted.add_fonts(data, epoc::adapter::font_file_adapter_kind::freetype));
+    }
 }

@@ -92,3 +92,9 @@ add_assets(ekatests "${CMAKE_CURRENT_SOURCE_DIR}/epoc/services/internet/tlsasset
 add_assets(ekatests "${CMAKE_CURRENT_SOURCE_DIR}/epoc/drivers/assets/" "audioassets")
 
 add_assets(ekatests "${CMAKE_CURRENT_SOURCE_DIR}/epoc/drivers/videoassets/" "videoassets")
+
+add_custom_command(TARGET ekatests POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E make_directory "$<TARGET_FILE_DIR:ekatests>/fontassets"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+        "${PROJECT_SOURCE_DIR}/src/emu/qt/resources/overlay_font.ttf"
+        "$<TARGET_FILE_DIR:ekatests>/fontassets/")
