@@ -210,7 +210,8 @@ namespace eka2l1::dispatch {
         return info.transfer_texture_;
     }
 
-    BRIDGE_FUNC_DISPATCHER(void, update_screen, const std::uint32_t screen_number, const std::uint32_t num_rects, const eka2l1::rect *rect_list) {
+    static void update_screen_from_source(system *sys, const std::uint32_t screen_number,
+        const std::uint32_t num_rects, const eka2l1::rect *rect_list, epoc::framebuffer_update_source source) {
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
 
         epoc::screen *scr = dispatcher->winserv_->get_screens();
@@ -222,18 +223,23 @@ namespace eka2l1::dispatch {
                 if (next_vsync_us) {
                     sys->get_kernel_system()->crr_thread()->sleep(static_cast<std::uint32_t>(next_vsync_us));
                 }
-                if (scr->direct_framebuffer_mapped) {
-                    scr->update_direct_framebuffer();
-                }
-                // The scdv bridge supplies its dispatch ordinal (1); the internal
-                // ERawEvent::ERedraw path supplies 0 and has no draw-device format.
-                scr->present_framebuffer(sys->get_graphics_driver(), sys->get_kernel_system(), rect_list, num_rects,
-                    func_num == 1);
+                scr->update_direct_framebuffer(source);
+                scr->present_framebuffer(sys->get_graphics_driver(), sys->get_kernel_system(), rect_list, num_rects);
                 break;
             }
 
             scr = scr->next;
         }
+    }
+
+    BRIDGE_FUNC_DISPATCHER(void, update_screen, const std::uint32_t screen_number,
+        const std::uint32_t num_rects, const eka2l1::rect *rect_list) {
+        update_screen_from_source(sys, screen_number, num_rects, rect_list, epoc::framebuffer_update_source::draw_device);
+    }
+
+    BRIDGE_FUNC_LIBRARY(void, update_raw_screen, const std::uint32_t screen_number,
+        const std::uint32_t num_rects, const eka2l1::rect *rect_list) {
+        update_screen_from_source(sys, screen_number, num_rects, rect_list, epoc::framebuffer_update_source::raw);
     }
 
     BRIDGE_FUNC_DISPATCHER(std::int32_t, get_screen_buffer_byte_width, const std::uint32_t screen_number,

@@ -274,7 +274,7 @@ namespace eka2l1::ldd {
             if (!rectangles.empty()) {
                 std::uint64_t next_vsync = 0;
                 screen->vsync(kern->get_ntimer(), next_vsync);
-                screen->update_direct_framebuffer();
+                screen->update_direct_framebuffer(epoc::framebuffer_update_source::draw_device);
                 screen->present_framebuffer(winserv->get_graphics_driver(), kern, rectangles.data(),
                     static_cast<std::uint32_t>(rectangles.size()));
             }

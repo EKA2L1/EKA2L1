@@ -193,24 +193,16 @@ namespace eka2l1::epoc {
         delete pitcher;
     }
 
-    void screen::reset_dsa_depth_guess() {
+    void screen::reset_framebuffer_tracking() {
         dsa_disp_mode = dsa_disp_mode_initial;
         if (!screen_buffer_chunk) {
             return;
         }
 
-        if (dsa_disp_mode != disp_mode) {
-            const eka2l1::vec2 buffer_size = current_mode().size;
-            const std::size_t narrow_bytes = epoc::get_byte_width(buffer_size.x,
-                epoc::get_bpp_from_display_mode(dsa_disp_mode)) * buffer_size.y;
-            const std::size_t wide_bytes = epoc::get_byte_width(buffer_size.x,
-                epoc::get_bpp_from_display_mode(disp_mode)) * buffer_size.y;
-            if (wide_bytes > narrow_bytes) {
-                std::fill(screen_buffer_ptr() + narrow_bytes, screen_buffer_ptr() + wide_bytes,
-                    SCREEN_BUFFER_UNTOUCHED_FILL);
-                raw_depth_observer.reset(screen_buffer_ptr() + narrow_bytes, wide_bytes - narrow_bytes);
-            }
-        }
+        const std::size_t narrow_bytes = screen_buffer_byte_width(dsa_disp_mode_initial) * current_mode().size.y;
+        const std::size_t wide_bytes = screen_buffer_byte_width(disp_mode) * current_mode().size.y;
+        framebuffer_depth.reset(screen_buffer_ptr() + narrow_bytes,
+            wide_bytes > narrow_bytes ? wide_bytes - narrow_bytes : 0);
         if (direct_framebuffer_mapped) {
             direct_framebuffer.reset(screen_buffer_ptr(), screen_buffer_byte_width(dsa_disp_mode), current_mode().size.y);
         }
@@ -226,42 +218,45 @@ namespace eka2l1::epoc {
         direct_framebuffer.reset(screen_buffer_ptr(), screen_buffer_byte_width(dsa_disp_mode), current_mode().size.y);
     }
 
-    bool screen::update_direct_framebuffer() {
-        return screen_buffer_chunk && direct_framebuffer.update(screen_buffer_ptr(),
+    bool screen::update_direct_framebuffer(framebuffer_update_source source) {
+        if (!screen_buffer_chunk) {
+            return false;
+        }
+
+        const display_mode previous_mode = dsa_disp_mode;
+        if (dsa_disp_mode_initial != disp_mode) {
+            const std::size_t narrow_bytes = screen_buffer_byte_width(dsa_disp_mode_initial) * current_mode().size.y;
+            dsa_disp_mode = framebuffer_depth.update(source, screen_buffer_ptr() + narrow_bytes)
+                ? disp_mode : dsa_disp_mode_initial;
+        }
+
+        if (!direct_framebuffer_mapped) {
+            return false;
+        }
+        const bool pixels_changed = direct_framebuffer.update(screen_buffer_ptr(),
             screen_buffer_byte_width(dsa_disp_mode), current_mode().size.y);
+        const bool format_changed = previous_mode != dsa_disp_mode;
+        if (format_changed) {
+            direct_framebuffer.invalidate();
+        }
+        return pixels_changed || format_changed;
     }
 
     void screen::present_framebuffer(drivers::graphics_driver *driver, kernel_system *kern,
-        const eka2l1::rect *symbian_rects, const std::uint32_t rect_count, const bool from_draw_device) {
+        const eka2l1::rect *symbian_rects, const std::uint32_t rect_count) {
         // Update the DSA screen texture
         const epoc::config::screen_mode &mode_info = current_mode();
         const eka2l1::vec2 screen_size = mode_info.size;
 
         const char *data_ptr = reinterpret_cast<const char *>(screen_buffer_ptr());
 
-        // WINDOWMODE tells us what WSERV composes in, not what a direct screen
-        // access client writes into the panel buffer. Most EKA1 guests take the
-        // reported mode and write that many bytes per pixel, but a few hardcode
-        // 16-bit pixels and would be shredded by a 32-bit upload. The two cases
-        // are distinguishable by writes beyond the narrower frame. A preceding
-        // scdv clear is a different writer, so snapshot it instead of letting it
-        // determine the raw client's format permanently.
-        if (dsa_disp_mode_initial != disp_mode) {
-            const std::size_t narrow_bytes = screen_buffer_byte_width(dsa_disp_mode_initial) * screen_size.y;
-            const auto *tail = screen_buffer_ptr() + narrow_bytes;
-            if (from_draw_device) {
-                promote_dsa_depth_if_deep_pixels_written();
-                raw_depth_observer.acknowledge_draw_device(tail);
-            } else {
-                dsa_disp_mode = raw_depth_observer.observe_raw(tail) ? disp_mode : dsa_disp_mode_initial;
-            }
-        }
+        const display_mode framebuffer_mode = dsa_disp_mode;
+        const bool texture_format_changed = dsa_texture_mode != framebuffer_mode;
 
-        // Every writer lays its rows out at the pitch the screen reports, so read
-        // it back with that one. Only a 32-bit framebuffer is ever padded.
-        const std::uint32_t bits_per_pixel = epoc::get_bpp_from_display_mode(dsa_disp_mode);
+        // Use the selected layout consistently for the upload and its texture.
+        const std::uint32_t bits_per_pixel = epoc::get_bpp_from_display_mode(framebuffer_mode);
         const std::size_t tight_screen_pitch = mode_info.size.x * sizeof(std::uint32_t);
-        const std::size_t framebuffer_pitch = screen_buffer_byte_width(dsa_disp_mode);
+        const std::size_t framebuffer_pitch = screen_buffer_byte_width(framebuffer_mode);
         const std::size_t screen_pitch = common::max(framebuffer_pitch, tight_screen_pitch);
         const std::size_t buffer_size = screen_pitch * mode_info.size.y;
         const std::size_t pixels_per_line = (screen_pitch != tight_screen_pitch)
@@ -270,7 +265,7 @@ namespace eka2l1::epoc {
 
         std::unique_lock<std::mutex> guard(screen_mutex);
 
-        if ((dsa_texture_mode != dsa_disp_mode) && dsa_texture) {
+        if (texture_format_changed && dsa_texture) {
             // The transfer texture was made for the old depth; drop it and let the
             // block below build one that matches.
             drivers::graphics_command_builder discard_builder;
@@ -294,7 +289,7 @@ namespace eka2l1::epoc {
             guard.lock();
 
             dsa_texture = bitmap_handle;
-            dsa_texture_mode = dsa_disp_mode;
+            dsa_texture_mode = framebuffer_mode;
         }
 
         if (!screen_texture) {
@@ -310,7 +305,7 @@ namespace eka2l1::epoc {
 
         // NOTE: This is a hack for some apps that dont fill alpha
         // TODO: Figure out why or better solution (maybe the display mode is not really correct?)
-        switch (dsa_disp_mode) {
+        switch (framebuffer_mode) {
         case epoc::display_mode::color16m:
         case epoc::display_mode::color16mu:
         case epoc::display_mode::color16ma:
@@ -391,45 +386,6 @@ namespace eka2l1::epoc {
         }
 
         fire_screen_redraw_callbacks(true);
-    }
-
-    bool screen::promote_dsa_depth_if_deep_pixels_written() {
-        if (dsa_disp_mode == disp_mode) {
-            return false;
-        }
-
-        if (!screen_buffer_chunk) {
-            return false;
-        }
-
-        // The buffer is always allocated for the composed mode, so a guest writing at the
-        // narrower depth leaves the tail of every frame untouched. Anything in there can
-        // only have come from the guest: the WSERV write-back honours dsa_disp_mode too.
-        const eka2l1::vec2 buffer_size = current_mode().size;
-        const std::size_t narrow_bytes = epoc::get_byte_width(buffer_size.x,
-            epoc::get_bpp_from_display_mode(dsa_disp_mode)) * buffer_size.y;
-        const std::size_t wide_bytes = epoc::get_byte_width(buffer_size.x,
-            epoc::get_bpp_from_display_mode(disp_mode)) * buffer_size.y;
-
-        if (wide_bytes <= narrow_bytes) {
-            dsa_disp_mode = disp_mode;
-            return true;
-        }
-
-        const std::uint8_t *tail = screen_buffer_ptr() + narrow_bytes;
-        const std::size_t tail_size = wide_bytes - narrow_bytes;
-
-        for (std::size_t i = 0; i < tail_size; i++) {
-            if (tail[i] != SCREEN_BUFFER_UNTOUCHED_FILL) {
-                LOG_INFO(SERVICE_WINDOW, "Direct screen access writes {} bit pixels, switching the framebuffer format",
-                    epoc::get_bpp_from_display_mode(disp_mode));
-
-                dsa_disp_mode = disp_mode;
-                return true;
-            }
-        }
-
-        return false;
     }
 
     void screen::sync_screen_buffer_data(drivers::graphics_driver *driver) {
@@ -821,7 +777,7 @@ namespace eka2l1::epoc {
         if (really_changed) {
             disp_mode = new_mode->disp_mode;
             dsa_disp_mode_initial = new_mode->dsa_disp_mode;
-            reset_dsa_depth_guess();
+            reset_framebuffer_tracking();
 
             if (dsa_texture) {
                 drivers::graphics_command_builder builder;
@@ -1040,7 +996,7 @@ namespace eka2l1::epoc {
 
     void screen::ref_dsa_usage() {
         if (active_dsa_count_ == 0) {
-            reset_dsa_depth_guess();
+            reset_framebuffer_tracking();
         }
 
         active_dsa_count_++;

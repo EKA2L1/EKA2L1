@@ -12,33 +12,43 @@
 
 #include <common/region.h>
 
+#include <algorithm>
 #include <cstdint>
 #include <cstring>
 #include <vector>
 
 namespace eka2l1::epoc {
-    // A draw-device update can write the whole panel before a legacy client starts
-    // writing narrower pixels through ScreenInfo. Do not count those earlier bytes
-    // as evidence that the raw client writes at the wider depth.
-    class raw_framebuffer_depth_observer {
-        std::vector<std::uint8_t> baseline_;
-        bool wide_ = false;
+    enum class framebuffer_update_source {
+        draw_device,
+        raw
+    };
+
+    // The tail is the part of a wide framebuffer beyond a complete narrow frame.
+    // Attribute changes to the source submitting this update, then acknowledge
+    // them for both sources. Each source retains its own depth until reset.
+    class framebuffer_depth_tracker {
+        std::vector<std::uint8_t> previous_tail_;
+        bool draw_device_wide_ = false;
+        bool raw_wide_ = false;
 
     public:
         void reset(const std::uint8_t *tail, std::size_t size) {
-            baseline_.assign(tail, tail + size);
-            wide_ = false;
-        }
-
-        void acknowledge_draw_device(const std::uint8_t *tail) {
-            if (!baseline_.empty()) {
-                std::memcpy(baseline_.data(), tail, baseline_.size());
+            if (size) {
+                previous_tail_.assign(tail, tail + size);
+            } else {
+                previous_tail_.clear();
             }
+            draw_device_wide_ = false;
+            raw_wide_ = false;
         }
 
-        bool observe_raw(const std::uint8_t *tail) {
-            wide_ = wide_ || (!baseline_.empty() && std::memcmp(baseline_.data(), tail, baseline_.size()) != 0);
-            return wide_;
+        bool update(framebuffer_update_source source, const std::uint8_t *tail) {
+            bool &wide = source == framebuffer_update_source::draw_device ? draw_device_wide_ : raw_wide_;
+            if (!previous_tail_.empty() && std::memcmp(previous_tail_.data(), tail, previous_tail_.size()) != 0) {
+                wide = true;
+                std::memcpy(previous_tail_.data(), tail, previous_tail_.size());
+            }
+            return wide;
         }
     };
 
@@ -74,6 +84,11 @@ namespace eka2l1::epoc {
 
         void acknowledge(const std::uint8_t *data) {
             std::memcpy(previous_.data(), data, previous_.size());
+        }
+
+        // A format change invalidates every row even when the bytes are unchanged.
+        void invalidate() {
+            std::fill(written_rows_.begin(), written_rows_.end(), true);
         }
 
         bool update(const std::uint8_t *data, std::size_t stride, std::size_t rows) {

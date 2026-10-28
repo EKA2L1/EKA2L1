@@ -14,38 +14,61 @@
 
 using namespace eka2l1;
 
-TEST_CASE("Draw-device clears do not determine a raw framebuffer writer's depth", "[window][framebuffer]") {
-    // Four pixels: a narrow RGB565 frame occupies the first eight bytes;
-    // a wide BGRX frame also writes the following eight bytes.
+TEST_CASE("Framebuffer depth is tracked independently for each update source", "[window][framebuffer]") {
+    using source = epoc::framebuffer_update_source;
+    // Four pixels: RGB565 occupies eight bytes; BGRX also writes the tail.
     std::vector<std::uint8_t> pixels(16, 255);
-    epoc::raw_framebuffer_depth_observer depth;
+    epoc::framebuffer_depth_tracker depth;
     depth.reset(pixels.data() + 8, 8);
 
-    SECTION("a 32-bit startup clear followed by RGB565 stays narrow") {
+    SECTION("a 32-bit startup clear does not widen later RGB565 updates") {
         std::fill(pixels.begin(), pixels.end(), 0);
-        depth.acknowledge_draw_device(pixels.data() + 8);
-        const std::uint8_t rgb565[] = {0, 248, 224, 7, 31, 0, 255, 255};
+        REQUIRE(depth.update(source::draw_device, pixels.data() + 8));
+        const std::uint8_t rgb565[] = { 0, 248, 224, 7, 31, 0, 255, 255 };
         std::copy(std::begin(rgb565), std::end(rgb565), pixels.begin());
-        REQUIRE_FALSE(depth.observe_raw(pixels.data() + 8));
+        REQUIRE_FALSE(depth.update(source::raw, pixels.data() + 8));
         pixels[0] = 31;
-        REQUIRE_FALSE(depth.observe_raw(pixels.data() + 8));
+        REQUIRE_FALSE(depth.update(source::raw, pixels.data() + 8));
     }
 
-    SECTION("a wide raw writer is detected after the startup clear") {
-        std::fill(pixels.begin(), pixels.end(), 0);
-        depth.acknowledge_draw_device(pixels.data() + 8);
-        pixels[8] = 127;
-        REQUIRE(depth.observe_raw(pixels.data() + 8));
-        depth.acknowledge_draw_device(pixels.data() + 8);
-        REQUIRE(depth.observe_raw(pixels.data() + 8));
-        depth.reset(pixels.data() + 8, 8);
-        REQUIRE_FALSE(depth.observe_raw(pixels.data() + 8));
-    }
-
-    SECTION("a raw-only client still widens when it writes past the narrow frame") {
+    SECTION("a wide raw update does not widen a narrow draw-device update") {
         pixels[15] = 0;
-        REQUIRE(depth.observe_raw(pixels.data() + 8));
+        REQUIRE(depth.update(source::raw, pixels.data() + 8));
+        pixels[0] = 31;
+        REQUIRE_FALSE(depth.update(source::draw_device, pixels.data() + 8));
+        REQUIRE(depth.update(source::raw, pixels.data() + 8));
     }
+
+    SECTION("both sources retain their own detection until the client resets") {
+        pixels[8] = 0;
+        REQUIRE(depth.update(source::draw_device, pixels.data() + 8));
+        pixels[9] = 127;
+        REQUIRE(depth.update(source::raw, pixels.data() + 8));
+        REQUIRE(depth.update(source::draw_device, pixels.data() + 8));
+        REQUIRE(depth.update(source::raw, pixels.data() + 8));
+        depth.reset(pixels.data() + 8, 8);
+        REQUIRE_FALSE(depth.update(source::draw_device, pixels.data() + 8));
+        REQUIRE_FALSE(depth.update(source::raw, pixels.data() + 8));
+    }
+}
+
+TEST_CASE("Framebuffer depth snapshots accept zero and white pixel data", "[window][framebuffer]") {
+    using source = epoc::framebuffer_update_source;
+    const auto initial_pixel = GENERATE(0, 255);
+    std::vector<std::uint8_t> pixels(16, initial_pixel);
+    epoc::framebuffer_depth_tracker depth;
+    depth.reset(pixels.data() + 8, 8);
+    REQUIRE_FALSE(depth.update(source::raw, pixels.data() + 8));
+
+    std::fill(pixels.begin(), pixels.end(), 255 - initial_pixel);
+    REQUIRE(depth.update(source::draw_device, pixels.data() + 8));
+    REQUIRE_FALSE(depth.update(source::raw, pixels.data() + 8));
+    pixels[15] = initial_pixel;
+    REQUIRE(depth.update(source::raw, pixels.data() + 8));
+
+    depth.reset(nullptr, 0);
+    REQUIRE_FALSE(depth.update(source::draw_device, nullptr));
+    REQUIRE_FALSE(depth.update(source::raw, nullptr));
 }
 
 TEST_CASE("UIQ 2 wire opcodes preserve ROM export contracts", "[window]") {
@@ -107,6 +130,13 @@ TEST_CASE("Mapped framebuffer tracks writes without a sentinel pixel value", "[w
     observer.reset(pixels.data(), 8, 2);
     REQUIRE(observer.written_rows() == std::vector<bool>{false, false});
     REQUIRE_FALSE(observer.update(pixels.data(), 8, 2));
+    // Reinterpreting unchanged bytes must still redraw every row. Sampling
+    // unchanged pixels afterwards must not discard that invalidation.
+    observer.invalidate();
+    REQUIRE_FALSE(observer.update(pixels.data(), 8, 2));
+    REQUIRE(observer.written_rows() == std::vector<bool>{true, true});
+    observer.reset(pixels.data(), 8, 2);
+    REQUIRE(observer.written_rows() == std::vector<bool>{false, false});
 }
 
 TEST_CASE("Mapped panel updates scan the visible DSA region independently of dirty rectangles", "[window][framebuffer]") {

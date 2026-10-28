@@ -58,7 +58,7 @@ namespace eka2l1::epoc {
     const std::uint32_t WORD_PALETTE_ENTRIES_COUNT = 16;
 
     // The direct screen access buffer is handed to the guest pre-filled with this value.
-    const std::uint8_t SCREEN_BUFFER_UNTOUCHED_FILL = 255;
+    const std::uint8_t SCREEN_BUFFER_INITIAL_FILL = 255;
 
     struct window;
     struct window_group;
@@ -98,7 +98,7 @@ namespace eka2l1::epoc {
         epoc::display_mode dsa_disp_mode;
         epoc::display_mode dsa_disp_mode_initial;
         epoc::display_mode dsa_texture_mode = display_mode::color_last;
-        raw_framebuffer_depth_observer raw_depth_observer;
+        framebuffer_depth_tracker framebuffer_depth;
 
         std::uint64_t last_vsync;
         std::uint64_t last_fps_check;
@@ -238,16 +238,10 @@ namespace eka2l1::epoc {
         void sync_screen_buffer_data(drivers::graphics_driver *driver);
 
         /**
-         * @brief Widen the assumed direct screen access pixel depth once the guest proves
-         *        it writes deeper pixels than the conservative starting guess.
-         */
-        bool promote_dsa_depth_if_deep_pixels_written();
-
-        /**
          * @brief Forget what the last direct screen access client wrote, so the next one
-         *        is measured on its own frames.
+         *        is measured on its own frames without altering guest pixels.
          */
-        void reset_dsa_depth_guess();
+        void reset_framebuffer_tracking();
 
         /**
          * @brief Remember that a client was given the raw framebuffer address.
@@ -257,14 +251,13 @@ namespace eka2l1::epoc {
         // Caller holds the kernel lock. Rects are Symbian TRects in screen coordinates; with none
         // the whole buffer is presented.
         void present_framebuffer(drivers::graphics_driver *driver, kernel_system *kern,
-            const eka2l1::rect *symbian_rects = nullptr, const std::uint32_t rect_count = 0,
-            const bool from_draw_device = false);
+            const eka2l1::rect *symbian_rects = nullptr, const std::uint32_t rect_count = 0);
 
         /**
-         * @brief Snapshot the directly mapped framebuffer. True if the guest wrote to it
-         *        since the last snapshot.
+         * @brief Select the update source's pixel format, then snapshot the mapped framebuffer.
+         *        True if the pixel format or the mapped contents changed.
          */
-        bool update_direct_framebuffer();
+        bool update_direct_framebuffer(framebuffer_update_source source);
 
         /**
          * \brief Set screen mode.

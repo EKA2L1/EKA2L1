@@ -1817,7 +1817,7 @@ namespace eka2l1 {
         const std::lock_guard<kernel_system> guard(*kern);
         if (auto *driver = get_graphics_driver()) {
             for (epoc::screen *scr = screens; scr; scr = scr->next) {
-                if (scr->direct_framebuffer_mapped && scr->update_direct_framebuffer()) {
+                if (scr->direct_framebuffer_mapped && scr->update_direct_framebuffer(epoc::framebuffer_update_source::raw)) {
                     std::uint64_t next_vsync = 0;
                     scr->vsync(get_ntimer(), next_vsync);
                     scr->present_framebuffer(driver, kern);
@@ -2136,10 +2136,10 @@ namespace eka2l1 {
 
         // Fill with white
         std::uint8_t *fill_start = reinterpret_cast<std::uint8_t *>(buffer->host_base());
-        std::fill(fill_start, fill_start + max_chunk_size, epoc::SCREEN_BUFFER_UNTOUCHED_FILL);
+        std::fill(fill_start, fill_start + max_chunk_size, epoc::SCREEN_BUFFER_INITIAL_FILL);
 
         scr->screen_buffer_chunk = buffer;
-        scr->reset_dsa_depth_guess();
+        scr->reset_framebuffer_tracking();
     }
 
     void window_server::init_screens() {
