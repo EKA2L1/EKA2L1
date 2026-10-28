@@ -34,7 +34,7 @@ class TDesOverflowHandler : public TDes16Overflow {
     }
 };
 
-void LogOut(const TDesC &aCategory, const TDesC &aMessage, ...) {
+void LogOut(const TDesC &aCategory, TRefByValue<const TDesC> aMessage, ...) {
     HBufC *newString = HBufC::NewL(256);
 
     VA_LIST list;
