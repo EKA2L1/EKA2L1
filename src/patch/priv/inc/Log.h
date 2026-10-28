@@ -30,6 +30,6 @@ _LIT(KScdvCat, "SCDV-HLE");
 _LIT(KPostingSurfaceCat, "PostingSurface");
 _LIT(KAvkonFepCat, "AVKONFEP");
 
-void LogOut(const TDesC &aCategory, const TDesC &aMessage, ...);
+void LogOut(const TDesC &aCategory, TRefByValue<const TDesC> aMessage, ...);
 
 #endif

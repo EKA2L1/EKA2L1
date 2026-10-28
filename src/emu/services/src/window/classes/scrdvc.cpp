@@ -363,6 +363,12 @@ namespace eka2l1::epoc {
             break;
         }
 
+        case ws_sd_op_palette_attributes:
+            // The HLE screen has no modifiable palette. The reply packs the
+            // entry count and ws_sd_op_setable_bit_flag into the completion code.
+            ctx.complete(0);
+            break;
+
         case ws_sd_op_display_mode: {
             ctx.complete(static_cast<int>(scr->disp_mode));
             break;
