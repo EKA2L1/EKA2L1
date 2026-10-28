@@ -50,6 +50,8 @@ namespace eka2l1::dispatch {
     static constexpr std::uint32_t FORMAT_RGB24_888_LE = 0x01000002;
     static constexpr std::uint32_t FORMAT_RGB32_X888_LE = 0x01000004;
 
+    BRIDGE_FUNC_LIBRARY(void, update_raw_screen, const std::uint32_t screen_number,
+        const std::uint32_t num_rects, const eka2l1::rect *rect_list);
     BRIDGE_FUNC_DISPATCHER(void, update_screen, const std::uint32_t screen_number, const std::uint32_t num_rects, const eka2l1::rect *rect_list);
     BRIDGE_FUNC_DISPATCHER(void, flexible_post, std::int32_t screen_index, std::uint8_t *data, std::int32_t size_x,
         std::int32_t size_y, std::int32_t format, posting_info *info);

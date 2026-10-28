@@ -326,7 +326,7 @@ namespace eka2l1::dispatch {
             up_rect.top = { 0, 0 };
             up_rect.size = scr->size();
 
-            dispatch::update_screen(sys, 0, scr->number, 1, &up_rect);
+            dispatch::update_raw_screen(sys, scr->number, 1, &up_rect);
             scr = scr->next;
         }
     }
