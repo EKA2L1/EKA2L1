@@ -180,6 +180,7 @@ namespace eka2l1::kernel {
         kernel::process *parent_process_;
 
         std::uint32_t time_delay_;
+        std::uint32_t tick_count_mask_ = ~0U;
         bool setting_inheritence_;
 
         std::int32_t generation_;
@@ -317,6 +318,14 @@ namespace eka2l1::kernel {
 
         std::uint32_t get_flags() const {
             return flags;
+        }
+
+        std::uint32_t get_tick_count_mask() const {
+            return tick_count_mask_;
+        }
+
+        void set_tick_count_mask(const std::uint32_t mask) {
+            tick_count_mask_ = mask;
         }
 
         chunk_ptr get_rom_bss_chunk(const address addr);

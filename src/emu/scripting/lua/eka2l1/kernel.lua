@@ -55,6 +55,7 @@ ffi.cdef([[
     thread *eka2l1_process_first_thread(process *pr);
     const char *eka2l1_process_executable_path(process *pr);
     const char *eka2l1_process_name(process *pr);
+    void eka2l1_process_set_tick_count_mask(process *pr, uint32_t mask);
 
     thread *eka2l1_get_current_thread();
     thread *eka2l1_next_thread_in_process(thread *thr);
@@ -302,6 +303,12 @@ end
 --- @return Qword value stored at the given address.
 function kernel.process:readQword(addr)
     return ffi.C.eka2l1_process_read_qword(self.impl, addr)
+end
+
+--- Set the compatibility mask applied to this process's User::TickCount results.
+--- @param mask A 32-bit mask; 0xFFFFFFFF keeps the complete counter.
+function kernel.process:setTickCountMask(mask)
+    ffi.C.eka2l1_process_set_tick_count_mask(self.impl, mask)
 end
 
 --- Get the name of the process.
