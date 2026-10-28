@@ -133,6 +133,8 @@ public:
     bool loaded_[2];
 
     bool should_dead_;
+    bool reloading_;
+    bool reload_again_;
     std::mutex exit_mutex_;
     eka2l1::common::event scanning_done_evt_;
 
@@ -150,12 +152,14 @@ public:
     void update_devices(const QStringList &devices, const int index);
     void update_j2me_button_name();
     void reload_whole_list();
+    void reload_whole_list_now();
     void show_no_apps_avail();
 
 private slots:
     void on_list_widget_item_clicked(QListWidgetItem *item);
     void on_device_change_request(int index);
-    void on_new_registeration_item_come(QListWidgetItem *item);
+    void on_new_registeration_item_come(const QIcon &icon, const QString &name, const QString &tool_tip,
+        int registry_index, bool is_j2me);
     void on_j2me_mode_btn_clicked();
     void on_j2me_list_widget_custom_menu_requested(const QPoint &pos);
     void on_action_delete_j2me_app_triggered();
@@ -164,7 +168,8 @@ private slots:
 signals:
     void app_launch(applist_widget_item *item);
     void device_change_request(int index);
-    void new_registeration_item_come(QListWidgetItem *item);
+    void new_registeration_item_come(const QIcon &icon, const QString &name, const QString &tool_tip,
+        int registry_index, bool is_j2me);
 
 public:
     explicit applist_widget(QWidget *parent, eka2l1::applist_server *lister, eka2l1::fbs_server *fbss, eka2l1::io_system *io,
