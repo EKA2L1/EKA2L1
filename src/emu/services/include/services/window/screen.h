@@ -97,6 +97,8 @@ namespace eka2l1::epoc {
         // Keep the detected DSA format separate from the screen device's mode.
         epoc::display_mode dsa_disp_mode;
         epoc::display_mode dsa_disp_mode_initial;
+        epoc::display_mode dsa_texture_mode = display_mode::color_last;
+        raw_framebuffer_depth_observer raw_depth_observer;
 
         std::uint64_t last_vsync;
         std::uint64_t last_fps_check;
@@ -255,7 +257,8 @@ namespace eka2l1::epoc {
         // Caller holds the kernel lock. Rects are Symbian TRects in screen coordinates; with none
         // the whole buffer is presented.
         void present_framebuffer(drivers::graphics_driver *driver, kernel_system *kern,
-            const eka2l1::rect *symbian_rects = nullptr, const std::uint32_t rect_count = 0);
+            const eka2l1::rect *symbian_rects = nullptr, const std::uint32_t rect_count = 0,
+            const bool from_draw_device = false);
 
         /**
          * @brief Snapshot the directly mapped framebuffer. True if the guest wrote to it

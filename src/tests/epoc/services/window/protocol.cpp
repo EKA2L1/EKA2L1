@@ -14,6 +14,40 @@
 
 using namespace eka2l1;
 
+TEST_CASE("Draw-device clears do not determine a raw framebuffer writer's depth", "[window][framebuffer]") {
+    // Four pixels: a narrow RGB565 frame occupies the first eight bytes;
+    // a wide BGRX frame also writes the following eight bytes.
+    std::vector<std::uint8_t> pixels(16, 255);
+    epoc::raw_framebuffer_depth_observer depth;
+    depth.reset(pixels.data() + 8, 8);
+
+    SECTION("a 32-bit startup clear followed by RGB565 stays narrow") {
+        std::fill(pixels.begin(), pixels.end(), 0);
+        depth.acknowledge_draw_device(pixels.data() + 8);
+        const std::uint8_t rgb565[] = {0, 248, 224, 7, 31, 0, 255, 255};
+        std::copy(std::begin(rgb565), std::end(rgb565), pixels.begin());
+        REQUIRE_FALSE(depth.observe_raw(pixels.data() + 8));
+        pixels[0] = 31;
+        REQUIRE_FALSE(depth.observe_raw(pixels.data() + 8));
+    }
+
+    SECTION("a wide raw writer is detected after the startup clear") {
+        std::fill(pixels.begin(), pixels.end(), 0);
+        depth.acknowledge_draw_device(pixels.data() + 8);
+        pixels[8] = 127;
+        REQUIRE(depth.observe_raw(pixels.data() + 8));
+        depth.acknowledge_draw_device(pixels.data() + 8);
+        REQUIRE(depth.observe_raw(pixels.data() + 8));
+        depth.reset(pixels.data() + 8, 8);
+        REQUIRE_FALSE(depth.observe_raw(pixels.data() + 8));
+    }
+
+    SECTION("a raw-only client still widens when it writes past the narrow frame") {
+        pixels[15] = 0;
+        REQUIRE(depth.observe_raw(pixels.data() + 8));
+    }
+}
+
 TEST_CASE("UIQ 2 wire opcodes preserve ROM export contracts", "[window]") {
     epoc::window_server_protocol uiq(epocver::epoc70, {1, 0, 151});
     REQUIRE(uiq.session_opcode(47) == ws_cl_op_claim_system_pointer_cursor_list);

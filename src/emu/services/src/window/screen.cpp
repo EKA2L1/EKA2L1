@@ -208,6 +208,7 @@ namespace eka2l1::epoc {
             if (wide_bytes > narrow_bytes) {
                 std::fill(screen_buffer_ptr() + narrow_bytes, screen_buffer_ptr() + wide_bytes,
                     SCREEN_BUFFER_UNTOUCHED_FILL);
+                raw_depth_observer.reset(screen_buffer_ptr() + narrow_bytes, wide_bytes - narrow_bytes);
             }
         }
         if (direct_framebuffer_mapped) {
@@ -231,7 +232,7 @@ namespace eka2l1::epoc {
     }
 
     void screen::present_framebuffer(drivers::graphics_driver *driver, kernel_system *kern,
-        const eka2l1::rect *symbian_rects, const std::uint32_t rect_count) {
+        const eka2l1::rect *symbian_rects, const std::uint32_t rect_count, const bool from_draw_device) {
         // Update the DSA screen texture
         const epoc::config::screen_mode &mode_info = current_mode();
         const eka2l1::vec2 screen_size = mode_info.size;
@@ -242,10 +243,19 @@ namespace eka2l1::epoc {
         // access client writes into the panel buffer. Most EKA1 guests take the
         // reported mode and write that many bytes per pixel, but a few hardcode
         // 16-bit pixels and would be shredded by a 32-bit upload. The two cases
-        // are distinguishable: at 16 bits the guest only ever fills the first
-        // half of the (always 32-bit sized) buffer. Start narrow and widen the
-        // moment anything lands in the upper half.
-        const bool dsa_depth_changed = promote_dsa_depth_if_deep_pixels_written();
+        // are distinguishable by writes beyond the narrower frame. A preceding
+        // scdv clear is a different writer, so snapshot it instead of letting it
+        // determine the raw client's format permanently.
+        if (dsa_disp_mode_initial != disp_mode) {
+            const std::size_t narrow_bytes = screen_buffer_byte_width(dsa_disp_mode_initial) * screen_size.y;
+            const auto *tail = screen_buffer_ptr() + narrow_bytes;
+            if (from_draw_device) {
+                promote_dsa_depth_if_deep_pixels_written();
+                raw_depth_observer.acknowledge_draw_device(tail);
+            } else {
+                dsa_disp_mode = raw_depth_observer.observe_raw(tail) ? disp_mode : dsa_disp_mode_initial;
+            }
+        }
 
         // Every writer lays its rows out at the pitch the screen reports, so read
         // it back with that one. Only a 32-bit framebuffer is ever padded.
@@ -260,7 +270,7 @@ namespace eka2l1::epoc {
 
         std::unique_lock<std::mutex> guard(screen_mutex);
 
-        if (dsa_depth_changed && dsa_texture) {
+        if ((dsa_texture_mode != dsa_disp_mode) && dsa_texture) {
             // The transfer texture was made for the old depth; drop it and let the
             // block below build one that matches.
             drivers::graphics_command_builder discard_builder;
@@ -284,6 +294,7 @@ namespace eka2l1::epoc {
             guard.lock();
 
             dsa_texture = bitmap_handle;
+            dsa_texture_mode = dsa_disp_mode;
         }
 
         if (!screen_texture) {

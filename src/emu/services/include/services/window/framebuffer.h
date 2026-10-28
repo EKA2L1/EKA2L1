@@ -17,6 +17,31 @@
 #include <vector>
 
 namespace eka2l1::epoc {
+    // A draw-device update can write the whole panel before a legacy client starts
+    // writing narrower pixels through ScreenInfo. Do not count those earlier bytes
+    // as evidence that the raw client writes at the wider depth.
+    class raw_framebuffer_depth_observer {
+        std::vector<std::uint8_t> baseline_;
+        bool wide_ = false;
+
+    public:
+        void reset(const std::uint8_t *tail, std::size_t size) {
+            baseline_.assign(tail, tail + size);
+            wide_ = false;
+        }
+
+        void acknowledge_draw_device(const std::uint8_t *tail) {
+            if (!baseline_.empty()) {
+                std::memcpy(baseline_.data(), tail, baseline_.size());
+            }
+        }
+
+        bool observe_raw(const std::uint8_t *tail) {
+            wide_ = wide_ || (!baseline_.empty() && std::memcmp(baseline_.data(), tail, baseline_.size()) != 0);
+            return wide_;
+        }
+    };
+
     inline common::region explicit_framebuffer_update_region(const eka2l1::rect *symbian_rects,
         const std::uint32_t rect_count, const common::region &visible_region, const bool mapped_dsa) {
         // A mapped panel already contains the pixels being scanned out; draw-device

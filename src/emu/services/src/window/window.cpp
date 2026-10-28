@@ -2139,6 +2139,7 @@ namespace eka2l1 {
         std::fill(fill_start, fill_start + max_chunk_size, epoc::SCREEN_BUFFER_UNTOUCHED_FILL);
 
         scr->screen_buffer_chunk = buffer;
+        scr->reset_dsa_depth_guess();
     }
 
     void window_server::init_screens() {

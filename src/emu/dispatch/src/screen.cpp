@@ -225,7 +225,10 @@ namespace eka2l1::dispatch {
                 if (scr->direct_framebuffer_mapped) {
                     scr->update_direct_framebuffer();
                 }
-                scr->present_framebuffer(sys->get_graphics_driver(), sys->get_kernel_system(), rect_list, num_rects);
+                // The scdv bridge supplies its dispatch ordinal (1); the internal
+                // ERawEvent::ERedraw path supplies 0 and has no draw-device format.
+                scr->present_framebuffer(sys->get_graphics_driver(), sys->get_kernel_system(), rect_list, num_rects,
+                    func_num == 1);
                 break;
             }
 
