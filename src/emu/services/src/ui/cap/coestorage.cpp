@@ -24,8 +24,21 @@
 
 #include <common/cvt.h>
 #include <common/log.h>
+#include <utils/locale.h>
 
 namespace eka2l1::epoc {
+    void initialize_input_language(central_repo &repo, const std::uint32_t ui_language) {
+        if (repo.uid != AKN_FEP_REPO_UID) {
+            return;
+        }
+
+        auto entry = repo.find_entry(AKN_FEP_INPUT_LANGUAGE_KEY);
+        if (entry && entry->data.etype == central_repo_entry_type::integer && entry->data.intd == 0) {
+            // Avkon's default input language uses English keymaps for American UI ROMs.
+            entry->data.intd = ui_language == lang_american ? lang_english : ui_language;
+        }
+    }
+
     coe_data_storage::coe_data_storage(eka2l1::central_repo_server *serv, io_system *io, device_manager *mngr)
         : serv_(serv)
         , fep_repo_(nullptr)

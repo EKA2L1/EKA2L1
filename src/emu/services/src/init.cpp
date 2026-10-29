@@ -73,6 +73,7 @@
 #include <services/socket/server.h>
 #include <services/sysagt/sysagt.h>
 #include <services/timezone/timezone.h>
+#include <services/ui/cap/coestorage.h>
 #include <services/ui/cap/oom_app.h>
 #include <services/ui/eikappui.h>
 #include <services/ui/icon/icon.h>
@@ -305,7 +306,10 @@ namespace eka2l1 {
 
             CREATE_SERVER(sys, fbs_server);
             CREATE_SERVER(sys, window_server);
-            CREATE_SERVER(sys, central_repo_server, provide_host_access_point);
+            CREATE_SERVER(sys, central_repo_server, [sys](central_repo &repo) {
+                provide_host_access_point(repo);
+                epoc::initialize_input_language(repo, static_cast<std::uint32_t>(sys->get_system_language()));
+            });
             CREATE_SERVER(sys, featmgr_server);
 
             if (cfg->enable_srv_rights)
