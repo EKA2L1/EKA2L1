@@ -364,9 +364,10 @@ namespace eka2l1::epoc {
         }
 
         case ws_sd_op_palette_attributes:
-            // The HLE screen has no modifiable palette. The reply packs the
-            // entry count and ws_sd_op_setable_bit_flag into the completion code.
-            ctx.complete(0);
+            // Fixed/direct-colour panels still report their colour capacity.
+            // Use the native panel layout, which can differ from the backing bitmap.
+            // Leave ws_sd_op_setable_bit_flag clear: custom palettes are unsupported.
+            ctx.complete(epoc::get_num_colors_from_display_mode(scr->current_mode().dsa_disp_mode));
             break;
 
         case ws_sd_op_display_mode: {
