@@ -178,18 +178,24 @@ namespace eka2l1::hle {
         return true;
     }
 
-    static void buildup_import_fixup_table(loader::e32img *img, memory_system *mem, hle::lib_manager &mngr, codeseg_ptr cs) {
+    static bool buildup_import_fixup_table(loader::e32img *img, memory_system *mem, hle::lib_manager &mngr, codeseg_ptr cs) {
         if (img->epoc_ver < epocver::eka2) {
             std::uint32_t track = 0;
 
             for (auto &ib : img->import_section.imports) {
-                pe_fix_up_iat(mem, mngr, img->header.text_size, ib, track, cs);
+                if (!pe_fix_up_iat(mem, mngr, img->header.text_size, ib, track, cs)) {
+                    return false;
+                }
             }
         } else {
             for (auto &ib : img->import_section.imports) {
-                elf_fix_up_import_dir(mem, mngr, reinterpret_cast<std::uint8_t *>(&img->data[img->header.code_offset]), ib, cs);
+                if (!elf_fix_up_import_dir(mem, mngr, reinterpret_cast<std::uint8_t *>(&img->data[img->header.code_offset]), ib, cs)) {
+                    return false;
+                }
             }
         }
+
+        return true;
     }
 
     static std::string get_e32_codeseg_name_from_path(const std::u16string &path) {
@@ -201,8 +207,7 @@ namespace eka2l1::hle {
         return res;
     }
 
-    static codeseg_ptr import_e32img(loader::e32img *img, memory_system *mem, kernel_system *kern, hle::lib_manager &mngr,
-        const std::u16string &path = u"", const address force_code_addr = 0) {
+    codeseg_ptr lib_manager::import_e32img(loader::e32img *img, const std::u16string &path, const address force_code_addr) {
         std::uint32_t data_seg_size = img->header.data_size + img->header.bss_size;
         kernel::codeseg_create_info info;
 
@@ -255,16 +260,34 @@ namespace eka2l1::hle {
             }
         }
 
-        codeseg_ptr cs = kern->create<kernel::codeseg>(get_e32_codeseg_name_from_path(path), info);
+        codeseg_ptr cs = kern_->create<kernel::codeseg>(get_e32_codeseg_name_from_path(path), info);
 
         if (!cs) {
             LOG_ERROR(KERNEL, "E32 image loading failed!");
             return nullptr;
         }
 
-        // Build import table so that it can patch later
-        buildup_import_fixup_table(img, mem, mngr, cs);
-        mngr.try_apply_patch(cs);
+        const std::size_t first = loading_codesegs_.size();
+        cs->set_loading(true);
+        loading_codesegs_.push_back(cs);
+        if (!buildup_import_fixup_table(img, mem_, *this, cs)) {
+            for (std::size_t i = first; i < loading_codesegs_.size(); i++) {
+                loading_codesegs_[i]->clear_dependencies();
+            }
+            for (std::size_t i = first; i < loading_codesegs_.size(); i++) {
+                kern_->destroy(loading_codesegs_[i]);
+            }
+            loading_codesegs_.resize(first);
+            return nullptr;
+        }
+        try_apply_patch(cs);
+
+        if (first == 0) {
+            for (auto segment : loading_codesegs_) {
+                segment->set_loading(false);
+            }
+            loading_codesegs_.clear();
+        }
 
         return cs;
     }
@@ -621,7 +644,7 @@ namespace eka2l1::hle {
 
                 // Relocate! Import
                 std::memcpy(code_chunk->host_base(), e32img->data.data() + e32img->header.code_offset, e32img->header.code_size);
-                patch_seg = import_e32img(&e32img.value(), mem, kern_, *this, common::utf8_to_ucs2(patch_image_paths[i]),
+                patch_seg = import_e32img(&e32img.value(), common::utf8_to_ucs2(patch_image_paths[i]),
                     code_chunk->base(nullptr).ptr_address());
 
                 patch_segs_lookup.emplace(patch_image_paths[i], patch_seg);
@@ -874,7 +897,7 @@ namespace eka2l1::hle {
             return seg;
         }
 
-        return import_e32img(&img, mem_, kern_, *this, path);
+        return import_e32img(&img, path);
     }
 
     // Stage ROFS ROM images at their linked address.

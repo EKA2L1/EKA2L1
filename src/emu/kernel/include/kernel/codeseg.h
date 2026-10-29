@@ -156,6 +156,7 @@ namespace eka2l1::kernel {
         std::unique_ptr<std::uint8_t[]> code_data;
 
         bool mark{ false };
+        bool loading_ = false;
 
         std::vector<std::unique_ptr<attached_info>> attaches;
         std::vector<address> premade_eps;
@@ -220,6 +221,9 @@ namespace eka2l1::kernel {
         /*! \brief Add new dependency.
         */
         bool add_dependency(const codeseg_dependency_info &codeseg);
+        void clear_dependencies();
+        void set_loading(const bool loading) { loading_ = loading; }
+        int decrease_access_count() override;
 
         /*! \brief Lookup for export.
         */

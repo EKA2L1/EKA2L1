@@ -147,6 +147,9 @@ namespace eka2l1 {
             std::vector<patch_pending_entry> patch_pendings_;
             std::vector<image_replacement> replacements_;
             std::map<address, address> trampoline_lookup_;
+            std::vector<codeseg_ptr> loading_codesegs_;
+
+            codeseg_ptr import_e32img(loader::e32img *img, const std::u16string &path, const address force_code_addr = 0);
 
         protected:
             const std::uint8_t *entry_points_call_routine_;
