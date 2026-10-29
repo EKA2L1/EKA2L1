@@ -77,11 +77,26 @@ namespace eka2l1::kernel {
             kern->destroy(code_chunk_shared);
         }
 
-        for (auto &dep: dependencies) {
-            dep.dep_->decrease_access_count();
-        }
+        clear_dependencies();
 
         return 0;
+    }
+
+    void codeseg::clear_dependencies() {
+        auto released = std::move(dependencies);
+        dependencies.clear();
+        for (auto &dep : released) {
+            dep.dep_->decrease_access_count();
+        }
+    }
+
+    int codeseg::decrease_access_count() {
+        // The loader owns pending segments until dependency resolution finishes.
+        if (loading_) {
+            --access_count;
+            return 0;
+        }
+        return kernel_obj::decrease_access_count();
     }
 
     // Shared code keeps the import addresses patched for the first process, so every
