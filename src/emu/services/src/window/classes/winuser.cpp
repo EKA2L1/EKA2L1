@@ -1810,7 +1810,9 @@ namespace eka2l1::epoc {
                 draw_surface(builder, background_surface_);
             }
             drivers::command_list cmd_list = driver_builder_.retrieve_command_list();
-            if (pending_segment_) {
+            // An earlier scheduled refresh can run before EndRedraw; keep the
+            // unfinished commands queued just like the pending redraw-store segment.
+            if (pending_segment_ && !(flags & flags_in_redraw)) {
                 builder.clip_bitmap_region(visible_region, scr->display_scale_factor);
 
                 gdi_command_builder gdi_builder(client->get_ws().get_graphics_driver(), builder,
