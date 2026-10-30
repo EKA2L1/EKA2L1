@@ -16,13 +16,13 @@ EXPORTS
 	_ZN15CPostingSurface19TPostingBufferChunkC1Ev @ 15 NONAME
 	_ZN15CPostingSurface19TPostingBufferChunkC2Ev @ 16 NONAME
 	_ZTI19CPostingSurfaceImpl @ 17 NONAME
-	_ZTI19CScreenSyncListener @ 18 NONAME
+	_ZTI19CScreenSyncListener @ 18 NONAME ABSENT
 	_ZTI22CPostingSurfaceFactory @ 19 NONAME
 	_ZTIN15CPostingSurface12TPostingBuffE @ 20 NONAME
 	_ZTIN15CPostingSurface15TPostingBuffExtE @ 21 NONAME
 	_ZTIN15CPostingSurface19TPostingBufferChunkE @ 22 NONAME
 	_ZTV19CPostingSurfaceImpl @ 23 NONAME
-	_ZTV19CScreenSyncListener @ 24 NONAME
+	_ZTV19CScreenSyncListener @ 24 NONAME ABSENT
 	_ZTV22CPostingSurfaceFactory @ 25 NONAME
 	_ZTVN15CPostingSurface12TPostingBuffE @ 26 NONAME
 	_ZTVN15CPostingSurface15TPostingBuffExtE @ 27 NONAME
