@@ -59,11 +59,11 @@ TEST_CASE("An empty CommsDat exposes a complete host access point", "[internet][
     REQUIRE(service);
     REQUIRE(bearer);
     REQUIRE(network);
-    REQUIRE(repo.find_entry(0x04820000 | (service->data.intd << 8)));
-    REQUIRE(repo.find_entry(0x08820000 | (bearer->data.intd << 8)));
-    REQUIRE(repo.find_entry(0x01820000 | (network->data.intd << 8)));
-    REQUIRE(repo.find_entry(0x0A060100)->data.intd == 1);
-    REQUIRE(repo.find_entry(0x0A030100)->data.intd == 1);
+    REQUIRE(repo.find_entry(service->data.intd | 0x00020000));
+    REQUIRE(repo.find_entry(bearer->data.intd | 0x00020000));
+    REQUIRE(repo.find_entry(network->data.intd | 0x00020000));
+    REQUIRE(repo.find_entry(0x0A060100)->data.intd == 0x02800100);
+    REQUIRE(repo.find_entry(0x0A030100)->data.intd == 0x03000100);
     REQUIRE(repo.find_entry(0x03030100));
     REQUIRE(repo.find_entry(0x02FFFF00)->data.etype == central_repo_entry_type::string);
     REQUIRE(repo.find_entry(0x02FF0100)->data.etype == central_repo_entry_type::integer);
@@ -92,7 +92,7 @@ TEST_CASE("Host access points preserve existing records and other repositories",
     REQUIRE(repo.entries.front().data.intd == 8);
     REQUIRE_FALSE(repo.entries.front().transient);
     REQUIRE(repo.find_entry(0x02820200));
-    REQUIRE(repo.find_entry(0x0A060100)->data.intd == 2);
+    REQUIRE(repo.find_entry(0x0A060100)->data.intd == 0x02800200);
     const auto count = repo.entries.size();
     provide_host_access_point(repo);
     REQUIRE(repo.entries.size() == count);
@@ -110,11 +110,11 @@ TEST_CASE("Host access point links avoid occupied table records", "[host_access_
         add_integer(repo, table | 0x00010100, 1234);
     }
     provide_host_access_point(repo);
-    REQUIRE(repo.find_entry(0x02840200)->data.intd == 2);
-    REQUIRE(repo.find_entry(0x02860200)->data.intd == 2);
-    REQUIRE(repo.find_entry(0x02870200)->data.intd == 2);
-    REQUIRE(repo.find_entry(0x0A030200)->data.intd == 2);
-    REQUIRE(repo.find_entry(0x0A060200)->data.intd == 2);
+    REQUIRE(repo.find_entry(0x02840200)->data.intd == 0x04800200);
+    REQUIRE(repo.find_entry(0x02860200)->data.intd == 0x08800200);
+    REQUIRE(repo.find_entry(0x02870200)->data.intd == 0x01800200);
+    REQUIRE(repo.find_entry(0x0A030200)->data.intd == 0x03000200);
+    REQUIRE(repo.find_entry(0x0A060200)->data.intd == 0x02800200);
     REQUIRE(repo.find_entry(0x04810100)->data.intd == 1234);
 }
 
@@ -162,8 +162,9 @@ TEST_CASE("Host access points use an available packet data bearer", "[host_acces
     bearer.data.strd.assign(reinterpret_cast<const char *>(nif.data()), nif.size() * sizeof(char16_t));
     repo.entries.push_back(bearer);
     provide_host_access_point(repo);
-    REQUIRE(repo.find_entry(0x02860100)->data.intd == 2);
+    REQUIRE(repo.find_entry(0x02860100)->data.intd == 0x08000200);
     REQUIRE(repo.find_entry(0x0C820100));
+    REQUIRE(repo.find_entry(0x02840100)->data.intd == 0x0C800100);
     REQUIRE_FALSE(repo.find_entry(0x04820100));
     REQUIRE(repo.find_entry(0x08030200)->data.strd == bearer.data.strd);
     REQUIRE_FALSE(repo.find_entry(0x08030200)->transient);

@@ -259,3 +259,96 @@ TEST_CASE("flexible_loaded_code_shares_the_global_area_with_rom", "mem") {
     fixture.process->delete_chunk(code_chunk);
     fixture.process->delete_chunk(rom_chunk);
 }
+
+TEST_CASE("multiple_code_segments_pack_pages_without_replacing_rom", "[mem][code_pages]") {
+    mem_model_fixture fixture(mem::mem_model_type::multiple);
+    auto opener = mem::make_new_mem_model_process(fixture.control.get(), mem::mem_model_type::multiple);
+    mem::mem_model_chunk_creation_info info;
+    info.size = 0x1000;
+    info.flags = mem::MEM_MODEL_CHUNK_TYPE_NORMAL | mem::MEM_MODEL_CHUNK_REGION_USER_ROM;
+    info.perm = prot_read_write_exec;
+    info.addr = mem::rom;
+    mem::mem_model_chunk *rom = nullptr;
+    REQUIRE(fixture.process->create_chunk(rom, info) == mem::MEM_MODEL_CHUNK_ERR_OK);
+    REQUIRE(rom->commit(0, info.size) == info.size);
+    auto *rom_word = static_cast<std::uint32_t *>(rom->host_base());
+    *rom_word = 0xE12FFF1E;
+
+    info.addr = 0;
+    info.flags = mem::MEM_MODEL_CHUNK_TYPE_NORMAL | mem::MEM_MODEL_CHUNK_REGION_USER_CODE;
+    std::vector<mem::mem_model_chunk *> chunks;
+    for (std::uint32_t i = 0; i < 300; ++i) {
+        mem::mem_model_chunk *chunk = nullptr;
+        REQUIRE(fixture.process->create_chunk(chunk, info) == mem::MEM_MODEL_CHUNK_ERR_OK);
+        chunks.push_back(chunk);
+        REQUIRE(chunk->base(nullptr) == mem::ram_code_addr + i * info.size);
+        REQUIRE(chunk->max() == info.size);
+        REQUIRE(chunk->commit(0, info.size) == info.size);
+        *static_cast<std::uint32_t *>(chunk->host_base()) = i;
+    }
+    fixture.process->delete_chunk(chunks[1]);
+    chunks[1] = nullptr;
+    for (std::uint32_t i = 0; i < chunks.size(); ++i) {
+        auto *word = static_cast<std::uint32_t *>(fixture.control->get_host_pointer(opener->address_space_id(), mem::ram_code_addr + i * info.size));
+        if (i == 1) {
+            REQUIRE(word == nullptr);
+        } else {
+            REQUIRE(word != nullptr);
+            REQUIRE(*word == i);
+        }
+    }
+    REQUIRE(fixture.control->get_host_pointer(opener->address_space_id(), mem::rom) == rom_word);
+    REQUIRE(*rom_word == 0xE12FFF1E);
+    for (auto *chunk : chunks) {
+        if (chunk) fixture.process->delete_chunk(chunk);
+    }
+    fixture.process->delete_chunk(rom);
+}
+
+TEST_CASE("multiple_code_mapping_crosses_page_tables_from_an_unaligned_base", "[mem][code_pages]") {
+    mem_model_fixture fixture(mem::mem_model_type::multiple);
+    mem::mem_model_chunk_creation_info info;
+    info.size = 0x1000;
+    info.flags = mem::MEM_MODEL_CHUNK_TYPE_NORMAL | mem::MEM_MODEL_CHUNK_REGION_USER_CODE;
+    info.perm = prot_read_write_exec;
+    mem::mem_model_chunk *first = nullptr;
+    REQUIRE(fixture.process->create_chunk(first, info) == mem::MEM_MODEL_CHUNK_ERR_OK);
+    REQUIRE(first->commit(0, info.size) == info.size);
+    *static_cast<std::uint32_t *>(first->host_base()) = 0x12345678;
+
+    info.size = 0x101000;
+    mem::mem_model_chunk *second = nullptr;
+    REQUIRE(fixture.process->create_chunk(second, info) == mem::MEM_MODEL_CHUNK_ERR_OK);
+    REQUIRE(second->base(nullptr) == first->base(nullptr) + 0x1000);
+    REQUIRE(second->commit(0, info.size) == info.size);
+    for (const auto offset : {0U, 0xFF000U, 0x100000U}) {
+        auto *word = static_cast<std::uint32_t *>(fixture.control->get_host_pointer(fixture.process->address_space_id(), second->base(nullptr) + offset));
+        REQUIRE(word == reinterpret_cast<std::uint32_t *>(static_cast<std::uint8_t *>(second->host_base()) + offset));
+        *word = offset;
+    }
+    second->decommit(0xFF000, 0x2000);
+    REQUIRE(fixture.control->get_host_pointer(fixture.process->address_space_id(), second->base(nullptr) + 0xFF000) == nullptr);
+    REQUIRE(fixture.control->get_host_pointer(fixture.process->address_space_id(), second->base(nullptr)) == second->host_base());
+    fixture.process->delete_chunk(second);
+    REQUIRE(*static_cast<std::uint32_t *>(first->host_base()) == 0x12345678);
+    REQUIRE(fixture.control->get_host_pointer(fixture.process->address_space_id(), first->base(nullptr)) == first->host_base());
+    fixture.process->delete_chunk(first);
+}
+
+TEST_CASE("multiple_code_space_exhaustion_fails_before_rom_and_can_be_reused", "[mem][code_pages]") {
+    mem_model_fixture fixture(mem::mem_model_type::multiple);
+    mem::mem_model_chunk_creation_info info;
+    info.size = mem::rom - mem::ram_code_addr;
+    info.flags = mem::MEM_MODEL_CHUNK_TYPE_NORMAL | mem::MEM_MODEL_CHUNK_REGION_USER_CODE;
+    info.perm = prot_read_write_exec;
+    mem::mem_model_chunk *all_code = nullptr;
+    REQUIRE(fixture.process->create_chunk(all_code, info) == mem::MEM_MODEL_CHUNK_ERR_OK);
+    info.size = 0x1000;
+    mem::mem_model_chunk *extra = nullptr;
+    REQUIRE(fixture.process->create_chunk(extra, info) == mem::MEM_MODEL_CHUNK_ERR_NO_MEM);
+    REQUIRE(extra == nullptr);
+    fixture.process->delete_chunk(all_code);
+    REQUIRE(fixture.process->create_chunk(extra, info) == mem::MEM_MODEL_CHUNK_ERR_OK);
+    REQUIRE(extra->base(nullptr) == mem::ram_code_addr);
+    fixture.process->delete_chunk(extra);
+}

@@ -140,11 +140,13 @@ namespace eka2l1 {
         }
         add_record(repo, iap_table, iap, {
             {1, iap}, {2, name}, {3, packet_bearer ? u"OutgoingGPRS" : u"LANService"},
-            {4, service}, {5, packet_bearer ? u"ModemBearer" : u"LANBearer"},
-            {6, bearer}, {7, network}, {8, 0U}, {9, 0U}});
+            {4, (packet_bearer ? packet_service_table : lan_service_table) | (service << 8)},
+            {5, packet_bearer ? u"ModemBearer" : u"LANBearer"},
+            {6, (packet_bearer ? modem_bearer_table : lan_bearer_table) | (bearer << 8)},
+            {7, network_table | (network << 8)}, {8, 0U}, {9, 0U}});
         add_record(repo, wap_table, wap, {{1, wap}, {2, name}, {3, u"WAPIPBearer"}, {4, u""}});
         add_record(repo, wap_bearer_table, wap_bearer, {
-            {1, wap_bearer}, {2, name}, {3, wap}, {4, u"0.0.0.0"}, {5, 0U},
-            {6, iap}, {7, 0U}, {8, 0U}, {9, 0U}, {10, u""}, {11, u""}});
+            {1, wap_bearer}, {2, name}, {3, wap_table | (wap << 8)}, {4, u"0.0.0.0"}, {5, 0U},
+            {6, iap_table | (iap << 8)}, {7, 0U}, {8, 0U}, {9, 0U}, {10, u""}, {11, u""}});
     }
 }

@@ -38,30 +38,37 @@ namespace eka2l1::mem {
             // The number of page sastify the request
             int page_num = (end_offset - running_offset) >> control_->page_size_bits_;
 
-            // The number of page to the end of page table
-            const int page_num_till_end_pt = (control_->chunk_size_ - (running_offset & control_->chunk_mask_)) >> control_->page_size_bits_;
+            const vm_address mapping_offset = (base_ & control_->chunk_mask_) + running_offset;
+            const int page_num_till_end_pt = (control_->chunk_size_ - (mapping_offset & control_->chunk_mask_)) >> control_->page_size_bits_;
 
             page_num = common::min(page_num, page_num_till_end_pt);
 
-            std::uint32_t ptid = page_tabs_[running_offset >> control_->chunk_shift_];
+            const auto table_index = mapping_offset >> control_->chunk_shift_;
+            std::uint32_t ptid = page_tabs_[table_index];
             page_table *pt = nullptr;
 
             if (ptid == 0xFFFFFFFF) {
-                pt = control_->create_new_page_table();
+                // Small code segments share a page table instead of reserving one each.
+                if (is_code && !control_->mem_map_old_) {
+                    auto mul_ctrl = static_cast<control_multiple *>(control_);
+                    pt = mul_ctrl->global_dir_.get_page_table(base_ + running_offset);
+                }
+                if (!pt) {
+                    pt = control_->create_new_page_table();
+                }
             } else {
                 pt = control_->get_page_table_by_id(ptid);
             }
 
             // Start offset
-            int ps_off = (running_offset >> control_->page_index_shift_) & control_->page_index_mask_;
+            int ps_off = (mapping_offset >> control_->page_index_shift_) & control_->page_index_mask_;
             const auto psize = control_->page_size();
 
             std::size_t size_just_mapped = 0;
             vm_address off_start_just_mapped = 0;
             std::uint8_t *host_start_just_mapped = nullptr;
 
-            const auto pt_base = (running_offset >> control_->chunk_shift_) << control_->chunk_shift_;
-            std::uint8_t *host_commit_ptr = reinterpret_cast<std::uint8_t *>(host_base_) + (ps_off << control_->page_size_bits_) + pt_base;
+            std::uint8_t *host_commit_ptr = reinterpret_cast<std::uint8_t *>(host_base_) + running_offset;
             const std::size_t host_commit_size = page_num << control_->page_size_bits_;
 
             // Commit the memory to the host
@@ -78,7 +85,7 @@ namespace eka2l1::mem {
             for (int poff = ps_off; poff < ps_off + page_num; poff++) {
                 // If the entry has not yet been committed.
                 if (pt->pages_[poff].host_addr == nullptr) {
-                    pt->pages_[poff].host_addr = reinterpret_cast<std::uint8_t *>(host_base_) + (poff << control_->page_size_bits_) + pt_base;
+                    pt->pages_[poff].host_addr = host_commit_ptr + ((poff - ps_off) << control_->page_size_bits_);
                     pt->pages_[poff].perm = permission_;
 
                     // Increase committed size.
@@ -86,8 +93,8 @@ namespace eka2l1::mem {
                     size_just_mapped += psize;
 
                     if (off_start_just_mapped == 0) {
-                        off_start_just_mapped = (poff << control_->page_size_bits_) + crr_base_addr + pt_base;
-                        host_start_just_mapped = reinterpret_cast<std::uint8_t *>(host_base_) + (poff << control_->page_size_bits_) + pt_base;
+                        off_start_just_mapped = crr_base_addr + running_offset + ((poff - ps_off) << control_->page_size_bits_);
+                        host_start_just_mapped = host_commit_ptr + ((poff - ps_off) << control_->page_size_bits_);
                     }
                 } else {
                     if (!ignore_committed) {
@@ -123,10 +130,10 @@ namespace eka2l1::mem {
 
             if (ptid == 0xFFFFFFFF) {
                 // Assign the new page table to the specified address
-                control_->assign_page_table(pt, crr_base_addr + pt_base, !is_local ? MMU_ASSIGN_LOCAL_GLOBAL_REGION : 0,
+                control_->assign_page_table(pt, crr_base_addr + running_offset, !is_local ? MMU_ASSIGN_LOCAL_GLOBAL_REGION : 0,
                     is_local ? &mul_process->addr_space_id_ : nullptr, is_local ? 1 : 0);
 
-                page_tabs_[running_offset >> control_->chunk_shift_] = pt->id();
+                page_tabs_[table_index] = pt->id();
             }
 
             // Alloc in-house bits
@@ -143,18 +150,19 @@ namespace eka2l1::mem {
     void multiple_mem_model_chunk::decommit(const vm_address offset, const std::size_t size) {
         // Align the offset
         vm_address running_offset = offset;
-        vm_address end_offset = common::min(static_cast<vm_address>(offset + max_size_),
+        vm_address end_offset = common::min(static_cast<vm_address>(max_size_),
             static_cast<vm_address>(offset + size));
 
         while (running_offset < end_offset) {
             // The number of page sastify the request
             int page_num = (end_offset - running_offset) >> control_->page_size_bits_;
 
-            // The number of page to the end of page table
-            const int page_num_till_end_pt = (control_->chunk_size_ - (running_offset & control_->chunk_mask_)) >> control_->page_size_bits_;
+            const vm_address mapping_offset = (base_ & control_->chunk_mask_) + running_offset;
+            const int page_num_till_end_pt = (control_->chunk_size_ - (mapping_offset & control_->chunk_mask_)) >> control_->page_size_bits_;
 
             page_num = common::min(page_num, page_num_till_end_pt);
-            std::uint32_t ptid = page_tabs_[running_offset >> control_->chunk_shift_];
+            const auto table_index = mapping_offset >> control_->chunk_shift_;
+            std::uint32_t ptid = page_tabs_[table_index];
             page_table *pt = nullptr;
 
             if (ptid == 0xFFFFFFFF) {
@@ -165,13 +173,12 @@ namespace eka2l1::mem {
             }
 
             // Start offset
-            int ps_off = (running_offset >> control_->page_index_shift_) & control_->page_index_mask_;
+            int ps_off = (mapping_offset >> control_->page_index_shift_) & control_->page_index_mask_;
             const auto psize = control_->page_size();
 
             std::size_t size_just_unmapped = 0;
             vm_address off_start_just_unmapped = 0;
 
-            const auto pt_base = (running_offset >> control_->chunk_shift_) << control_->chunk_shift_;
             const vm_address crr_base_addr = base_;
 
             control_multiple *mul_ctrl = reinterpret_cast<control_multiple *>(control_);
@@ -187,7 +194,7 @@ namespace eka2l1::mem {
                     size_just_unmapped += psize;
 
                     if (off_start_just_unmapped == 0) {
-                        off_start_just_unmapped = (poff << control_->page_size_bits_) + crr_base_addr + pt_base;
+                        off_start_just_unmapped = crr_base_addr + running_offset + ((poff - ps_off) << control_->page_size_bits_);
                     }
                 } else {
                     // Invalidate the CPU TLB unconditionally: globally-visible pages
@@ -217,7 +224,7 @@ namespace eka2l1::mem {
 
             // Decommit the memory from the host
             if (!is_external_host) {
-                if (!common::decommit(reinterpret_cast<std::uint8_t *>(host_base_) + (ps_off << control_->page_size_bits_) + pt_base,
+                if (!common::decommit(reinterpret_cast<std::uint8_t *>(host_base_) + running_offset,
                         page_num << control_->page_size_bits_)) {
                     LOG_ERROR(MEMORY, "Can't decommit a page from host memory");
                 }
@@ -307,11 +314,12 @@ namespace eka2l1::mem {
             is_code = true;
         }
 
-        // Calculate total page table that we will use.
-        // For multiple model, Symbian uses a whole page table too, it's one of a way for it to be
-        // fast (not nitpicking places in the table, but actually alloc the whole table)
         const std::uint32_t total_pt = static_cast<std::uint32_t>(
             (create_info.size + control_->chunk_mask_) >> control_->chunk_shift_);
+
+        if (is_code && !control_->mem_map_old_) {
+            granularity_shift_ = control_->page_size_bits_;
+        }
 
         // Calculate the aligned max size, depends on the granularity.
         // The granularity is set in mem model process's chunk creation.
@@ -324,10 +332,17 @@ namespace eka2l1::mem {
         vm_address addr = create_info.addr;
 
         if (addr == 0) {
-            int max_page = total_pt << control_->page_per_tab_shift_;
+            const int requested_pages = (is_code && !control_->mem_map_old_)
+                ? static_cast<int>(max_size_ >> control_->page_size_bits_)
+                : static_cast<int>(total_pt << control_->page_per_tab_shift_);
+            int max_page = requested_pages;
             const int offset = chunk_sec->alloc_.allocate_from(0, max_page, false);
 
-            if (offset == -1) {
+            if (offset == -1 || max_page != requested_pages) {
+                if (offset != -1) {
+                    chunk_sec->alloc_.deallocate(offset, max_page);
+                }
+                max_size_ = 0;
                 return MEM_MODEL_CHUNK_ERR_NO_MEM;
             }
 
@@ -356,6 +371,9 @@ namespace eka2l1::mem {
         base_ = addr;
         committed_ = 0;
 
+        page_tabs_.resize(((base_ & control_->chunk_mask_) + max_size_ + control_->chunk_mask_) >> control_->chunk_shift_);
+        std::fill(page_tabs_.begin(), page_tabs_.end(), 0xFFFFFFFF);
+
         // Map host base memory
         if (create_info.host_map) {
             host_base_ = create_info.host_map;
@@ -368,10 +386,6 @@ namespace eka2l1::mem {
         if (!host_base_) {
             return MEM_MODEL_CHUNK_ERR_NO_MEM;
         }
-
-        // Allocate page table IDs storage that the chunk will use
-        page_tabs_.resize(total_pt);
-        std::fill(page_tabs_.begin(), page_tabs_.end(), 0xFFFFFFFF);
 
         permission_ = create_info.perm;
 
@@ -395,6 +409,10 @@ namespace eka2l1::mem {
     }
 
     multiple_mem_model_chunk::~multiple_mem_model_chunk() {
+        if (max_size_ == 0) {
+            return;
+        }
+
         // Decommit the whole things
         decommit(0, max_size_);
 
