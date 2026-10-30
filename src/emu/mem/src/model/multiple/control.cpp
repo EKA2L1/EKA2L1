@@ -25,7 +25,7 @@ namespace eka2l1::mem {
         : control_base(monitor, alloc, conf, psize_bits, mem_map_old)
         , global_dir_(page_size_bits_, 0)
         , user_global_sec_(mem_map_old ? shared_data_eka1 : shared_data, mem_map_old ? shared_data_end_eka1 : ram_drive, page_size())
-        , user_code_sec_(mem_map_old ? ram_code_addr_eka1 : ram_code_addr, mem_map_old ? ram_code_addr_eka1_end : dll_static_data, page_size())
+        , user_code_sec_(mem_map_old ? ram_code_addr_eka1 : ram_code_addr, mem_map_old ? ram_code_addr_eka1_end : rom, page_size())
         , user_rom_sec_(mem_map_old ? rom_eka1 : rom, mem_map_old ? kern_mapping_eka1 : global_data, page_size())
         , kernel_mapping_sec_(mem_map_old ? kern_mapping_eka1 : kernel_mapping, mem_map_old ? kern_mapping_eka1_end : kernel_mapping_end, page_size()) {
     }
