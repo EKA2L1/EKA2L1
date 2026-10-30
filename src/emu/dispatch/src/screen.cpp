@@ -315,12 +315,14 @@ namespace eka2l1::dispatch {
                 builder.set_texture_filter(temp, true, filter);
                 builder.set_texture_filter(temp, false, filter);
 
-                eka2l1::rect scaled_twice_rect = info->scale_to_rect;
+                eka2l1::rect scaled_twice_rect = post_info_copy.scale_to_rect;
+                // The scale rectangle is relative to the displayed rectangle.
+                scaled_twice_rect.top += post_info_copy.displayed_rect.top;
                 scaled_twice_rect.scale(scr->display_scale_factor);
 
                 builder.bind_bitmap(scr->screen_texture);
                 builder.set_feature(drivers::graphics_feature::clipping, false);
-                builder.draw_bitmap(temp, 0, scaled_twice_rect, info->input_crop, eka2l1::vec2(0, 0), 0, 0);
+                builder.draw_bitmap(temp, 0, scaled_twice_rect, post_info_copy.input_crop, eka2l1::vec2(0, 0), 0, 0);
                 builder.bind_bitmap(0);
 
                 drivers::command_list retrieved = builder.retrieve_command_list();
