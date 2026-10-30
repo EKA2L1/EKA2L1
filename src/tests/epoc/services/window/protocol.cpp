@@ -84,6 +84,32 @@ TEST_CASE("UIQ 2 wire opcodes preserve ROM export contracts", "[window]") {
     REQUIRE(uiq.legacy_dsa());
 }
 
+TEST_CASE("SimulateKeyEvent wire opcodes reach the same handler across ROM versions", "[window]") {
+    const struct {
+        epocver os;
+        epoc::version client;
+        std::uint16_t opcode;
+    } cases[] = {
+        { epocver::epoc6, { 1, 0, 139 }, 0x3F },
+        { epocver::epoc70, { 1, 0, 151 }, 0x3F },
+        { epocver::epoc7, { 1, 0, 151 }, 0x41 },
+        { epocver::epoc80, { 1, 0, 151 }, 0x41 },
+        { epocver::epoc81a, { 1, 0, 151 }, 0x41 },
+        { epocver::epoc91, { 1, 0, 151 }, 0x41 },
+        { epocver::epoc93fp1, { 1, 0, 151 }, 0x41 },
+        { epocver::epoc93fp2, { 1, 0, 151 }, 0x41 },
+        { epocver::epoc94, { 1, 0, 151 }, 0x41 },
+        { epocver::epoc10, { 1, 0, 151 }, 0x41 }
+    };
+
+    for (const auto &entry : cases) {
+        INFO("OS version " << static_cast<int>(entry.os));
+        epoc::window_server_protocol protocol(entry.os, entry.client);
+        REQUIRE(protocol.session_opcode(entry.opcode) == ws_cl_op_key_event);
+    }
+    REQUIRE(sizeof(epoc::key_event) == 16);
+}
+
 TEST_CASE("Window protocol extensions do not shift other platform tables", "[window]") {
     epoc::window_server_protocol s60v1(epocver::epoc6, {1, 0, 139});
     REQUIRE(s60v1.session_opcode(80) == ws_cl_op_set_faded);
