@@ -1028,6 +1028,44 @@ namespace eka2l1::epoc {
         ctx.complete(epoc::error_none);
     }
 
+    void window_server_client::add_key_event(service::ipc_context &ctx, ws_cmd &cmd) {
+        static epoc::security_policy policy({ epoc::cap_sw_event });
+        if (!ctx.satisfy(policy)) {
+            ctx.complete(epoc::error_permission_denied);
+            return;
+        }
+        if (cmd.header.cmd_len < sizeof(epoc::key_event)) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+
+        epoc::event evt{};
+        evt.type = epoc::event_code::key;
+        evt.time = get_ws().get_kernel_system()->universal_time();
+        evt.key_evt_ = *reinterpret_cast<const epoc::key_event *>(cmd.data_ptr);
+        evt.key_evt_.repeats = 0;
+
+        epoc::window_group *target = get_ws().get_focus();
+        const auto captures = get_ws().key_capture_requests.find(evt.key_evt_.code);
+        if (captures != get_ws().key_capture_requests.end()) {
+            const epoc::event_capture_key_notifier *capture = nullptr;
+            for (const auto &request : captures->second) {
+                if (request.type_ == epoc::event_key_capture_type::normal
+                    && (evt.key_evt_.modifiers & request.modifiers_mask_) == request.modifiers_
+                    && (!capture || request.pri_ > capture->pri_)) {
+                    capture = &request;
+                }
+            }
+            if (capture) {
+                target = static_cast<epoc::window_group *>(capture->user);
+            }
+        }
+        if (target) {
+            get_ws().send_event_to_window_group(target, evt);
+        }
+        ctx.complete(epoc::error_none);
+    }
+
     void window_server_client::set_keyboard_repeat_rate(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_cmd_keyboard_repeat_rate *repeat_rate = reinterpret_cast<ws_cmd_keyboard_repeat_rate *>(cmd.data_ptr);
         get_ws().set_keyboard_repeat_rate(repeat_rate->initial_time, repeat_rate->next_time);
@@ -1291,6 +1329,10 @@ namespace eka2l1::epoc {
 
         case ws_cl_op_raw_event:
             add_raw_event(ctx, cmd);
+            break;
+
+        case ws_cl_op_key_event:
+            add_key_event(ctx, cmd);
             break;
 
         case ws_cl_op_set_keyboard_repeat_rate:
