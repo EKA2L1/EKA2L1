@@ -34,3 +34,9 @@ TEST_CASE("symbian91_locked_atomics_use_the_rom_fast_exec_numbers", "[kernel_svc
     REQUIRE(epoc::svc_register_funcs_v10.at(0x0080000A).name == "debug_mask");
     REQUIRE(epoc::svc_register_funcs_v10.at(0x0080000B).name == "debug_mask_index");
 }
+
+TEST_CASE("library_memory_info_uses_the_sdk_slow_exec_numbers", "[kernel_svc]") {
+    REQUIRE(epoc::svc_register_funcs_v93.at(0x5F).name == "library_get_memory_info");
+    REQUIRE(epoc::svc_register_funcs_v94.at(0x60).name == "library_get_memory_info");
+    REQUIRE(epoc::svc_register_funcs_v10.at(0x60).name == "library_get_memory_info");
+}
