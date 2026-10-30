@@ -185,16 +185,16 @@ public:
     virtual void GetCapabilities(TPostingCapab& aCaps) = 0;
     virtual TBool FormatSupported(TPostingFormat aFormat) = 0;
 
-    virtual TInt SetPostingParameters(const TPostingParams& aParams) = 0;
-    virtual TInt SetClipRegion(const TRegion& aClipRegion) = 0;
+    virtual void Destroy(TRequestStatus& aComplete) = 0;
+    virtual void Destroy() = 0;
 
     virtual TInt WaitForNextBuffer(TRequestStatus& aComplete) = 0;
     virtual TPostingBuff* NextBuffer() = 0;
     virtual TInt CancelBuffer() = 0;
     virtual TInt PostBuffer(TPostingBuff* aBuffer) = 0;
 
-    virtual void Destroy(TRequestStatus& aComplete)= 0;
-    virtual void Destroy() = 0;
+    virtual TInt SetPostingParameters(const TPostingParams& aParams) = 0;
+    virtual TInt SetClipRegion(const TRegion& aClipRegion) = 0;
 };
 
 #include "PostingSurface.inl"

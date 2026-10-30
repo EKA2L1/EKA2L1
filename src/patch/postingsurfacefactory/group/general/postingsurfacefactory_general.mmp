@@ -14,6 +14,6 @@ nostrictdef
 LIBRARY		    euser.lib hal.lib
 STATICLIBRARY   priv.lib
 
-DEFFILE         ..\..\eabi\postingsurface_general.def
+DEFFILE         ..\..\eabi\postingsurfacefactory_general.def
 
 DEBUGGABLE_UDEBONLY
