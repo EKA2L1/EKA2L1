@@ -62,6 +62,7 @@ set(CORE_TEST_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/services/centralrepo/creiniloader.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/sms/common.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/socket/opcodes.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/services/ui/input_language.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/ui/iconops.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/services/ui/skin/skn.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/utils/obj.cpp

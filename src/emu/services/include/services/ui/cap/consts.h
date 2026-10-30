@@ -22,6 +22,8 @@
 #include <cstdint>
 
 namespace eka2l1::epoc {
+    static constexpr std::uint32_t AKN_FEP_REPO_UID = 0x101F876D;
+    static constexpr std::uint32_t AKN_FEP_INPUT_LANGUAGE_KEY = 0x00000005;
     static constexpr std::uint32_t FEP_FRAMEWORK_REPO_UID = 0x10272618;
     static constexpr std::uint32_t FEP_RESOURCE_ID = 0x008; /*19BD6008*/
 

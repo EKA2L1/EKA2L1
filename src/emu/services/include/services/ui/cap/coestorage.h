@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <optional>
 #include <string>
 
@@ -31,6 +32,8 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::epoc {
+    void initialize_input_language(central_repo &repo, std::uint32_t ui_language);
+
     class coe_data_storage {
         eka2l1::central_repo *fep_repo_;
         eka2l1::central_repo_server *serv_;
