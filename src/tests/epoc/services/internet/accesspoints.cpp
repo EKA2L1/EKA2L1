@@ -47,7 +47,7 @@ namespace {
 TEST_CASE("An empty CommsDat exposes a complete host access point", "[internet][host_access_point]") {
     central_repo repo{};
     repo.uid = 0xCCCCCC00;
-    provide_host_access_point(repo);
+    provide_host_access_point(repo, epocver::epoc94);
     const auto available = connmonitor_available_iaps(repo);
     REQUIRE(available.count == 1);
     REQUIRE(available.ids[0] == 1);
@@ -69,7 +69,7 @@ TEST_CASE("An empty CommsDat exposes a complete host access point", "[internet][
     REQUIRE(repo.find_entry(0x02FF0100)->data.etype == central_repo_entry_type::integer);
 
     const auto count = repo.entries.size();
-    provide_host_access_point(repo);
+    provide_host_access_point(repo, epocver::epoc94);
     REQUIRE(repo.entries.size() == count);
 }
 
@@ -83,7 +83,7 @@ TEST_CASE("Host access points preserve existing records and other repositories",
     const std::u16string name = u"Carrier";
     original_name.data.strd.assign(reinterpret_cast<const char *>(name.data()), name.size() * sizeof(char16_t));
     repo.entries.push_back(original_name);
-    provide_host_access_point(repo);
+    provide_host_access_point(repo, epocver::epoc94);
     const auto available = connmonitor_available_iaps(repo);
     REQUIRE(available.count == 2);
     REQUIRE(available.ids[0] == 1);
@@ -94,12 +94,12 @@ TEST_CASE("Host access points preserve existing records and other repositories",
     REQUIRE(repo.find_entry(0x02820200));
     REQUIRE(repo.find_entry(0x0A060100)->data.intd == 0x02800200);
     const auto count = repo.entries.size();
-    provide_host_access_point(repo);
+    provide_host_access_point(repo, epocver::epoc94);
     REQUIRE(repo.entries.size() == count);
 
     repo.entries.clear();
     repo.uid = 0x12345678;
-    provide_host_access_point(repo);
+    provide_host_access_point(repo, epocver::epoc94);
     REQUIRE(repo.entries.empty());
 }
 
@@ -109,7 +109,7 @@ TEST_CASE("Host access point links avoid occupied table records", "[host_access_
     for (const auto table : {0x01800000, 0x02800000, 0x04800000, 0x08800000, 0x03000000, 0x0A000000}) {
         add_integer(repo, table | 0x00010100, 1234);
     }
-    provide_host_access_point(repo);
+    provide_host_access_point(repo, epocver::epoc94);
     REQUIRE(repo.find_entry(0x02840200)->data.intd == 0x04800200);
     REQUIRE(repo.find_entry(0x02860200)->data.intd == 0x08800200);
     REQUIRE(repo.find_entry(0x02870200)->data.intd == 0x01800200);
@@ -125,7 +125,7 @@ TEST_CASE("Host access point records never enter the persisted repository", "[ho
     add_integer(repo, 0x00123456, 77);
     add_integer(repo, 0x02840100, 8);
     const auto original = serialize(repo);
-    provide_host_access_point(repo);
+    provide_host_access_point(repo, epocver::epoc94);
     REQUIRE(serialize(repo) == original);
 
     add_integer(repo, 0x00123457, 88);
@@ -136,7 +136,7 @@ TEST_CASE("Host access point records never enter the persisted repository", "[ho
     REQUIRE(loaded.entries.size() == 3);
     REQUIRE(loaded.find_entry(0x00123457)->data.intd == 88);
     REQUIRE(connmonitor_available_iaps(loaded).count == 0);
-    provide_host_access_point(loaded);
+    provide_host_access_point(loaded, epocver::epoc94);
     REQUIRE(connmonitor_available_iaps(loaded).count == 1);
 }
 
@@ -147,7 +147,7 @@ TEST_CASE("Full access point or bearer tables prevent partial host records", "[h
     for (std::uint32_t id = 1; id < 255; id++) {
         add_integer(repo, table | (id << 8), id);
     }
-    provide_host_access_point(repo);
+    provide_host_access_point(repo, epocver::epoc94);
     REQUIRE(repo.entries.size() == 254);
     REQUIRE(connmonitor_available_iaps(repo).count == 0);
 }
@@ -161,11 +161,23 @@ TEST_CASE("Host access points use an available packet data bearer", "[host_acces
     const std::u16string nif = u"genericnif";
     bearer.data.strd.assign(reinterpret_cast<const char *>(nif.data()), nif.size() * sizeof(char16_t));
     repo.entries.push_back(bearer);
-    provide_host_access_point(repo);
+    provide_host_access_point(repo, epocver::epoc94);
     REQUIRE(repo.find_entry(0x02860100)->data.intd == 0x08000200);
     REQUIRE(repo.find_entry(0x0C820100));
     REQUIRE(repo.find_entry(0x02840100)->data.intd == 0x0C800100);
     REQUIRE_FALSE(repo.find_entry(0x04820100));
     REQUIRE(repo.find_entry(0x08030200)->data.strd == bearer.data.strd);
     REQUIRE_FALSE(repo.find_entry(0x08030200)->transient);
+}
+
+TEST_CASE("Host access point links use plain record ids before Symbian 9.4", "[host_access_point]") {
+    central_repo repo{};
+    repo.uid = 0xCCCCCC00;
+    add_integer(repo, 0x02840100, 8);
+    provide_host_access_point(repo, epocver::epoc93fp2);
+    REQUIRE(repo.find_entry(0x02840200)->data.intd == 1);
+    REQUIRE(repo.find_entry(0x02860200)->data.intd == 1);
+    REQUIRE(repo.find_entry(0x02870200)->data.intd == 1);
+    REQUIRE(repo.find_entry(0x0A030100)->data.intd == 1);
+    REQUIRE(repo.find_entry(0x0A060100)->data.intd == 2);
 }

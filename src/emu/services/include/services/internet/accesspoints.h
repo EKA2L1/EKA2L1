@@ -19,8 +19,10 @@
 
 #pragma once
 
+#include <common/types.h>
+
 namespace eka2l1 {
     struct central_repo;
 
-    void provide_host_access_point(central_repo &repo);
+    void provide_host_access_point(central_repo &repo, epocver ver);
 }
