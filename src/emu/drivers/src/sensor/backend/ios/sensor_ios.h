@@ -142,7 +142,7 @@ namespace eka2l1::drivers {
         void set_motion_rotation(const int degrees) override;
         void set_controller(void *controller);
         void set_controller_rotation(int degrees);
-        void set_acceleration_override(const double *acceleration_ms2);
+        void set_acceleration_override(const double *acceleration_ms2) override;
 
         bool accelerometer_available() const;
         bool magnetometer_available() const;

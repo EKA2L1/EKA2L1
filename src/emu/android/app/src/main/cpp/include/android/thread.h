@@ -42,3 +42,7 @@ namespace eka2l1::android {
 
     void touch_screen(emulator &state, int x, int y, int z, int action, int pointer_id);
 }
+namespace eka2l1::android {
+    void prepare_control_reset(emulator &state);
+    bool control_boot_device(emulator &state, int index);
+}

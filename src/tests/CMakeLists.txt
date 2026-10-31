@@ -5,6 +5,7 @@ add_subdirectory(common)
 
 add_executable(ekatests 
 	tests.cpp
+    control.cpp
     platform.cpp
     ${COMMON_TEST_FILES}
     ${CORE_TEST_FILES})
@@ -12,6 +13,7 @@ add_executable(ekatests
 
 target_link_libraries(ekatests PRIVATE
     Catch2
+    control_native
     glm
     common
     config

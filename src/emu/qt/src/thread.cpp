@@ -56,6 +56,7 @@
 
 #include <qt/mainwindow.h>
 #include <iostream>
+#include <filesystem>
 
 static eka2l1::drivers::input_event make_mouse_event_driver(const float x, const float y, const float z, const int button, const int action,
     const int mouse_id) {
@@ -186,10 +187,18 @@ namespace eka2l1::desktop {
 
         switch (state.graphics_driver->get_current_api()) {
         case drivers::graphic_api::opengl: {
-            state.graphics_driver->set_display_hook([window]() {
-                window->swap_buffer();
-                window->poll_events();
-            });
+            if (state.debug_control_port) {
+                state.graphics_driver->set_display_hook([window, &state]() {
+                    state.debug_frames.fetch_add(1, std::memory_order_relaxed);
+                    window->swap_buffer();
+                    window->poll_events();
+                });
+            } else {
+                state.graphics_driver->set_display_hook([window]() {
+                    window->swap_buffer();
+                    window->poll_events();
+                });
+            }
 
             break;
         }
@@ -396,7 +405,47 @@ namespace eka2l1::desktop {
             state.ui_main->setup_and_switch_to_game_mode();
         }
 
+        if (state.debug_control_port) {
+            control::native_frontend frontend;
+            frontend.platform = "qt";
+            frontend.documents = std::filesystem::current_path().string();
+            frontend.log = (std::filesystem::current_path() / "EKA2L1.log").string();
+            frontend.get_system = [&state] { return state.symsys.get(); };
+            frontend.frames = [&state] { return state.debug_frames.load(); };
+            frontend.launch = [&state](auto uid) { return state.ui_main->control_launch(uid); };
+            frontend.close = [&state] { state.ui_main->control_close(); };
+            frontend.boot = [&state](int index) { return state.ui_main->control_boot(index); };
+            frontend.pause = [&state](bool paused) { state.ui_main->control_pause(paused); };
+            frontend.changed = [&state](auto change) { state.ui_main->control_changed(change); };
+            state.debug_backend = std::make_shared<control::native_backend>(std::move(frontend));
+            state.debug_active = std::make_shared<std::atomic<bool>>(true);
+            auto active = state.debug_active;
+            std::weak_ptr<control::native_backend> backend = state.debug_backend;
+            auto *window = state.ui_main;
+            state.debug_service = std::make_unique<control::service>([active, backend, window](auto req, auto done) {
+                if (!active->load()) return done(control::response::error(503,"stopped","frontend stopped"));
+                QMetaObject::invokeMethod(window, [active, backend, req = std::move(req), done = std::move(done)] {
+                    if (!active->load()) return done(control::response::error(503,"stopped","frontend stopped"));
+                    if (auto control = backend.lock()) done(control->handle(req));
+                    else done(control::response::error(503,"stopped","frontend stopped"));
+                }, Qt::QueuedConnection);
+            });
+            state.debug_server = std::make_unique<control::server>();
+            std::string error;
+            if (!state.debug_server->start(state.debug_control_port, [&state](auto req, auto done) {
+                state.debug_service->handle(std::move(req),std::move(done));
+            }, error)) {
+                LOG_ERROR(FRONTEND_CMDLINE,"Unable to start debug control: {}",error);
+            } else {
+                LOG_INFO(FRONTEND_CMDLINE,"Debug control on 127.0.0.1:{}",state.debug_control_port);
+            }
+        }
+
         const int exec_code = application.exec();
+        if (state.debug_active) state.debug_active->store(false);
+        if (state.debug_server) state.debug_server->stop();
+        if (state.debug_service) state.debug_service->stop();
+        state.debug_backend.reset();
         kill_emulator(state);
 
         // Wait for OS thread to die

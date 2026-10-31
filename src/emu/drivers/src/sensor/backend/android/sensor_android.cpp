@@ -24,6 +24,7 @@
 #include <common/time.h>
 #include <common/android/jniutils.h>
 #include <thread>
+#include <algorithm>
 
 namespace eka2l1::drivers {
     static constexpr int SENSOR_LOOPER_ID = 3;
@@ -281,9 +282,13 @@ namespace eka2l1::drivers {
         // Hope it's fine :D
         switch (event.type) {
             case ASENSOR_TYPE_ACCELEROMETER: {
+                const auto override = driver_->acceleration_override();
+                const double x = override ? (*override)[0] : event.acceleration.x;
+                const double y = override ? (*override)[1] : event.acceleration.y;
+                const double z = override ? (*override)[2] : event.acceleration.z;
                 if (rotation_) {
                     const auto data = rotation_from_acceleration(common::get_current_utc_time_in_microseconds_since_0ad(),
-                        event.acceleration.x, event.acceleration.y, event.acceleration.z);
+                        x, y, z);
                     const auto *bytes = reinterpret_cast<const std::uint8_t *>(&data);
                     events_translated_.insert(events_translated_.end(), bytes, bytes + sizeof(data));
                     break;
@@ -295,9 +300,13 @@ namespace eka2l1::drivers {
 
                 axis_data.timestamp_ = common::get_current_utc_time_in_microseconds_since_0ad();
 
-                axis_data.axis_x_ = static_cast<std::int32_t>(static_cast<float>(event.acceleration.x) * ACCELEROMETER_SCALE_RANGE_MAX / measure_range);
-                axis_data.axis_y_ = static_cast<std::int32_t>(static_cast<float>(event.acceleration.y) * ACCELEROMETER_SCALE_RANGE_MAX / measure_range);
-                axis_data.axis_z_ = static_cast<std::int32_t>(static_cast<float>(event.acceleration.z) * ACCELEROMETER_SCALE_RANGE_MAX / measure_range);
+                auto scale = [measure_range](double value) {
+                    return static_cast<std::int32_t>(std::clamp(value * ACCELEROMETER_SCALE_RANGE_MAX / measure_range,
+                        double(ACCELEROMETER_SCALE_RANGE_MIN), double(ACCELEROMETER_SCALE_RANGE_MAX)));
+                };
+                axis_data.axis_x_ = scale(x);
+                axis_data.axis_y_ = scale(y);
+                axis_data.axis_z_ = scale(z);
 
                 events_translated_.insert(events_translated_.end(), reinterpret_cast<std::uint8_t*>(&axis_data),
                                           reinterpret_cast<std::uint8_t*>(&axis_data + 1));

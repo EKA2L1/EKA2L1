@@ -117,6 +117,7 @@ public class EmulatorActivity extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         Intent intent = getIntent();
+        Emulator.configureDebugControl(this, intent);
         boolean externalIntent = intent.getBooleanExtra(KEY_APP_IS_SHORTCUT, false) || ACTION_LAUNCH_GAME.equals(intent.getAction())
                 || intent.getData() != null;
 

@@ -126,6 +126,54 @@ public class Emulator {
     private static String scriptsDir;
     private static String screenshotDir;
     private static boolean init;
+    private static int debugControlPort;
+    private static java.lang.ref.WeakReference<android.app.Activity> debugHost = new java.lang.ref.WeakReference<>(null);
+    private static java.lang.ref.WeakReference<android.app.Activity> debugScreen = new java.lang.ref.WeakReference<>(null);
+
+    public static void configureDebugControl(android.app.Activity activity, Intent intent) {
+        if (intent.hasExtra("debug_control_port")) {
+            int port = intent.getIntExtra("debug_control_port", 0);
+            if (port < 1 || port > 65535) throw new IllegalArgumentException("debug_control_port must be 1..65535");
+            if (init && port != debugControlPort) throw new IllegalStateException("Restart the app to change the control port");
+            debugControlPort = port;
+        }
+        if (activity instanceof EmulatorActivity) debugScreen = new java.lang.ref.WeakReference<>(activity);
+        else debugHost = new java.lang.ref.WeakReference<>(activity);
+    }
+
+    public static boolean isDebugControlEnabled() { return debugControlPort != 0; }
+
+    @SuppressLint("unused")
+    public static void debugLaunchApp(long uid) {
+        new Handler(Looper.getMainLooper()).post(() -> {
+            android.app.Activity host = debugHost.get();
+            if (host == null) host = debugScreen.get();
+            if (host == null) return;
+            Intent intent = new Intent(host, EmulatorActivity.class);
+            intent.putExtra(Constants.KEY_APP_UID, uid);
+            intent.putExtra(Constants.KEY_APP_NAME, String.format("0x%08X", uid));
+            intent.putExtra("debug_control_port", debugControlPort);
+            host.startActivity(intent);
+        });
+    }
+
+    @SuppressLint("unused")
+    public static void debugCloseApp() {
+        android.app.Activity screen = debugScreen.get();
+        new Handler(Looper.getMainLooper()).post(() -> {
+            if (debugScreen.get() == screen) debugScreen.clear();
+            if (screen != null) screen.finish();
+        });
+    }
+
+    @SuppressLint("unused")
+    public static void debugContentChanged() {
+        new Handler(Looper.getMainLooper()).post(() -> {
+            android.app.Activity host = debugHost.get();
+            if (host != null && debugScreen.get() == null) host.recreate();
+        });
+    }
+
     private static boolean load;
 
     static {
@@ -301,7 +349,7 @@ public class Emulator {
             throw new IllegalStateException("Emulator is not initialized");
         }
         if (!init) {
-            init = startNative();
+            init = startNative(debugControlPort);
             load = true;
             if (!init) {
                 throw new IllegalStateException("Emulator is not initialized");
@@ -699,7 +747,10 @@ public class Emulator {
         });
     }
 
+    private static native void debugCloseNative();
+
     public static void exitInstance() {
+        if (isDebugControlEnabled()) { debugCloseNative(); debugCloseApp(); return; }
         Process.killProcess(Process.myPid());
     }
 
@@ -732,7 +783,7 @@ public class Emulator {
 
     private static native void setDirectory(String path);
 
-    private static native boolean startNative();
+    private static native boolean startNative(int debugControlPort);
 
     private static native String[] getApps();
 

@@ -18,6 +18,7 @@
  */
 
 #include <android/thread.h>
+#include <android/input_dialog.h>
 #include <common/thread.h>
 #include <drivers/audio/audio.h>
 #include <drivers/graphics/graphics.h>
@@ -54,6 +55,7 @@ namespace eka2l1::android {
         };
 
         state.graphics_driver->set_display_hook([window, &state]() {
+            if (state.debug_control_enabled) state.debug_frames.fetch_add(1, std::memory_order_relaxed);
             window->swap_buffer();
             window->poll_events();
 
@@ -192,5 +194,24 @@ namespace eka2l1::android {
         evt.mouse_.action_ = static_cast<eka2l1::drivers::mouse_action>(action);
         evt.mouse_.raw_screen_pos_ = false;
         state.winserv->queue_input_from_driver(evt);
+    }
+}
+namespace eka2l1::android {
+    void prepare_control_reset(emulator &state) {
+        if (state.should_graphics_pause.exchange(false)) state.pause_graphics_sema.notify();
+    }
+
+    bool control_boot_device(emulator &state, int index) {
+        prepare_control_reset(state);
+        if (state.debug_backend) state.debug_backend->reset_session();
+        if (!os_thread_obj) state.symsys->startup();
+        if (!state.symsys->set_device(static_cast<std::uint8_t>(index))) return false;
+        state.conf.device = index;
+        state.conf.serialize();
+        if (!state.stage_two_inited) {
+            if (!state.stage_two()) return false;
+            if (!os_thread_obj) os_thread_obj = std::make_unique<std::thread>(os_thread, std::ref(state));
+        }
+        return true;
     }
 }

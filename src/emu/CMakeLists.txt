@@ -36,6 +36,7 @@ endif ()
 
 add_subdirectory(bridge)
 add_subdirectory(common)
+add_subdirectory(control)
 add_subdirectory(config)
 add_subdirectory(cpu)
 add_subdirectory(disasm)

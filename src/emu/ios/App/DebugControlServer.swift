@@ -1,5 +1,4 @@
 import Foundation
-import Network
 import UIKit
 
 // Navigation and session signals shared by the frontend and the simulator-only
@@ -176,12 +175,19 @@ enum DebugControl {
 
 private typealias JSON = [String: Any]
 
+private final class ControlProgress: @unchecked Sendable {
+    let callback: ((Double) -> Void)?
+    init(_ callback: ((Double) -> Void)?) { self.callback = callback }
+    func report(_ fraction: Double) { callback?(fraction) }
+}
+
 private struct HTTPRequest: Sendable {
     let method: String
     let path: [String]
     let query: [String: String]
     let headers: [String: String]
     let body: Data
+    var progress: (@Sendable (Double) -> Void)?
 }
 
 private struct HTTPResponse: Sendable {
@@ -205,112 +211,6 @@ private struct APIError: Error {
     static let noScreen = APIError(status: 409, code: "no_screen", message: "the emulator screen is not up")
 }
 
-// MARK: - HTTP transport
-
-// One request per connection (the response closes it), which is all curl needs.
-private final class HTTPConnection: @unchecked Sendable {
-    private static let maxRequestSize = 1 << 30
-
-    private let connection: NWConnection
-    private let queue: DispatchQueue
-    private let handler: @Sendable (HTTPRequest) async -> HTTPResponse
-    private var buffer = Data()
-    private var sentContinue = false
-
-    init(connection: NWConnection, queue: DispatchQueue, handler: @escaping @Sendable (HTTPRequest) async -> HTTPResponse) {
-        self.connection = connection
-        self.queue = queue
-        self.handler = handler
-    }
-
-    func start() {
-        connection.start(queue: queue)
-        receive()
-    }
-
-    private func receive() {
-        connection.receive(minimumIncompleteLength: 1, maximumLength: 1 << 20) { data, _, complete, error in
-            if let data { self.buffer.append(data) }
-            switch self.parse() {
-            case .request(let request):
-                Task {
-                    let response = await self.handler(request)
-                    self.queue.async { self.send(response) }
-                }
-            case .invalid(let message):
-                self.send(DebugControlServer.errorResponse(.badRequest(message)))
-            case .incomplete:
-                if complete || error != nil {
-                    self.connection.cancel()
-                } else if self.buffer.count > Self.maxRequestSize {
-                    self.send(DebugControlServer.errorResponse(APIError(status: 413, code: "too_large", message: "request too large")))
-                } else {
-                    self.receive()
-                }
-            }
-        }
-    }
-
-    private enum ParseResult {
-        case incomplete
-        case invalid(String)
-        case request(HTTPRequest)
-    }
-
-    private func parse() -> ParseResult {
-        guard let headerEnd = buffer.range(of: Data("\r\n\r\n".utf8)) else { return .incomplete }
-        guard let head = String(data: buffer[..<headerEnd.lowerBound], encoding: .utf8) else {
-            return .invalid("headers are not UTF-8")
-        }
-        let lines = head.components(separatedBy: "\r\n")
-        let parts = lines[0].split(separator: " ")
-        guard parts.count >= 2 else { return .invalid("malformed request line") }
-
-        var headers: [String: String] = [:]
-        for line in lines.dropFirst() {
-            guard let colon = line.firstIndex(of: ":") else { continue }
-            headers[line[..<colon].lowercased()] = line[line.index(after: colon)...].trimmingCharacters(in: .whitespaces)
-        }
-        let length = Int(headers["content-length"] ?? "0") ?? 0
-        let bodyStart = headerEnd.upperBound
-        if buffer.count - bodyStart < length {
-            if !sentContinue, headers["expect"]?.lowercased() == "100-continue" {
-                sentContinue = true
-                connection.send(content: Data("HTTP/1.1 100 Continue\r\n\r\n".utf8), completion: .idempotent)
-            }
-            return .incomplete
-        }
-
-        guard let components = URLComponents(string: "http://localhost" + parts[1]) else {
-            return .invalid("malformed request target")
-        }
-        var query: [String: String] = [:]
-        for item in components.queryItems ?? [] {
-            query[item.name] = item.value ?? ""
-        }
-        let path = components.path.split(separator: "/").map(String.init)
-        return .request(HTTPRequest(method: String(parts[0]).uppercased(), path: path, query: query,
-                                    headers: headers, body: buffer.subdata(in: bodyStart..<(bodyStart + length))))
-    }
-
-    private func send(_ response: HTTPResponse) {
-        var head = "HTTP/1.1 \(response.status) \(response.status < 400 ? "OK" : "Error")\r\n"
-        var headers = response.headers
-        headers["Content-Type"] = response.contentType
-        headers["Content-Length"] = String(response.body.count)
-        headers["Connection"] = "close"
-        for (name, value) in headers {
-            head += "\(name): \(value)\r\n"
-        }
-        head += "\r\n"
-        var payload = Data(head.utf8)
-        payload.append(response.body)
-        connection.send(content: payload, completion: .contentProcessed { _ in
-            self.connection.cancel()
-        })
-    }
-}
-
 // MARK: - Server
 
 @MainActor
@@ -318,8 +218,7 @@ private final class DebugControlServer {
     static let shared = DebugControlServer()
     static let apiVersion = 1
 
-    private var listener: NWListener?
-    private let queue = DispatchQueue(label: "eka2l1.debug-control")
+    private var listener: EKA2L1ControlServer?
     private weak var store: DeviceStore?
 
     // Session as seen through the frontend's launch/exit signals.
@@ -329,8 +228,6 @@ private final class DebugControlServer {
     private var heldKeys = Set<UInt32>()
     private var heldPointers = Set<Int>()
     private var acceleration: [Double]?
-    private var jobs: [Int: Job] = [:]
-    private var nextJobID = 1
 
     func start(store: DeviceStore) {
         self.store = store
@@ -338,7 +235,7 @@ private final class DebugControlServer {
         let configured = UserDefaults.standard.object(forKey: "DebugServerPort") as? Int
             ?? Int(UserDefaults.standard.string(forKey: "DebugServerPort") ?? "")
         let portNumber = configured ?? 8765
-        guard portNumber > 0, let port = NWEndpoint.Port(rawValue: UInt16(clamping: portNumber)) else { return }
+        guard portNumber > 0, let port = UInt16(exactly: portNumber) else { return }
 
         let center = NotificationCenter.default
         center.addObserver(forName: .eka2l1GuestAppLaunched, object: nil, queue: .main) { note in
@@ -352,23 +249,27 @@ private final class DebugControlServer {
             MainActor.assumeIsolated { self.sessionDidExit(uid: uid, fatal: fatal) }
         }
 
-        let parameters = NWParameters.tcp
-        parameters.allowLocalEndpointReuse = true
-        parameters.requiredLocalEndpoint = .hostPort(host: "127.0.0.1", port: port)
-        do {
-            let listener = try NWListener(using: parameters)
-            listener.newConnectionHandler = { [queue] connection in
-                HTTPConnection(connection: connection, queue: queue) { request in
-                    await DebugControlServer.shared.handle(request)
-                }.start()
+        let server = EKA2L1ControlServer()
+        var error: NSString?
+        let started = server.start(withPort: port, handler: { request, complete in
+            let progress = ControlProgress(request.progress)
+            Task { @MainActor in
+                let response = await DebugControlServer.shared.handle(HTTPRequest(
+                    method: request.method, path: request.path, query: request.query,
+                    headers: request.headers, body: request.body, progress: { progress.report($0) }))
+                let result = EKA2L1ControlResponse()
+                result.status = response.status
+                result.contentType = response.contentType
+                result.headers = response.headers
+                result.body = response.body
+                complete(result)
             }
-            listener.stateUpdateHandler = { state in
-                NSLog("[EKA2L1] debug control server on 127.0.0.1:%d: %@", portNumber, String(describing: state))
-            }
-            listener.start(queue: queue)
-            self.listener = listener
-        } catch {
-            NSLog("[EKA2L1] debug control server failed to listen on %d: %@", portNumber, String(describing: error))
+        }, error: &error)
+        if started {
+            listener = server
+            NSLog("[EKA2L1] debug control server on 127.0.0.1:%d", portNumber)
+        } else {
+            NSLog("[EKA2L1] debug control server failed: %@", error ?? "unknown")
         }
     }
 
@@ -416,7 +317,7 @@ private final class DebugControlServer {
 
     private func route(_ request: HTTPRequest) async throws -> HTTPResponse {
         guard request.path.first == "v1" else {
-            if request.path.isEmpty { return json(endpointIndex()) }
+            if request.path.isEmpty { throw APIError.notFound("see GET /v1") }
             throw APIError.notFound("unknown path; see GET /v1")
         }
         let path = Array(request.path.dropFirst())
@@ -431,34 +332,34 @@ private final class DebugControlServer {
             key[1] = "*"
         }
         switch request.method + " " + key.joined(separator: "/") {
-        case "GET ":
-            return json(endpointIndex())
+        case "GET capabilities":
+            return json(["platform": "ios", "hostScreenshot": true, "accelerometer": true])
         case "GET status":
             return json(status())
 
         case "GET devices":
             return json(["devices": devicesJSON(), "current": nullable(currentDeviceJSON())])
         case "POST devices":
-            return try await runJob("install_device", request) { job in try await self.installDevice(body, job: job) }
+            return json(try await installDevice(body, progress: request.progress))
         case "POST devices/rescan":
-            return try await runJob("rescan_devices", request) { _ in try await self.rescanDevices() }
+            return json(try await rescanDevices())
         case "POST devices/*/boot":
-            return try await runJob("boot_device", request) { _ in try await self.bootDevice(id) }
+            return json(try await bootDevice(id))
         case "PATCH devices/*":
             return json(try renameDevice(id, body))
         case "DELETE devices/*":
-            return try await runJob("delete_device", request) { _ in try await self.deleteDevice(id) }
+            return json(try await deleteDevice(id))
 
         case "GET apps":
             return json(["apps": appsJSON(includeSystem: boolParam(request.query["system"]) ?? false)])
         case "POST apps":
-            return try await runJob("install_app", request) { _ in try await self.installApps(body) }
+            return json(try await installApps(body))
         case "DELETE apps/*":
             return json(try uninstallApp(id))
         case "GET apps/*/icon":
             return try appIcon(id, size: UInt(request.query["size"] ?? "") ?? 96)
         case "POST apps/*/launch":
-            return json(try await launchApp(id, body, request))
+            return json(try await launchApp(id))
 
         case "GET session":
             return json(sessionJSON())
@@ -478,25 +379,22 @@ private final class DebugControlServer {
         case "GET card":
             return json(cardJSON())
         case "PUT card":
-            return try await runJob("mount_card", request) { _ in try await self.mountCard(body) }
+            return json(try await mountCard(body))
         case "DELETE card":
             guard try requireIdleStore().ejectCard() else { throw APIError.failed("eject_failed", "no card was ejected") }
             return json(cardJSON())
 
-        case "GET keys":
-            return json(["keys": Self.keyNames.mapValues { hex($0) }])
-        case "POST input/key", "POST input/touch", "POST input/text":
-            try await runInputStep(body, kind: path[1])
+        case "POST input/key":
+            let scans = try ((body["keys"] as? [Any]) ?? [body["key"] as Any]).map(scanCode)
+            let pressed = (body["action"] as? String) == "down"
+            scans.forEach { setKey($0, pressed: pressed) }
             return json(inputStateJSON())
-        case "POST input/sequence":
-            guard let steps = body["steps"] as? [JSON] else { throw APIError.badRequest("`steps` must be an array of objects") }
-            for (index, step) in steps.enumerated() {
-                do {
-                    try await runInputStep(step, kind: nil)
-                } catch let error as APIError {
-                    throw APIError(status: error.status, code: error.code, message: "step \(index): \(error.message)")
-                }
-            }
+        case "POST input/touch":
+            let (x, y) = try point(body)
+            let action = (body["action"] as? String) ?? "down"
+            let phase: EKA2L1PointerPhase = action == "down" ? .began : action == "move" ? .moved : .ended
+            pointer((body["id"] as? NSNumber)?.intValue ?? 0,
+                    try surfacePoint(x, y, space: (body["space"] as? String) ?? "guest"), phase)
             return json(inputStateJSON())
         case "POST input/release":
             releaseAllInput()
@@ -512,10 +410,8 @@ private final class DebugControlServer {
 
         case "GET screenshot":
             return try screenshot(request.query)
-        case "GET log":
-            return try log(request.query)
-        case "POST wait":
-            return json(try await wait(body))
+        case "RESOLVE log":
+            return json(["hostPath": logPath()])
 
         case "GET config":
             return json(EKA2L1Bridge.shared.currentConfigSnapshot())
@@ -535,8 +431,9 @@ private final class DebugControlServer {
             NotificationCenter.default.post(name: .eka2l1AppListInvalidated, object: nil)
             return json(languageJSON())
 
-        case "GET files", "PUT files", "DELETE files":
-            return try files(request)
+        case "RESOLVE files":
+            guard let path = request.query["path"], !path.isEmpty else { throw APIError.badRequest("`path` query parameter is required") }
+            return json(["hostPath": try hostPath(path)])
 
         case "POST emulator/pause":
             EKA2L1Bridge.shared.pause()
@@ -545,38 +442,9 @@ private final class DebugControlServer {
             EKA2L1Bridge.shared.resume()
             return json(["paused": false])
 
-        case "GET jobs":
-            return json(["jobs": jobs.keys.sorted().compactMap { jobs[$0]?.json }])
-        case "GET jobs/*":
-            guard let job = Int(id).flatMap({ jobs[$0] }) else { throw APIError.notFound("no job \(id)") }
-            return json(job.json)
-
         default:
             throw APIError.notFound("no route for \(request.method) /v1/\(path.joined(separator: "/")); see GET /v1")
         }
-    }
-
-    private func endpointIndex() -> JSON {
-        [
-            "api": Self.apiVersion,
-            "endpoints": [
-                "GET /v1/status",
-                "GET /v1/devices", "POST /v1/devices", "POST /v1/devices/rescan",
-                "POST /v1/devices/{index|code}/boot", "PATCH /v1/devices/{index|code}", "DELETE /v1/devices/{index|code}",
-                "GET /v1/apps?system=1", "POST /v1/apps", "DELETE /v1/apps/{uid}", "GET /v1/apps/{uid}/icon",
-                "POST /v1/apps/{uid}/launch",
-                "GET /v1/session", "DELETE /v1/session",
-                "GET|PUT /v1/session/screen-mode", "GET|PUT /v1/session/frame-limit",
-                "GET|PUT|DELETE /v1/card",
-                "GET /v1/keys", "POST /v1/input/key", "POST /v1/input/touch", "POST /v1/input/text",
-                "POST /v1/input/sequence", "POST /v1/input/release", "GET|PUT|DELETE /v1/input/accelerometer",
-                "GET /v1/screenshot", "GET /v1/log", "POST /v1/wait",
-                "GET|PATCH /v1/config", "GET|PUT /v1/language",
-                "GET|PUT|DELETE /v1/files?path=",
-                "POST /v1/emulator/pause", "POST /v1/emulator/resume",
-                "GET /v1/jobs", "GET /v1/jobs/{id}",
-            ],
-        ]
     }
 
     // MARK: Helpers
@@ -662,7 +530,7 @@ private final class DebugControlServer {
             "card": cardJSON(),
             "session": sessionJSON(),
             "frames": EKA2L1Bridge.shared.renderedFrameCount(),
-            "runningJobs": jobs.values.filter { $0.state == "running" }.map(\.id).sorted(),
+            "runningJobs": [Int](),
             "documents": documentsRoot(),
             "log": logPath(),
         ]
@@ -717,13 +585,11 @@ private final class DebugControlServer {
 
     // MARK: Devices
 
-    private func installDevice(_ body: JSON, job: Job) async throws -> Any {
+    private func installDevice(_ body: JSON, progress: (@Sendable (Double) -> Void)?) async throws -> Any {
         let store = try requireIdleStore()
         let isolate = body["isolateDrives"] as? Bool ?? false
         let boot = body["boot"] as? Bool ?? true
-        let progress: @Sendable (Double) -> Void = { fraction in
-            Task { @MainActor in job.progress = fraction }
-        }
+        let progress: @Sendable (Double) -> Void = progress ?? { _ in }
 
         let result: EKA2L1InstallResult
         if let archive = body["archive"] as? String {
@@ -926,7 +792,7 @@ private final class DebugControlServer {
         await sleep(ms: 400)
     }
 
-    private func launchApp(_ text: String, _ body: JSON, _ request: HTTPRequest) async throws -> Any {
+    private func launchApp(_ text: String) async throws -> Any {
         let store = try requireBootedStore()
         let uid = try parseUID(text)
         guard store.apps.contains(where: { $0.uid == uid }) else { throw APIError.notFound("no app \(hex(uid)) on this device") }
@@ -935,14 +801,6 @@ private final class DebugControlServer {
         sessionUID = uid
         sessionState = "launching"
         NotificationCenter.default.post(name: .eka2l1RemoteLaunchApp, object: nil, userInfo: ["uid": uid])
-        let wait = boolParam(request.query["wait"]) ?? (body["wait"] as? Bool ?? true)
-        if wait {
-            let timeout = doubleValue(body["timeoutMs"]) ?? 30000
-            guard await waitUntil(timeoutMs: timeout, { sessionState != "launching" }) else {
-                throw APIError(status: 504, code: "timeout", message: "launch of \(hex(uid)) did not complete")
-            }
-            if sessionState == "launch_failed" { throw APIError.failed("launch_failed", "launch of \(hex(uid)) failed") }
-        }
         return sessionJSON()
     }
 
@@ -1002,32 +860,9 @@ private final class DebugControlServer {
 
     // MARK: Input
 
-    static let keyNames: [String: UInt32] = {
-        var keys: [String: UInt32] = [
-            "lsk": Scan.leftSoft, "softleft": Scan.leftSoft, "menu": Scan.leftSoft,
-            "rsk": Scan.rightSoft, "softright": Scan.rightSoft, "back": Scan.rightSoft,
-            "ok": Scan.select, "select": Scan.select, "center": Scan.select,
-            "up": Scan.up, "down": Scan.down, "left": Scan.left, "right": Scan.right,
-            "clear": Scan.clear, "backspace": Scan.clear,
-            "call": Scan.call, "green": Scan.call, "end": Scan.end, "red": Scan.end,
-            "edit": Scan.edit, "shift": Scan.edit,
-            "star": Scan.star, "*": Scan.star, "hash": Scan.hash, "#": Scan.hash,
-            "space": 0x05, "tab": 0x02, "enter": 0x03, "escape": 0x04,
-            "yes": 0xC4, "no": 0xC5, "applications": 0x94,
-        ]
-        for digit in 0...9 { keys[String(digit)] = UInt32(0x30 + digit) }
-        for letter in UnicodeScalar("a").value...UnicodeScalar("z").value {
-            keys[String(UnicodeScalar(letter)!)] = letter - 0x20
-        }
-        return keys
-    }()
-
     private func scanCode(_ value: Any?) throws -> UInt32 {
-        if let number = value as? NSNumber { return number.uint32Value }
-        guard let text = (value as? String)?.lowercased() else { throw APIError.badRequest("`key` must be a name or scan code") }
-        if let scan = Self.keyNames[text] { return scan }
-        if text.hasPrefix("0x"), let scan = UInt32(text.dropFirst(2), radix: 16) { return scan }
-        throw APIError.badRequest("unknown key `\(text)`; see GET /v1/keys")
+        guard let number = value as? NSNumber else { throw APIError.badRequest("expected a scan code") }
+        return number.uint32Value
     }
 
     private func setKey(_ scan: UInt32, pressed: Bool) {
@@ -1076,77 +911,6 @@ private final class DebugControlServer {
 
     private func pointerID(_ id: Int) -> UInt { 0xEC0_0000 + UInt(max(0, id)) }
 
-    // Kind is the endpoint (`key`/`touch`/`text`), or nil for a sequence step,
-    // which names itself by its fields.
-    private func runInputStep(_ step: JSON, kind: String?) async throws {
-        let kind = kind ?? (step["key"] != nil || step["keys"] != nil ? "key"
-                            : step["touch"] != nil ? "touch"
-                            : step["text"] != nil ? "text"
-                            : step["accelerometer"] != nil ? "accelerometer"
-                            : step["waitMs"] != nil ? "wait" : "")
-        switch kind {
-        case "key":
-            try await runKey(step)
-        case "touch":
-            try await runTouch((step["touch"] as? JSON) ?? step)
-        case "text":
-            try await runText(step)
-        case "accelerometer":
-            if step["accelerometer"] is NSNull {
-                clearAcceleration()
-            } else {
-                guard let values = step["accelerometer"] as? JSON else {
-                    throw APIError.badRequest("`accelerometer` must be an object or null")
-                }
-                try setAcceleration(values)
-            }
-        case "wait":
-            break
-        default:
-            throw APIError.badRequest("a step needs `key`, `keys`, `touch`, `text`, `accelerometer` or `waitMs`")
-        }
-        await sleep(ms: doubleValue(step["waitMs"]) ?? 0)
-    }
-
-    private func runKey(_ step: JSON) async throws {
-        let raw: [Any] = (step["keys"] as? [Any]) ?? [step["key"] as Any]
-        let scans = try raw.map(scanCode)
-        let action = (step["action"] as? String) ?? "tap"
-        let holdMs = doubleValue(step["holdMs"]) ?? 80
-        let repeatCount = max(1, (step["repeat"] as? NSNumber)?.intValue ?? 1)
-        let gapMs = doubleValue(step["gapMs"]) ?? 80
-        switch action {
-        case "down":
-            scans.forEach { setKey($0, pressed: true) }
-        case "up":
-            scans.forEach { setKey($0, pressed: false) }
-        case "tap":
-            for index in 0..<repeatCount {
-                if index > 0 { await sleep(ms: gapMs) }
-                scans.forEach { setKey($0, pressed: true) }
-                await sleep(ms: holdMs)
-                scans.reversed().forEach { setKey($0, pressed: false) }
-            }
-        default:
-            throw APIError.badRequest("key `action` must be tap, down or up")
-        }
-    }
-
-    // Letters and digits map to their scan codes; the guest's own input method
-    // decides what they produce (multitap on ITU-T devices).
-    private func runText(_ step: JSON) async throws {
-        let text = try stringField(step, "text")
-        let interval = doubleValue(step["intervalMs"]) ?? 120
-        for character in text.lowercased() {
-            let name = character == " " ? "space" : character == "\n" ? "enter" : String(character)
-            guard let scan = Self.keyNames[name] else { throw APIError.badRequest("no key for `\(character)`") }
-            setKey(scan, pressed: true)
-            await sleep(ms: 60)
-            setKey(scan, pressed: false)
-            await sleep(ms: interval)
-        }
-    }
-
     // Maps a point to render-surface pixels. `guest` (default) uses the guest
     // screen's own pixels, as in GET /v1/screenshot; `normalized` is 0…1.
     private func surfacePoint(_ x: Double, _ y: Double, space: String) throws -> CGPoint {
@@ -1181,38 +945,6 @@ private final class DebugControlServer {
         default: break
         }
         EKA2L1Bridge.shared.submitPointer(x: location.x, y: location.y, phase: phase, pointerId: pointerID(id))
-    }
-
-    private func runTouch(_ touch: JSON) async throws {
-        let action = (touch["action"] as? String) ?? "tap"
-        let space = (touch["space"] as? String) ?? "guest"
-        let id = (touch["id"] as? NSNumber)?.intValue ?? 0
-        switch action {
-        case "tap":
-            let (x, y) = try point(touch)
-            let location = try surfacePoint(x, y, space: space)
-            pointer(id, location, .began)
-            await sleep(ms: doubleValue(touch["holdMs"]) ?? 80)
-            pointer(id, location, .ended)
-        case "down", "move", "up":
-            let (x, y) = try point(touch)
-            let phase: EKA2L1PointerPhase = action == "down" ? .began : action == "move" ? .moved : .ended
-            pointer(id, try surfacePoint(x, y, space: space), phase)
-        case "swipe":
-            let (x0, y0) = try point(touch)
-            let (x1, y1) = try point(touch, xKey: "toX", yKey: "toY")
-            let duration = doubleValue(touch["durationMs"]) ?? 300
-            let steps = max(2, Int(duration / 16))
-            pointer(id, try surfacePoint(x0, y0, space: space), .began)
-            for step in 1...steps {
-                await sleep(ms: duration / Double(steps))
-                let t = Double(step) / Double(steps)
-                pointer(id, try surfacePoint(x0 + (x1 - x0) * t, y0 + (y1 - y0) * t, space: space), .moved)
-            }
-            pointer(id, try surfacePoint(x1, y1, space: space), .ended)
-        default:
-            throw APIError.badRequest("touch `action` must be tap, down, move, up or swipe")
-        }
     }
 
     // MARK: Screenshot
@@ -1272,101 +1004,6 @@ private final class DebugControlServer {
         (documentsRoot() as NSString).appendingPathComponent("data/EKA2L1.log")
     }
 
-    private func logSize() -> UInt64 {
-        ((try? FileManager.default.attributesOfItem(atPath: logPath()))?[.size] as? NSNumber)?.uint64Value ?? 0
-    }
-
-    private func readLog(from offset: UInt64, maxBytes: UInt64) -> (Data, UInt64) {
-        guard let handle = FileHandle(forReadingAtPath: logPath()) else { return (Data(), 0) }
-        defer { try? handle.close() }
-        let end = (try? handle.seekToEnd()) ?? 0
-        let start = min(offset, end)
-        let clampedStart = end - start > maxBytes ? end - maxBytes : start
-        try? handle.seek(toOffset: clampedStart)
-        return ((try? handle.readToEnd()) ?? Data(), end)
-    }
-
-    // ?since=<offset> continues from a previous X-Log-Offset (a log that shrank
-    // restarts from 0); ?tail=<lines> (default 200); ?grep=<regex> filters lines.
-    private func log(_ query: [String: String]) throws -> HTTPResponse {
-        let size = logSize()
-        var offset: UInt64
-        if let since = query["since"].flatMap(UInt64.init) {
-            offset = since > size ? 0 : since
-        } else {
-            offset = size > 4 << 20 ? size - (4 << 20) : 0
-        }
-        let (data, end) = readLog(from: offset, maxBytes: 16 << 20)
-        offset = end
-        var lines = String(decoding: data, as: UTF8.self).components(separatedBy: "\n")
-        if lines.last == "" { lines.removeLast() }
-        if let pattern = query["grep"], !pattern.isEmpty {
-            guard let regex = try? NSRegularExpression(pattern: pattern) else { throw APIError.badRequest("invalid `grep` regex") }
-            lines = lines.filter { regex.firstMatch(in: $0, range: NSRange($0.startIndex..., in: $0)) != nil }
-        }
-        if query["since"] == nil || query["tail"] != nil {
-            let tail = Int(query["tail"] ?? "") ?? 200
-            if tail > 0, lines.count > tail { lines = Array(lines.suffix(tail)) }
-        }
-        let text = lines.isEmpty ? "" : lines.joined(separator: "\n") + "\n"
-        return HTTPResponse(status: 200, contentType: "text/plain; charset=utf-8", body: Data(text.utf8),
-                            headers: ["X-Log-Offset": String(offset)])
-    }
-
-    // MARK: Wait
-
-    private func wait(_ body: JSON) async throws -> Any {
-        let until = try stringField(body, "until")
-        let timeout = doubleValue(body["timeoutMs"]) ?? 30000
-        let started = Date()
-        let satisfied: Bool
-        switch until {
-        case "running":
-            satisfied = await waitUntil(timeoutMs: timeout) { effectiveSessionState() == "running" }
-        case "exited":
-            satisfied = await waitUntil(timeoutMs: timeout) { !["running", "launching"].contains(effectiveSessionState()) }
-        case "idle":
-            satisfied = await waitUntil(timeoutMs: timeout) {
-                !(store?.busy ?? true) && !jobs.values.contains { $0.state == "running" }
-            }
-        case "frames":
-            let target = EKA2L1Bridge.shared.renderedFrameCount() + UInt64(max(1, (body["count"] as? NSNumber)?.intValue ?? 1))
-            satisfied = await waitUntil(timeoutMs: timeout) { EKA2L1Bridge.shared.renderedFrameCount() >= target }
-        case "log":
-            let pattern = try stringField(body, "pattern")
-            guard let regex = try? NSRegularExpression(pattern: pattern) else { throw APIError.badRequest("invalid `pattern` regex") }
-            var offset = (body["since"] as? NSNumber)?.uint64Value ?? logSize()
-            var match: String?
-            satisfied = await waitUntil(timeoutMs: timeout) {
-                let (data, end) = readLog(from: offset, maxBytes: 16 << 20)
-                // Only scan complete lines; a partial tail is re-read next round.
-                guard let newline = data.lastIndex(of: 0x0A) else { return false }
-                offset = end - UInt64(data.count - newline - 1)
-                for line in String(decoding: data[...newline], as: UTF8.self).split(separator: "\n") {
-                    let text = String(line)
-                    if regex.firstMatch(in: text, range: NSRange(text.startIndex..., in: text)) != nil {
-                        match = text
-                        return true
-                    }
-                }
-                return false
-            }
-            if satisfied {
-                return ["satisfied": true, "elapsedMs": Int(Date().timeIntervalSince(started) * 1000),
-                        "line": match ?? "", "logOffset": offset]
-            }
-        case "sleep":
-            await sleep(ms: timeout)
-            satisfied = true
-        default:
-            throw APIError.badRequest("`until` must be running, exited, idle, frames, log or sleep")
-        }
-        guard satisfied else {
-            throw APIError(status: 504, code: "timeout", message: "`\(until)` not reached within \(Int(timeout))ms")
-        }
-        return ["satisfied": true, "elapsedMs": Int(Date().timeIntervalSince(started) * 1000), "status": status()]
-    }
-
     // MARK: Language
 
     private func languageJSON() -> JSON {
@@ -1383,6 +1020,11 @@ private final class DebugControlServer {
     // a bare absolute path the host. Guest-style paths match case-insensitively.
     private func hostPath(_ raw: String) throws -> String {
         let normalized = raw.replacingOccurrences(of: "\\", with: "/")
+        if normalized.lowercased().hasPrefix("host:") {
+            let path = String(normalized.dropFirst(5))
+            guard path.hasPrefix("/") else { throw APIError.badRequest("host: requires an absolute path") }
+            return path
+        }
         if normalized.hasPrefix("/") { return normalized }
         let root: String
         let rest: String
@@ -1415,123 +1057,7 @@ private final class DebugControlServer {
         return resolved
     }
 
-    private func files(_ request: HTTPRequest) throws -> HTTPResponse {
-        guard let raw = request.query["path"], !raw.isEmpty else { throw APIError.badRequest("`path` query parameter is required") }
-        let path = try hostPath(raw)
-        let manager = FileManager.default
-        var isDirectory: ObjCBool = false
-        let exists = manager.fileExists(atPath: path, isDirectory: &isDirectory)
 
-        switch request.method {
-        case "GET":
-            guard exists else { throw APIError.notFound("no file at \(raw) (\(path))") }
-            if isDirectory.boolValue {
-                let names = (try? manager.contentsOfDirectory(atPath: path)) ?? []
-                let entries: [JSON] = names.sorted().map { name in
-                    let full = (path as NSString).appendingPathComponent(name)
-                    let attributes = (try? manager.attributesOfItem(atPath: full)) ?? [:]
-                    let directory = (attributes[.type] as? FileAttributeType) == .typeDirectory
-                    var entry: JSON = ["name": name, "directory": directory]
-                    if !directory { entry["size"] = (attributes[.size] as? NSNumber)?.intValue ?? 0 }
-                    if let date = attributes[.modificationDate] as? Date {
-                        entry["modified"] = ISO8601DateFormatter().string(from: date)
-                    }
-                    return entry
-                }
-                return json(["path": raw, "hostPath": path, "entries": entries])
-            }
-            guard let data = manager.contents(atPath: path) else { throw APIError(status: 500, code: "read_failed", message: "cannot read \(path)") }
-            return HTTPResponse(status: 200, contentType: "application/octet-stream", body: data,
-                                headers: ["X-Host-Path": path])
-        case "PUT":
-            guard !isDirectory.boolValue else { throw APIError.conflict("is_directory", "\(raw) is a directory") }
-            do {
-                try manager.createDirectory(atPath: (path as NSString).deletingLastPathComponent, withIntermediateDirectories: true)
-                try request.body.write(to: URL(fileURLWithPath: path), options: .atomic)
-            } catch {
-                throw APIError(status: 500, code: "write_failed", message: error.localizedDescription)
-            }
-            return json(["path": raw, "hostPath": path, "size": request.body.count])
-        default:
-            guard exists else { throw APIError.notFound("no file at \(raw)") }
-            guard boolParam(request.query["recursive"]) == true || !isDirectory.boolValue
-                    || ((try? manager.contentsOfDirectory(atPath: path)) ?? []).isEmpty else {
-                throw APIError.conflict("not_empty", "directory is not empty; pass recursive=1")
-            }
-            do {
-                try manager.removeItem(atPath: path)
-            } catch {
-                throw APIError(status: 500, code: "delete_failed", message: error.localizedDescription)
-            }
-            return json(["deleted": raw, "hostPath": path])
-        }
-    }
-
-    // MARK: Jobs
-
-    @MainActor
-    final class Job {
-        let id: Int
-        let kind: String
-        var state = "running"
-        var progress: Double?
-        var result: Any?
-        var error: APIError?
-        let started = Date()
-        var finished: Date?
-
-        init(id: Int, kind: String) {
-            self.id = id
-            self.kind = kind
-        }
-
-        var json: JSON {
-            var object: JSON = ["id": id, "kind": kind, "state": state,
-                                "started": ISO8601DateFormatter().string(from: started)]
-            if let progress { object["progress"] = progress }
-            if let result { object["result"] = result }
-            if let error { object["error"] = ["code": error.code, "message": error.message] }
-            if let finished {
-                object["finished"] = ISO8601DateFormatter().string(from: finished)
-                object["elapsedMs"] = Int(finished.timeIntervalSince(started) * 1000)
-            }
-            return object
-        }
-    }
-
-    // Long operations run as jobs. By default the request blocks until the job
-    // ends; `?async=1` returns 202 with the job to poll at GET /v1/jobs/{id}.
-    private func runJob(_ kind: String, _ request: HTTPRequest,
-                        _ work: @escaping @MainActor (Job) async throws -> Any) async throws -> HTTPResponse {
-        let job = Job(id: nextJobID, kind: kind)
-        nextJobID += 1
-        jobs[job.id] = job
-        if jobs.count > 50, let oldest = jobs.keys.min() { jobs[oldest] = nil }
-
-        let task = Task { @MainActor in
-            do {
-                job.result = try await work(job)
-                job.state = "succeeded"
-            } catch let error as APIError {
-                job.error = error
-                job.state = "failed"
-            } catch {
-                job.error = APIError(status: 500, code: "internal", message: String(describing: error))
-                job.state = "failed"
-            }
-            job.finished = Date()
-        }
-        if boolParam(request.query["async"]) == true {
-            return json(job.json, status: 202)
-        }
-        await task.value
-        if let error = job.error {
-            var response = Self.errorResponse(error)
-            response.headers["X-Job-Id"] = String(job.id)
-            return response
-        }
-        return json(job.result ?? NSNull())
-    }
 }
 
 private extension DeviceStore {

@@ -49,6 +49,7 @@ class btnet_dialog;
 class editor_widget;
 
 namespace eka2l1 {
+    namespace control { enum class native_change; }
     class system;
     class window_server;
 
@@ -229,6 +230,11 @@ public:
     void dropEvent(QDropEvent *event) override;
     void closeEvent(QCloseEvent *event) override;
 
+    bool control_launch(std::uint32_t uid);
+    bool control_boot(int index);
+    void control_close();
+    void control_changed(eka2l1::control::native_change change);
+    void control_pause(bool paused);
     void setup_and_switch_to_game_mode();
     void draw_enabled_overlay(eka2l1::drivers::graphics_driver *driver,
         eka2l1::drivers::graphics_command_builder &builder, const float scale_factor_x,

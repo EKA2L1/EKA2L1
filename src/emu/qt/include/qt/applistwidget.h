@@ -142,7 +142,6 @@ public:
     void add_registeration_item_native(eka2l1::apa_app_registry &reg, const int index);
     void add_registeration_item_j2me(const eka2l1::j2me::app_entry &entry);
 
-    eka2l1::apa_app_registry *get_registry_from_widget_item(applist_widget_item *item);
 
     void hide_all();
     void show_all();
@@ -171,6 +170,7 @@ public:
         eka2l1::j2me::app_list *lister_j2me, eka2l1::config::state &conf, const bool hide_system_apps = true, const bool ngage_mode = false);
     ~applist_widget();
 
+    eka2l1::apa_app_registry *get_registry_from_widget_item(applist_widget_item *item);
     bool launch_from_widget_item(applist_widget_item *item, std::function<void(eka2l1::kernel::process*)> done_cb);
     std::string get_app_name_from_widget_item(applist_widget_item *item);
     void set_hide_system_apps(const bool should_hide);
