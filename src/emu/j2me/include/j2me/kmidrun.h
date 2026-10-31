@@ -34,7 +34,7 @@ namespace eka2l1::j2me {
     struct app_entry;
     class app_list;
 
-    void launch_through_kmidrun(system *sys, const app_entry &entry, std::function<void(kernel::process*)> exit_cb);
+    bool launch_through_kmidrun(system *sys, const app_entry &entry, std::function<void(kernel::process*)> exit_cb);
     install_error install_for_kmidrun(system *sys, app_list *applist, const std::string &path, app_entry &entry_ino);
     void uninstall_for_kmidrun(system *sys, app_list *applist, const app_entry &entry);
 }

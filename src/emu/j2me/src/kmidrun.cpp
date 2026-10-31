@@ -73,13 +73,13 @@ namespace eka2l1::j2me {
         return build_path_to_jar_dir(entry) + fmt::format("{}.jar", reduce_special_character_in_name(entry.name_));
     }
 
-    void launch_through_kmidrun(system *sys, const app_entry &entry, std::function<void(kernel::process*)> exit_cb) {
+    bool launch_through_kmidrun(system *sys, const app_entry &entry, std::function<void(kernel::process*)> exit_cb) {
         std::u16string jar_path = common::utf8_to_ucs2(build_path_to_jar(entry));
         io_system *io = sys->get_io_system();
 
         if (!io->exist(jar_path)) {
             LOG_ERROR(J2ME, "The JAR has disappeared!");
-            return;
+            return false;
         }
 
         std::u16string jad_path = jar_path;
@@ -89,7 +89,7 @@ namespace eka2l1::j2me {
             auto f_jad = io->open_file(jad_path, WRITE_MODE | BIN_MODE);
             if (!f_jad) {
                 LOG_ERROR(J2ME, "Can't recreate JAD file for launch!");
-                return;
+                return false;
             }
 
             std::string jar_real_path = common::ucs2_to_utf8(io->get_raw_path(jar_path).value());
@@ -98,7 +98,7 @@ namespace eka2l1::j2me {
             install_error err = create_jad_fake_link_from_jar(jar_real_path, jad_content);
             if (err != INSTALL_ERROR_JAR_SUCCESS) {
                 LOG_ERROR(J2ME, "Can't create JAD file for launch. Error code {}", static_cast<int>(err));
-                return;
+                return false;
             }
             
             f_jad->write_file(jad_content.c_str(), 1, static_cast<std::uint32_t>(jad_content.size()));
@@ -114,11 +114,13 @@ namespace eka2l1::j2me {
 
         if (!pr) {
             LOG_ERROR(J2ME, "Can't launch KMidRun for running Midlet!");
-        } else {
-            pr->logon(exit_cb);
+            return false;
         }
 
+        pr->logon(exit_cb);
         pr->run();
+
+        return true;
     }
 
     install_error install_for_kmidrun(system *sys, app_list *applist, const std::string &path, app_entry &entry_info) {
@@ -149,6 +151,7 @@ namespace eka2l1::j2me {
             return INSTALL_ERROR_JAR_CANT_ADD_TO_DB;
         }
 
+        entry.id_ = add_res;
         entry_info = entry;
 
         std::u16string path_to_dir = common::utf8_to_ucs2(build_path_to_jar_dir(entry));
