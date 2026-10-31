@@ -7,7 +7,7 @@ target_include_directories(control PUBLIC include)
 target_include_directories(control SYSTEM PRIVATE
     "${PROJECT_SOURCE_DIR}/src/external/ext-boost"
     "${PROJECT_SOURCE_DIR}/src/external/rapidjson/include")
-target_compile_definitions(control PRIVATE BOOST_ERROR_CODE_HEADER_ONLY BOOST_SYSTEM_NO_LIB)
+target_compile_definitions(control PRIVATE BOOST_ERROR_CODE_HEADER_ONLY BOOST_ALL_NO_LIB)
 set_target_properties(control PROPERTIES POSITION_INDEPENDENT_CODE ON CXX_STANDARD 17)
 if(WIN32)
     target_link_libraries(control PRIVATE ws2_32 mswsock)
