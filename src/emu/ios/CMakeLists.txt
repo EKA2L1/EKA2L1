@@ -54,6 +54,8 @@ set(EKA2L1_IOS_SOURCES
     "${EKA2L1_IOS_APP_DIR}/SettingsView.swift"
     "${EKA2L1_IOS_APP_DIR}/HostOverridesView.swift"
     "${EKA2L1_IOS_APP_DIR}/Toast.swift"
+    "${EKA2L1_IOS_BRIDGE_DIR}/DebugControl.h"
+    "${EKA2L1_IOS_BRIDGE_DIR}/DebugControl.mm"
     "${EKA2L1_IOS_BRIDGE_DIR}/IosEmulator.h"
     "${EKA2L1_IOS_BRIDGE_DIR}/IosEmulator.mm"
     "${EKA2L1_IOS_BRIDGE_DIR}/EKA2L1-Bridging-Header.h"
@@ -138,6 +140,7 @@ target_compile_definitions(${EKA2L1_IOS_APP} PRIVATE GLES_SILENCE_DEPRECATION)
 # JNI bridge link line (see src/emu/android/app/src/main/cpp/CMakeLists.txt)
 # because that target is known-good for a non-Qt frontend.
 target_link_libraries(${EKA2L1_IOS_APP} PRIVATE
+    control
     common
     cpu
     drivers

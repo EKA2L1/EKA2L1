@@ -20,6 +20,10 @@
 #pragma once
 
 #include <cstdint>
+#include <array>
+#include <atomic>
+#include <mutex>
+#include <optional>
 #include <string>
 #include <functional>
 #include <memory>
@@ -222,7 +226,23 @@ namespace eka2l1::drivers {
     };
 
     class sensor_driver {
+        std::atomic<bool> acceleration_override_enabled_{false};
+        std::mutex acceleration_override_mutex_;
+        std::optional<std::array<double, 3>> host_acceleration_override_;
     public:
+        // Samples are in the guest device's own axes, before any host rotation.
+        virtual void set_acceleration_override(const double *values) {
+            std::lock_guard<std::mutex> guard(acceleration_override_mutex_);
+            if (values) host_acceleration_override_ = std::array<double, 3>{values[0], values[1], values[2]};
+            else host_acceleration_override_.reset();
+            acceleration_override_enabled_.store(values != nullptr, std::memory_order_release);
+        }
+        std::optional<std::array<double, 3>> acceleration_override() {
+            if (!acceleration_override_enabled_.load(std::memory_order_acquire)) return std::nullopt;
+            std::lock_guard<std::mutex> guard(acceleration_override_mutex_);
+            return host_acceleration_override_;
+        }
+
         virtual ~sensor_driver() = default;
 
         virtual std::vector<sensor_info> queries_active_sensor(const sensor_info &search_info) = 0;

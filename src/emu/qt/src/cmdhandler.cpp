@@ -44,6 +44,7 @@
 #include <vfs/vfs.h>
 #include <qt/utils.h>
 
+#include <charconv>
 #include <cstdio>
 #include <cstring>
 #include <iostream>
@@ -72,6 +73,7 @@ static void attach_command_line_console() {
 using namespace eka2l1;
 
 void register_command_line_options(eka2l1::common::arg_parser &parser) {
+    parser.add("--debug-control-port", "Enable the loopback HTTP control API on this port (1..65535). Disabled by default.", debug_control_option_handler);
     parser.add("--help, -h", "Display this help and exit", help_option_handler);
     parser.add("--listapp", "List all installed applications", list_app_option_handler);
     parser.add("--listdevices", "List all installed devices", list_devices_option_handler);
@@ -553,3 +555,18 @@ bool python_docgen_option_handler(eka2l1::common::arg_parser *parser, void *user
     return false;
 }
 #endif
+
+bool debug_control_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err) {
+    const char *value = parser->next_token();
+    int port = 0;
+    if (value) {
+        auto end = value + std::strlen(value);
+        auto parsed = std::from_chars(value, end, port);
+        if (parsed.ec == std::errc{} && parsed.ptr == end && port > 0 && port <= 65535) {
+            reinterpret_cast<desktop::emulator *>(userdata)->debug_control_port = port;
+            return true;
+        }
+    }
+    *err = "--debug-control-port requires a port between 1 and 65535";
+    return false;
+}

@@ -26,6 +26,8 @@
 #include <queue>
 #include <thread>
 
+#include <control/native.h>
+#include <control/service.h>
 #include <common/log.h>
 #include <common/queue.h>
 #include <common/sync.h>
@@ -87,6 +89,13 @@ namespace eka2l1::android {
         int present_status;
 
         std::mutex input_mutex;
+
+        bool debug_control_enabled = false;
+        std::atomic<std::uint64_t> debug_frames{0};
+        std::recursive_mutex debug_mutex;
+        std::shared_ptr<control::native_backend> debug_backend;
+        std::unique_ptr<control::service> debug_service;
+        std::unique_ptr<control::server> debug_server;
 
         explicit emulator();
 

@@ -27,6 +27,8 @@
 #include <queue>
 #include <thread>
 
+#include <control/native.h>
+#include <control/service.h>
 #include <common/queue.h>
 #include <common/sync.h>
 #include <config/app_settings.h>
@@ -100,6 +102,13 @@ namespace eka2l1::desktop {
         int present_status;
 
         std::string launched_app_name_;
+
+        int debug_control_port = 0;
+        std::atomic<std::uint64_t> debug_frames{0};
+        std::shared_ptr<control::native_backend> debug_backend;
+        std::unique_ptr<control::service> debug_service;
+        std::unique_ptr<control::server> debug_server;
+        std::shared_ptr<std::atomic<bool>> debug_active;
 
         explicit emulator();
 

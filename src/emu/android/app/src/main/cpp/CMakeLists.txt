@@ -21,6 +21,7 @@ add_library(native-lib SHARED
 target_link_libraries(native-lib PRIVATE
         android
         Catch2
+        control_native
         common
         cpu
         drivers

@@ -46,3 +46,5 @@ bool run_ngage_game_option_handler(eka2l1::common::arg_parser *parser, void *use
 #if ENABLE_SCRIPTING
 bool python_docgen_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err);
 #endif
+
+bool debug_control_option_handler(eka2l1::common::arg_parser *parser, void *userdata, std::string *err);

@@ -461,6 +461,8 @@ void applist_widget::reload_whole_list() {
         QCoreApplication::processEvents();
         std::this_thread::sleep_for(std::chrono::milliseconds(1));
     }
+    // Deliver the final scanned items before another reload can clear their owners.
+    QCoreApplication::sendPostedEvents(this, QEvent::MetaCall);
 
     if (in_j2me) {
         if (list_j2me_widget_->count() == 0) {

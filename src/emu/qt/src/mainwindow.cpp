@@ -661,6 +661,7 @@ void main_window::on_package_uninstalled() {
 }
 
 void main_window::on_device_set_requested(const int index) {
+    if (emulator_state_.debug_backend) emulator_state_.debug_backend->reset_session();
     if (bt_netplay_dialog_) {
         bt_netplay_dialog_->close();
         bt_netplay_dialog_ = nullptr;
@@ -1199,6 +1200,9 @@ void main_window::on_app_clicked(applist_widget_item *item) {
     bool launch_ok = false;
     if (item->is_j2me_) {
         launch_ok = eka2l1::j2me::launch(emulator_state_.symsys.get(), static_cast<std::uint32_t>(item->registry_index_), get_process_exit_callback());
+    } else if (emulator_state_.debug_backend) {
+        auto *registry = applist_->get_registry_from_widget_item(item);
+        launch_ok = registry && emulator_state_.debug_backend->launch_app(registry->mandatory_info.uid, get_process_exit_callback());
     } else  {
         launch_ok = applist_->launch_from_widget_item(item, get_process_exit_callback());
     }
@@ -2014,4 +2018,35 @@ eka2l1::drivers::ui::dialog_cancel_callback main_window::question_dialog_open(co
             }, Qt::QueuedConnection);
         }
     };
+}
+
+bool main_window::control_launch(std::uint32_t uid) {
+    if (!emulator_state_.debug_backend->launch_app(uid, get_process_exit_callback())) return false;
+    setup_and_switch_to_game_mode();
+    emit app_launching();
+    return true;
+}
+
+bool main_window::control_boot(int index) {
+    on_device_set_requested(index);
+    return emulator_state_.symsys->get_device_manager()->get_current_index() == index;
+}
+
+void main_window::control_close() {
+    on_restart_requested();
+}
+
+void main_window::control_changed(eka2l1::control::native_change change) {
+    if (applist_) {
+        if (change == eka2l1::control::native_change::applications) applist_->request_reload(false);
+        if (change == eka2l1::control::native_change::configuration) applist_->set_hide_system_apps(emulator_state_.conf.hide_system_apps);
+        if (change == eka2l1::control::native_change::devices) applist_->update_devices(emulator_state_.symsys->get_device_manager());
+    }
+    refresh_current_device_label();
+    refresh_mount_availbility();
+}
+
+void main_window::control_pause(bool paused) {
+    ui_->action_pause->setChecked(paused);
+    on_pause_toggled(paused);
 }

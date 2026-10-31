@@ -477,3 +477,5 @@ if (UNIX AND NOT APPLE)
         POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_if_different "${CMAKE_CURRENT_SOURCE_DIR}/assets/duck_tank_fedora.png" "$<TARGET_FILE_DIR:eka2l1_qt>/duck_tank_fedora.png")
 endif()
+
+target_link_libraries(eka2l1_qt PRIVATE control_native)

@@ -57,6 +57,7 @@ public class MainActivity extends BaseActivity {
     @SuppressLint("NewApi")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Emulator.configureDebugControl(this, getIntent());
         Emulator.initializePath(this);
 
         super.onCreate(savedInstanceState);

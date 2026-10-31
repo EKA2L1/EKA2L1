@@ -80,6 +80,7 @@ namespace eka2l1::android {
     }
 
     std::vector<std::string> launcher::get_apps() {
+        if (!alserv) return {};
         std::vector<apa_app_registry> &registerations = alserv->get_registerations();
         std::vector<std::string> info;
         for (auto &reg : registerations) {

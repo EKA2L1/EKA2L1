@@ -99,6 +99,11 @@ namespace eka2l1::android {
         winserv = reinterpret_cast<eka2l1::window_server *>(the_sys->get_kernel_system()->get_by_name<eka2l1::service::server>(
                 eka2l1::get_winserv_name_by_epocver(symsys->get_symbian_version_use())));
 
+        if (debug_backend) {
+            launcher = std::make_unique<eka2l1::android::launcher>(the_sys);
+            eka2l1::drivers::ui::launcher_instance = launcher.get();
+        }
+
         if (stage_two_inited) {
             register_draw_callback();
             the_sys->initialize_user_parties();

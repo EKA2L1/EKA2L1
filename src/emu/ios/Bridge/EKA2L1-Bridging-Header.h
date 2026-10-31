@@ -3,3 +3,5 @@
 // less surface area Swift sees, the less churn when the bridge evolves.
 
 #import "IosEmulator.h"
+
+#import "DebugControl.h"
