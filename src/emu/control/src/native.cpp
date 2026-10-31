@@ -148,8 +148,10 @@ namespace eka2l1::control {
         json card() { return { { "mounted", !card_path.empty() }, { "name", card_path.empty() ? json(nullptr) : json(fs::path(card_path).filename().string()) } }; }
         json screen() {
             auto *server = windows();
+            if (!server)
+                return nullptr;
             kernel_lock guard(sys().get_kernel_system());
-            auto *scr = server ? server->get_current_focus_screen() : nullptr;
+            auto *scr = server->get_current_focus_screen();
             if (!scr)
                 return nullptr;
             std::lock_guard<std::mutex> screen_guard(scr->screen_mutex);
