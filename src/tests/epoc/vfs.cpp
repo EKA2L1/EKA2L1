@@ -68,6 +68,34 @@ struct io_scope_guard {
     }
 };
 
+TEST_CASE("drive_remount_after_notification_removal", "vfs") {
+    eka2l1::io_system io;
+    io_scope_guard guard(io);
+    int removed_calls = 0;
+    int active_calls = 0;
+    const auto removed = io.register_drive_change_notify([&](void *, drive_number, eka2l1::drive_action) {
+        ++removed_calls;
+    }, nullptr);
+    const auto active = io.register_drive_change_notify([&](void *, drive_number drv, eka2l1::drive_action) {
+        REQUIRE(drv == drive_c);
+        ++active_calls;
+    }, nullptr);
+
+    REQUIRE(io.mount_physical_path(drive_c, drive_media::physical, io_attrib_internal, u"."));
+    REQUIRE(removed_calls == 1);
+    REQUIRE(active_calls == 1);
+    REQUIRE(io.remove_drive_change_notify(removed));
+    REQUIRE(io.unmount(drive_c));
+    REQUIRE(io.mount_physical_path(drive_c, drive_media::physical, io_attrib_internal, u"."));
+    REQUIRE(removed_calls == 1);
+    REQUIRE(active_calls == 3);
+
+    REQUIRE(io.remove_drive_change_notify(active));
+    REQUIRE(io.unmount(drive_c));
+    REQUIRE(io.mount_physical_path(drive_c, drive_media::physical, io_attrib_internal, u"."));
+    REQUIRE(active_calls == 3);
+}
+
 TEST_CASE("get_physical", "vfs") {
     eka2l1::io_system io;
     io_scope_guard guard(io);
