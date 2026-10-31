@@ -32,8 +32,7 @@ namespace eka2l1::j2me {
         }
         const epocver sysver = sys->get_symbian_version_use();
         if (sysver <= epocver::epoc6) {
-            launch_through_kmidrun(sys, entry.value(), exit_cb);
-            return true;
+            return launch_through_kmidrun(sys, entry.value(), exit_cb);
         }
 
         return false;

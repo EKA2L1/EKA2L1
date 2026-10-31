@@ -208,14 +208,14 @@ namespace eka2l1::j2me {
         if (res == SQLITE_DONE) {
             // No entry, just add it
             if (!execute_insert(entry)) {
-                return false;
+                return static_cast<std::uint32_t>(-1);
             }
 
-            return true;
+            return static_cast<std::uint32_t>(sqlite3_last_insert_rowid(database_));
         }
 
         if (!replace_existing) {
-            return false;
+            return static_cast<std::uint32_t>(-1);
         }
 
         int id = sqlite3_column_int(find_existing_stmt_, 0);
