@@ -3,6 +3,8 @@
 #include <catch2/catch.hpp>
 #include <chrono>
 #include <condition_variable>
+#include <config/app_settings.h>
+#include <config/config.h>
 #include <control/service.h>
 #include <control/native.h>
 #include <filesystem>
@@ -10,6 +12,8 @@
 #include <future>
 #include <mutex>
 #include <thread>
+#include <system/devices.h>
+#include <system/epoc.h>
 
 using namespace eka2l1::control;
 using namespace std::chrono_literals;
@@ -212,4 +216,48 @@ TEST_CASE("A native screenshot without an active surface fails before waiting on
     CHECK(result.status == 409);
     CHECK(json::parse(result.body)["error"]["code"].string() == "no_screen");
     CHECK_FALSE(touched_system);
+}
+
+TEST_CASE("Native control status is available with no installed devices", "[control][no-device]") {
+    namespace fs = std::filesystem;
+    const auto root = fs::temp_directory_path() / ("eka-control-no-device-" + std::to_string(std::chrono::steady_clock::now().time_since_epoch().count()));
+    fs::create_directories(root);
+    struct cleanup {
+        fs::path path;
+        ~cleanup() { fs::remove_all(path); }
+    } remove{ root };
+    eka2l1::config::state conf;
+    conf.storage = root.string() + "/";
+    eka2l1::config::app_settings settings(&conf);
+    eka2l1::system_create_components components;
+    components.conf_ = &conf;
+    components.settings_ = &settings;
+    components.cache_root_ = conf.storage + "cache/";
+    eka2l1::system sys(components);
+    REQUIRE(sys.get_device_manager()->total() == 0);
+    SECTION("Before core startup") {
+        REQUIRE(sys.get_kernel_system() == nullptr);
+    }
+    SECTION("After core startup without a window server") {
+        sys.startup();
+        REQUIRE(sys.get_kernel_system() != nullptr);
+    }
+
+    native_frontend frontend;
+    frontend.get_system = [&] { return &sys; };
+    frontend.frames = [] { return 0; };
+    native_backend backend(std::move(frontend));
+    service control([&](request req, completion done) { done(backend.handle(req)); });
+    for (int i = 0; i < 2; ++i) {
+        const auto result = call(control, { "GET", { "v1", "status" }, {}, {}, {} });
+        REQUIRE(result.status == 200);
+        const auto status = json::parse(result.body);
+        CHECK(status["started"].boolean());
+        CHECK(status["device"].is_null());
+        CHECK(status["screen"].is_null());
+        CHECK(status["session"]["state"].string() == "none");
+    }
+    const auto devices = call(control, { "GET", { "v1", "devices" }, {}, {}, {} });
+    REQUIRE(devices.status == 200);
+    CHECK(json::parse(devices.body)["devices"].items().empty());
 }
