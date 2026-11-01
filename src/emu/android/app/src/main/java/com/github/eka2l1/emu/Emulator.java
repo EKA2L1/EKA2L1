@@ -42,8 +42,6 @@ import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.Vibrator;
 import android.provider.DocumentsContract;
-import android.system.ErrnoException;
-import android.system.Os;
 import android.view.Surface;
 import android.view.ViewGroup;
 import android.widget.EditText;
@@ -184,17 +182,6 @@ public class Emulator {
 
     public static void initializePath(Context context) {
         Emulator.context = context;
-        if (!init && context instanceof Activity) {
-            Intent intent = ((Activity) context).getIntent();
-            if (intent.hasExtra("force_bgra_conversion")) {
-                try {
-                    Os.setenv("EKA2L1_FORCE_BGRA_CONVERSION",
-                            intent.getBooleanExtra("force_bgra_conversion", false) ? "1" : "0", true);
-                } catch (ErrnoException e) {
-                    throw new IllegalStateException("Unable to configure BGRA conversion", e);
-                }
-            }
-        }
 
         final String defaultEmulatorDir = FileUtils.isExternalStorageLegacy()
                 ? Environment.getExternalStorageDirectory() + "/EKA2L1/"
