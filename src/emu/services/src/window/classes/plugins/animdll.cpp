@@ -25,6 +25,23 @@
 #include <utils/err.h>
 
 namespace eka2l1::epoc {
+    anim_executor::anim_executor(canvas_base *canvas)
+        : canvas_(canvas) {
+        if (canvas_) {
+            canvas_->add_canvas_observer(this);
+        }
+    }
+
+    anim_executor::~anim_executor() {
+        if (canvas_) {
+            canvas_->remove_canvas_observer(this);
+        }
+    }
+
+    void anim_executor::on_window_destroyed(canvas_interface *obj) {
+        canvas_ = nullptr;
+    }
+
     anim_dll::anim_dll(window_server_client_ptr client, screen *scr, anim_executor_factory *factory)
         : window_client_obj(client, scr)
         , factory_(factory) {
