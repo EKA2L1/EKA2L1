@@ -142,6 +142,7 @@ namespace eka2l1::drivers {
         eka2l1::vec2 new_surface_size_;
 
         bool is_gles;
+        const bool force_bgra_conversion_;
         bool support_line_width_;
 
         std::uint32_t max_texture_size_ = 2048;
@@ -226,6 +227,10 @@ namespace eka2l1::drivers {
 
         bool is_stricted() const override {
             return is_gles;
+        }
+
+        bool convert_bgra_uploads() const {
+            return is_gles && force_bgra_conversion_;
         }
 
         std::uint32_t max_texture_size() const override {

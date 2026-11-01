@@ -2415,6 +2415,8 @@ namespace eka2l1::dispatch {
         drivers::graphics_driver *drv = sys->get_graphics_driver();
         get_data_type_to_upload(internal_format_driver, format_driver, dtype, swizzles, format, data_type, drv->is_stricted());
 
+        const std::size_t needed_size = calculate_possible_upload_size(eka2l1::vec2(width, height), format, data_type, ctx->unpack_alignment_);
+
         // TODO: border is ignored!
         if (!tex->handle_value()) {
             need_set_params = true;
@@ -2427,7 +2429,7 @@ namespace eka2l1::dispatch {
                 ctx->texture_pools_2d_.pop();
             } else {
                 drivers::handle new_h = drivers::create_texture(drv, dimension, static_cast<std::uint8_t>(level), internal_format_driver,
-                    format_driver, dtype, data_pixels, 0, eka2l1::vec3(width, height, 0), 0, ctx->unpack_alignment_);
+                    format_driver, dtype, data_pixels, needed_size, eka2l1::vec3(width, height, 0), 0, ctx->unpack_alignment_);
 
                 if (!new_h) {
                     controller.push_error(ctx, GL_INVALID_OPERATION);
@@ -2440,7 +2442,6 @@ namespace eka2l1::dispatch {
         }
 
         if (need_reinstantiate) {
-            const std::size_t needed_size = calculate_possible_upload_size(eka2l1::vec2(width, height), format, data_type, ctx->unpack_alignment_);
             ctx->cmd_builder_.recreate_texture(tex->handle_value(), dimension, static_cast<std::uint8_t>(level), internal_format_driver,
                 format_driver, dtype, data_pixels, needed_size, eka2l1::vec3(width, height, 0), 0, ctx->unpack_alignment_);
         }
