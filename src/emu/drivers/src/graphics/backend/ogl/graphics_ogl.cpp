@@ -77,12 +77,13 @@ namespace eka2l1::drivers {
         glad_set_post_callback(gl_post_callback_for_error);
     }
 
-    ogl_graphics_driver::ogl_graphics_driver(const window_system_info &info)
+    ogl_graphics_driver::ogl_graphics_driver(const window_system_info &info, const bool force_bgra_conversion)
         : shared_graphics_driver(graphic_api::opengl)
         , should_stop(false)
         , surface_update_needed(false)
         , new_surface(nullptr)
         , is_gles(false)
+        , force_bgra_conversion_(force_bgra_conversion)
         , support_line_width_(true)
         , point_size(1.0)
         , line_style(pen_style_none)
@@ -194,6 +195,9 @@ namespace eka2l1::drivers {
         }
 
         std::string feature = "";
+        if (convert_bgra_uploads()) {
+            feature += "BGRAConvert;";
+        }
 
         if (feature_flags_ & OGL_FEATURE_SUPPORT_ETC2) {
             feature += "ETC2Dec;";

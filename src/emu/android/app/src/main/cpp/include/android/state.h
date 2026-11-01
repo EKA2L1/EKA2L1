@@ -57,6 +57,7 @@ namespace eka2l1::android {
      * \brief State of the emulator on desktop.
      */
     struct emulator {
+        bool force_bgra_conversion = false;
         std::unique_ptr<system> symsys;
         std::unique_ptr<drivers::graphics_driver> graphics_driver;
         std::unique_ptr<drivers::audio_driver> audio_driver;

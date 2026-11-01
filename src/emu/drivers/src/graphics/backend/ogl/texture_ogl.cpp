@@ -121,7 +121,12 @@ namespace eka2l1::drivers {
         drivers::texture_data_type converted_data_type = tex_data_type;
 
         auto *ogl_driver = static_cast<ogl_graphics_driver *>(driver);
-        if (converted_internal_format == texture_format::bgra) {
+#if EKA2L1_PLATFORM(IOS)
+        const bool use_bgra_internal_format = false;
+#else
+        const bool use_bgra_internal_format = ogl_driver->is_stricted() && !ogl_driver->convert_bgra_uploads();
+#endif
+        if (converted_internal_format == texture_format::bgra && !use_bgra_internal_format) {
             converted_internal_format = texture_format::rgba;
         }
 
@@ -129,7 +134,7 @@ namespace eka2l1::drivers {
         std::uint32_t upload_alignment = unpack_alignment;
 
         std::vector<std::uint8_t> converted_data;
-        if (converted_format == texture_format::bgra && ogl_driver->is_stricted()) {
+        if (converted_format == texture_format::bgra && ogl_driver->convert_bgra_uploads()) {
             converted_format = texture_format::rgba;
             if (data) {
                 if (data_type != texture_data_type::ubyte || !convert_bgra_upload(converted_data, data, total_size,
@@ -371,7 +376,7 @@ namespace eka2l1::drivers {
         std::uint32_t upload_alignment = alg;
         std::vector<std::uint8_t> converted_data;
         auto *ogl_driver = static_cast<ogl_graphics_driver *>(driver);
-        if (converted_format == texture_format::bgra && ogl_driver->is_stricted()) {
+        if (converted_format == texture_format::bgra && ogl_driver->convert_bgra_uploads()) {
             if (data_type != texture_data_type::ubyte || !convert_bgra_upload(converted_data, data, data_size,
                     size, dimensions, pixels_per_line, alg)) {
                 LOG_ERROR(DRIVER_GRAPHICS, "Invalid BGRA8888 texture update");

@@ -127,6 +127,7 @@ public class Emulator {
     private static String screenshotDir;
     private static boolean init;
     private static int debugControlPort;
+    private static boolean forceBgraConversion;
     private static java.lang.ref.WeakReference<android.app.Activity> debugHost = new java.lang.ref.WeakReference<>(null);
     private static java.lang.ref.WeakReference<android.app.Activity> debugScreen = new java.lang.ref.WeakReference<>(null);
 
@@ -182,6 +183,12 @@ public class Emulator {
 
     public static void initializePath(Context context) {
         Emulator.context = context;
+        if (!init && context instanceof Activity) {
+            Intent intent = ((Activity) context).getIntent();
+            if (intent.hasExtra("force_bgra_conversion")) {
+                forceBgraConversion = intent.getBooleanExtra("force_bgra_conversion", false);
+            }
+        }
 
         final String defaultEmulatorDir = FileUtils.isExternalStorageLegacy()
                 ? Environment.getExternalStorageDirectory() + "/EKA2L1/"
@@ -349,7 +356,7 @@ public class Emulator {
             throw new IllegalStateException("Emulator is not initialized");
         }
         if (!init) {
-            init = startNative(debugControlPort);
+            init = startNative(debugControlPort, forceBgraConversion);
             load = true;
             if (!init) {
                 throw new IllegalStateException("Emulator is not initialized");
@@ -783,7 +790,7 @@ public class Emulator {
 
     private static native void setDirectory(String path);
 
-    private static native boolean startNative(int debugControlPort);
+    private static native boolean startNative(int debugControlPort, boolean forceBgraConversion);
 
     private static native String[] getApps();
 
