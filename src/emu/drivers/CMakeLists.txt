@@ -91,6 +91,7 @@ add_library(drivers
         include/drivers/graphics/input_desc.h
         include/drivers/graphics/shader.h
         include/drivers/graphics/texture.h
+        include/drivers/graphics/texture_upload.h
         include/drivers/graphics/backend/graphics_driver_shared.h
         include/drivers/input/emu_controller.h
         include/drivers/location/location.h
