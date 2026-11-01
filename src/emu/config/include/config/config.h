@@ -187,6 +187,7 @@ namespace eka2l1::config {
         bool extensive_logging{ false };
         int background_image_opacity{ 255 };
         bool background_image_keep_aspect{ false };
+        bool background_image_follow_rotation{ false };
         int screen_scale_ratio{ 100 };
 
         std::string current_mmc_id;

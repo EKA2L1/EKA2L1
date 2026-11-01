@@ -199,10 +199,24 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     eka2l1::rect area;
     area.size = swapchain_size;
 
+    auto &crr_mode = scr->current_mode();
+
+    eka2l1::vec2 size = crr_mode.size;
+    if ((scr->ui_rotation % 180) != 0) {
+        std::swap(size.x, size.y);
+    }
+
     eka2l1::drivers::handle background_image = state_ptr->ui_main->get_background_image();
     builder.clear({ color_clear.z / 255.0f, color_clear.y / 255.0f, color_clear.x / 255.0f, color_clear.w / 255.0f, 0.0f, 0.0f }, eka2l1::drivers::draw_buffer_bit_color_buffer);
     if (background_image != 0) {
-        const eka2l1::vec2 image_size = state_ptr->ui_main->get_background_image_size();
+        eka2l1::vec2 image_size = state_ptr->ui_main->get_background_image_size();
+
+        // A picture of a phone held sideways stands up, turned clockwise, while the screen is taller than wide
+        const bool turn_image = state.conf.background_image_follow_rotation && (image_size.x > image_size.y) && (size.y > size.x);
+        if (turn_image) {
+            std::swap(image_size.x, image_size.y);
+        }
+
         if (state.conf.background_image_keep_aspect && (image_size.x > 0) && (image_size.y > 0)) {
             const float image_scale = std::min(static_cast<float>(swapchain_size.x) / image_size.x, static_cast<float>(swapchain_size.y) / image_size.y);
             area.size = eka2l1::vec2(static_cast<int>(image_size.x * image_scale), static_cast<int>(image_size.y * image_scale));
@@ -210,27 +224,24 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
         }
 
         eka2l1::rect draw_image_rect = area;
+        if (turn_image) {
+            eka2l1::drivers::advance_draw_pos_around_origin(draw_image_rect, 90);
+            std::swap(draw_image_rect.size.x, draw_image_rect.size.y);
+        }
 
         builder.set_feature(eka2l1::drivers::graphics_feature::blend, true);
         builder.blend_formula(eka2l1::drivers::blend_equation::add, eka2l1::drivers::blend_equation::add,
             eka2l1::drivers::blend_factor::frag_out_alpha, eka2l1::drivers::blend_factor::one_minus_frag_out_alpha,
             eka2l1::drivers::blend_factor::one, eka2l1::drivers::blend_factor::one_minus_frag_out_alpha);
         builder.set_brush_color_detail(eka2l1::vec4(255, 255, 255, eka2l1::common::clamp<int>(0, 255, state_ptr->conf.background_image_opacity)));
-        builder.draw_bitmap(background_image, 0, draw_image_rect, eka2l1::rect(), eka2l1::vec2(0, 0), 0.0f, eka2l1::drivers::bitmap_draw_flag_use_brush);
+        builder.draw_bitmap(background_image, 0, draw_image_rect, eka2l1::rect(), eka2l1::vec2(0, 0), turn_image ? 90.0f : 0.0f, eka2l1::drivers::bitmap_draw_flag_use_brush);
         builder.set_feature(eka2l1::drivers::graphics_feature::blend, false);
     }
-
-    auto &crr_mode = scr->current_mode();
 
     // A host camera is bolted to the monitor, not to the emulated device. The
     // draw below turns the picture clockwise by ui_rotation, so a frame turned
     // counter-clockwise by the same amount comes out upright on the monitor.
     eka2l1::drivers::camera::set_frame_rotation(scr->ui_rotation);
-
-    eka2l1::vec2 size = crr_mode.size;
-    if ((scr->ui_rotation % 180) != 0) {
-        std::swap(size.x, size.y);
-    }
 
     float mult_x = scr->requested_ui_scale_factor > 0.0f ? scr->requested_ui_scale_factor : (static_cast<float>(area.size.x) / size.x);
     float mult_y = scr->requested_ui_scale_factor > 0.0f ? scr->requested_ui_scale_factor : (state.stretch_to_fill_display ? (static_cast<float>(area.size.y) / size.y) : mult_x);
