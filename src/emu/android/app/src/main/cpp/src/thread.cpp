@@ -45,7 +45,7 @@ namespace eka2l1::android {
         // We got window and context ready (OpenGL, let makes stuff now)
         // TODO: Configurable
         state.graphics_driver = drivers::create_graphics_driver(drivers::graphic_api::opengl,
-                state.window->get_window_system_info(), state.force_bgra_conversion);
+                state.window->get_window_system_info());
         state.symsys->set_graphics_driver(state.graphics_driver.get());
 
         drivers::emu_window_android *window = state.window.get();

@@ -24,10 +24,10 @@
 #include <common/platform.h>
 
 namespace eka2l1::drivers {
-    graphics_driver_ptr create_graphics_driver(const graphic_api api, const window_system_info &info, const bool force_bgra_conversion) {
+    graphics_driver_ptr create_graphics_driver(const graphic_api api, const window_system_info &info) {
         switch (api) {
         case graphic_api::opengl: {
-            return std::make_unique<ogl_graphics_driver>(info, force_bgra_conversion);
+            return std::make_unique<ogl_graphics_driver>(info);
         }
 
         default:

@@ -196,5 +196,5 @@ namespace eka2l1::drivers {
 
     using graphics_driver_ptr = std::unique_ptr<graphics_driver>;
 
-    graphics_driver_ptr create_graphics_driver(const graphic_api api, const window_system_info &info, const bool force_bgra_conversion = false);
+    graphics_driver_ptr create_graphics_driver(const graphic_api api, const window_system_info &info);
 };

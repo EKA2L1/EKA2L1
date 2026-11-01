@@ -131,13 +131,12 @@ Java_com_github_eka2l1_emu_Emulator_setDirectory(
 extern "C" JNIEXPORT jboolean JNICALL
 Java_com_github_eka2l1_emu_Emulator_startNative(
     JNIEnv *env,
-    jclass clazz, jint debug_port, jboolean force_bgra_conversion) {
+    jclass clazz, jint debug_port) {
     eka2l1::common::jni::init_classloader();
     eka2l1::common::android::register_storage_callbacks(env);
     eka2l1::drivers::android::register_camera_callbacks(env);
 
     state = std::make_unique<eka2l1::android::emulator>();
-    state->force_bgra_conversion = force_bgra_conversion == JNI_TRUE;
     state->debug_control_enabled = debug_port > 0 && debug_port <= 65535;
     const bool ready = emulator_entry(*state);
     start_debug_control(debug_port);

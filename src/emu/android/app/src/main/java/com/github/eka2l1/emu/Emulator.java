@@ -42,6 +42,8 @@ import android.os.ParcelFileDescriptor;
 import android.os.Process;
 import android.os.Vibrator;
 import android.provider.DocumentsContract;
+import android.system.ErrnoException;
+import android.system.Os;
 import android.view.Surface;
 import android.view.ViewGroup;
 import android.widget.EditText;
@@ -127,7 +129,6 @@ public class Emulator {
     private static String screenshotDir;
     private static boolean init;
     private static int debugControlPort;
-    private static boolean forceBgraConversion;
     private static java.lang.ref.WeakReference<android.app.Activity> debugHost = new java.lang.ref.WeakReference<>(null);
     private static java.lang.ref.WeakReference<android.app.Activity> debugScreen = new java.lang.ref.WeakReference<>(null);
 
@@ -186,7 +187,12 @@ public class Emulator {
         if (!init && context instanceof Activity) {
             Intent intent = ((Activity) context).getIntent();
             if (intent.hasExtra("force_bgra_conversion")) {
-                forceBgraConversion = intent.getBooleanExtra("force_bgra_conversion", false);
+                try {
+                    Os.setenv("EKA2L1_FORCE_BGRA_CONVERSION",
+                            intent.getBooleanExtra("force_bgra_conversion", false) ? "1" : "0", true);
+                } catch (ErrnoException e) {
+                    throw new IllegalStateException("Unable to configure BGRA conversion", e);
+                }
             }
         }
 
@@ -356,7 +362,7 @@ public class Emulator {
             throw new IllegalStateException("Emulator is not initialized");
         }
         if (!init) {
-            init = startNative(debugControlPort, forceBgraConversion);
+            init = startNative(debugControlPort);
             load = true;
             if (!init) {
                 throw new IllegalStateException("Emulator is not initialized");
@@ -790,7 +796,7 @@ public class Emulator {
 
     private static native void setDirectory(String path);
 
-    private static native boolean startNative(int debugControlPort, boolean forceBgraConversion);
+    private static native boolean startNative(int debugControlPort);
 
     private static native String[] getApps();
 

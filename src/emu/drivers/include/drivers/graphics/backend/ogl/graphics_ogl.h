@@ -206,7 +206,7 @@ namespace eka2l1::drivers {
         void commit_upscale_shader_change();
 
     public:
-        explicit ogl_graphics_driver(const window_system_info &info, const bool force_bgra_conversion = false);
+        explicit ogl_graphics_driver(const window_system_info &info);
         ~ogl_graphics_driver() override;
 
         void set_viewport(const eka2l1::rect &viewport) override;
