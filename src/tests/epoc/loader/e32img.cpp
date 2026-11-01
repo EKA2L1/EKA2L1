@@ -24,6 +24,7 @@
 #include <vfs/vfs.h>
 
 #include <catch2/catch.hpp>
+#include <common/buffer.h>
 #include <common/crypt.h>
 #include <common/fileutils.h>
 #include <config/app_settings.h>
@@ -33,8 +34,12 @@
 #include <kernel/kernel.h>
 #include <kernel/timing.h>
 
+#include <algorithm>
+#include <array>
+#include <cstdint>
 #include <cstring>
 #include <fstream>
+#include <vector>
 
 using namespace eka2l1;
 
@@ -95,6 +100,100 @@ namespace {
         out.write(reinterpret_cast<const char *>(image.ed.syms.data()), 4);
         out.write(imports.data(), imports.size());
         REQUIRE(out.good());
+    }
+
+    constexpr std::array<std::uint8_t, 8> ARM_CODE = {
+        0x00, 0x00, 0xA0, 0xE3,
+        0x1E, 0xFF, 0x2F, 0xE1
+    };
+
+    void append16(std::vector<std::uint8_t> &buffer, const std::uint16_t value) {
+        buffer.push_back(static_cast<std::uint8_t>(value & 0xFF));
+        buffer.push_back(static_cast<std::uint8_t>(value >> 8));
+    }
+
+    void append32(std::vector<std::uint8_t> &buffer, const std::uint32_t value) {
+        for (int i = 0; i < 4; i++) {
+            buffer.push_back(static_cast<std::uint8_t>((value >> (i * 8)) & 0xFF));
+        }
+    }
+
+    void append_header(std::vector<std::uint8_t> &buffer, const eka2l1::loader::e32img_header &header, const bool eka1) {
+        append32(buffer, static_cast<std::uint32_t>(header.uid1));
+        append32(buffer, header.uid2);
+        append32(buffer, header.uid3);
+        append32(buffer, header.check);
+        append32(buffer, header.sig);
+        append32(buffer, eka1 ? 0x2000 : header.header_crc);
+        append32(buffer, static_cast<std::uint32_t>(header.major) | (static_cast<std::uint32_t>(header.minor) << 16));
+        append32(buffer, header.compression_type);
+        append32(buffer, static_cast<std::uint32_t>(header.petran_major) | (static_cast<std::uint32_t>(header.petran_minor) << 8) | (static_cast<std::uint32_t>(header.petran_build) << 16));
+        append32(buffer, header.msb);
+        append32(buffer, header.lsb);
+        append32(buffer, header.flags);
+        append32(buffer, header.code_size);
+        append32(buffer, header.data_size);
+        append32(buffer, header.heap_size_min);
+        append32(buffer, header.heap_size_max);
+        append32(buffer, header.stack_size);
+        append32(buffer, header.bss_size);
+        append32(buffer, header.entry_point);
+        append32(buffer, header.code_base);
+        append32(buffer, header.data_base);
+        append32(buffer, header.dll_ref_table_count);
+        append32(buffer, header.export_dir_offset);
+        append32(buffer, header.export_dir_count);
+        append32(buffer, header.text_size);
+        append32(buffer, header.code_offset);
+        append32(buffer, header.data_offset);
+        append32(buffer, header.import_offset);
+        append32(buffer, header.code_reloc_offset);
+        append32(buffer, header.data_reloc_offset);
+        append32(buffer, static_cast<std::uint32_t>(header.priority) | (static_cast<std::uint32_t>(header.cpu) << 16));
+    }
+
+    void append_bytepair_page(std::vector<std::uint8_t> &buffer, const std::uint32_t decompressed_size,
+        const std::vector<std::uint8_t> &page) {
+        append32(buffer, static_cast<std::uint32_t>(page.size()));
+        append32(buffer, decompressed_size);
+        append16(buffer, 1);
+        append16(buffer, static_cast<std::uint16_t>(page.size()));
+        buffer.insert(buffer.end(), page.begin(), page.end());
+    }
+
+    std::vector<std::uint8_t> make_bytepair_image(const bool eka1) {
+        eka2l1::loader::e32img_header header{};
+        header.uid1 = eka2l1::loader::e32_img_type::exe;
+        header.uid2 = 0x100039CE;
+        header.uid3 = 0xA000017F;
+        header.sig = 0x434F5045;
+        header.major = 1;
+        header.compression_type = 0x102822AA;
+        header.flags = eka1 ? 0x01000000 : 0x01000028;
+        header.code_size = static_cast<std::uint32_t>(ARM_CODE.size());
+        header.code_base = 0x8000;
+        header.data_base = 0x400000;
+        header.text_size = header.code_size;
+        header.code_offset = eka1 ? 124 : 128;
+        header.data_offset = header.code_offset + header.code_size;
+        header.import_offset = header.data_offset;
+        header.cpu = eka1 ? eka2l1::loader::e32_cpu::armv4 : eka2l1::loader::e32_cpu::armv5;
+
+        const std::uint32_t uids[] = { static_cast<std::uint32_t>(header.uid1), header.uid2, header.uid3 };
+        header.check = eka2l1::crypt::calculate_checked_uid_checksum(uids);
+
+        const std::vector<std::uint8_t> compressed_code = {
+            0x01, 0xFE, 0x01, 0x00, 0x00,
+            0x01, 0xA0, 0xE3, 0x1E, 0xFF, 0x2F, 0xE1
+        };
+        const std::vector<std::uint8_t> empty_import_section = { 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+        std::vector<std::uint8_t> buffer;
+        append_header(buffer, header, eka1);
+        append32(buffer, header.code_size + 4);
+        append_bytepair_page(buffer, header.code_size, compressed_code);
+        append_bytepair_page(buffer, 4, empty_import_section);
+        return buffer;
     }
 }
 
@@ -164,4 +263,23 @@ TEST_CASE("Failed cyclic DLL loads roll back without destroying their loading pa
         REQUIRE(kern.get_by_name<kernel::codeseg>("child.dll") != nullptr);
     }
     common::delete_folder(root);
+}
+
+TEST_CASE("E32Image byte-pair decompression preserves the code section", "[e32img]") {
+    const bool formats[] = { false, true };
+
+    for (const bool eka1 : formats) {
+        INFO((eka1 ? "EKA1" : "EKA2"));
+        std::vector<std::uint8_t> data = make_bytepair_image(eka1);
+        eka2l1::common::ro_buf_stream stream(data.data(), data.size());
+        auto image = eka2l1::loader::parse_e32img(&stream, false);
+
+        REQUIRE(image);
+        REQUIRE(image->epoc_ver == (eka1 ? epocver::epoc6 : epocver::epoc94));
+        REQUIRE(image->header.code_base == 0x8000);
+        REQUIRE(image->header.code_size == ARM_CODE.size());
+        REQUIRE(image->data.size() == image->header.code_offset + image->header.code_size + 4);
+        const auto *code = reinterpret_cast<const std::uint8_t *>(image->data.data() + image->header.code_offset);
+        REQUIRE(std::equal(ARM_CODE.begin(), ARM_CODE.end(), code));
+    }
 }
