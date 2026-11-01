@@ -1145,7 +1145,7 @@ namespace eka2l1 {
 
         const std::string &run_folder = layout.app_folder_to_run;
 
-        result.mandatory_info.app_path = eka2l1::add_path(u"E:\\system\\apps\\", common::utf8_to_ucs2(eka2l1::add_path(run_folder, run_folder + ".app")));
+        result.mandatory_info.app_path = eka2l1::add_path(u"E:\\system\\apps\\", common::utf8_to_ucs2(eka2l1::add_path(run_folder, run_folder + ".app", true)), true);
         return true;
     }
 
