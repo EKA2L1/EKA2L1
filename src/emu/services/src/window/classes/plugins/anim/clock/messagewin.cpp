@@ -35,6 +35,9 @@ namespace eka2l1::epoc {
     }
 
     messagewin_anim_executor::~messagewin_anim_executor() {
-        canvas_->set_visible(true);
+        // Nothing to restore when the window went first.
+        if (canvas_) {
+            canvas_->set_visible(true);
+        }
     }
 }
