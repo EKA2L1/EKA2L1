@@ -17,6 +17,7 @@ target_link_libraries(ekatests PRIVATE
     glm
     common
     config
+    j2me
     epoc
     epocio
     epockern

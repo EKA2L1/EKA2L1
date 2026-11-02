@@ -623,6 +623,16 @@ namespace eka2l1::common {
                 return false;
             }
 
+            struct stat input_info;
+            struct stat output_info;
+            if ((fstat(fileno(input), &input_info) != 0)
+                || ((stat(dest.c_str(), &output_info) == 0)
+                    && (input_info.st_dev == output_info.st_dev)
+                    && (input_info.st_ino == output_info.st_ino))) {
+                fclose(input);
+                return false;
+            }
+
             // open output file
             FILE *output = open_c_file(dest, "wb");
             if (!output) {

@@ -162,7 +162,7 @@ namespace eka2l1::j2me {
             static const char *UPDATE_ENTRY_STMT = "UPDATE apps SET "
                 "name=:name,"
                 "author=:author,"
-                "iconPath=iconPath,"
+                "iconPath=:iconPath,"
                 "title=:title,"
                 "originalTitle=:originalTitle,"
                 "version=:version WHERE id=:id";
