@@ -6284,6 +6284,9 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x7E, server_create),
         BRIDGE_REGISTER(0x7F, session_create),
         BRIDGE_REGISTER(0x80, session_create_from_handle),
+        BRIDGE_REGISTER(0x81, logical_device_load),
+        BRIDGE_REGISTER(0x82, logical_device_free),
+        BRIDGE_REGISTER(0x83, logical_channel_create),
         BRIDGE_REGISTER(0x84, timer_create),
         BRIDGE_REGISTER(0x85, timer_after_high_res), // Actually TimerHighRes
         BRIDGE_REGISTER(0x86, after), // Actually AfterHighRes
@@ -6468,6 +6471,8 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x7D, server_create),
         BRIDGE_REGISTER(0x7E, session_create),
         BRIDGE_REGISTER(0x7F, session_create_from_handle),
+        BRIDGE_REGISTER(0x80, logical_device_load),
+        BRIDGE_REGISTER(0x81, logical_device_free),
         BRIDGE_REGISTER(0x82, logical_channel_create),
         BRIDGE_REGISTER(0x83, timer_create),
         BRIDGE_REGISTER(0x84, timer_after_high_res), // Actually TimerHighRes
