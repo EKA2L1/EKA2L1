@@ -634,6 +634,13 @@ namespace eka2l1 {
         POSIX_REQUEST_FINISH(ctx);
     }
 
+    void posix_server::terminate_process(service::ipc_context &ctx) {
+        POSIX_REQUEST_INIT(ctx);
+
+        // exit() of STDLIB ends here, with the exit status in fid. The process does not wait for an answer.
+        own_process->kill(kernel::entity_exit_type::kill, u"Kill", params->fid);
+    }
+
     posix_server::posix_server(eka2l1::system *sys, process_ptr &associated_process,
         const std::u16string &executable_path)
         : service::server(sys->get_kernel_system(), sys, nullptr, std::string("Posix-") + common::to_string(associated_process->unique_id()), true)
@@ -654,6 +661,7 @@ namespace eka2l1 {
         REGISTER_IPC(posix_server, getenv, PMgetenv, "Posix::Getenv");
         REGISTER_IPC(posix_server, dup, PMdup, "Posix::Dup");
         REGISTER_IPC(posix_server, dup2, PMdup2, "Posix::Dup2");
+        REGISTER_IPC(posix_server, terminate_process, PMterminateprocess, "Posix::TerminateProcess");
     }
 
     void posix_server::update_executable_path(const std::u16string &executable_path) {

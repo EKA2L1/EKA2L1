@@ -134,6 +134,8 @@ namespace eka2l1 {
         void dup(service::ipc_context &ctx);
         void dup2(service::ipc_context &ctx);
 
+        void terminate_process(service::ipc_context &ctx);
+
     public:
         posix_server(eka2l1::system *sys, process_ptr &associated_process,
             const std::u16string &executable_path);
