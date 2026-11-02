@@ -462,8 +462,7 @@ namespace eka2l1 {
                 end_access();
             }
 
-            // Before startup() there is no kernel to switch; the frontend boots the device later.
-            if (actually_found && kern_) {
+            if (actually_found) {
                 conf_->device = 0;
                 conf_->serialize(false);
 
@@ -1421,7 +1420,8 @@ namespace eka2l1 {
             start_access();
         }
 
-        if ((index >= 0) && (static_cast<std::size_t>(index) >= dvcmngr_->total())) {
+        const bool no_device = (index >= 0) ? (static_cast<std::size_t>(index) >= dvcmngr_->total()) : !dvcmngr_->get_current();
+        if (no_device) {
             if (lock_sys) {
                 end_access();
             }
