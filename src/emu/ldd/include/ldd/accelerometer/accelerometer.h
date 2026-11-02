@@ -21,10 +21,18 @@
 
 #include <kernel/ldd.h>
 
+#include <array>
 #include <memory>
+#include <mutex>
+#include <optional>
+#include <vector>
 
 namespace eka2l1 {
     class ntimer;
+
+    namespace drivers {
+        class sensor;
+    }
 }
 
 namespace eka2l1::ldd {
@@ -44,17 +52,39 @@ namespace eka2l1::ldd {
     static constexpr std::uint32_t ACCELEROMETER_DATA_KEY = 0;
 
     // Publishes samples periodically while at least one channel is started.
+    // Samples come from the host accelerometer when the sensor driver delivers
+    // any, otherwise from the driver's acceleration override, otherwise the
+    // device is at rest.
     class accelerometer_stream : public std::enable_shared_from_this<accelerometer_stream> {
         kernel_system *kern_;
         system *sys_;
         ntimer *timing_;
 
         int sample_evt_;
+        int rearm_evt_;
         std::uint32_t listener_count_;
+
+        // Guards host_sensor_ and the scale; never taken from the host data callback,
+        // which runs with the backend's own lock held.
+        std::mutex host_sensor_lock_;
+        std::unique_ptr<drivers::sensor> host_sensor_;
+        double host_measure_range_ms2_;
+
+        // Latest host sample in m/s^2, written from the host data callback. The
+        // generation changes whenever the host sensor is closed.
+        std::mutex host_sample_lock_;
+        std::optional<std::array<double, 3>> host_sample_;
+        std::uint64_t host_generation_;
 
         void publish_sample();
         void schedule_next_sample();
         void on_sample_due();
+
+        void open_host_sensor();
+        void close_host_sensor();
+        void request_host_sample();
+        void on_host_data(const std::vector<std::uint8_t> &data, const std::size_t packet_count,
+            const std::uint64_t generation, const double scale);
 
     public:
         explicit accelerometer_stream(kernel_system *kern, system *sys);

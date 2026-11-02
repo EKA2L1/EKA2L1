@@ -31,6 +31,7 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
+#include <cstring>
 
 namespace eka2l1::ldd {
     // The N95's LIS302DL reports about 18 mg per count, so 1 g is about 56 counts.
@@ -38,12 +39,19 @@ namespace eka2l1::ldd {
     static constexpr double STANDARD_GRAVITY = 9.80665;
     static constexpr std::int64_t ACCELEROMETER_SAMPLE_INTERVAL_US = 40000;
 
+    // Host backends scale samples so that the active measure range maps to this value.
+    static constexpr double HOST_SCALED_RANGE_MAX = 127.0;
+    static constexpr double DEFAULT_HOST_MEASURE_RANGE_MS2 = 2.0 * STANDARD_GRAVITY;
+
     accelerometer_stream::accelerometer_stream(kernel_system *kern, system *sys)
         : kern_(kern)
         , sys_(sys)
         , timing_(sys->get_ntimer())
         , sample_evt_(-1)
-        , listener_count_(0) {
+        , rearm_evt_(-1)
+        , listener_count_(0)
+        , host_measure_range_ms2_(DEFAULT_HOST_MEASURE_RANGE_MS2)
+        , host_generation_(0) {
     }
 
     accelerometer_stream::~accelerometer_stream() {
@@ -51,6 +59,13 @@ namespace eka2l1::ldd {
             timing_->unschedule_event(sample_evt_, 0);
             timing_->remove_event(sample_evt_);
         }
+
+        if (rearm_evt_ >= 0) {
+            timing_->unschedule_event(rearm_evt_, 0);
+            timing_->remove_event(rearm_evt_);
+        }
+
+        close_host_sensor();
     }
 
     void accelerometer_stream::init() {
@@ -59,6 +74,12 @@ namespace eka2l1::ldd {
         sample_evt_ = timing_->register_event("AccelerometerSampleDue", [weak_self](std::uint64_t, int) {
             if (auto self = weak_self.lock()) {
                 self->on_sample_due();
+            }
+        });
+
+        rearm_evt_ = timing_->register_event("AccelerometerHostRearm", [weak_self](std::uint64_t, int) {
+            if (auto self = weak_self.lock()) {
+                self->request_host_sample();
             }
         });
     }
@@ -80,6 +101,7 @@ namespace eka2l1::ldd {
 
     void accelerometer_stream::add_listener() {
         if (listener_count_++ == 0) {
+            open_host_sensor();
             publish_sample();
             schedule_next_sample();
         }
@@ -88,15 +110,140 @@ namespace eka2l1::ldd {
     void accelerometer_stream::remove_listener() {
         if (listener_count_ && (--listener_count_ == 0)) {
             timing_->unschedule_event(sample_evt_, 0);
+            close_host_sensor();
         }
+    }
+
+    void accelerometer_stream::open_host_sensor() {
+        drivers::sensor_driver *driver = sys_->get_sensor_driver();
+        if (!driver) {
+            return;
+        }
+
+        drivers::sensor_info search_info;
+        search_info.type_ = drivers::SENSOR_TYPE_ACCELEROMETER;
+        search_info.data_type_ = drivers::SENSOR_DATA_TYPE_ACCELOREMETER_AXIS;
+
+        const std::vector<drivers::sensor_info> infos = driver->queries_active_sensor(search_info);
+        if (infos.empty()) {
+            return;
+        }
+
+        std::unique_ptr<drivers::sensor> host_sensor = driver->new_sensor_controller(infos[0].id_);
+        if (!host_sensor || (host_sensor->data_packet_size() != sizeof(drivers::sensor_accelerometer_axis_data))) {
+            return;
+        }
+
+        // Samples arrive scaled so that the active measure range maps to 127. The
+        // range is an array property: its status names the active element.
+        double measure_range = DEFAULT_HOST_MEASURE_RANGE_MS2;
+        drivers::sensor_property_data range_status{};
+        range_status.data_type_ = drivers::sensor_property_data::DATA_TYPE_BUFFER;
+
+        if (host_sensor->get_property(drivers::SENSOR_PROPERTY_MEASURE_RANGE, -1, drivers::SENSOR_PROPERTY_SINGLE, range_status)
+            && (range_status.data_type_ == drivers::sensor_property_data::DATA_TYPE_INT)
+            && (range_status.array_index_ == drivers::SENSOR_PROPERTY_ARRAY) && (range_status.int_value_ >= 0)) {
+            drivers::sensor_property_data range{};
+            range.data_type_ = drivers::sensor_property_data::DATA_TYPE_BUFFER;
+
+            if (host_sensor->get_property(drivers::SENSOR_PROPERTY_MEASURE_RANGE, -1, range_status.int_value_, range)
+                && (range.data_type_ == drivers::sensor_property_data::DATA_TYPE_DOUBLE)
+                && (range.max_float_value_ >= STANDARD_GRAVITY) && (range.max_float_value_ <= 16.0 * STANDARD_GRAVITY)) {
+                measure_range = range.max_float_value_;
+            }
+        }
+
+        if (!host_sensor->listen_for_data(1, 1, 0)) {
+            LOG_WARN(KERNEL, "Unable to listen to the host accelerometer");
+            return;
+        }
+
+        {
+            const std::lock_guard<std::mutex> guard(host_sensor_lock_);
+            host_sensor_ = std::move(host_sensor);
+            host_measure_range_ms2_ = measure_range;
+        }
+
+        request_host_sample();
+    }
+
+    void accelerometer_stream::close_host_sensor() {
+        std::unique_ptr<drivers::sensor> host_sensor;
+
+        {
+            const std::lock_guard<std::mutex> guard(host_sensor_lock_);
+            host_sensor = std::move(host_sensor_);
+        }
+
+        if (host_sensor) {
+            host_sensor->cancel_data_listening();
+        }
+
+        const std::lock_guard<std::mutex> guard(host_sample_lock_);
+        host_sample_.reset();
+        host_generation_++;
+    }
+
+    void accelerometer_stream::request_host_sample() {
+        const std::lock_guard<std::mutex> guard(host_sensor_lock_);
+        if (!host_sensor_) {
+            return;
+        }
+
+        std::uint64_t generation = 0;
+        {
+            const std::lock_guard<std::mutex> sample_guard(host_sample_lock_);
+            generation = host_generation_;
+        }
+
+        const double scale = host_measure_range_ms2_ / HOST_SCALED_RANGE_MAX;
+        std::weak_ptr<accelerometer_stream> weak_self = weak_from_this();
+
+        host_sensor_->receive_data([weak_self, generation, scale](std::vector<std::uint8_t> &data, std::size_t packet_count) {
+            if (auto self = weak_self.lock()) {
+                self->on_host_data(data, packet_count, generation, scale);
+            }
+        });
+    }
+
+    void accelerometer_stream::on_host_data(const std::vector<std::uint8_t> &data, const std::size_t packet_count,
+        const std::uint64_t generation, const double scale) {
+        // Runs on the backend's thread with its lock held, so the next request is
+        // made from the timer thread instead of from here.
+        const std::size_t packet_size = sizeof(drivers::sensor_accelerometer_axis_data);
+        const std::size_t available = std::min(packet_count, data.size() / packet_size);
+
+        if (available) {
+            drivers::sensor_accelerometer_axis_data axis_data;
+            std::memcpy(&axis_data, data.data() + (available - 1) * packet_size, packet_size);
+
+            const std::lock_guard<std::mutex> guard(host_sample_lock_);
+            if (generation != host_generation_) {
+                // A late sample from a sensor that has since been closed.
+                return;
+            }
+
+            host_sample_ = std::array<double, 3>{ axis_data.axis_x_ * scale, axis_data.axis_y_ * scale,
+                axis_data.axis_z_ * scale };
+        }
+
+        timing_->schedule_event(0, rearm_evt_, 0);
     }
 
     void accelerometer_stream::publish_sample() {
         // At rest, face up: only gravity, on the z axis.
         std::array<double, 3> acceleration{ 0.0, 0.0, STANDARD_GRAVITY };
 
-        drivers::sensor_driver *driver = sys_->get_sensor_driver();
-        if (driver) {
+        std::optional<std::array<double, 3>> host_sample;
+        {
+            const std::lock_guard<std::mutex> guard(host_sample_lock_);
+            host_sample = host_sample_;
+        }
+
+        if (host_sample) {
+            acceleration = *host_sample;
+        } else if (drivers::sensor_driver *driver = sys_->get_sensor_driver()) {
+            // Backends that deliver samples apply the override themselves.
             if (const auto override_values = driver->acceleration_override()) {
                 acceleration = *override_values;
             }
