@@ -127,7 +127,10 @@ namespace eka2l1 {
             // now being torn down via decrease_access_count). notify_info::complete()
             // dereferences the requester thread, so only signal it while it is still alive;
             // otherwise just drop the stale subscription.
-            if (kern->is_thread_alive((*subscription_iterator)->requester)) {
+            // During kernel wipeout nobody is left to notify, and completing wakes the
+            // requester's semaphore waiters into a half-torn-down scheduler/timer
+            // (crash on window close with any app running). Same guard as camera.cpp.
+            if (!kern->is_wiping() && kern->is_thread_alive((*subscription_iterator)->requester)) {
                 (*subscription_iterator)->complete(epoc::error_cancel);
             }
 
