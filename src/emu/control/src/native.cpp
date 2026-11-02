@@ -314,6 +314,7 @@ namespace eka2l1::control {
                     const bool isolate = body["isolateDrives"].boolean();
                     auto result = body.contains("archive") ? loader::install_archive(manager, required_string(body, "archive"), roms, drives, isolate, [&req](std::size_t done, std::size_t total) { if (req.progress && total) req.progress(double(done) / total); }, nullptr) : loader::install_rom_with_optional_rpkg(manager, required_string(body, "rom"), body["rpkg"].string(), roms, drives, isolate, [&req](std::size_t done, std::size_t total) { if (req.progress && total) req.progress(double(done) / total); }, nullptr);
                     require(result == device_installation_none, "install_failed", "device installation failed: " + std::to_string(int(result)));
+                    manager->save_devices();
                     if (body["boot"].boolean(true))
                         require(frontend.boot(int(manager->total()) - 1), "boot_failed", "boot failed");
                     frontend.changed(native_change::devices);

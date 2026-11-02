@@ -462,7 +462,8 @@ namespace eka2l1 {
                 end_access();
             }
 
-            if (actually_found) {
+            // Before startup() there is no kernel to switch; the frontend boots the device later.
+            if (actually_found && kern_) {
                 conf_->device = 0;
                 conf_->serialize(false);
 

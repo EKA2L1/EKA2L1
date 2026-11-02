@@ -132,6 +132,7 @@ private:
 
     void setup_screen_draw();
     void setup_app_list(const bool load_now = false);
+    void boot_first_device(const int index);
     void setup_package_installer_ui_hooks();
     void reprepare_touch_mappings();
     void refresh_recent_mounts();

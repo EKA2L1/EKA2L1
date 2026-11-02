@@ -661,6 +661,14 @@ void main_window::on_package_uninstalled() {
 }
 
 void main_window::on_device_set_requested(const int index) {
+    // Launching without an installed device skips system startup, which set_device() and reset() need.
+    if (emulator_state_.symsys && !emulator_state_.symsys->get_kernel_system()) {
+        if (index >= 0) {
+            boot_first_device(index);
+        }
+        return;
+    }
+
     if (emulator_state_.debug_backend) emulator_state_.debug_backend->reset_session();
     if (bt_netplay_dialog_) {
         bt_netplay_dialog_->close();
@@ -758,24 +766,34 @@ void main_window::on_status_bar_update(const std::uint64_t fps) {
     screen_status_label_->setText(QString("%1 FPS").arg(fps));
 }
 
+void main_window::boot_first_device(const int index) {
+    if (emulator_state_.debug_backend) emulator_state_.debug_backend->reset_session();
+    ui_->label_al_not_available->setVisible(false);
+
+    emulator_state_.symsys->startup();
+    if (!emulator_state_.symsys->set_device(static_cast<std::uint8_t>(index))) {
+        return;
+    }
+
+    emulator_state_.conf.device = index;
+    emulator_state_.conf.serialize();
+
+    emulator_state_.symsys->mount_device_drives();
+
+    // Set and wait for reinitialization. The app list built below needs the ROM drive that
+    // only the stage two initialisation mounts, so this really has to wait for the retry.
+    emulator_state_.init_done_event.reset();
+    emulator_state_.init_event.set();
+    emulator_state_.init_done_event.wait();
+
+    refresh_current_device_label();
+    reprepare_touch_mappings();
+    setup_app_list(true);
+}
+
 void main_window::on_new_device_added() {
     if (!applist_) {
-        ui_->label_al_not_available->setVisible(false);
-
-        emulator_state_.symsys->startup();
-        emulator_state_.symsys->set_device(0);
-
-        emulator_state_.symsys->mount_device_drives();
-
-        // Set and wait for reinitialization. The app list built below needs the ROM drive that
-        // only the stage two initialisation mounts, so this really has to wait for the retry.
-        emulator_state_.init_done_event.reset();
-        emulator_state_.init_event.set();
-        emulator_state_.init_done_event.wait();
-
-        refresh_current_device_label();
-        reprepare_touch_mappings();
-        setup_app_list(true);
+        boot_first_device(0);
     } else {
         if (emulator_state_.symsys) {
             applist_->update_devices(emulator_state_.symsys->get_device_manager());
