@@ -7,6 +7,7 @@ set(COMMON_TEST_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/chunkyseri.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/crypt.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/flate.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/fileutils.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/ini.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/linked.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/logsink.cpp

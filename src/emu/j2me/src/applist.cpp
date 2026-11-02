@@ -162,14 +162,14 @@ namespace eka2l1::j2me {
             static const char *UPDATE_ENTRY_STMT = "UPDATE apps SET "
                 "name=:name,"
                 "author=:author,"
-                "iconPath=iconPath,"
+                "iconPath=:iconPath,"
                 "title=:title,"
                 "originalTitle=:originalTitle,"
                 "version=:version WHERE id=:id";
 
             if (sqlite3_prepare(database_, UPDATE_ENTRY_STMT, -1, &update_entry_stmt_, nullptr) != SQLITE_OK) {
                 LOG_ERROR(J2ME, "Failed to prepare update entry statement! Error: {}", sqlite3_errmsg(database_));
-                return false;
+                return static_cast<std::uint32_t>(-1);
             }
         }
 
