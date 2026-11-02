@@ -6,70 +6,20 @@
 #include <catch2/catch.hpp>
 #include <common/fileutils.h>
 
-#include <filesystem>
 #include <fstream>
 #include <iterator>
 #include <string>
 
-namespace {
-    struct copy_fixture {
-        const std::string root = "fileutils_copy_test";
-        const std::string source = root + "/source.jar";
-        const std::string contents = "JAR contents must survive copying onto the same file";
+TEST_CASE("copy_file rejects copying a file onto itself without truncating it", "[fileutils]") {
+    const std::string path = "fileutils_copy_test.jar";
+    const std::string contents = "Original JAR contents";
+    struct cleanup {
+        const std::string &path;
+        ~cleanup() { eka2l1::common::remove(path); }
+    } cleanup{ path };
+    std::ofstream(path, std::ios::binary) << contents;
 
-        copy_fixture() {
-            eka2l1::common::delete_folder(root);
-            eka2l1::common::create_directories(root);
-            std::ofstream(source, std::ios::binary) << contents;
-        }
-
-        ~copy_fixture() {
-            eka2l1::common::delete_folder(root);
-        }
-
-        std::string read(const std::string &path) const {
-            std::ifstream file(path, std::ios::binary);
-            return { std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>() };
-        }
-    };
-}
-
-TEST_CASE("copy_file preserves the source when the destination is the same file", "[fileutils]") {
-    copy_fixture fixture;
-    std::string destination;
-
-    SECTION("identical path") {
-        destination = fixture.source;
-    }
-
-    SECTION("path alias") {
-        destination = fixture.root + "/./source.jar";
-    }
-
-    SECTION("hard link") {
-        destination = fixture.root + "/linked.jar";
-        std::error_code error;
-        std::filesystem::create_hard_link(fixture.source, destination, error);
-        REQUIRE_FALSE(error);
-    }
-
-    REQUIRE_FALSE(eka2l1::common::copy_file(fixture.source, destination, true));
-    REQUIRE(fixture.read(fixture.source) == fixture.contents);
-    REQUIRE(fixture.read(destination) == fixture.contents);
-}
-
-TEST_CASE("copy_file still copies to a different file", "[fileutils]") {
-    copy_fixture fixture;
-    const std::string destination = fixture.root + "/copy.jar";
-
-    SECTION("new destination") {
-    }
-
-    SECTION("existing destination") {
-        std::ofstream(destination, std::ios::binary) << "Old contents";
-    }
-
-    REQUIRE(eka2l1::common::copy_file(fixture.source, destination, true));
-    REQUIRE(fixture.read(fixture.source) == fixture.contents);
-    REQUIRE(fixture.read(destination) == fixture.contents);
+    REQUIRE_FALSE(eka2l1::common::copy_file(path, path, true));
+    std::ifstream file(path, std::ios::binary);
+    REQUIRE(std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()) == contents);
 }

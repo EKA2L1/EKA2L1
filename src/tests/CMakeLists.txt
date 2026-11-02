@@ -90,8 +90,6 @@ add_assets(ekatests ${PACKAGE_ASSETS_PATH} "packageassets")
 set(SYSTEM_ASSETS_PATH "${CMAKE_CURRENT_SOURCE_DIR}/epoc/system/assets/")
 add_assets(ekatests ${SYSTEM_ASSETS_PATH} "systemassets")
 
-add_assets(ekatests "${CMAKE_CURRENT_SOURCE_DIR}/epoc/j2me/assets/" "j2meassets")
-
 add_assets(ekatests "${CMAKE_CURRENT_SOURCE_DIR}/epoc/services/internet/tlsassets/" "tlsassets")
 
 add_assets(ekatests "${CMAKE_CURRENT_SOURCE_DIR}/epoc/drivers/assets/" "audioassets")
