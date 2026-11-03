@@ -476,24 +476,15 @@ namespace eka2l1 {
         for (std::size_t i = 0; i < icons.size(); i++) {
             epoc::akn_icon_params cached_spec = icons[i].spec;
 
-            /**
-             * The original implementation only check for the equal of:
-             * - The bitmap ID.
-             * - The bitmap container file (compare folded aka ignoring case)
-             * - App icon?
-             *
-             * These three are the decesive elements that decide if two requests are trying to get the same bitmap.
-             */
-            if (spec.bitmap_id == cached_spec.bitmap_id) {
-                if (common::compare_ignore_case(spec.file_name.to_std_string(nullptr), cached_spec.file_name.to_std_string(nullptr)) == 0) {
-                    if (spec.app_icon == cached_spec.app_icon) {
-                        if (idx) {
-                            *idx = i;
-                        }
-
-                        return icons[i].ret;
-                    }
+            // Same key as CAknIconSrvIconItem::LinearOrder: each size, mode, rotation and colour is its own bitmap.
+            if ((spec.bitmap_id == cached_spec.bitmap_id) && (spec.mask_id == cached_spec.mask_id) && (spec.size == cached_spec.size) && (spec.mode == cached_spec.mode)
+                && (spec.rotation == cached_spec.rotation) && (spec.color == cached_spec.color) && (spec.app_icon == cached_spec.app_icon)
+                && (common::compare_ignore_case(spec.file_name.to_std_string(nullptr), cached_spec.file_name.to_std_string(nullptr)) == 0)) {
+                if (idx) {
+                    *idx = i;
                 }
+
+                return icons[i].ret;
             }
         }
         return std::nullopt;
