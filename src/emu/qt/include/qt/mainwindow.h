@@ -174,6 +174,7 @@ private slots:
     void on_restart_requested();
     void on_device_set_requested(const int index = -1);
     void on_app_setting_changed();
+    void on_app_setting_files_changed();
     void on_another_rotation_triggered(QAction *action);
     void on_pause_toggled(bool checked);
     void on_package_uninstalled();
