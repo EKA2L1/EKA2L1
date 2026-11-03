@@ -39,12 +39,8 @@ namespace eka2l1::ldd {
     static constexpr double STANDARD_GRAVITY = 9.80665;
     static constexpr std::int64_t ACCELEROMETER_SAMPLE_INTERVAL_US = 40000;
 
-    // Host samples use the Android / Symbian Sensor Framework frame: x right, y toward the top,
-    // z out of the screen, reaction to gravity (a phone lying face up reads +z). The N95's raw
-    // frame is that one turned 180 degrees about y, so x and z are reversed. The ROM's
-    // rrsensorplugina treats y >= +45 counts as the top held up. MosKillTo only plays naturally
-    // with x and z reversed: it turns left when the top tips left, and looks down when the top
-    // tips away from the player.
+    // Host axes point right, toward the top, and out of the screen (face up reads +z).
+    // The N95 raw frame is rotated 180 degrees about y, reversing x and z.
     static constexpr std::array<double, 3> N95_AXIS_SIGN{ -1.0, 1.0, -1.0 };
 
     // Host backends scale samples so that the active measure range maps to this value.
@@ -142,8 +138,7 @@ namespace eka2l1::ldd {
             return;
         }
 
-        // Samples arrive scaled so that the active measure range maps to 127. The
-        // range is an array property: its status names the active element.
+        // The measure range is an array property; its status selects the active element.
         double measure_range = DEFAULT_HOST_MEASURE_RANGE_MS2;
         drivers::sensor_property_data range_status{};
         range_status.data_type_ = drivers::sensor_property_data::DATA_TYPE_BUFFER;
@@ -227,7 +222,6 @@ namespace eka2l1::ldd {
 
             const std::lock_guard<std::mutex> guard(host_sample_lock_);
             if (generation != host_generation_) {
-                // A late sample from a sensor that has since been closed.
                 return;
             }
 

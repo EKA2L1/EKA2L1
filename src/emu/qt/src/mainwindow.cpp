@@ -770,8 +770,7 @@ void main_window::finish_stage_two() {
     ui_->label_al_not_available->setVisible(false);
     emulator_state_.symsys->mount_device_drives();
 
-    // Set and wait for reinitialization. The app list built afterwards needs the ROM drive that
-    // only the stage two initialisation mounts, so this really has to wait for the retry.
+    // The app list needs the ROM drive mounted by stage two on the OS thread.
     emulator_state_.init_done_event.reset();
     emulator_state_.init_event.set();
     emulator_state_.init_done_event.wait();

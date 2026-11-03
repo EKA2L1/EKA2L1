@@ -115,7 +115,6 @@ namespace eka2l1 {
         }
 
         bool property::cancel(const epoc::notify_info &info) {
-            // Find the subscription
             auto subscription_iterator = std::find(subscription_queue.begin(), subscription_queue.end(),
                 &info);
 
@@ -123,11 +122,8 @@ namespace eka2l1 {
                 return false;
             }
 
-            // The subscriber thread may already have exited (e.g. this reference is only
-            // now being torn down via decrease_access_count). notify_info::complete()
-            // dereferences the requester thread, so only signal it while it is still alive;
-            // otherwise just drop the stale subscription. During kernel wipeout the
-            // requester's request semaphore may already be destroyed, so skip it then too.
+            // Completion requires a live requester and request semaphore; kernel wipeout
+            // may destroy the semaphore before the subscription is cancelled.
             if (!kern->is_wiping() && kern->is_thread_alive((*subscription_iterator)->requester)) {
                 (*subscription_iterator)->complete(epoc::error_cancel);
             }
@@ -139,7 +135,6 @@ namespace eka2l1 {
 
         void property::notify_request(const std::int32_t err) {
             while (auto subscription = subscription_queue.pop()) {
-                // Same rationale as cancel(): never complete to a requester that has died.
                 if (!kern->is_wiping() && kern->is_thread_alive(subscription.value()->requester)) {
                     subscription.value()->complete(err);
                 }

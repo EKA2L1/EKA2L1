@@ -40,9 +40,7 @@ namespace eka2l1::epoc {
     };
 
     struct anim_executor : public canvas_observer {
-        // Null once the window is destroyed. An animation can outlive its window: the
-        // client may close the window first, and client teardown frees objects in
-        // creation order, not in dependency order.
+        // Animations can outlive their windows; cleared by on_window_destroyed().
         canvas_base *canvas_;
 
     public:

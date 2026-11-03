@@ -36,10 +36,8 @@ namespace eka2l1 {
 }
 
 namespace eka2l1::ldd {
-    // The "accelerometer" LDD found on S60v3 FP1 devices such as the Nokia N95.
-    // RRSensorServer drives it. While started, the driver publishes each sample
-    // as three signed bytes (x, y, z) into a Publish & Subscribe property, which
-    // rrsensorplugina subscribes to.
+    // N95 RRSensorServer LDD protocol; rrsensorplugina receives samples through P&S
+    // as three signed bytes (x, y, z).
     enum accelerometer_opcode {
         ACCELEROMETER_CONTROL_STOP = 0,
         ACCELEROMETER_CONTROL_START = 6,
@@ -51,10 +49,6 @@ namespace eka2l1::ldd {
     static constexpr std::uint32_t ACCELEROMETER_DATA_CATEGORY = 0x20000581;
     static constexpr std::uint32_t ACCELEROMETER_DATA_KEY = 0;
 
-    // Publishes samples periodically while at least one channel is started.
-    // Samples come from the host accelerometer when the sensor driver delivers
-    // any, otherwise from the driver's acceleration override, otherwise the
-    // device is at rest.
     class accelerometer_stream : public std::enable_shared_from_this<accelerometer_stream> {
         kernel_system *kern_;
         system *sys_;
@@ -64,8 +58,7 @@ namespace eka2l1::ldd {
         int rearm_evt_;
         std::uint32_t listener_count_;
 
-        // Guards host_sensor_ and the scale; never taken from the host data callback,
-        // which runs with the backend's own lock held.
+        // The host callback must not take this lock while holding the backend lock.
         std::mutex host_sensor_lock_;
         std::unique_ptr<drivers::sensor> host_sensor_;
         double host_measure_range_ms2_;
