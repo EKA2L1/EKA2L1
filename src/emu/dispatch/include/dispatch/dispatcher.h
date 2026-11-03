@@ -144,6 +144,9 @@ namespace eka2l1::dispatch {
     struct dsp_epoc_player : public dsp_medium {
     public:
         std::unique_ptr<epoc::rw_des_stream> custom_stream_;
+
+        // The supplied sound converted to a format a host player reads, when it has none
+        std::unique_ptr<common::rw_stream> converted_stream_;
         std::unique_ptr<drivers::player> impl_;
 
         std::uint32_t flags_;
