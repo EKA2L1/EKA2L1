@@ -1,0 +1,14 @@
+TARGET AudioRecorderTest.exe
+TARGETTYPE exe
+UID 0 0xe0002a21
+SECUREID 0xe0002a21
+CAPABILITY NONE
+
+SYSTEMINCLUDE \epoc32\include
+SOURCEPATH ..\src
+SOURCE main.cpp
+LIBRARY euser.lib efsrv.lib mediaclientaudio.lib mmfcontrollerframework.lib
+
+START RESOURCE ..\data\AudioRecorderTest_reg.rss
+TARGETPATH \private\10003a3f\import\apps
+END

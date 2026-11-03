@@ -20,6 +20,7 @@
 #include <Log.h>
 #include <SoftInt.h>
 
+#include "common.h"
 #include "dispatch.h"
 #include "impl.h"
 
@@ -30,6 +31,12 @@
 #include <e32def.h>
 #include <e32std.h>
 #include <f32file.h>
+
+#if defined(EKA2) && (MCA_NEW >= 2)
+#include <badesca.h>
+#include <mmf/common/mmfcontrollerpluginresolver.h>
+#include <mmf/server/mmfdatasourcesink.hrh>
+#endif
 
 static const TUint32 KBlackListAudioClipFormat[2] = { KUidMdaClipFormatRawAudioDefine, KUidMdaClipFormatAuDefine };
 static const TUint32 KBlackListAudioClipFormatCount = sizeof(KBlackListAudioClipFormat) / sizeof(TUint32);
@@ -524,14 +531,15 @@ void CMMFMdaAudioPlayerUtility::OnStateChanged(const TMdaState aCurrentState, co
 }
 
 ///================== AUDIO RECORDER UTILITY =======================
-CMMFMdaAudioRecorderUtility::CMMFMdaAudioRecorderUtility(MMdaObjectStateChangeObserver &aObserver, const TInt aPriority, const TMdaPriorityPreference aPref)
+CMMFMdaAudioRecorderUtility::CMMFMdaAudioRecorderUtility(CMdaAudioRecorderUtility &aParent, MMdaObjectStateChangeObserver &aObserver, const TInt aPriority, const TMdaPriorityPreference aPref)
     : CMMFMdaAudioUtility(aPriority, aPref)
     , iObserver(aObserver)
-    , iContainerFormat(0) {
+    , iContainerFormat(0)
+    , iParent(aParent) {
 }
 
-CMMFMdaAudioRecorderUtility *CMMFMdaAudioRecorderUtility::NewL(MMdaObjectStateChangeObserver &aObserver, const TInt aPriority, const TMdaPriorityPreference aPref) {
-    CMMFMdaAudioRecorderUtility *newUtil = new (ELeave) CMMFMdaAudioRecorderUtility(aObserver, aPriority, aPref);
+CMMFMdaAudioRecorderUtility *CMMFMdaAudioRecorderUtility::NewL(CMdaAudioRecorderUtility &aParent, MMdaObjectStateChangeObserver &aObserver, const TInt aPriority, const TMdaPriorityPreference aPref) {
+    CMMFMdaAudioRecorderUtility *newUtil = new (ELeave) CMMFMdaAudioRecorderUtility(aParent, aObserver, aPriority, aPref);
     CleanupStack::PushL(newUtil);
     newUtil->ConstructL(0);
     CleanupStack::Pop(newUtil);
@@ -581,8 +589,67 @@ void CMMFMdaAudioRecorderUtility::OnStateChanged(const TMdaState aCurrentState, 
         realError = 0;
     }
 
-    iObserver.MoscoStateChangeEvent(this, prevTrans, currentTrans, realError);
+    iObserver.MoscoStateChangeEvent(&iParent, prevTrans, currentTrans, realError);
 }
+
+#if defined(EKA2) && (MCA_NEW >= 2)
+static void CheckPlaybackSourceL(const TDesC &aFileName, TUid aControllerUid, TUid aFormatUid) {
+    if (aControllerUid == KNullUid) {
+        User::Leave(KErrNotSupported);
+    }
+
+    CMMFControllerImplementationInformation *info = CMMFControllerImplementationInformation::NewL(aControllerUid);
+    CleanupStack::PushL(info);
+    if (info->SupportedMediaIds().Find(KUidMediaTypeAudio) == KErrNotFound) {
+        User::Leave(KErrNotSupported);
+    }
+
+    RFs fs;
+    User::LeaveIfError(fs.Connect());
+    CleanupClosePushL(fs);
+    RFile file;
+    User::LeaveIfError(file.Open(fs, aFileName, EFileRead | EFileShareReadersOnly));
+    CleanupClosePushL(file);
+    TBuf8<256> header;
+    User::LeaveIfError(file.Read(header));
+    TBuf8<KMaxFileName> extension;
+    extension.Copy(TParsePtrC(aFileName).Ext());
+
+    TBool supported = EFalse;
+    const RMMFFormatImplInfoArray &formats = info->PlayFormats();
+    for (TInt i = 0; (i < formats.Count()) && !supported; ++i) {
+        const CMMFFormatImplementationInformation &format = *formats[i];
+        if ((aFormatUid != KNullUid) && (format.Uid() != aFormatUid)) {
+            continue;
+        }
+
+        supported = format.SupportsHeaderDataL(header);
+        if (!supported && format.SupportsFileExtension(extension)) {
+            const CDesC8Array &headers = format.SupportedHeaderData();
+            supported = (header.Length() == 0) || (headers.Count() == 0);
+            for (TInt j = 0; (j < headers.Count()) && !supported; ++j) {
+                supported = (headers[j].Length() == 0);
+            }
+        }
+    }
+    CleanupStack::PopAndDestroy(3, info);
+    if (!supported) {
+        User::Leave(KErrNotSupported);
+    }
+}
+
+void CMMFMdaAudioRecorderUtility::OpenPlaybackFileL(const TDesC &aFileName, TUid aControllerUid, TUid aFormatUid) {
+    Close();
+    TRAPD(err, CheckPlaybackSourceL(aFileName, aControllerUid, aFormatUid));
+    if (err != KErrNone) {
+        iDuration = TTimeIntervalMicroSeconds(0);
+        iOpener.Complete(this, EMdaStateIdle, err);
+        return;
+    }
+
+    SupplyUrlL(aFileName);
+}
+#endif
 
 TInt CMMFMdaAudioRecorderUtility::SetDestCodec(TFourCC aDestCodec) {
     return EAudioPlayerSetDestinationEncoding(0, iDispatchInstance, aDestCodec.FourCC());

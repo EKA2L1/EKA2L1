@@ -27,7 +27,7 @@ SOURCE          player.cpp
 
 nostrictdef
 
-LIBRARY		    euser.lib mediaclient.lib efsrv.lib
+LIBRARY		    euser.lib mediaclient.lib efsrv.lib mmfcontrollerframework.lib
 STATICLIBRARY   priv.lib
 
 DEFFILE ..\..\eabi\mediaclientaudio_general.def

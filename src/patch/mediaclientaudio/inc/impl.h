@@ -89,9 +89,9 @@ protected:
 
 private:
     TMdaState iState;
-    CMMFMdaAudioOpenComplete iOpener;
 
 protected:
+    CMMFMdaAudioOpenComplete iOpener;
     TAny *iDispatchInstance;
     TTimeIntervalMicroSeconds iDuration;
     TTimeIntervalMicroSeconds iPosition;
@@ -169,12 +169,17 @@ struct CMMFMdaAudioRecorderUtility : public CMMFMdaAudioUtility {
 private:
     MMdaObjectStateChangeObserver &iObserver;
     TUint32 iContainerFormat;
+    CMdaAudioRecorderUtility &iParent;
 
 public:
-    CMMFMdaAudioRecorderUtility(MMdaObjectStateChangeObserver &aObserver, const TInt aPriority, const TMdaPriorityPreference aPref);
-    static CMMFMdaAudioRecorderUtility *NewL(MMdaObjectStateChangeObserver &aObserver, const TInt aPriority, const TMdaPriorityPreference aPref);
+    CMMFMdaAudioRecorderUtility(CMdaAudioRecorderUtility &aParent, MMdaObjectStateChangeObserver &aObserver, const TInt aPriority, const TMdaPriorityPreference aPref);
+    static CMMFMdaAudioRecorderUtility *NewL(CMdaAudioRecorderUtility &aParent, MMdaObjectStateChangeObserver &aObserver, const TInt aPriority, const TMdaPriorityPreference aPref);
 
     virtual void OnStateChanged(const TMdaState aCurrentState, const TMdaState aPreviousState, const TInt aError);
+
+#ifdef EKA2
+    void OpenPlaybackFileL(const TDesC &aFileName, TUid aControllerUid, TUid aFormatUid);
+#endif
 
     TInt SetDestCodec(TFourCC aDestCodec);
     TInt GetDestCodec(TFourCC &aDestCodec);

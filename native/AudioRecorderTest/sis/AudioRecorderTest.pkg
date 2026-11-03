@@ -1,0 +1,6 @@
+#{"Audio Recorder Test"},(0xe0002a21),1,0,0
+%{"EKA2L1"}
+:"EKA2L1"
+
+"$(EPOCROOT)epoc32\release\gcce\urel\AudioRecorderTest.exe" -"!:\sys\bin\AudioRecorderTest.exe"
+"$(EPOCROOT)epoc32\data\z\private\10003a3f\import\apps\AudioRecorderTest_reg.rsc" -"!:\private\10003a3f\import\apps\AudioRecorderTest_reg.rsc"
