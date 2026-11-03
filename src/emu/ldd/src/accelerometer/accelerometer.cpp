@@ -39,6 +39,14 @@ namespace eka2l1::ldd {
     static constexpr double STANDARD_GRAVITY = 9.80665;
     static constexpr std::int64_t ACCELEROMETER_SAMPLE_INTERVAL_US = 40000;
 
+    // Host samples use the Android / Symbian Sensor Framework frame: x right, y toward the top,
+    // z out of the screen, reaction to gravity (a phone lying face up reads +z). The N95's raw
+    // frame is that one turned 180 degrees about y, so x and z are reversed. The ROM's
+    // rrsensorplugina treats y >= +45 counts as the top held up. MosKillTo only plays naturally
+    // with x and z reversed: it turns left when the top tips left, and looks down when the top
+    // tips away from the player.
+    static constexpr std::array<double, 3> N95_AXIS_SIGN{ -1.0, 1.0, -1.0 };
+
     // Host backends scale samples so that the active measure range maps to this value.
     static constexpr double HOST_SCALED_RANGE_MAX = 127.0;
     static constexpr double DEFAULT_HOST_MEASURE_RANGE_MS2 = 2.0 * STANDARD_GRAVITY;
@@ -251,7 +259,7 @@ namespace eka2l1::ldd {
 
         std::uint8_t sample[3];
         for (std::size_t i = 0; i < 3; i++) {
-            const double counts = std::round(acceleration[i] / STANDARD_GRAVITY * ACCELEROMETER_COUNTS_PER_G);
+            const double counts = std::round(N95_AXIS_SIGN[i] * acceleration[i] / STANDARD_GRAVITY * ACCELEROMETER_COUNTS_PER_G);
             sample[i] = static_cast<std::uint8_t>(static_cast<std::int8_t>(std::clamp(counts, -128.0, 127.0)));
         }
 
