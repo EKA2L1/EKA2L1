@@ -417,6 +417,10 @@ namespace eka2l1::desktop {
             frontend.boot = [&state](int index) { return state.ui_main->control_boot(index); };
             frontend.pause = [&state](bool paused) { state.ui_main->control_pause(paused); };
             frontend.changed = [&state](auto change) { state.ui_main->control_changed(change); };
+            if (state.sensor_driver) {
+                state.sensor_driver->set_acceleration_override(nullptr);
+                frontend.acceleration = [&state](const double *values) { state.sensor_driver->set_acceleration_override(values); };
+            }
             state.debug_backend = std::make_shared<control::native_backend>(std::move(frontend));
             state.debug_active = std::make_shared<std::atomic<bool>>(true);
             auto active = state.debug_active;

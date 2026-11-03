@@ -515,6 +515,10 @@ namespace eka2l1 {
             if (io->get_drive_entry(drive_c)) {
                 io->create_directories(u"C:\\Nokia\\Sounds\\Simple\\");
             }
+        } else if (io_system *io = sys->get_io_system(); io->get_drive_entry(drive_c)) {
+            // PathInfo::OthersPath() on phone memory. Retail ROMs leave it to the factory C: image,
+            // and apps saving there fail with KErrPathNotFound without it.
+            io->create_directories(u"C:\\Data\\Others\\");
         }
 
         std::u16string temp_data_dir = u"?:\\System\\Temp\\";
