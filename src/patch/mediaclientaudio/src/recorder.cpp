@@ -51,7 +51,7 @@ static TInt ClipSize(const TDesC &aFileName) {
 EXPORT_C CMdaAudioRecorderUtility *CMdaAudioRecorderUtility::NewL(MMdaObjectStateChangeObserver &aObserver, CMdaServer *aServer, TInt aPriority, TMdaPriorityPreference aPref) {
     CMdaAudioRecorderUtility *util = new (ELeave) CMdaAudioRecorderUtility();
     CleanupStack::PushL(util);
-    util->iProperties = CMMFMdaAudioRecorderUtility::NewL(aObserver, aPriority, aPref);
+    util->iProperties = CMMFMdaAudioRecorderUtility::NewL(*util, aObserver, aPriority, aPref);
     CleanupStack::Pop(util);
 
     return util;
@@ -370,6 +370,13 @@ EXPORT_C void CMdaAudioRecorderUtility::UseSharedHeap() {
 #if (MCA_NEW >= 2)
 EXPORT_C void CMdaAudioRecorderUtility::OpenFileL(const TDesC &aFileName, TUid aRecordControllerUid,
     TUid aPlaybackControllerUid, TUid aDestinationFormatUid, TFourCC aDestinationDataType) {
+#ifdef EKA2
+    if (aRecordControllerUid == KNullUid) {
+        iProperties->OpenPlaybackFileL(aFileName, aPlaybackControllerUid, aDestinationFormatUid);
+        return;
+    }
+#endif
+
     LogOut(KMcaCat, _L("Unimplemented function to open recorder utility with file name to play/record!"));
 }
 

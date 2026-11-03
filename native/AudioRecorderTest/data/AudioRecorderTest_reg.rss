@@ -1,0 +1,9 @@
+#include <appinfo.rh>
+
+UID2 KUidAppRegistrationResourceFile
+UID3 0xe0002a21
+
+RESOURCE APP_REGISTRATION_INFO
+{
+    app_file = "AudioRecorderTest";
+}
