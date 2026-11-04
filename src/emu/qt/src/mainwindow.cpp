@@ -208,7 +208,10 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
 
     eka2l1::drivers::handle background_image = state_ptr->ui_main->get_background_image();
     builder.clear({ color_clear.z / 255.0f, color_clear.y / 255.0f, color_clear.x / 255.0f, color_clear.w / 255.0f, 0.0f, 0.0f }, eka2l1::drivers::draw_buffer_bit_color_buffer);
-    if (background_image != 0) {
+    // A skin draws the phone around the screen, and says where the screen goes
+    const bool skin_drawn = state_ptr->ui_main->draw_skin(state_ptr->graphics_driver.get(), builder, swapchain_size, size.x > size.y, area);
+
+    if (!skin_drawn && (background_image != 0)) {
         eka2l1::vec2 image_size = state_ptr->ui_main->get_background_image_size();
 
         // A picture of a phone held sideways stands up, turned clockwise, while the screen is taller than wide
@@ -258,7 +261,7 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
     }
 
     // Shrink the screen to fit the one drawn on the background, like the Android screen scale
-    if (scr->requested_ui_scale_factor <= 0.0f) {
+    if (!skin_drawn && (scr->requested_ui_scale_factor <= 0.0f)) {
         const float ratio = eka2l1::common::clamp<int>(10, 100, state.conf.screen_scale_ratio) / 100.0f;
         mult_x *= ratio;
         mult_y *= ratio;
@@ -290,6 +293,10 @@ static void draw_emulator_screen(void *userdata, eka2l1::epoc::screen *scr, cons
 
     builder.draw_bitmap(scr->screen_texture, 0, dest, src, eka2l1::vec2(0, 0), static_cast<float>(scr->ui_rotation),
         (scr->flags_ & eka2l1::epoc::screen::FLAG_SCREEN_UPSCALE_FACTOR_LOCK) ? eka2l1::drivers::bitmap_draw_flag_use_upscale_shader : 0);
+
+    if (skin_drawn) {
+        state_ptr->ui_main->draw_skin_lit(builder);
+    }
 
     if (state_ptr->ui_main) {
         builder.set_viewport(dest);
@@ -2063,4 +2070,138 @@ void main_window::control_changed(eka2l1::control::native_change change) {
 void main_window::control_pause(bool paused) {
     ui_->action_pause->setChecked(paused);
     on_pause_toggled(paused);
+}
+
+static void use_skin_blending(eka2l1::drivers::graphics_command_builder &builder) {
+    builder.set_feature(eka2l1::drivers::graphics_feature::blend, true);
+    builder.blend_formula(eka2l1::drivers::blend_equation::add, eka2l1::drivers::blend_equation::add,
+        eka2l1::drivers::blend_factor::frag_out_alpha, eka2l1::drivers::blend_factor::one_minus_frag_out_alpha,
+        eka2l1::drivers::blend_factor::one, eka2l1::drivers::blend_factor::one_minus_frag_out_alpha);
+    builder.set_brush_color_detail(eka2l1::vec4(255, 255, 255, 255));
+}
+
+eka2l1::rect main_window::skin_to_window(const eka2l1::rect &area) const {
+    return eka2l1::rect(eka2l1::vec2(skin_origin_.x + static_cast<int>(area.top.x * skin_scale_), skin_origin_.y + static_cast<int>(area.top.y * skin_scale_)),
+        eka2l1::vec2(static_cast<int>(area.size.x * skin_scale_), static_cast<int>(area.size.y * skin_scale_)));
+}
+
+bool main_window::draw_skin(eka2l1::drivers::graphics_driver *driver, eka2l1::drivers::graphics_command_builder &builder,
+    const eka2l1::vec2 &swapchain_size, const bool wide, eka2l1::rect &screen_area) {
+    const std::lock_guard<std::mutex> guard(skin_lock_);
+    skin_drawn_ = -1;
+
+    const bool use_wide = wide && !emulator_state_.conf.skin_layout_wide.empty();
+    const int index = use_wide ? 1 : 0;
+    const std::string path = use_wide ? emulator_state_.conf.skin_layout_wide : emulator_state_.conf.skin_layout;
+
+    if (path.empty()) {
+        return false;
+    }
+
+    eka2l1::desktop::skin_layout &skin = skins_[index];
+    if (skin_paths_[index] != path) {
+        if (skin.image) {
+            builder.destroy(skin.image);
+        }
+
+        if (skin.lit_image) {
+            builder.destroy(skin.lit_image);
+        }
+
+        skin = eka2l1::desktop::skin_layout();
+        skin_paths_[index] = path;
+        skin_ready_[index] = skin.load(path) && skin.upload(driver);
+    }
+
+    if (!skin_ready_[index]) {
+        return false;
+    }
+
+    const float scale = std::min(static_cast<float>(swapchain_size.x) / skin.size.x, static_cast<float>(swapchain_size.y) / skin.size.y);
+    const eka2l1::vec2 drawn_size(static_cast<int>(skin.size.x * scale), static_cast<int>(skin.size.y * scale));
+
+    skin_origin_ = eka2l1::vec2((swapchain_size.x - drawn_size.x) / 2, (swapchain_size.y - drawn_size.y) / 2);
+    skin_scale_ = scale;
+    skin_drawn_ = index;
+
+    use_skin_blending(builder);
+    builder.draw_bitmap(skin.image, 0, eka2l1::rect(skin_origin_, drawn_size), eka2l1::rect(), eka2l1::vec2(0, 0), 0.0f,
+        eka2l1::drivers::bitmap_draw_flag_use_brush);
+    builder.set_feature(eka2l1::drivers::graphics_feature::blend, false);
+
+    screen_area = skin_to_window(skin.screen);
+    return true;
+}
+
+void main_window::draw_skin_lit(eka2l1::drivers::graphics_command_builder &builder) {
+    const std::lock_guard<std::mutex> guard(skin_lock_);
+    if (skin_drawn_ < 0) {
+        return;
+    }
+
+    const eka2l1::desktop::skin_layout &skin = skins_[skin_drawn_];
+    if (!skin.lit_image) {
+        return;
+    }
+
+    bool blending = false;
+    for (const eka2l1::desktop::skin_key &key : skin.keys) {
+        if ((key.code >= skin_keys_down_.size()) || !skin_keys_down_[key.code].load(std::memory_order_relaxed)) {
+            continue;
+        }
+
+        if ((key.lit.size.x <= 0) || (key.lit.size.y <= 0)) {
+            continue;
+        }
+
+        if (!blending) {
+            use_skin_blending(builder);
+            blending = true;
+        }
+
+        builder.draw_bitmap(skin.lit_image, 0, skin_to_window(key.area), key.lit, eka2l1::vec2(0, 0), 0.0f,
+            eka2l1::drivers::bitmap_draw_flag_use_brush);
+    }
+
+    if (blending) {
+        builder.set_feature(eka2l1::drivers::graphics_feature::blend, false);
+    }
+}
+
+void main_window::skin_key_changed(const std::uint32_t code, const bool down) {
+    if (code < skin_keys_down_.size()) {
+        skin_keys_down_[code].store(down, std::memory_order_relaxed);
+    }
+}
+
+int main_window::skin_touch(const eka2l1::vec3 &pos, const int action, const int mouse_id, std::uint32_t &code, bool &down) {
+    const std::lock_guard<std::mutex> guard(skin_lock_);
+
+    // A finger that went down on a key keeps it until it is lifted, wherever it goes
+    auto held = skin_touch_keys_.find(mouse_id);
+    if (held != skin_touch_keys_.end()) {
+        if (action != 2) {
+            return 1;
+        }
+
+        code = held->second;
+        down = false;
+        skin_touch_keys_.erase(held);
+        return 2;
+    }
+
+    if ((action != 0) || (skin_drawn_ < 0) || (skin_scale_ <= 0.0f)) {
+        return 0;
+    }
+
+    const eka2l1::vec2 point(static_cast<int>((pos.x - skin_origin_.x) / skin_scale_), static_cast<int>((pos.y - skin_origin_.y) / skin_scale_));
+    const eka2l1::desktop::skin_key *key = skins_[skin_drawn_].key_at(point);
+    if (!key) {
+        return 0;
+    }
+
+    skin_touch_keys_[mouse_id] = key->code;
+    code = key->code;
+    down = true;
+    return 2;
 }

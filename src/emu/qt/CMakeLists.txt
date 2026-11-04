@@ -87,6 +87,7 @@ set(PROJECT_SOURCES
         include/qt/thread.h
         include/qt/update_dialog.h
         include/qt/update_notice_dialog.h
+        include/qt/skin.h
         include/qt/utils.h
         src/btnmap/aim.cpp
         src/btnmap/base.cpp
@@ -129,6 +130,7 @@ set(PROJECT_SOURCES
         src/update_dialog.ui
         src/update_notice_dialog.cpp
         src/update_notice_dialog.ui
+        src/skin.cpp
         src/utils.cpp
         EKA2L1.def
         ${RESOURCE_FILES}

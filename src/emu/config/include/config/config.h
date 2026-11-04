@@ -190,6 +190,11 @@ namespace eka2l1::config {
         bool background_image_follow_rotation{ false };
         int screen_scale_ratio{ 100 };
 
+        // Skin layouts (JSON) drawn around the screen, with keys that light up and can be
+        // touched. The wide one is used while the screen is wider than tall.
+        std::string skin_layout;
+        std::string skin_layout_wide;
+
         std::string current_mmc_id;
 
         void serialize(const bool with_bindings = true);

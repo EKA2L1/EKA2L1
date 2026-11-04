@@ -31,10 +31,14 @@
 #include <QPointer>
 #include <QProgressDialog>
 #include <QSystemTrayIcon>
+#include <array>
+#include <atomic>
 #include <memory>
 #include <map>
+#include <mutex>
 
 #include <qt/discord_rpc.h>
+#include <qt/skin.h>
 
 QT_BEGIN_NAMESPACE
 namespace Ui {
@@ -124,6 +128,19 @@ private:
     eka2l1::drivers::handle background_image_texture_;
     eka2l1::vec2 previous_background_image_size_;
     std::string previous_background_image_path_;
+
+    // Skins: 0 is used while the screen is taller than wide, 1 while it is wider
+    eka2l1::desktop::skin_layout skins_[2];
+    std::string skin_paths_[2];
+    bool skin_ready_[2] = { false, false };
+    int skin_drawn_ = -1;
+    eka2l1::vec2 skin_origin_;
+    float skin_scale_ = 0.0f;
+    std::map<int, std::uint32_t> skin_touch_keys_;
+    std::array<std::atomic<bool>, 256> skin_keys_down_{};
+    std::mutex skin_lock_;
+
+    eka2l1::rect skin_to_window(const eka2l1::rect &area) const;
     
     QSystemTrayIcon *tray_icon_;
     QIcon emu_icon_;
@@ -264,6 +281,27 @@ public:
     eka2l1::vec2 get_background_image_size() const {
         return previous_background_image_size_;
     }
+
+    /**
+     * \brief Draw the skin picture, if one is set. Called while the screen is drawn.
+     * \param wide           True when the screen is wider than tall.
+     * \param screen_area    Set to where the screen goes in the window.
+     * \return True when a skin was drawn.
+     */
+    bool draw_skin(eka2l1::drivers::graphics_driver *driver, eka2l1::drivers::graphics_command_builder &builder,
+        const eka2l1::vec2 &swapchain_size, const bool wide, eka2l1::rect &screen_area);
+
+    // Draw the keys the device has down, lit, over the skin drawn last
+    void draw_skin_lit(eka2l1::drivers::graphics_command_builder &builder);
+
+    void skin_key_changed(const std::uint32_t code, const bool down);
+
+    /**
+     * \brief Find the skin key under a touch.
+     * \return 0 when the touch is not for the skin, 1 when it is taken with nothing to do,
+     *         2 when the key in code goes down or up.
+     */
+    int skin_touch(const eka2l1::vec3 &pos, const int action, const int mouse_id, std::uint32_t &code, bool &down);
 
     std::function<void(eka2l1::kernel::process *)> get_process_exit_callback();
 
