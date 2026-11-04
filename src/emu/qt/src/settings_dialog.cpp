@@ -51,7 +51,11 @@
 #include <utils/system.h>
 
 #include <QColorDialog>
+#include <QDir>
+#include <QFile>
 #include <QFileDialog>
+#include <QFileInfo>
+#include <QRawFont>
 #include <QInputDialog>
 #include <QKeyEvent>
 #include <QMessageBox>
@@ -267,6 +271,8 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     ui_->system_audio_current_val_label->setText(QString("%1").arg(configuration_.audio_master_volume));
     ui_->system_screen_buffer_sync_combo->setCurrentIndex(static_cast<int>(configuration_.screen_buffer_sync));
     ui_->system_friendly_phone_name_edit->setText(QString::fromStdString(configuration_.device_display_name));
+    ui_->system_prop_font_scale_spin->setValue(configuration_.system_font_scale);
+    refresh_system_fonts();
     ui_->system_audio_midi_backend_combo->setCurrentIndex(static_cast<int>(configuration.midi_backend));
     ui_->system_audio_midi_hsb_bank_edit->setText(QString::fromStdString(eka2l1::absolute_path(configuration.hsb_bank_path, current_dir)));
     ui_->system_audio_midi_sf2_bank_edit->setText(QString::fromStdString(eka2l1::absolute_path(configuration.sf2_bank_path, current_dir)));
@@ -421,6 +427,9 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     connect(ui_->system_prop_bat_slider, &QSlider::valueChanged, this, &settings_dialog::on_system_battery_slider_value_moved);
     connect(ui_->system_prop_imei_check_btn, &QPushButton::clicked, this, &settings_dialog::on_check_imei_validity_clicked);
     connect(ui_->system_friendly_phone_name_edit, &QLineEdit::textEdited, this, &settings_dialog::on_friendly_phone_name_edited);
+    connect(ui_->system_prop_font_combo, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_system_font_choose);
+    connect(ui_->system_prop_font_add_btn, &QPushButton::clicked, this, &settings_dialog::on_system_font_add_clicked);
+    connect(ui_->system_prop_font_scale_spin, QOverload<int>::of(&QSpinBox::valueChanged), this, &settings_dialog::on_system_font_scale_changed);
     connect(ui_->system_audio_vol_slider, &QSlider::valueChanged, this, &settings_dialog::on_master_volume_value_changed);
     connect(ui_->system_audio_midi_backend_combo, QOverload<int>::of(&QComboBox::activated), this, &settings_dialog::on_audio_midi_backend_changed);
     connect(ui_->system_audio_midi_hsb_bank_browse, &QPushButton::clicked, this, &settings_dialog::on_audio_hsb_browse_clicked);
@@ -668,6 +677,103 @@ void settings_dialog::refresh_available_system_languages(const int index) {
 
         if (need_set)
             ui_->system_prop_lang_combobox->setCurrentIndex((current_index < 0) ? 0 : current_index);
+    }
+}
+
+static QString system_fonts_folder(const eka2l1::config::state &conf) {
+    std::string current_dir;
+    eka2l1::common::get_current_directory(current_dir);
+
+    // The folder fbs_server::load_custom_fonts reads at boot.
+    return QString::fromStdString(eka2l1::add_path(eka2l1::absolute_path(conf.storage, current_dir), "fonts"));
+}
+
+void settings_dialog::refresh_system_fonts() {
+    ui_->system_prop_font_combo->clear();
+    ui_->system_prop_font_combo->addItem(tr("Device default"), QString());
+
+    QStringList families;
+    const QDir folder(system_fonts_folder(configuration_));
+
+    // Only TrueType outlines are drawn by the emulator, whatever the file is
+    // called; a font Qt cannot read either is not offered.
+    for (const QFileInfo &file : folder.entryInfoList(QDir::Files, QDir::Name)) {
+        if (file.suffix().compare("ttf", Qt::CaseInsensitive) != 0) {
+            continue;
+        }
+
+        const QRawFont font(file.absoluteFilePath(), 12);
+        const QString family = font.isValid() ? font.familyName() : QString();
+
+        if (!family.isEmpty() && !families.contains(family, Qt::CaseInsensitive)) {
+            families.append(family);
+        }
+    }
+
+    families.sort(Qt::CaseInsensitive);
+
+    for (const QString &family : families) {
+        ui_->system_prop_font_combo->addItem(family, family);
+    }
+
+    int current_index = 0;
+    const QString current = QString::fromStdString(configuration_.system_font);
+
+    if (!current.isEmpty()) {
+        current_index = ui_->system_prop_font_combo->findData(current, Qt::UserRole, Qt::MatchFixedString);
+
+        // Keep a choice whose files were removed visible rather than silently
+        // switching back to the device's font.
+        if (current_index < 0) {
+            ui_->system_prop_font_combo->addItem(tr("%1 (not found)").arg(current), current);
+            current_index = ui_->system_prop_font_combo->count() - 1;
+        }
+    }
+
+    ui_->system_prop_font_combo->setCurrentIndex(current_index);
+}
+
+void settings_dialog::on_system_font_choose(const int index) {
+    configuration_.system_font = ui_->system_prop_font_combo->itemData(index).toString().toStdString();
+    configuration_.serialize(false);
+}
+
+void settings_dialog::on_system_font_scale_changed(int value) {
+    configuration_.system_font_scale = value;
+    configuration_.serialize(false);
+}
+
+void settings_dialog::on_system_font_add_clicked() {
+    const QStringList files = QFileDialog::getOpenFileNames(this, tr("Choose TrueType fonts"), QString(),
+        tr("TrueType fonts (*.ttf *.TTF)"));
+
+    if (files.isEmpty()) {
+        return;
+    }
+
+    const QString folder_path = system_fonts_folder(configuration_);
+    QDir().mkpath(folder_path);
+
+    QStringList failed;
+
+    for (const QString &path : files) {
+        const QFileInfo source(path);
+        const QString destination = QDir(folder_path).filePath(source.fileName());
+
+        if (QFileInfo(destination).absoluteFilePath() == source.absoluteFilePath()) {
+            continue;
+        }
+
+        if (QFile::exists(destination) || !QFile::copy(path, destination)) {
+            failed.append(source.fileName());
+        }
+    }
+
+    refresh_system_fonts();
+
+    if (!failed.isEmpty()) {
+        QMessageBox::warning(this, tr("Some fonts were not added"),
+            tr("These fonts could not be copied, or a font with the same file name is already there:\n%1").arg(failed.join("\n")));
     }
 }
 

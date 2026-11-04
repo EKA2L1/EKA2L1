@@ -449,8 +449,11 @@ namespace eka2l1 {
         load_linked_fonts(sys->get_io_system());
 
         // Anything imported is only useful once the device's own faces can
-        // reach it, the ROM having no link.ini that mentions it.
-        persistent_font_store.attach_user_font_fallbacks();
+        // reach it, the ROM having no link.ini that mentions it. One of them
+        // may also have been chosen to draw the device's text in place of its
+        // own fonts.
+        persistent_font_store.attach_user_font_fallbacks(common::utf8_to_ucs2(sys->get_config()->system_font),
+            sys->get_config()->system_font_scale);
 
         fs_server = kern->get_by_name<service::server>(epoc::fs::get_server_name_through_epocver(
             kern->get_epoc_version()));

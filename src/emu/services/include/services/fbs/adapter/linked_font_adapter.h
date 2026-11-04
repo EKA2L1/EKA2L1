@@ -22,6 +22,8 @@
 #include <services/fbs/adapter/font_adapter.h>
 
 #include <map>
+#include <mutex>
+#include <optional>
 #include <unordered_map>
 #include <vector>
 
@@ -54,6 +56,13 @@ namespace eka2l1::epoc::adapter {
         struct component {
             font_file_adapter_base *adapter_;
             std::size_t face_index_;
+
+            // Zero sizes the component the way link.ini components are: asked
+            // for the same maximum height as the canonical face. Otherwise it
+            // is sized so that its capitals are this many percent as tall as
+            // the canonical's -- for a font standing in for the canonical's
+            // own glyphs, whose design may sit very differently in its box.
+            int cap_height_scale_ = 0;
         };
 
     private:
@@ -73,8 +82,13 @@ namespace eka2l1::epoc::adapter {
         // it -- a pixel size to FreeType, an index into the face's bitmaps to
         // gdr -- so the canonical's identifier is remembered alongside the one
         // each component uses for that same size. Filled in by
-        // get_nearest_supported_metric, which is where the size is still known.
-        std::unordered_map<std::uint32_t, std::vector<std::uint32_t>> metric_identifiers_;
+        // get_nearest_supported_metric, which is where the size is still known,
+        // and by metric_for for a size it never saw (see there).
+        mutable std::unordered_map<std::uint32_t, std::vector<std::uint32_t>> metric_identifiers_;
+        mutable std::mutex identifiers_lock_;
+
+        // Is any component sized by capital height?
+        bool has_scaled_component_ = false;
 
         const component &canonical() const {
             return components_[canonical_];
@@ -84,6 +98,23 @@ namespace eka2l1::epoc::adapter {
         // `metric_identifier`.
         std::uint32_t metric_for(const std::size_t component_index, const std::uint32_t metric_identifier) const;
 
+        // Every component's identifier for the canonical's `canonical_identifier`,
+        // whose maximum height is `settled_size`. Components that are not sized
+        // by capital height are only asked when `ask_unscaled` is set, and keep
+        // the canonical's identifier otherwise.
+        std::vector<std::uint32_t> identifiers_for(const std::uint32_t canonical_identifier,
+            const std::uint16_t settled_size, const bool ask_unscaled) const;
+
+        // Height in pixels of the component's "H" at that metric, or 0 if it
+        // has none.
+        static std::int32_t capital_height(const component &comp, const std::uint32_t metric_identifier);
+
+        // The metric identifier at which `comp` draws capitals closest to
+        // `target_height` pixels tall, starting from a maximum height of
+        // `settled_size`.
+        static std::optional<std::uint32_t> metric_for_capital_height(const component &comp,
+            const std::int32_t target_height, const std::uint16_t settled_size);
+
         // The component that renders `code`, falling back to the canonical one
         // when no component covers it (so the caller still gets .notdef rather
         // than nothing).
@@ -92,6 +123,16 @@ namespace eka2l1::epoc::adapter {
         // Can this component draw into an atlas made for the canonical one?
         // Only if it writes the same pixel format.
         bool can_share_atlas(const std::size_t component_index);
+
+        // Failing that, can its antialiased glyph bitmaps be copied into the
+        // canonical's atlas as they are?
+        bool can_draw_grey_into_atlas(const std::size_t component_index);
+
+        // Run `handler(bitmap, width, height, metric)` on the component's
+        // antialiased glyph for `code`, the bitmap being null if it has none.
+        template <typename F>
+        static void with_grey_glyph(const component &comp, const int code, const std::uint32_t metric_identifier,
+            F handler);
 
         // Group `codes` by the component that draws each of them, then hand
         // every group to `handler` as one batch, along with where each entry

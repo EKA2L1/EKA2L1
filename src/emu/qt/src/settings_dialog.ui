@@ -1054,6 +1054,66 @@ Preferred option will automatically enable this on S60v1/S60v2 devices.</string>
             </item>
            </layout>
           </item>
+          <item row="7" column="0">
+           <layout class="QHBoxLayout" name="system_prop_font_layout" stretch="1,2,0">
+            <item>
+             <widget class="QLabel" name="system_prop_font_label">
+              <property name="toolTip">
+               <string>Draw the device's text with a font of your choice instead of its own. Fonts are kept in the fonts folder of the data folder. Takes effect the next time a device boots.</string>
+              </property>
+              <property name="text">
+               <string>System font</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QComboBox" name="system_prop_font_combo"/>
+            </item>
+            <item>
+             <widget class="QPushButton" name="system_prop_font_add_btn">
+              <property name="toolTip">
+               <string>Copy TrueType fonts into the fonts folder of the data folder.</string>
+              </property>
+              <property name="text">
+               <string>Add...</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
+          <item row="8" column="0">
+           <layout class="QHBoxLayout" name="system_prop_font_scale_layout" stretch="1,2">
+            <item>
+             <widget class="QLabel" name="system_prop_font_scale_label">
+              <property name="toolTip">
+               <string>Size of the system font, as a percentage of the height of the device's own capital letters.</string>
+              </property>
+              <property name="text">
+               <string>System font size</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QSpinBox" name="system_prop_font_scale_spin">
+              <property name="suffix">
+               <string>%</string>
+              </property>
+              <property name="minimum">
+               <number>50</number>
+              </property>
+              <property name="maximum">
+               <number>200</number>
+              </property>
+              <property name="singleStep">
+               <number>5</number>
+              </property>
+              <property name="value">
+               <number>100</number>
+              </property>
+             </widget>
+            </item>
+           </layout>
+          </item>
          </layout>
         </widget>
        </item>
