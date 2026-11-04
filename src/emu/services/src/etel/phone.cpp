@@ -208,17 +208,11 @@ namespace eka2l1 {
     void etel_phone_subsession::get_subscriber_id(eka2l1::service::ipc_context *ctx) {
         config::state *conf_state = ctx->sys->get_config();
 
-        if (legacy_level_ <= ETEL_LEGACY_LEVEL_TRANSITION) {
-            epoc::buf_static<char16_t, 15> imei_buf;
-            imei_buf.assign(nullptr, common::utf8_to_ucs2(conf_state->imei));
+        // The client passes a bare TBuf<KIMSISize> (TMobilePhoneSubscriberId), not a versioned package.
+        epoc::buf_static<char16_t, 15> imsi_buf;
+        imsi_buf.assign(nullptr, common::utf8_to_ucs2(conf_state->imei));
 
-            ctx->write_data_to_descriptor_argument(0, imei_buf);
-        } else {
-            subscriber_id_info_v1 id_info;
-            id_info.the_id_.assign(nullptr, common::utf8_to_ucs2(conf_state->imei));
-
-            ctx->write_data_to_descriptor_argument<subscriber_id_info_v1>(0, id_info);
-        }
+        ctx->write_data_to_descriptor_argument(0, imsi_buf);
         ctx->complete(epoc::error_none);
     }
 
