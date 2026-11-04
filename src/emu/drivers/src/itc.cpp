@@ -44,9 +44,12 @@ namespace eka2l1::drivers {
 
         std::unique_lock<std::mutex> ulock(drv->mut_);
         drv->submit_command_list(cmd_list);
-        drv->cond_.wait(ulock, [&]() { return status != -100; });
 
-        return status;
+        // Once the driver is aborted (emulator quitting), the list may have been dropped or may never be
+        // dispatched, so nothing would ever set the status.
+        drv->cond_.wait(ulock, [&]() { return (status != -100) || drv->aborted(); });
+
+        return (status == -100) ? -1 : status;
     }
 
     static std::uint64_t make_data_copy(const void *source, const std::size_t size) {

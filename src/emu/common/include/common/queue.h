@@ -217,7 +217,12 @@ namespace eka2l1 {
         }
 
         void abort() {
-            abort_ = true;
+            {
+                // Set under the lock, so that a thread between its abort_ check and its wait gets the notification
+                const std::lock_guard<std::mutex> guard(queue_mut_);
+                abort_ = true;
+            }
+
             queue_cond_.notify_all();
             queue_empty_cond_.notify_all();
         }
