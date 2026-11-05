@@ -164,6 +164,16 @@ namespace eka2l1 {
         void schedule_event_at(std::uint64_t deadline, int event_type, std::uint64_t userdata);
         bool unschedule_event(int event_type, uint64_t userdata);
 
+        /**
+         * @brief Run guest time faster or slower than the host clock (fast-forward).
+         *
+         * Every guest clock reading and timer deadline goes through this timer, so
+         * scaling it speeds up tick counts, timers and the window server frame
+         * pacing together. The reading stays continuous across a change.
+         */
+        void set_speed(const double speed);
+        double get_speed() const;
+
         bool set_clock_frequency_mhz(const std::uint32_t cpu_mhz);
         std::uint32_t get_clock_frequency_mhz();
 

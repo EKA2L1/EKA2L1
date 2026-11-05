@@ -51,6 +51,7 @@
 #include <string>
 
 #include <disasm/disasm.h>
+#include <drivers/audio/audio.h>
 #include <drivers/itc.h>
 #include <gdbstub/gdbstub.h>
 
@@ -162,6 +163,7 @@ namespace eka2l1 {
 
         std::atomic<bool> exit = false;
         std::atomic<bool> paused = false;
+        std::atomic<double> speed_{ 1.0 };
 
         std::unordered_map<uint32_t, hal_instance> hals_;
 
@@ -549,6 +551,11 @@ namespace eka2l1 {
         bool pause();
         bool unpause();
 
+        void set_speed(const double speed);
+        double get_speed() const {
+            return speed_;
+        }
+
         memory_system *get_memory_system() {
             return mem_.get();
         }
@@ -640,6 +647,7 @@ namespace eka2l1 {
         // Initialize all the system that doesn't depend on others first
         timing_ = std::make_unique<ntimer>(DEFAULT_CPU_HZ);
         timing_->set_realtime_level(get_realtime_level_from_string(conf_->rtos_level.c_str()));
+        timing_->set_speed(speed_);
 
         file_system_inst physical_fs = create_physical_filesystem(epocver::epoc94, "");
         physical_fs_id_ = io_->add_filesystem(physical_fs);
@@ -704,6 +712,26 @@ namespace eka2l1 {
 
     void system_impl::set_audio_driver(drivers::audio_driver *aud_driver) {
         adriver = aud_driver;
+
+        if (adriver) {
+            adriver->playback_speed(speed_);
+        }
+    }
+
+    void system_impl::set_speed(const double speed) {
+        if (speed <= 0.0) {
+            return;
+        }
+
+        speed_ = speed;
+
+        if (timing_) {
+            timing_->set_speed(speed);
+        }
+
+        if (adriver) {
+            adriver->playback_speed(speed);
+        }
     }
 
     void system_impl::set_sensor_driver(drivers::sensor_driver *sensor_driver) {
@@ -1620,6 +1648,14 @@ namespace eka2l1 {
 
     bool system::unpause() {
         return impl->unpause();
+    }
+
+    void system::set_speed(const double speed) {
+        impl->set_speed(speed);
+    }
+
+    double system::get_speed() const {
+        return impl->get_speed();
     }
 
     memory_system *system::get_memory_system() {

@@ -129,8 +129,12 @@ namespace eka2l1 {
                     constexpr std::uint64_t IGNORE_AND_GO_PASS_MICROSECS = 32;
 #endif
 
-                    if (next_microseconds > IGNORE_AND_GO_PASS_MICROSECS) {
-                        new_event_evt_.wait_for(next_microseconds.value());
+                    // The deadline is in guest time; sleep the host time it takes to get there.
+                    const std::uint64_t host_wait = static_cast<std::uint64_t>(
+                        static_cast<double>(next_microseconds.value()) / teletimer_->get_speed());
+
+                    if (host_wait > IGNORE_AND_GO_PASS_MICROSECS) {
+                        new_event_evt_.wait_for(host_wait);
                     }
                 } else {
                     new_event_evt_.wait();
@@ -222,6 +226,21 @@ namespace eka2l1 {
         }
 
         return false;
+    }
+
+    void ntimer::set_speed(const double speed) {
+        if ((speed <= 0.0) || (speed == teletimer_->get_speed())) {
+            return;
+        }
+
+        teletimer_->set_speed(speed);
+
+        // The timer thread may be sleeping on a host wait sized for the old speed.
+        new_event_evt_.set();
+    }
+
+    double ntimer::get_speed() const {
+        return teletimer_->get_speed();
     }
 
     bool ntimer::set_clock_frequency_mhz(const std::uint32_t cpu_mhz) {
