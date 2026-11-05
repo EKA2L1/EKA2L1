@@ -37,6 +37,7 @@ namespace eka2l1::dispatch {
         std::int32_t logic_op_mask_loc_;
         std::int32_t view_model_mat_loc_;
         std::int32_t proj_mat_loc_;
+        std::int32_t position_scale_loc_;
         std::int32_t color_loc_;
         std::int32_t normal_loc_;
         std::int32_t point_size_loc_;

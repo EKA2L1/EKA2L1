@@ -89,7 +89,8 @@ namespace eka2l1::dispatch {
             uni_decl += "uniform mat4 uViewModelMat;\n";
         }
 
-        uni_decl += "uniform mat4 uProjMat;\n";
+        uni_decl += "uniform mat4 uProjMat;\n"
+                    "uniform vec4 uPositionScale;\n";
         out_decl += "out vec4 mMyPos;\n";
 
         main_body += "void main() {\n";
@@ -107,8 +108,9 @@ namespace eka2l1::dispatch {
             }
         }
 
-        main_body += "\tgl_Position = uProjMat * uViewModelMat * inPosition;\n"
-                     "\tmMyPos = uViewModelMat * inPosition;\n";
+        main_body += "\tvec4 position = inPosition * uPositionScale;\n"
+                     "\tgl_Position = uProjMat * uViewModelMat * position;\n"
+                     "\tmMyPos = uViewModelMat * position;\n";
 
         if (vertex_statuses & egl_context_es1::VERTEX_STATE_DRAW_POINTS) {
             uni_decl += "uniform float uPointScale;\n"

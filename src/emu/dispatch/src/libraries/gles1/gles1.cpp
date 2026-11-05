@@ -3166,6 +3166,11 @@ namespace eka2l1::dispatch {
             cmd_builder_.set_dynamic_uniform(var_info->proj_mat_loc_, drivers::shader_var_type::mat4,
                 glm::value_ptr(proj_mat_stack_.top()), 64);
 
+            // Fixed positions are fed as raw integers, so scale back here; an unspecified w stays 1.
+            const float fixed_scale = (vertex_attrib_.data_type_ == GL_FIXED_EMU) ? 1.0f / 65536.0f : 1.0f;
+            const float position_scale[4] = { fixed_scale, fixed_scale, fixed_scale, (vertex_attrib_.size_ == 4) ? fixed_scale : 1.0f };
+            cmd_builder_.set_dynamic_uniform(var_info->position_scale_loc_, drivers::shader_var_type::vec4, position_scale, 16);
+
             if (drawing_points) {
                 float point_scale = draw_surface_->current_scale_;
                 float point_size_factor = 1.0f;
@@ -3307,11 +3312,10 @@ namespace eka2l1::dispatch {
             temp_desc.stride = vertex_attrib_.stride_;
 
             gl_enum_to_drivers_data_format(vertex_attrib_.data_type_, temp_format);
-            temp_desc.set_format(vertex_attrib_.size_, temp_format);
 
-            if (vertex_attrib_.data_type_ == GL_FIXED_EMU) {
-                temp_desc.set_normalized(true);
-            }
+            // Host GL_FIXED conversion is not always exact (Mesa divides by 65535), which shifts
+            // depth and breaks equality-sensitive depth tests. Fetch as integers and scale in the shader.
+            temp_desc.set_format(vertex_attrib_.size_, (vertex_attrib_.data_type_ == GL_FIXED_EMU) ? drivers::data_format::sint : temp_format);
 
             descs.push_back(temp_desc);
 

@@ -218,6 +218,7 @@ namespace eka2l1::dispatch {
             info_inst->point_attenuation_loc_ = metadata.get_uniform_binding("uPointAttenuation");
             info_inst->point_range_loc_ = metadata.get_uniform_binding("uPointRange");
             info_inst->proj_mat_loc_ = metadata.get_uniform_binding("uProjMat");
+            info_inst->position_scale_loc_ = metadata.get_uniform_binding("uPositionScale");
 
             if ((vertex_statuses & egl_context_es1::VERTEX_STATE_CLIENT_COLOR_ARRAY) == 0)
                 info_inst->color_loc_ = metadata.get_uniform_binding("uColor");
