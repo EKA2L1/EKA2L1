@@ -1359,6 +1359,12 @@ namespace eka2l1::epoc {
             ctx.complete(epoc::error_none);
             break;
 
+        case ws_cl_op_set_background_color:
+            // The window server draws no background behind the windows: nothing to change,
+            // but the client waits for the answer
+            ctx.complete(epoc::error_none);
+            break;
+
         case ws_cl_op_get_double_click_settings:
             get_double_click_settings(ctx, cmd);
             break;
