@@ -1,7 +1,10 @@
 // Copyright (c) 2026 EKA2L1 Team.
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "cheats.h"
+
 #include <algorithm>
 #include <atomic>
+#include <chrono>
 #include <cmath>
 #include <common/algorithm.h>
 #include <common/cvt.h>
@@ -15,6 +18,7 @@
 #include <drivers/graphics/graphics.h>
 #include <drivers/input/common.h>
 #include <filesystem>
+#include <future>
 #include <kernel/kernel.h>
 #include <kernel/process.h>
 #include <kernel/thread.h>
@@ -85,6 +89,8 @@ namespace eka2l1::control {
         std::set<int> held_pointers;
         json acceleration;
         std::string card_path;
+        std::shared_ptr<cheat_engine> cheats;
+        system *cheats_system = nullptr;
 
         explicit impl(native_frontend frontend)
             : frontend(std::move(frontend)) {}
@@ -289,6 +295,33 @@ namespace eka2l1::control {
                 { "btnetDiscoveryMode", c.btnet_discovery_mode }, { "btnetListenPort", c.internet_bluetooth_port }, { "btnetPassword", c.btnet_password }, { "btCentralServerUrl", c.bt_central_server_url },
                 { "hideSystemApps", c.hide_system_apps }, { "logFilter", c.log_filter }, { "screenBufferSync", c.screen_buffer_sync_string } };
         }
+        // The engine works between two CPU slices, on the emulator thread
+        response cheat_request(const request &req) {
+            system &s = sys();
+            if (!cheats)
+                cheats = std::make_shared<cheat_engine>(fs::u8path(frontend.documents) / "cheats");
+            if (cheats_system != &s) {
+                std::weak_ptr<cheat_engine> weak = cheats;
+                s.add_slice_callback([weak](system *target) {
+                    if (auto engine = weak.lock())
+                        engine->freeze(*target);
+                });
+                cheats_system = &s;
+            }
+            auto result = std::make_shared<std::promise<response>>();
+            auto future = result->get_future();
+            s.run_between_slices([engine = cheats, req, result](system *target) {
+                try {
+                    result->set_value(engine->handle(*target, req));
+                } catch (const api_error &e) {
+                    result->set_value(response::error(e.status, e.code, e.what()));
+                } catch (const std::exception &e) {
+                    result->set_value(response::error(500, "internal", e.what()));
+                }
+            });
+            require(future.wait_for(std::chrono::seconds(10)) == std::future_status::ready, "busy", "the emulator did not reach the end of a CPU slice", 503);
+            return future.get();
+        }
         response route(const request &req) {
             auto p = req.path;
             require(!p.empty() && p[0] == "v1", "not_found", "unknown API version", 404);
@@ -304,6 +337,8 @@ namespace eka2l1::control {
             auto body = req.data();
             if (p == std::vector<std::string>{ "v1", "status" } && req.method == "GET")
                 return response::from_json(status());
+            if (p.size() >= 2 && p[1] == "cheats")
+                return cheat_request(req);
             if (p == std::vector<std::string>{ "v1", "devices" } && req.method == "GET")
                 return response::from_json({ { "devices", devices() }, { "current", current_device() } });
             if (p.size() >= 2 && p[1] == "devices") {
