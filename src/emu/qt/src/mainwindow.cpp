@@ -397,6 +397,13 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
         }
     });
 
+    // Apply the running app's screen filter when its setting file changes, for instance from a frontend's in-game menu
+    const QString compat_path = QDir::current().absoluteFilePath(QStringLiteral("compat"));
+    QDir().mkpath(compat_path);
+    QFileSystemWatcher *compat_watcher = new QFileSystemWatcher(this);
+    compat_watcher->addPath(compat_path);
+    connect(compat_watcher, &QFileSystemWatcher::directoryChanged, this, &main_window::on_app_setting_files_changed);
+
     rotate_group_ = new QActionGroup(this);
     rotate_group_->addAction(ui_->action_rotate_0);
     rotate_group_->addAction(ui_->action_rotate_90);
@@ -1459,6 +1466,58 @@ void main_window::on_app_setting_changed() {
     setting.filter_shader_path = settings_dialog_->active_upscale_shader().toStdString();
 
     emulator_state_.app_settings->add_or_replace_setting(info->app_uid_, setting);
+}
+
+void main_window::on_app_setting_files_changed() {
+    eka2l1::system *system = emulator_state_.symsys.get();
+    if (!system || !emulator_state_.app_settings) {
+        return;
+    }
+
+    eka2l1::kernel_system *kernel = system->get_kernel_system();
+    eka2l1::drivers::graphics_driver *driver = system->get_graphics_driver();
+    if (!kernel || !driver) {
+        return;
+    }
+
+    bool changed = false;
+
+    kernel->lock();
+    eka2l1::epoc::screen *scr = get_current_active_screen();
+    std::optional<eka2l1::akn_running_app_info> info = ::get_active_app_info(system, active_screen_number_);
+
+    if (scr && scr->focus && info.has_value()) {
+        emulator_state_.app_settings->update_setting(info->app_uid_);
+        const eka2l1::config::app_setting *setting = emulator_state_.app_settings->get_setting(info->app_uid_);
+
+        if (setting) {
+            const std::string shader = setting->filter_shader_path.empty() ? "Default" : setting->filter_shader_path;
+            eka2l1::config::app_setting &saved = scr->focus->saved_setting;
+
+            if (shader != driver->get_active_upscale_shader()) {
+                driver->set_upscale_shader(shader);
+                saved.filter_shader_path = setting->filter_shader_path;
+                changed = true;
+            }
+
+            // Only turned on here: a game drawing straight to the screen turns it on by itself
+            if ((setting->screen_upscale_method != 0) && !(scr->flags_ & eka2l1::epoc::screen::FLAG_SCREEN_UPSCALE_FACTOR_LOCK)) {
+                scr->flags_ |= eka2l1::epoc::screen::FLAG_SCREEN_UPSCALE_FACTOR_LOCK;
+                scr->try_change_display_rescale(driver, 1.0f);
+                saved.screen_upscale_method = setting->screen_upscale_method;
+                changed = true;
+            }
+
+            if (changed) {
+                LOG_INFO(eka2l1::FRONTEND_UI, "Screen filter of app 0x{:X} is now {}", info->app_uid_, shader);
+            }
+        }
+    }
+    kernel->unlock();
+
+    if (changed && settings_dialog_) {
+        settings_dialog_->refresh_app_configuration_details();
+    }
 }
 
 void main_window::refresh_mount_availbility() {
