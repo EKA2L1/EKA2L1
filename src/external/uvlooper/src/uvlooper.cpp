@@ -1,4 +1,5 @@
 #include <uvlooper/uvlooper.h>
+#include <vector>
 
 namespace libuv {
     task::task(std::function<void()> callback)
@@ -142,17 +143,24 @@ namespace libuv {
     }
 
     void looper::task_cleanup_final_function() {
-        // Cleanup handles
-        const std::lock_guard<std::mutex> guard(looper_mutex_);
-        for (auto task: cleanup_instanced_tasks_) {
-            auto ite = task->assigned_.find(this);
-            if (ite != task->assigned_.end()) {
-                destroy_looper_async(ite->second);
-                task->assigned_.erase(ite);
+        std::vector<uv_async_t *> task_asyncs;
+        {
+            const std::lock_guard<std::mutex> guard(looper_mutex_);
+            for (auto task: cleanup_instanced_tasks_) {
+                auto ite = task->assigned_.find(this);
+                if (ite != task->assigned_.end()) {
+                    task_asyncs.push_back(ite->second);
+                    task->assigned_.erase(ite);
+                }
             }
+
+            cleanup_instanced_tasks_.clear();
         }
 
-        cleanup_instanced_tasks_.clear();
+        // A task that never ran may be released here, and its destructor takes looper_mutex_.
+        for (uv_async_t *async: task_asyncs) {
+            destroy_looper_async(async);
+        }
 
         close_and_delete_async(stop_async_);
         close_and_delete_async(task_post_async_);
