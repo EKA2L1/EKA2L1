@@ -27,7 +27,7 @@ target_link_libraries(control_guest PUBLIC control PRIVATE epoc epockern epocser
 set_target_properties(control_guest PROPERTIES POSITION_INDEPENDENT_CODE ON CXX_STANDARD 17)
 
 if(NOT EKA2L1_IOS)
-    add_library(control_native src/native.cpp)
+    add_library(control_native src/cheats.cpp src/native.cpp)
     target_include_directories(control_native PUBLIC include)
     target_link_libraries(control_native PUBLIC control PRIVATE control_guest epoc epockern epocservs epocpkg drivers common zlibstatic)
     set_target_properties(control_native PROPERTIES POSITION_INDEPENDENT_CODE ON)
