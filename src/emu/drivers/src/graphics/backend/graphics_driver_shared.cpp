@@ -142,13 +142,12 @@ namespace eka2l1::drivers {
         return texture;
     }
 
-    static texture_ptr instantiate_bitmap_depth_stencil_texture(graphics_driver *driver, const eka2l1::vec2 &size, const std::uint32_t depth_bits) {
+    // 16-bit depth configs stay backed by 24-bit depth, as every surface was before they were exposed:
+    // games separate depths one GLfixed step apart (e.g. sky just in front of the clear depth), which D16 rounds together.
+    static texture_ptr instantiate_bitmap_depth_stencil_texture(graphics_driver *driver, const eka2l1::vec2 &size) {
         auto ds_tex = make_texture(driver);
-        ds_tex->create(driver, 2, 0, eka2l1::vec3(size.x, size.y, 0),
-            depth_bits == 16 ? texture_format::depth16 : texture_format::depth24_stencil8,
-            depth_bits == 16 ? texture_format::depth_component : texture_format::depth_stencil,
-            depth_bits == 16 ? texture_data_type::ushort : texture_data_type::uint_24_8,
-            nullptr, 0);
+        ds_tex->create(driver, 2, 0, eka2l1::vec3(size.x, size.y, 0), texture_format::depth24_stencil8,
+            texture_format::depth_stencil, texture_data_type::uint_24_8, nullptr, 0);
 
         return ds_tex;
     }
@@ -168,7 +167,7 @@ namespace eka2l1::drivers {
 
     void bitmap::resize(graphics_driver *driver, const eka2l1::vec2 &new_size) {
         auto tex_to_replace = std::move(instantiate_suit_color_bitmap_texture(driver, new_size, bpp));
-        auto ds_tex_to_replace = std::move(instantiate_bitmap_depth_stencil_texture(driver, new_size, depth_bits));
+        auto ds_tex_to_replace = std::move(instantiate_bitmap_depth_stencil_texture(driver, new_size));
 
         if (fb) {
             auto new_fb = make_framebuffer(driver, { tex_to_replace.get() }, { 0 }, ds_tex_to_replace.get(), 0,
@@ -198,7 +197,7 @@ namespace eka2l1::drivers {
     }
 
     void bitmap::init_fb(graphics_driver *driver) {
-        ds_tex = std::move(instantiate_bitmap_depth_stencil_texture(driver, tex->get_size(), depth_bits));
+        ds_tex = std::move(instantiate_bitmap_depth_stencil_texture(driver, tex->get_size()));
         fb = make_framebuffer(driver, { tex.get() }, { 0 }, ds_tex.get(), 0, depth_bits == 16 ? nullptr : ds_tex.get(), 0);
     }
 
