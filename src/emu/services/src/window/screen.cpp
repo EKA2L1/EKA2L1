@@ -659,23 +659,24 @@ namespace eka2l1::epoc {
                 flags_ &= ~FLAG_SCREEN_UPSCALE_FACTOR_LOCK;
             }
 
+            // Restore the group's saved settings before the callbacks, so the orientation its app asks for wins
             if (new_focus_screen) {
                 serv->set_focus_screen(new_focus_screen);
 
                 alternative_focus->gain_focus();
 
-                serv->send_focus_group_change_events(new_focus_screen);
-                new_focus_screen->fire_focus_change_callbacks(focus_change_target);
-
                 new_focus_screen->restore_from_config(serv->get_graphics_driver(),
                     alternative_focus->saved_setting, serv);
+
+                serv->send_focus_group_change_events(new_focus_screen);
+                new_focus_screen->fire_focus_change_callbacks(focus_change_target);
             } else if (focus && is_me_currently_focus) {
                 focus->gain_focus();
 
+                restore_from_config(serv->get_graphics_driver(), focus->saved_setting, serv);
+
                 serv->send_focus_group_change_events(this);
                 fire_focus_change_callbacks(focus_change_target);
-
-                restore_from_config(serv->get_graphics_driver(), focus->saved_setting, serv);
             }
         }
 
