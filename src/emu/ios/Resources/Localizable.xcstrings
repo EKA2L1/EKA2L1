@@ -2989,6 +2989,54 @@
         }
       }
     },
+    "keypad.editor.dpadMode.buttons" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buttons"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按键"
+          }
+        }
+      }
+    },
+    "keypad.editor.dpadMode.hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activate to switch modes. Drag to reposition."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "轻点切换模式，拖动调整位置。"
+          }
+        }
+      }
+    },
+    "keypad.editor.dpadMode.joystick" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Joystick"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "摇杆"
+          }
+        }
+      }
+    },
     "keypad.editor.dragHint" : {
       "localizations" : {
         "en" : {
