@@ -320,6 +320,8 @@ namespace eka2l1::loader {
         // cache local to one extraction so repeated entries do not stat the same
         // directory hierarchy again, without retaining stale filesystem state.
         std::unordered_set<std::string> created_directories;
+        std::uint32_t extracted_entries = 0;
+        bool extraction_failed = false;
 
         while (!feof(f)) {
             total_read_size = 0;
@@ -331,6 +333,7 @@ namespace eka2l1::loader {
             total_read_size += fread(&entry.path_len, 1, 8, f);
 
             if (total_read_size != 24) {
+                extraction_failed = total_read_size != 0 || ferror(f);
                 break;
             }
 
@@ -342,14 +345,17 @@ namespace eka2l1::loader {
             total_read_size += fread(&entry.data_size, 1, 8, f);
 
             if (total_read_size != entry.path_len * 2 + 8) {
+                extraction_failed = true;
                 break;
             }
 
             LOG_INFO(SYSTEM, "Extracting: {}", common::ucs2_to_utf8(entry.path));
 
             if (!extract_file(devices_rom_path, f, entry, total_size, created_directories, progress_cb, cancel_cb)) {
+                extraction_failed = true;
                 break;
             }
+            ++extracted_entries;
 
             if (progress_cb) {
                 progress_cb(ftell(f), total_size);
@@ -363,6 +369,12 @@ namespace eka2l1::loader {
         if (cancel_cb && cancel_cb()) {
             common::delete_folder(folder_extracted);
             return device_installation_general_failure;
+        }
+
+        // Legacy RPKG dumps may leave the entry count uninitialized.
+        if (extraction_failed || (!is_ver_one && extracted_entries != header.count)) {
+            common::delete_folder(folder_extracted);
+            return device_installation_rpkg_corrupt;
         }
 
         if (progress_cb) {

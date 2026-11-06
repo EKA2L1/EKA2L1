@@ -785,6 +785,22 @@
         }
       }
     },
+    "display.editor.background" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Background"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "背景"
+          }
+        }
+      }
+    },
     "display.editor.editLayout" : {
       "localizations" : {
         "en" : {
@@ -813,6 +829,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "拖动以移动画面"
+          }
+        }
+      }
+    },
+    "display.editor.removeBackground" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove background"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "移除背景"
           }
         }
       }
@@ -2985,6 +3017,54 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "方向键"
+          }
+        }
+      }
+    },
+    "keypad.editor.dpadMode.buttons" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buttons"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "按键"
+          }
+        }
+      }
+    },
+    "keypad.editor.dpadMode.hint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activate to switch modes. Drag to reposition."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "轻点切换模式，拖动调整位置。"
+          }
+        }
+      }
+    },
+    "keypad.editor.dpadMode.joystick" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Joystick"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "摇杆"
           }
         }
       }

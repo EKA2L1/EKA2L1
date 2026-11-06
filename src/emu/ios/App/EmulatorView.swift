@@ -13,6 +13,7 @@ struct EmulatorView: View {
     @AppStorage(KeypadDefaults.orientationLockKey) private var lockGameOrientation = false
     @AppStorage(KeypadDefaults.portraitLayoutKey) private var portraitKeypadLayout = ""
     @AppStorage(KeypadDefaults.landscapeLayoutKey) private var landscapeKeypadLayout = ""
+    @AppStorage private var dpadMode: DirectionPadMode
     @AppStorage(KeypadDefaults.opacityKey) private var keypadOpacity = KeypadDefaults.opacity
     @AppStorage(DisplayLayoutDefaults.portraitKey) private var portraitDisplayLayout = ""
     @AppStorage(DisplayLayoutDefaults.landscapeKey) private var landscapeDisplayLayout = ""
@@ -47,6 +48,11 @@ struct EmulatorView: View {
     // The -LaunchKeypadLayout testing argument seeds the layout only for the
     // first emulator screen of the process; later screens use stored settings.
     @MainActor private static var launchLayoutApplied = false
+
+    init(uid: UInt32) {
+        self.uid = uid
+        _dpadMode = AppStorage(wrappedValue: .cross, "ios.keypadDPadMode.\(uid)")
+    }
 
     // Either editor takes over the whole screen: guest touch input and the FPS
     // readout step aside for it.
@@ -341,6 +347,7 @@ struct EmulatorView: View {
                     in: size,
                     safeAreaInsets: safeAreaInsets
                 ),
+                dpadMode: $dpadMode,
                 opacity: $keypadOpacity,
                 fullScreen: fullscreenSelection,
                 actions: menuActions,
@@ -359,6 +366,7 @@ struct EmulatorView: View {
                 size: size,
                 controlSize: controlSize,
                 configuration: configuration,
+                dpadMode: dpadMode,
                 fullScreen: isFullscreen,
                 actions: menuActions
             )

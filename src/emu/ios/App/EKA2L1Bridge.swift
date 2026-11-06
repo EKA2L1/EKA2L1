@@ -96,6 +96,10 @@ final class EKA2L1Bridge {
         emulator.currentDeviceIndex()
     }
 
+    func lastInstalledDeviceIndex() -> Int {
+        emulator.lastInstalledDeviceIndex()
+    }
+
     // Host folder behind drive E of the booted device, nil when none is booted.
     nonisolated static func currentDeviceDriveEPath() -> String? {
         EKA2L1Emulator.shared().currentDeviceDriveEPath()

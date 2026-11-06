@@ -24,6 +24,8 @@
 #include <config/config.h>
 #include <system/devices.h>
 #include <system/software.h>
+#include <system/installation/rpkg.h>
+#include "../../emu/ios/Bridge/DeviceInstallation.h"
 
 #include <algorithm>
 #include <fstream>
@@ -256,4 +258,148 @@ TEST_CASE("device_marked_for_deletion_goes_on_next_load", "devices") {
     // The reload rewrote devices.yml without the device.
     device_manager again(&conf);
     REQUIRE(again.total() == 1);
+}
+
+TEST_CASE("iOS device replacement retains writable drives and isolation", "[ios-install]") {
+    for (const bool isolated : {false, true}) {
+        storage_test_env env(isolated ? "replace_isolated" : "replace_shared");
+        storage_test_env staging("replacement_staging");
+        config::state conf;
+        conf.storage = env.root;
+        device_manager manager(&conf);
+        REQUIRE(manager.add_new_device("RA-2", "Old", "Nokia", epocver::epoc7, 1, isolated) == add_device_none);
+        REQUIRE(manager.add_new_device("Other", "Control", "Nokia", epocver::epoc7, 2, false) == add_device_none);
+        manager.set_current("Other");
+        env.write_file("drives/z/ra-2/obsolete");
+        env.write_file("roms/ra-2/SYM.ROM");
+        for (const auto drive : {drive_c, drive_d, drive_e}) {
+            env.write_file(device_drive_folder("RA-2", isolated, drive) + "saved-data");
+        }
+        staging.write_file("drives/z/ra-2/replacement");
+        staging.write_file("roms/ra-2/SYM.ROM");
+        device imported(epocver::epoc7, "ra-2", "Nokia", "Replacement");
+        imported.machine_uid = 42;
+        imported.isolated_drives = !isolated;
+        bool discard = true;
+        REQUIRE(ios::commit_device_install(manager, imported, staging.root, env.root, discard));
+        REQUIRE(discard);
+        REQUIRE(manager.total() == 2);
+        REQUIRE(manager.get_current_index() == 0);
+        REQUIRE(manager.get_current()->firmware_code == "RA-2");
+        REQUIRE(manager.get_current()->isolated_drives == isolated);
+        REQUIRE(manager.get_current()->machine_uid == 42);
+        REQUIRE_FALSE(env.has("drives/z/ra-2/obsolete"));
+        REQUIRE(env.has("drives/z/ra-2/replacement"));
+        for (const auto drive : {drive_c, drive_d, drive_e}) {
+            REQUIRE(env.has(device_drive_folder("RA-2", isolated, drive) + "saved-data"));
+        }
+        device_manager reloaded(&conf);
+        REQUIRE(reloaded.total() == 2);
+        REQUIRE(reloaded.get("RA-2")->isolated_drives == isolated);
+    }
+}
+
+TEST_CASE("iOS device replacement rolls back if the ROM cannot be moved", "[ios-install]") {
+    storage_test_env env("replace_rollback");
+    storage_test_env staging("rollback_staging");
+    config::state conf;
+    conf.storage = env.root;
+    device_manager manager(&conf);
+    REQUIRE(manager.add_new_device("RA-2", "Old", "Nokia", epocver::epoc7, 1, true) == add_device_none);
+    env.write_file("drives/z/ra-2/original");
+    env.write_file("roms/ra-2/SYM.ROM");
+    env.write_file("drives/ra-2/c/saved-data");
+    staging.write_file("drives/z/ra-2/replacement");
+    staging.write_file("roms/ra-2/SYM.ROM");
+    staging.write_file("previous-rom/blocker");
+    device imported(epocver::epoc7, "RA-2", "Nokia", "Replacement");
+    bool discard = true;
+    REQUIRE_FALSE(ios::commit_device_install(manager, imported, staging.root, env.root, discard));
+    REQUIRE(discard);
+    REQUIRE(env.has("drives/z/ra-2/original"));
+    REQUIRE_FALSE(env.has("drives/z/ra-2/replacement"));
+    REQUIRE(env.has("roms/ra-2/SYM.ROM"));
+    REQUIRE(env.has("drives/ra-2/c/saved-data"));
+    REQUIRE(manager.get("RA-2")->model == "Old");
+    REQUIRE(manager.get("RA-2")->isolated_drives);
+}
+
+TEST_CASE("iOS new isolated device retains its storage marker", "[ios-install]") {
+    storage_test_env env("import_new");
+    storage_test_env staging("new_staging");
+    config::state conf;
+    conf.storage = env.root;
+    device_manager manager(&conf);
+    staging.write_file("drives/z/ra-2/new");
+    staging.write_file("roms/ra-2/SYM.ROM");
+    device imported(epocver::epoc7, "RA-2", "Nokia", "New");
+    imported.isolated_drives = true;
+    bool discard = true;
+    REQUIRE(ios::commit_device_install(manager, imported, staging.root, env.root, discard));
+    REQUIRE(env.has("drives/ra-2/"));
+    REQUIRE(manager.total() == 1);
+    REQUIRE(manager.get_current()->firmware_code == "RA-2");
+}
+
+TEST_CASE("Truncated RPKGs cannot register a partially extracted device", "[ios-install]") {
+    for (const bool partial_entry : {false, true}) {
+        storage_test_env env(partial_entry ? "rpkg_partial_entry" : "rpkg_missing_entry");
+        const std::string rpkg_path = add_path(env.root, "truncated.rpkg");
+        {
+            std::ofstream rpkg(rpkg_path, std::ios::binary);
+            const std::uint32_t header[] = {'R', 'P', 'K', '2', 0, 3, 32, 0x101F8DDB};
+            rpkg.write(reinterpret_cast<const char *>(header), sizeof(header));
+            for (const auto &path : {u"Z:\\system\\install\\Dev9300.sis",
+                     u"Z:\\system\\install\\Series80v20.sis", u"Z:\\system\\last.bin"}) {
+                const std::u16string name(path);
+                if (name.find(u"last.bin") != std::u16string::npos && !partial_entry) {
+                    break;
+                }
+                const std::uint64_t entry[] = {0, 0, name.size()};
+                const std::uint64_t size = 4;
+                rpkg.write(reinterpret_cast<const char *>(entry), sizeof(entry));
+                rpkg.write(reinterpret_cast<const char *>(name.data()), name.size() * 2);
+                rpkg.write(reinterpret_cast<const char *>(&size), sizeof(size));
+                if (name.find(u"last.bin") != std::u16string::npos) {
+                    rpkg.write("x", 1);
+                } else {
+                    rpkg.write("data", 4);
+                }
+            }
+        }
+        config::state conf;
+        conf.storage = env.root;
+        device_manager manager(&conf);
+        std::string code;
+        REQUIRE(loader::install_rpkg(&manager, rpkg_path, add_path(env.root, "drives/z/"),
+            code, true, nullptr, nullptr) == device_installation_rpkg_corrupt);
+        REQUIRE(manager.total() == 0);
+        REQUIRE_FALSE(env.has("drives/z/temp/"));
+        REQUIRE_FALSE(env.has("drives/z/ra-2/"));
+    }
+}
+
+TEST_CASE("Legacy RPKG imports do not require a valid entry count", "[ios-install]") {
+    storage_test_env env("legacy_rpkg_count");
+    const std::string path = add_path(env.root, "legacy.rpkg");
+    {
+        std::ofstream rpkg(path, std::ios::binary);
+        const std::uint32_t header[] = {'R', 'P', 'K', 'G', 0, 0x801EEF37};
+        rpkg.write(reinterpret_cast<const char *>(header), sizeof(header));
+        const std::u16string name = u"Z:\\system\\install\\Dev9300.sis";
+        const std::uint64_t entry[] = {0, 0, name.size()};
+        const std::uint64_t size = 4;
+        rpkg.write(reinterpret_cast<const char *>(entry), sizeof(entry));
+        rpkg.write(reinterpret_cast<const char *>(name.data()), name.size() * 2);
+        rpkg.write(reinterpret_cast<const char *>(&size), sizeof(size));
+        rpkg.write("data", 4);
+    }
+    config::state conf;
+    conf.storage = env.root;
+    device_manager manager(&conf);
+    std::string code;
+    REQUIRE(loader::install_rpkg(&manager, path, add_path(env.root, "drives/z/"),
+        code, false, nullptr, nullptr) == device_installation_none);
+    REQUIRE(manager.total() == 1);
+    REQUIRE(code == "rae-6");
 }
