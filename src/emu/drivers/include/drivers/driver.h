@@ -21,6 +21,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstring>
 #include <condition_variable>
 #include <mutex>
 
@@ -76,6 +77,19 @@ namespace eka2l1::drivers {
 
             if (!base_) {
                 renew();
+            }
+
+            // Window-server text (econs) can emit more than MAX_CAP_COMMAND_COUNT
+            // commands in one list. Callers outside GLES never check need_flush(),
+            // so writing past max_cap_ smashed the heap (free(): invalid next size)
+            // as soon as a console process summoned.
+            if (size_ >= max_cap_) {
+                const std::size_t new_cap = max_cap_ * 2;
+                command *grown = new command[new_cap];
+                std::memcpy(grown, base_, size_ * sizeof(command));
+                delete[] base_;
+                base_ = grown;
+                max_cap_ = new_cap;
             }
 
             command *res = base_ + size_;
