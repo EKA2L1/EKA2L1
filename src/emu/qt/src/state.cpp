@@ -36,6 +36,7 @@
 #include <services/window/window.h>
 #include <services/init.h>
 
+#include <qt/mainwindow.h>
 #include <qt/state.h>
 #include <qt/utils.h>
 
@@ -217,6 +218,15 @@ namespace eka2l1::desktop {
     void emulator::on_system_reset(system *the_sys) {
         winserv = reinterpret_cast<eka2l1::window_server *>(the_sys->get_kernel_system()->get_by_name<eka2l1::service::server>(
             eka2l1::get_winserv_name_by_epocver(symsys->get_symbian_version_use())));
+
+        // Keys of the skin light up while the device has them down
+        if (winserv) {
+            winserv->key_watcher = [this](const std::uint32_t code, const bool down) {
+                if (ui_main) {
+                    ui_main->skin_key_changed(code, down);
+                }
+            };
+        }
 
         // Load patch libraries
         if (stage_two_inited) {
