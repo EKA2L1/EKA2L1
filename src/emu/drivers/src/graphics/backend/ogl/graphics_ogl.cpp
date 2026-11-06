@@ -2102,8 +2102,16 @@ namespace eka2l1::drivers {
     }
 
     void ogl_graphics_driver::abort() {
-        list_queue.abort();
         should_stop = true;
+
+        // Release a submitter blocked on a full queue first: it holds mut_ while it pushes.
+        list_queue.abort();
+
+        // A waiter that checked aborted() under mut_ just before should_stop was set is not sleeping yet.
+        // Take mut_ so the notification can only come after it waits.
+        {
+            const std::lock_guard<std::mutex> guard(mut_);
+        }
 
         cond_.notify_all();
     }
