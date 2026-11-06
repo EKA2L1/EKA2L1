@@ -327,9 +327,10 @@ private struct BackgroundImageControl: View {
     @State private var loading = false
 
     var body: some View {
+        let isLoading = loading
         PhotosPicker(selection: $selection, matching: .images, preferredItemEncoding: .current) {
             HStack(spacing: 8) {
-                if loading {
+                if isLoading {
                     ProgressView()
                         .tint(.white)
                 } else {

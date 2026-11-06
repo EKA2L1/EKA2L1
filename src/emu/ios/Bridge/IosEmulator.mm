@@ -624,8 +624,10 @@ namespace eka2l1::ios {
 
             std::vector<std::uint8_t> pixels(static_cast<std::size_t>(width) * height * 4);
             CGColorSpaceRef color_space = CGColorSpaceCreateDeviceRGB();
+            const CGBitmapInfo bitmap_info = static_cast<CGBitmapInfo>(kCGImageAlphaPremultipliedLast)
+                | kCGBitmapByteOrder32Big;
             CGContextRef context = CGBitmapContextCreate(pixels.data(), width, height, 8, width * 4,
-                color_space, kCGImageAlphaPremultipliedLast | kCGBitmapByteOrder32Big);
+                color_space, bitmap_info);
             CGColorSpaceRelease(color_space);
             if (!context) {
                 return {};
