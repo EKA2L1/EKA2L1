@@ -33,11 +33,6 @@ let keypadDigits: [(label: String, sub: String, scan: UInt32)] = [
 
 // MARK: - Key primitive
 
-enum Keypad {
-    // Barely-there tick: keys and the d-pad fire several times a second.
-    static let hapticIntensity = 0.3
-}
-
 struct HoldableRawKey<Label: View>: View {
     let scan: UInt32
     // Hit-test region for the key. Defaults to the full bounding rect; round
@@ -64,7 +59,7 @@ struct HoldableRawKey<Label: View>: View {
                     .accessibilityHidden(true)
             )
             .onDisappear(perform: release)
-            .hapticImpact(.light, intensity: Keypad.hapticIntensity, trigger: impacts)
+            .hapticImpact(.light, trigger: impacts)
     }
 
     private func press() {
@@ -349,7 +344,7 @@ struct DirectionPad: View {
         .onDisappear {
             update(DPadState())
         }
-        .hapticImpact(.light, intensity: Keypad.hapticIntensity, trigger: impacts)
+        .hapticImpact(.light, trigger: impacts)
     }
 
     private func update(_ new: DPadState) {
@@ -368,6 +363,7 @@ struct DirectionPad: View {
         if new.okPressed {
             scans.insert(Scan.select)
         }
+        guard scans != activeScans else { return }
         for scan in activeScans.subtracting(scans).sorted() {
             EKA2L1Bridge.shared.submitRawKey(scan, pressed: false)
         }

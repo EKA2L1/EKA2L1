@@ -24,26 +24,25 @@ extension View {
     /// key-down but not key-up, say.
     @ViewBuilder
     func hapticImpact<T: Equatable>(_ style: UIImpactFeedbackGenerator.FeedbackStyle,
-                                    intensity: Double = 1,
                                     trigger: T) -> some View {
         if #available(iOS 17.0, *) {
-            sensoryFeedback(style.sensoryFeedback(intensity: intensity), trigger: trigger)
+            sensoryFeedback(style.sensoryFeedback, trigger: trigger)
         } else {
-            onChange(of: trigger) { _ in Haptics.impact(style, intensity: intensity) }
+            onChange(of: trigger) { _ in Haptics.impact(style) }
         }
     }
 }
 
 @available(iOS 17.0, *)
 private extension UIImpactFeedbackGenerator.FeedbackStyle {
-    func sensoryFeedback(intensity: Double) -> SensoryFeedback {
+    var sensoryFeedback: SensoryFeedback {
         switch self {
-        case .light: .impact(weight: .light, intensity: intensity)
-        case .medium: .impact(weight: .medium, intensity: intensity)
-        case .heavy: .impact(weight: .heavy, intensity: intensity)
-        case .soft: .impact(flexibility: .soft, intensity: intensity)
-        case .rigid: .impact(flexibility: .rigid, intensity: intensity)
-        @unknown default: .impact(intensity: intensity)
+        case .light: .impact(weight: .light)
+        case .medium: .impact(weight: .medium)
+        case .heavy: .impact(weight: .heavy)
+        case .soft: .impact(flexibility: .soft)
+        case .rigid: .impact(flexibility: .rigid)
+        @unknown default: .impact()
         }
     }
 }
@@ -54,7 +53,7 @@ private extension UIImpactFeedbackGenerator.FeedbackStyle {
 enum Haptics {
     private static var generators: [UIImpactFeedbackGenerator.FeedbackStyle: UIImpactFeedbackGenerator] = [:]
 
-    static func impact(_ style: UIImpactFeedbackGenerator.FeedbackStyle, intensity: Double = 1) {
+    static func impact(_ style: UIImpactFeedbackGenerator.FeedbackStyle) {
         // Playing feedback while the app is not frontmost fails inside
         // CoreHaptics, and that failure is what raises the racing error report.
         guard UIApplication.shared.applicationState == .active else { return }
@@ -66,7 +65,7 @@ enum Haptics {
             generator = UIImpactFeedbackGenerator(style: style)
             generators[style] = generator
         }
-        generator.impactOccurred(intensity: intensity)
+        generator.impactOccurred()
         // Keeps the engine alive for the next tap instead of letting it idle
         // out and restart.
         generator.prepare()
