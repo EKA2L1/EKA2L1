@@ -191,8 +191,8 @@ public class EmulatorCamera {
     }
 
     public static void handleOrientationChangeForAllInstances() {
-        for (int i = 0; i < cameraWrappers.size(); i++) {
-            cameraWrappers.get(i).handleOrientationChange();
+        for (EmulatorCamera cam : cameraWrappers.values()) {
+            cam.handleOrientationChange();
         }
     }
 
