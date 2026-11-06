@@ -197,6 +197,15 @@ namespace eka2l1 {
         bool pause();
         bool unpause();
 
+        /**
+         * @brief Run the guest faster than real time (fast-forward), 1 being normal speed.
+         *
+         * Scales the guest clock - timers, tick counts, frame pacing - and the rate
+         * guest audio streams are played at. Kept across a device reboot.
+         */
+        void set_speed(const double speed);
+        double get_speed() const;
+
         bool set_device(const std::uint8_t idx);
         int install_package(std::u16string path, drive_number drv);
 

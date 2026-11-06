@@ -127,6 +127,7 @@ namespace eka2l1::config {
         int language{ -1 };
         int emulator_language{ -1 };
         int audio_master_volume{ 100 };
+        double fast_forward_speed{ 2.0 }; // Guest speed while fast-forward is on.
 
         bool enable_gdbstub{ false };
         int gdb_port{ 24689 };

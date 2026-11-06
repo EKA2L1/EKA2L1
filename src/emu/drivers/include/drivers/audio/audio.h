@@ -52,6 +52,7 @@ namespace eka2l1::drivers {
 
         std::uint32_t master_volume_ = 100;
         std::atomic<bool> suspend_{false};
+        std::atomic<double> playback_speed_{1.0};
 
         std::mutex lock_;
 
@@ -102,6 +103,16 @@ namespace eka2l1::drivers {
         }
 
         void master_volume(const std::uint32_t value);
+
+        // Rate guest audio streams are consumed at, following the guest clock speed
+        // (fast-forward). Above 1 a stream plays faster and higher pitched.
+        double playback_speed() const {
+            return playback_speed_.load(std::memory_order_relaxed);
+        }
+
+        void playback_speed(const double speed) {
+            playback_speed_.store(speed, std::memory_order_relaxed);
+        }
 
         std::vector<player_type> get_suitable_player_types(const std::string &url);
         std::vector<player_type> get_suitable_player_types(common::ro_stream &stream);

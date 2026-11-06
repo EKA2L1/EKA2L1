@@ -93,6 +93,10 @@ namespace eka2l1::common {
 
         virtual bool set_target_frequency(const std::uint32_t freq) = 0;
 
+        // Rate the clock runs at against the host clock (1 = real time, 2 = twice as fast).
+        virtual void set_speed(const double speed) = 0;
+        virtual double get_speed() const = 0;
+
         virtual std::uint64_t ticks() = 0;
         virtual std::uint64_t microseconds() = 0;
         virtual std::uint64_t nanoseconds() = 0;

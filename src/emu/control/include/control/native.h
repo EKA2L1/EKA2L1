@@ -27,6 +27,8 @@ namespace eka2l1::control {
         std::function<void()> close;
         std::function<bool(int)> boot;
         std::function<void(bool)> pause;
+        // Guest speed (1 = normal). Unset: the backend applies it to the system itself.
+        std::function<void(double)> speed;
         std::function<void(native_change)> changed;
         std::function<void(const double *)> acceleration;
     };

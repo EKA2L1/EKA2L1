@@ -76,6 +76,7 @@
 #include <QFutureWatcher>
 #include <QInputDialog>
 #include <QMessageBox>
+#include <QSignalBlocker>
 #include <QProgressDialog>
 #include <QSettings>
 #include <QLineEdit>
@@ -368,9 +369,11 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     ui_->status_bar->addPermanentWidget(screen_status_label_, 1);
 
     ui_->action_pause->setEnabled(false);
+    ui_->action_fast_forward->setEnabled(false);
     ui_->action_restart->setEnabled(false);
 
     addAction(ui_->action_fullscreen);
+    addAction(ui_->action_fast_forward);
 
     refresh_current_device_label();
     make_default_binding_profile();
@@ -463,6 +466,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     connect(ui_->action_mount_game_card_zip, &QAction::triggered, this, &main_window::on_mount_zip_clicked);
     connect(ui_->action_fullscreen, &QAction::toggled, this, &main_window::on_fullscreen_toogled);
     connect(ui_->action_pause, &QAction::toggled, this, &main_window::on_pause_toggled);
+    connect(ui_->action_fast_forward, &QAction::toggled, this, &main_window::on_fast_forward_toggled);
     connect(ui_->action_restart, &QAction::triggered, this, &main_window::on_restart_requested);
     connect(ui_->action_package_manager, &QAction::triggered, this, &main_window::on_package_manager_triggered);
     connect(ui_->action_refresh_app_list, &QAction::triggered, this, &main_window::on_refresh_app_list_requested);
@@ -718,6 +722,8 @@ void main_window::on_device_set_requested(const int index) {
     ui_->action_pause->setEnabled(false);
     ui_->action_restart->setEnabled(false);
     ui_->action_pause->setChecked(false);
+    ui_->action_fast_forward->setChecked(false);
+    ui_->action_fast_forward->setEnabled(false);
 
     setup_app_list(true);
 }
@@ -733,6 +739,12 @@ void main_window::on_pause_toggled(bool checked) {
     } else {
         emulator_state_.should_emu_pause = false;
         emulator_state_.pause_event.set();
+    }
+}
+
+void main_window::on_fast_forward_toggled(bool checked) {
+    if (eka2l1::system *system = emulator_state_.symsys.get()) {
+        system->set_speed(checked ? emulator_state_.conf.fast_forward_speed : 1.0);
     }
 }
 
@@ -759,7 +771,15 @@ void main_window::on_status_bar_visibility_change(bool visible) {
 }
 
 void main_window::on_status_bar_update(const std::uint64_t fps) {
-    screen_status_label_->setText(QString("%1 FPS").arg(fps));
+    eka2l1::system *system = emulator_state_.symsys.get();
+    const double speed = system ? system->get_speed() : 1.0;
+
+    if (speed == 1.0) {
+        screen_status_label_->setText(QString("%1 FPS").arg(fps));
+    } else {
+        // The count is per guest second; show what the host screen gets.
+        screen_status_label_->setText(QString("%1 FPS (x%2)").arg(static_cast<std::uint64_t>(fps * speed)).arg(speed));
+    }
 }
 
 void main_window::finish_stage_two() {
@@ -1123,6 +1143,7 @@ void main_window::switch_to_game_display_mode() {
     restore_ui_layouts();
 
     ui_->action_pause->setEnabled(true);
+    ui_->action_fast_forward->setEnabled(true);
     ui_->action_restart->setEnabled(true);
     ui_->action_rotate_drop_menu->setEnabled(true);
 
@@ -2052,4 +2073,15 @@ void main_window::control_changed(eka2l1::control::native_change change) {
 void main_window::control_pause(bool paused) {
     ui_->action_pause->setChecked(paused);
     on_pause_toggled(paused);
+}
+
+void main_window::control_speed(double speed) {
+    {
+        const QSignalBlocker blocker(ui_->action_fast_forward);
+        ui_->action_fast_forward->setChecked(speed != 1.0);
+    }
+
+    if (eka2l1::system *system = emulator_state_.symsys.get()) {
+        system->set_speed(speed);
+    }
 }
