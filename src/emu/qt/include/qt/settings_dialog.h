@@ -79,6 +79,7 @@ private:
     void update_device_settings();
     void set_current_language(const int lang);
     void refresh_available_system_languages(const int index = -1);
+    void refresh_system_fonts();
     void refresh_device_utils_locking();
     void refresh_keybind_buttons();
     void refresh_keybind_profiles();
@@ -123,6 +124,9 @@ private slots:
     void on_friendly_phone_name_edited(const QString &text);
     void on_rta_combo_choose(const int index);
     void on_system_language_choose(const int index);
+    void on_system_font_choose(const int index);
+    void on_system_font_add_clicked();
+    void on_system_font_scale_changed(int value);
     void on_system_battery_slider_value_moved(int value);
     void on_master_volume_value_changed(int value);
 

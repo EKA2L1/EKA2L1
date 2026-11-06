@@ -189,6 +189,13 @@ namespace eka2l1::config {
         bool background_image_keep_aspect{ false };
         int screen_scale_ratio{ 100 };
 
+        // Family name of a font imported into <storage>/fonts that the device
+        // draws its own text with instead of its ROM fonts. Empty keeps the
+        // device's fonts. The scale is a percentage of the ROM font's capital
+        // height, which is what the imported font is sized to match.
+        std::string system_font;
+        int system_font_scale{ 100 };
+
         std::string current_mmc_id;
 
         void serialize(const bool with_bindings = true);
