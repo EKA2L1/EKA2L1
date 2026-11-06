@@ -46,6 +46,10 @@ namespace eka2l1::drivers::camera {
     }
 
     instance_android::~instance_android() {
+        if (managed_handle_ < 0) {
+            return;
+        }
+
         release();
 
         android::emulator_camera_destroy(managed_handle_);
