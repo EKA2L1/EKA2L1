@@ -81,6 +81,7 @@ public class EmulatorCamera {
     private ImageCapture previousImageCapture;
     private Size[] outputImageSizes;
     private Camera camera;
+    private CameraSelector cameraSelector;
     private CameraCharacteristics characteristics;
 
     // Cached parameters for orientation change
@@ -104,19 +105,30 @@ public class EmulatorCamera {
         }
     }
 
-    public static int getCameraCount() throws CameraInfoUnavailableException {
-        int camCount = 0;
-
-        // To ensure best compatibility, only provide one back and one front camera
-        if (cameraProvider.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA)) {
-            camCount++;
+    // Guest camera indices enumerate at most one back and one front camera, skipping a missing facing.
+    private static List<CameraSelector> getAvailableCameraSelectors() {
+        List<CameraSelector> selectors = new ArrayList<>();
+        if (cameraProvider == null) {
+            return selectors;
         }
 
-        if (cameraProvider.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA)) {
-            camCount++;
+        try {
+            if (cameraProvider.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA)) {
+                selectors.add(CameraSelector.DEFAULT_BACK_CAMERA);
+            }
+
+            if (cameraProvider.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA)) {
+                selectors.add(CameraSelector.DEFAULT_FRONT_CAMERA);
+            }
+        } catch (CameraInfoUnavailableException ex) {
+            Log.e(TAG, "Unable to query available cameras, exception=" + ex);
         }
 
-        return camCount;
+        return selectors;
+    }
+
+    public static int getCameraCount() {
+        return getAvailableCameraSelectors().size();
     }
 
     public static int initializeCamera(int index) {
@@ -149,6 +161,7 @@ public class EmulatorCamera {
 
             return cameraIdCounter++;
         } catch (Exception ex) {
+            Log.e(TAG, "Unable to initialize camera " + index + ", exception=" + ex);
             return -1;
         }
     }
@@ -266,6 +279,12 @@ public class EmulatorCamera {
         this.configChanged = false;
         this.previousResolutionIndex = -1;
 
+        List<CameraSelector> selectors = getAvailableCameraSelectors();
+        if (index >= selectors.size()) {
+            throw new IllegalArgumentException("No camera available at index " + index);
+        }
+        cameraSelector = selectors.get(index);
+
         // Retrieve possible output sizes
         characteristics = Camera2CameraInfo.extractCameraCharacteristics(getCameraSelector().filter(cameraProvider.getAvailableCameraInfos()).get(0));
         StreamConfigurationMap streamConfigurationMap = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
@@ -316,7 +335,7 @@ public class EmulatorCamera {
     }
 
     private CameraSelector getCameraSelector() {
-        return (index == 0) ? CameraSelector.DEFAULT_BACK_CAMERA : CameraSelector.DEFAULT_FRONT_CAMERA;
+        return cameraSelector;
     }
 
     public boolean setFlashMode(int flashMode) {

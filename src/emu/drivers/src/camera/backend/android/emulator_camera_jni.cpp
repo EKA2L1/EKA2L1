@@ -86,8 +86,12 @@ namespace eka2l1::drivers::android {
         jintArray support_array = reinterpret_cast<jintArray>(env->CallStaticObjectMethod(
                 camera_class, camera_supported_output_image_format_method));
 
+        if (!support_array) {
+            return {};
+        }
+
         std::vector<int> support_list_native(env->GetArrayLength(support_array));
-        env->GetIntArrayRegion(support_array, 0, static_cast<jsize>(support_list_native.size()), &support_list_native[0]);
+        env->GetIntArrayRegion(support_array, 0, static_cast<jsize>(support_list_native.size()), support_list_native.data());
 
         return support_list_native;
     }
@@ -108,6 +112,10 @@ namespace eka2l1::drivers::android {
 
         jobjectArray size_array = static_cast<jobjectArray>(env->CallStaticObjectMethod(
                 camera_class, camera_get_output_image_size_method, handle));
+
+        if (!size_array) {
+            return result;
+        }
 
         result.resize(env->GetArrayLength(size_array));
 
