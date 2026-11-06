@@ -613,6 +613,10 @@ namespace eka2l1 {
             return threads_;
         }
 
+        std::vector<kernel_obj_unq_ptr> &get_chunk_list() {
+            return chunks_;
+        }
+
         // True while wipeout() is tearing the whole kernel down. Completion/scheduling
         // work should be skipped then: the scheduler and threads are being destroyed, so
         // signalling or rescheduling a thread would touch state that is already gone.

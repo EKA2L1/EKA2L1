@@ -90,6 +90,7 @@ namespace eka2l1 {
 
     using hal_instance = std::unique_ptr<epoc::hal>;
     using system_reset_callback_type = std::function<void(system *)>;
+    using slice_callback_type = std::function<void(system *)>;
 
     enum zip_mount_error {
         zip_mount_error_none,
@@ -214,6 +215,14 @@ namespace eka2l1 {
 
         std::size_t add_system_reset_callback(system_reset_callback_type type);
         bool remove_system_reset_callback(const std::size_t h);
+
+        // Runs the task once on the emulator thread, between two CPU slices: no guest code runs and
+        // no system call is being served there, so the task can read and change guest memory.
+        void run_between_slices(slice_callback_type task);
+
+        // Called the same way after every slice, until removed.
+        std::size_t add_slice_callback(slice_callback_type cb);
+        bool remove_slice_callback(const std::size_t h);
 
         void initialize_user_parties();
     };
