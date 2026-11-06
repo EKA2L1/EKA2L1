@@ -20,6 +20,7 @@
 #include <j2me/applist.h>
 #include <j2me/common.h>
 #include <j2me/kmidrun.h>
+#include <j2me/midp1.h>
 
 #include <system/epoc.h>
 #include <common/fileutils.h>
@@ -162,7 +163,7 @@ namespace eka2l1::j2me {
 
         if (raw_path_to_dir.has_value()) {
             std::string path_to_real = common::ucs2_to_utf8(raw_path_to_dir.value()) + fmt::format("{}.jar", reduce_special_character_in_name(entry.name_));
-            common::copy_file(path, path_to_real, true);
+            copy_jar_for_midp1(path, path_to_real);
 
             // Change to jad
             path_to_real.back() = 'd';
