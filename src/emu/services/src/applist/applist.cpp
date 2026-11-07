@@ -1338,7 +1338,7 @@ namespace eka2l1 {
 
         filter_method_ = APP_FILTER_BY_FLAGS;
         flags_mask_ = flags_mask.value();
-        flags_value = flags_value.value();
+        flags_match_value_ = flags_value.value();
         requested_screen_mode_ = screen_mode.value();
         current_index_ = 0;
 
