@@ -188,10 +188,10 @@ namespace eka2l1 {
             APP_FILTER_NONE
         };
 
-        std::size_t current_index_;
-        std::uint32_t flags_mask_;
-        std::uint32_t flags_match_value_;
-        std::uint32_t requested_screen_mode_;
+        std::size_t current_index_ = 0;
+        std::uint32_t flags_mask_ = 0;
+        std::uint32_t flags_match_value_ = 0;
+        std::uint32_t requested_screen_mode_ = 0;
 
         app_filter_method filter_method_;
 
