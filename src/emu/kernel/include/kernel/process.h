@@ -168,7 +168,7 @@ namespace eka2l1::kernel {
 
         std::uint32_t thread_count = 0;
 
-        mutex_ptr dll_lock;
+        mutex_ptr dll_lock = nullptr;
         epoc::security_info sec_info;
 
         common::roundabout thread_list;
@@ -191,7 +191,7 @@ namespace eka2l1::kernel {
         common::identity_container<process_logon_callback> logon_requests_emu;
 
     protected:
-        thread_ptr primary_thread;
+        thread_ptr primary_thread = nullptr;
 
         std::int32_t refresh_generation();
 
