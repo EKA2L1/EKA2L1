@@ -149,6 +149,14 @@ namespace eka2l1::drivers {
         return true;
     }
 
+    bool dsp_output_stream_shared::claim_more_buffer_request() {
+        if ((format_ != PCM16_FOUR_CC_CODE) || (buffer_.size() > low_water_mark_samples())) {
+            return false;
+        }
+
+        return !more_requested.exchange(true);
+    }
+
     std::size_t dsp_output_stream_shared::low_water_mark_samples() const {
         // Real MMF hands the client buffer to the sound device as soon as it arrives and
         // completes the copy notification right away, so the client always has a whole
