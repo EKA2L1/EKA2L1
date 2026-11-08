@@ -1556,6 +1556,21 @@ namespace eka2l1::epoc {
         redraw_rect_curr.make_empty();
         redraw_segments_.promote_last_segment();
 
+        if (!surface_ui_ && pending_segment_) {
+            // The server recomposite replays this redraw from the store; keeping it queued too
+            // would pile up stale frames and paint them over newer content later.
+            const std::lock_guard<std::mutex> guard(scr->screen_mutex);
+            auto &commands = pending_segment_->commands_;
+            if (pending_commands_before_redraw_ == 0 || pending_commands_before_redraw_ > commands.size()) {
+                pending_segment_.reset();
+            } else {
+                commands.resize(pending_commands_before_redraw_);
+                if (last_clip_command_.opcode_ != gdi_store_command_invalid) {
+                    commands.push_back(last_clip_command_);
+                }
+            }
+        }
+
         if (content_changed()) {
             // Newly completed redraw content must be composited in correct z-order:
             // an incremental client-path update can be overdrawn by later updates of
@@ -1607,6 +1622,10 @@ namespace eka2l1::epoc {
 
         // remove all pending redraws. End redraw will report invalidates later
         client->remove_redraws(this);
+        {
+            const std::lock_guard<std::mutex> guard(scr->screen_mutex);
+            pending_commands_before_redraw_ = pending_segment_ ? pending_segment_->commands_.size() : 0;
+        }
         redraw_segments_.add_new_segment(redraw_rect_curr, epoc::gdi_store_command_segment_pending_redraw);
 
         if (surface_ui_) {

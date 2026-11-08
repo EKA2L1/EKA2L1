@@ -29,6 +29,7 @@
 #include <common/rgb.h>
 #include <common/vecx.h>
 
+#include <map>
 #include <queue>
 #include <string>
 
@@ -122,7 +123,11 @@ namespace eka2l1::epoc {
         void do_submit_clipping();
 
         void draw_mask_impl(void *source_bitmap, void *mask_bitmap, eka2l1::rect dest_rect, eka2l1::rect source_rect, const std::uint8_t flags);
-        void fill_polygon_impl(const eka2l1::point *points, const std::size_t count, const bool winding, const eka2l1::vec4 &color);
+        using span_map = std::map<int, std::vector<std::pair<int, int>>>;
+
+        // With spans given, the spans are collected there instead of being drawn.
+        void fill_polygon_impl(const eka2l1::point *points, const std::size_t count, const bool winding, const eka2l1::vec4 &color,
+            span_map *spans = nullptr);
         void stroke_polyline_impl(const eka2l1::point *points, const std::size_t count);
         void draw_poly_line_impl(service::ipc_context &context, ws_cmd &cmd, const bool continued);
 

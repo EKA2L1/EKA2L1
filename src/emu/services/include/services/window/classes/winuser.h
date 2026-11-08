@@ -295,6 +295,7 @@ namespace eka2l1::epoc {
 
         gdi_store_command_collection redraw_segments_;
         std::vector<fbsfont*> using_fonts_;
+        std::size_t pending_commands_before_redraw_ = 0;
 
         explicit redraw_msg_canvas(window_server_client_ptr client, screen *scr, window *parent,
             const epoc::display_mode dmode, const std::uint32_t client_handle);
