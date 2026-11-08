@@ -152,7 +152,7 @@ namespace eka2l1::hle {
             cs = mngr.load(dll_name);
 
             if (!cs) {
-                LOG_TRACE(KERNEL, "Can't find {}", dll_name8);
+                LOG_ERROR(KERNEL, "Can't load {}: imported DLL {} not found", parent_cs->name(), dll_name8);
                 return false;
             }
         }
