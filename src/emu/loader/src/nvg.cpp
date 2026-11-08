@@ -665,6 +665,9 @@ namespace eka2l1::loader {
     // Offset vector: contains offset of the data for a command. First 2 byte is number of vector, later nvector * 2 bytes are offsets
     // Commands: Each command is 32-bit integer, upper 16-bit is opcode, lower 16-bit contains index of the data offset in the offset vector.
 
+    bool convert_nvg_tlv_to_svg(common::ro_stream &in, common::wo_stream &out, std::vector<nvg_convert_error_description> &errors,
+        nvg_options *options);
+
     bool convert_nvg_commands_to_svg(common::ro_stream &in, common::wo_stream &out, std::vector<nvg_convert_error_description> &errors, nvg_options *options) {
         std::int16_t header_size = 0;
         std::uint8_t version = 0;
@@ -809,12 +812,14 @@ namespace eka2l1::loader {
             return false;
         }
 
-        if ((nvg_type & 3) == 0) {
+        switch (nvg_type & 3) {
+        case 0:
             return convert_nvg_commands_to_svg(in, out, errors, options);
-        } else {
+        case 1:
+            return convert_nvg_tlv_to_svg(in, out, errors, options);
+        default:
             errors.emplace_back(NVG_TVL_FORMAT_UNSUPPORTED, 0);
+            return false;
         }
-
-        return false;
     }
 }

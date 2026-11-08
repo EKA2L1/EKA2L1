@@ -22,6 +22,7 @@ add_library(epocloader
         src/mbm.cpp
         src/mif.cpp
         src/nvg.cpp
+        src/nvg_tlv.cpp
         src/rofs.cpp
         src/rom.cpp
         src/romimage.cpp
