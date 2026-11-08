@@ -132,6 +132,14 @@ namespace eka2l1::drivers {
         virtual ~dsp_output_stream() = default;
         virtual bool write(const std::uint8_t *data, const std::uint32_t data_size) = 0;
 
+        /**
+         * @brief   Claim the more-buffer request for a caller that will ask the client itself.
+         * @returns True if the stream wants more data and no request was pending.
+         */
+        virtual bool claim_more_buffer_request() {
+            return false;
+        }
+
         virtual const std::uint32_t volume() const {
             return volume_;
         }

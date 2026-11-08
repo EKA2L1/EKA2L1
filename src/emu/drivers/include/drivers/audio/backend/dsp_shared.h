@@ -79,6 +79,7 @@ namespace eka2l1::drivers {
         std::size_t data_callback(std::int16_t *buffer, const std::size_t frame_count);
 
         bool write(const std::uint8_t *data, const std::uint32_t data_size) override;
+        bool claim_more_buffer_request() override;
 
         void volume(const std::uint32_t new_volume) override;
         bool set_properties(const std::uint32_t freq, const std::uint8_t channels) override;

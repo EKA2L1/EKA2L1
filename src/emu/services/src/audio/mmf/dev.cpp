@@ -38,7 +38,7 @@ namespace eka2l1 {
     static constexpr std::uint32_t MMF_BUFFER_SIZE_MAX = 0x4000;
     static constexpr std::uint32_t MMF_BUFFER_SIZE_DEFAULT = 0x1000;
 
-    static std::uint32_t recommended_buffer_size(const std::uint32_t sample_rate) {
+    static std::uint32_t recommended_mono_buffer_size(const std::uint32_t sample_rate) {
         if (sample_rate < 16000) {
             return MMF_BUFFER_SIZE_MIN;
         }
@@ -56,6 +56,13 @@ namespace eka2l1 {
         }
 
         return MMF_BUFFER_SIZE_MAX;
+    }
+
+    // Keeps the buffer duration independent of the channel count: clients that fill a fixed
+    // fraction of the buffer once per frame underrun at stereo otherwise.
+    static std::uint32_t recommended_buffer_size(const std::uint32_t sample_rate, const std::uint32_t channels) {
+        return common::clamp<std::uint32_t>(MMF_BUFFER_SIZE_MIN, MMF_BUFFER_SIZE_MAX,
+            recommended_mono_buffer_size(sample_rate) * common::max<std::uint32_t>(channels, 1));
     }
 
     const std::uint32_t freq_enum_to_number(const epoc::mmf_sample_rate rate) {
@@ -589,8 +596,7 @@ namespace eka2l1 {
 
         const std::uint32_t freq = freq_enum_to_number(static_cast<epoc::mmf_sample_rate>(conf_.rate_));
 
-        conf_.buffer_size_ = static_cast<std::int32_t>(common::clamp(MMF_BUFFER_SIZE_MIN, MMF_BUFFER_SIZE_MAX,
-            recommended_buffer_size(freq)));
+        conf_.buffer_size_ = static_cast<std::int32_t>(recommended_buffer_size(freq, conf_.channels_));
 
         stream_->set_properties(freq, conf_.channels_);
         ctx->complete(epoc::error_none);
@@ -1068,6 +1074,13 @@ namespace eka2l1 {
         }
 
         ctx->complete(epoc::error_none);
+
+        // DevSound asks for the next buffer while its hardware queue still has room, rather than
+        // making the client wait for the next render callback.
+        const bool can_report = evt_msg_queue_ || !buffer_info_.empty();
+        if (!last_buffer_ && can_report && out_stream->claim_more_buffer_request()) {
+            do_report_buffer_to_be_filled();
+        }
     }
 
     void mmf_dev_server_session::fetch(service::ipc_context *ctx) {
