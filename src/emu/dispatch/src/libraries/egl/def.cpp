@@ -161,6 +161,11 @@ namespace eka2l1::dispatch {
 
         auto ite = active_context_.find(thread_id);
         if ((ite != active_context_.end()) && ite->second && (ite->second != context_to_set)) {
+            // Uploads still staged in the context's buffer pushers must reach the driver with its draws.
+            if (ite->second->draw_surface_ && ite->second->read_surface_ && !ite->second->dead_pending_) {
+                ite->second->flush_to_driver(*this, driver_);
+            }
+
             if (ite->second->draw_surface_) {
                 ite->second->draw_surface_->bounded_context_ = nullptr;
             }

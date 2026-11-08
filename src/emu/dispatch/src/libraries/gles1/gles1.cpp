@@ -103,8 +103,8 @@ namespace eka2l1::dispatch {
         attenuatation_[1] = attenuatation_[2] = 0.0f;
     }
 
-    egl_context_es1::egl_context_es1()
-        : egl_context_es_shared()
+    egl_context_es1::egl_context_es1(std::shared_ptr<gles_object_namespace> shared_namespace)
+        : egl_context_es_shared(std::move(shared_namespace))
         , active_client_texture_unit_(0)
         , active_mat_stack_(GL_MODELVIEW_EMU)
         , current_palette_mat_index_(0)
@@ -375,7 +375,11 @@ namespace eka2l1::dispatch {
         std::uint32_t handle = texture_units_[active_texture_unit_].binded_texture_handle_;
 
         auto *obj = objects_.get(handle);
-        if (!obj || !obj->get() || (*obj)->object_type() != GLES_OBJECT_TEXTURE) {
+        if (!obj) {
+            return nullptr;
+        }
+
+        if (!obj->get() || (*obj)->object_type() != GLES_OBJECT_TEXTURE) {
             if (!obj->get()) {
                 // The capacity is still enough. Someone has deleted the texture that should not be ! (yes, Pet Me by mBounce)
                 LOG_WARN(HLE_DISPATCHER, "Texture name {} was previously deleted, generate a new one"
@@ -1166,7 +1170,10 @@ namespace eka2l1::dispatch {
             return nullptr;
         }
 
-        return reinterpret_cast<egl_context_es1*>(context);
+        egl_context_es1 *es1_context = reinterpret_cast<egl_context_es1*>(context);
+        es1_context->make_object_issuer();
+
+        return es1_context;
     }
     
     BRIDGE_FUNC_LIBRARY(void, gl_matrix_mode_emu, std::uint32_t mode) {

@@ -74,12 +74,16 @@ namespace eka2l1::dispatch {
     };
 
     struct egl_context_es_shared;
+    struct gles_object_namespace;
 
     struct gles_driver_object {
     protected:
-        egl_context_es_shared &context_;
+        gles_object_namespace &namespace_;
         drivers::handle driver_handle_;
         std::uint32_t client_handle_;
+
+        // The context making the current GL call, which may differ from the creator under EGL sharing.
+        egl_context_es_shared &context();
 
     public:
         explicit gles_driver_object(egl_context_es_shared &ctx);
@@ -287,6 +291,21 @@ namespace eka2l1::dispatch {
 
     using gles_driver_object_instance = std::unique_ptr<gles_driver_object>;
 
+    // Objects visible to every context created with the same EGL share_context.
+    struct gles_object_namespace {
+        common::identity_container<gles_driver_object_instance> objects_;
+        std::map<std::uint32_t, std::unique_ptr<gles_driver_buffer>> buffers_;
+
+        std::stack<drivers::handle> texture_pools_2d_;
+        std::stack<drivers::handle> texture_pools_cube_;
+        std::stack<drivers::handle> buffer_pools_;
+
+        common::roundabout texture_update_list_;
+        egl_context_es_shared *issuer_ = nullptr;
+
+        void return_handle_to_pool(const gles_object_type type, const drivers::handle h, const int subtype = 0);
+    };
+
     enum gles_get_data_type {
         GLES_GET_DATA_TYPE_INTEGER,
         GLES_GET_DATA_TYPE_FLOAT,
@@ -319,12 +338,13 @@ namespace eka2l1::dispatch {
         drivers::blend_equation blend_equation_rgb_;
         drivers::blend_equation blend_equation_a_;
 
-        common::identity_container<gles_driver_object_instance> objects_;
-        std::map<std::uint32_t, std::unique_ptr<gles_driver_buffer>> buffers_;
+        std::shared_ptr<gles_object_namespace> namespace_;
+        common::identity_container<gles_driver_object_instance> &objects_;
+        std::map<std::uint32_t, std::unique_ptr<gles_driver_buffer>> &buffers_;
 
-        std::stack<drivers::handle> texture_pools_2d_;
-        std::stack<drivers::handle> texture_pools_cube_;
-        std::stack<drivers::handle> buffer_pools_;
+        std::stack<drivers::handle> &texture_pools_2d_;
+        std::stack<drivers::handle> &texture_pools_cube_;
+        std::stack<drivers::handle> &buffer_pools_;
         
         // Viewport
         eka2l1::rect viewport_bl_;
@@ -404,9 +424,13 @@ namespace eka2l1::dispatch {
         bool attrib_changed_;
 
         float blend_colour_[4];
-        common::roundabout texture_update_list_;
+        common::roundabout &texture_update_list_;
 
-        explicit egl_context_es_shared();
+        explicit egl_context_es_shared(std::shared_ptr<gles_object_namespace> shared_namespace = nullptr);
+
+        void make_object_issuer() {
+            namespace_->issuer_ = this;
+        }
 
         virtual gles_driver_texture *binded_texture() {
             return nullptr;
@@ -419,7 +443,6 @@ namespace eka2l1::dispatch {
         gles_driver_buffer *binded_buffer(const bool is_array_buffer);
 
         virtual void init_context_state() override;
-        void return_handle_to_pool(const gles_object_type type, const drivers::handle h, const int subtype = 0);
         void on_surface_changed(drivers::graphics_driver *driver, egl_surface *prev_read, egl_surface *prev_draw) override;
         void flush_state_changes();
         

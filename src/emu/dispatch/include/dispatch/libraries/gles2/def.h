@@ -331,7 +331,7 @@ namespace eka2l1::dispatch {
 
         drivers::handle input_descs_;
 
-        explicit egl_context_es2();
+        explicit egl_context_es2(std::shared_ptr<gles_object_namespace> shared_namespace = nullptr);
 
         void init_context_state() override;
         void destroy(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) override;
