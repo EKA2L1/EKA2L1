@@ -50,7 +50,8 @@ namespace eka2l1::epoc {
         gdi_store_command_set_clip_rect_multiple,
         gdi_store_command_disable_clip,
         gdi_store_command_update_texture,
-        gdi_store_command_draw_raw_texture
+        gdi_store_command_draw_raw_texture,
+        gdi_store_command_blend_rect
     };
 
     // Whether replaying this opcode puts any pixel on the target. The clipping
@@ -60,6 +61,7 @@ namespace eka2l1::epoc {
         switch (opcode) {
         case gdi_store_command_draw_rect:
         case gdi_store_command_xor_rect:
+        case gdi_store_command_blend_rect:
         case gdi_store_command_draw_line:
         case gdi_store_command_draw_polygon:
         case gdi_store_command_draw_bitmap:
@@ -267,7 +269,7 @@ namespace eka2l1::epoc {
         void build_segment(const gdi_store_command_segment &segment);
         void build_texture_updates(const gdi_store_command_segment &segment);
         void build_single_command(const gdi_store_command &command);
-        void build_command_draw_rect(const gdi_store_command_draw_rect_data &cmd, bool exclusive_or = false);
+        void build_command_draw_rect(const gdi_store_command_draw_rect_data &cmd, bool exclusive_or = false, bool blend = false);
         void build_command_draw_line(const gdi_store_command_draw_line_data &cmd);
         void build_command_draw_polygon(const gdi_store_command_draw_polygon_data &cmd);
         void build_command_draw_text(const gdi_store_command_draw_text_data &cmd);

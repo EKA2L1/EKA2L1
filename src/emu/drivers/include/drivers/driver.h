@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <algorithm>
 #include <cstdint>
 #include <condition_variable>
 #include <mutex>
@@ -76,6 +77,12 @@ namespace eka2l1::drivers {
 
             if (!base_) {
                 renew();
+            } else if (size_ >= max_cap_) {
+                command *grown = new command[max_cap_ * 2];
+                std::copy(base_, base_ + size_, grown);
+                delete[] base_;
+                base_ = grown;
+                max_cap_ *= 2;
             }
 
             command *res = base_ + size_;

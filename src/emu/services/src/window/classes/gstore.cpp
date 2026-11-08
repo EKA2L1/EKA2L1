@@ -250,6 +250,10 @@ namespace eka2l1::epoc {
             build_command_draw_rect(command.get_data_struct_const<gdi_store_command_draw_rect_data>(), true);
             break;
 
+        case gdi_store_command_blend_rect:
+            build_command_draw_rect(command.get_data_struct_const<gdi_store_command_draw_rect_data>(), false, true);
+            break;
+
         case gdi_store_command_draw_line:
             build_command_draw_line(command.get_data_struct_const<gdi_store_command_draw_line_data>());
             break;
@@ -291,7 +295,7 @@ namespace eka2l1::epoc {
         }
     }
 
-    void gdi_command_builder::build_command_draw_rect(const gdi_store_command_draw_rect_data &cmd, const bool exclusive_or) {
+    void gdi_command_builder::build_command_draw_rect(const gdi_store_command_draw_rect_data &cmd, const bool exclusive_or, const bool blend) {
         eka2l1::rect scaled_rect = cmd.rect_;
         scaled_rect.top += position_;
 
@@ -303,9 +307,14 @@ namespace eka2l1::epoc {
             builder_.blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
                 drivers::blend_factor::one_minus_current_color, drivers::blend_factor::one_minus_frag_out_color,
                 drivers::blend_factor::zero, drivers::blend_factor::one);
+        } else if (blend) {
+            builder_.set_feature(drivers::graphics_feature::blend, true);
+            builder_.blend_formula(drivers::blend_equation::add, drivers::blend_equation::add,
+                drivers::blend_factor::frag_out_alpha, drivers::blend_factor::one_minus_frag_out_alpha,
+                drivers::blend_factor::one, drivers::blend_factor::one_minus_frag_out_alpha);
         }
         builder_.draw_rectangle(scaled_rect);
-        if (exclusive_or) {
+        if (exclusive_or || blend) {
             builder_.set_feature(drivers::graphics_feature::blend, false);
         }
     }

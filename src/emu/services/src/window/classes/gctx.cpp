@@ -61,6 +61,7 @@ namespace eka2l1::epoc {
         switch (cmd.opcode_) {
         case gdi_store_command_draw_rect:
         case gdi_store_command_xor_rect:
+        case gdi_store_command_blend_rect:
             cmd.get_data_struct<gdi_store_command_draw_rect_data>().rect_.top += origin;
             break;
         case gdi_store_command_draw_line: {
@@ -88,6 +89,11 @@ namespace eka2l1::epoc {
     }
 
     void graphic_context::add_draw_command(gdi_store_command &cmd) {
+        // EDrawModePEN blends a translucent colour over the target (CDrawBitmap::WriteRgbMulti).
+        if ((cmd.opcode_ == gdi_store_command_draw_rect) && (drawing_mode == draw_mode::pen)
+            && (cmd.get_data_struct<gdi_store_command_draw_rect_data>().color_.w < 255)) {
+            cmd.opcode_ = gdi_store_command_blend_rect;
+        }
         apply_origin(cmd);
         attached_window->add_draw_command(cmd);
     }
@@ -608,7 +614,8 @@ namespace eka2l1::epoc {
         context.complete(epoc::error_none);
     }
 
-    void graphic_context::fill_polygon_impl(const eka2l1::point *points, const std::size_t count, const bool winding, const eka2l1::vec4 &color) {
+    void graphic_context::fill_polygon_impl(const eka2l1::point *points, const std::size_t count, const bool winding, const eka2l1::vec4 &color,
+        span_map *spans) {
         if (count < 3) {
             return;
         }
@@ -674,7 +681,13 @@ namespace eka2l1::epoc {
                 const int x_start = static_cast<int>(std::lround(crossings[i].x));
                 const int x_end = static_cast<int>(std::lround(crossings[i + 1].x));
 
-                if (x_end > x_start) {
+                if (x_end <= x_start) {
+                    continue;
+                }
+
+                if (spans) {
+                    (*spans)[y].emplace_back(x_start, x_end);
+                } else {
                     rect_data.rect_ = eka2l1::rect({ x_start, y }, { x_end - x_start, 1 });
                     add_draw_command(gdi_cmd);
                 }
@@ -707,8 +720,10 @@ namespace eka2l1::epoc {
             return;
         }
 
-        // The line primitive is one pixel wide, so thick segments are filled as quads.
+        // The line primitive is one pixel wide, so thick segments are filled as quads. Their spans are
+        // merged first so a translucent pen covers each pixel once, even where segments overlap.
         const float half = static_cast<float>(width) / 2.0f;
+        span_map spans;
 
         for (std::size_t i = 0; i + 1 < count; i++) {
             const float dx = static_cast<float>(points[i + 1].x - points[i].x);
@@ -731,7 +746,31 @@ namespace eka2l1::epoc {
                 { static_cast<int>(std::lround(points[i].x - ex - nx)), static_cast<int>(std::lround(points[i].y - ey - ny)) }
             };
 
-            fill_polygon_impl(quad, 4, true, color);
+            fill_polygon_impl(quad, 4, true, color, &spans);
+        }
+
+        epoc::gdi_store_command gdi_cmd;
+        epoc::gdi_store_command_draw_rect_data &rect_data = gdi_cmd.get_data_struct<epoc::gdi_store_command_draw_rect_data>();
+        gdi_cmd.opcode_ = epoc::gdi_store_command_draw_rect;
+        rect_data.color_ = color;
+
+        for (auto &[y, row] : spans) {
+            std::sort(row.begin(), row.end());
+
+            std::pair<int, int> current = row[0];
+            for (std::size_t i = 1; i <= row.size(); i++) {
+                if ((i < row.size()) && (row[i].first <= current.second)) {
+                    current.second = std::max(current.second, row[i].second);
+                    continue;
+                }
+
+                rect_data.rect_ = eka2l1::rect({ current.first, y }, { current.second - current.first, 1 });
+                add_draw_command(gdi_cmd);
+
+                if (i < row.size()) {
+                    current = row[i];
+                }
+            }
         }
     }
 
