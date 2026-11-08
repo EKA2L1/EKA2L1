@@ -604,6 +604,9 @@ namespace eka2l1::dispatch {
         drv->submit_command_list(retrieved);
         init_context_state();
 
+        // Vertex buffer bindings are host state too, and another context's batch may run before the next one.
+        attrib_changed_ = true;
+
         if (is_frame_swap_flush) {
             vertex_buffer_pusher_.done_frame();
             index_buffer_pusher_.done_frame();
@@ -617,9 +620,15 @@ namespace eka2l1::dispatch {
 
         scissor_bl_.top = eka2l1::vec2(0, 0);
         scissor_bl_.size = eka2l1::vec2(-1, -1);
+
+        // A context that has never flushed has no state prefix, yet another context may have changed the shared host pipeline.
+        if (draw_surface_ && read_surface_) {
+            init_context_state();
+        }
     }
 
     void egl_context_es_shared::flush_state_changes() {
+        make_object_issuer();
         while (!texture_update_list_.empty()) {
             gles_driver_texture *tex = E_LOFF(texture_update_list_.first()->deque(), gles_driver_texture, update_link_);
             tex->update();
@@ -840,33 +849,42 @@ namespace eka2l1::dispatch {
     }
 
     void egl_context_es_shared::destroy(drivers::graphics_driver *driver, drivers::graphics_command_builder &builder) {
-        for (auto &obj: objects_) {
-            if (obj) {
-                obj.reset();
+        if (namespace_.use_count() > 1) {
+            // Shared objects outlive this context until the last context sharing them is destroyed.
+            if (namespace_->issuer_ == this) {
+                namespace_->issuer_ = nullptr;
             }
-        }
+        } else {
+            make_object_issuer();
 
-        buffers_.clear();
+            for (auto &obj: objects_) {
+                if (obj) {
+                    obj.reset();
+                }
+            }
 
-        while (!texture_pools_2d_.empty()) {
-            drivers::handle h = texture_pools_2d_.top();
-            builder.destroy(h);
+            buffers_.clear();
 
-            texture_pools_2d_.pop();
-        }
-        
-        while (!texture_pools_cube_.empty()) {
-            drivers::handle h = texture_pools_cube_.top();
-            builder.destroy(h);
+            while (!texture_pools_2d_.empty()) {
+                drivers::handle h = texture_pools_2d_.top();
+                builder.destroy(h);
 
-            texture_pools_cube_.pop();
-        }
-        
-        while (!buffer_pools_.empty()) {
-            drivers::handle h = buffer_pools_.top();
-            builder.destroy(h);
+                texture_pools_2d_.pop();
+            }
 
-            buffer_pools_.pop();
+            while (!texture_pools_cube_.empty()) {
+                drivers::handle h = texture_pools_cube_.top();
+                builder.destroy(h);
+
+                texture_pools_cube_.pop();
+            }
+
+            while (!buffer_pools_.empty()) {
+                drivers::handle h = buffer_pools_.top();
+                builder.destroy(h);
+
+                buffer_pools_.pop();
+            }
         }
 
         vertex_buffer_pusher_.destroy(builder);
@@ -907,7 +925,7 @@ namespace eka2l1::dispatch {
         return stride;
     }
 
-    egl_context_es_shared::egl_context_es_shared()
+    egl_context_es_shared::egl_context_es_shared(std::shared_ptr<gles_object_namespace> shared_namespace)
         : egl_context()
         , clear_depth_(1.0f)
         , clear_stencil_(0)
@@ -922,6 +940,12 @@ namespace eka2l1::dispatch {
         , dest_blend_factor_a_(drivers::blend_factor::zero)
         , blend_equation_rgb_(drivers::blend_equation::add)
         , blend_equation_a_(drivers::blend_equation::add)
+        , namespace_(shared_namespace ? std::move(shared_namespace) : std::make_shared<gles_object_namespace>())
+        , objects_(namespace_->objects_)
+        , buffers_(namespace_->buffers_)
+        , texture_pools_2d_(namespace_->texture_pools_2d_)
+        , texture_pools_cube_(namespace_->texture_pools_cube_)
+        , buffer_pools_(namespace_->buffer_pools_)
         , viewport_bl_(eka2l1::vec2(0, 0), eka2l1::vec2(0, 0))
         , scissor_bl_(eka2l1::vec2(0, 0), eka2l1::vec2(0, 0))
         , line_width_(1.0f)
@@ -950,21 +974,31 @@ namespace eka2l1::dispatch {
         , unpack_alignment_(4)
         , depth_range_min_(0.0f)
         , depth_range_max_(1.0f)
-        , attrib_changed_(false) {
+        , attrib_changed_(false)
+        , texture_update_list_(namespace_->texture_update_list_) {
         clear_color_[0] = 0.0f;
         clear_color_[1] = 0.0f;
         clear_color_[2] = 0.0f;
         clear_color_[3] = 0.0f;
+
+        // Gives the share group a context to record into before any GL call has selected one.
+        if (!namespace_->issuer_) {
+            namespace_->issuer_ = this;
+        }
     }
 
     gles_driver_object::gles_driver_object(egl_context_es_shared &ctx)
-        : context_(ctx)
+        : namespace_(*ctx.namespace_)
         , driver_handle_(0) {
+    }
+
+    egl_context_es_shared &gles_driver_object::context() {
+        return *namespace_.issuer_;
     }
 
     gles_driver_texture::~gles_driver_texture() {
         if (driver_handle_ != 0) {
-            context_.return_handle_to_pool(GLES_OBJECT_TEXTURE, driver_handle_, static_cast<int>(texture_type_));
+            namespace_.return_handle_to_pool(GLES_OBJECT_TEXTURE, driver_handle_, static_cast<int>(texture_type_));
         }
 
         for (gles_driver_texture_observer *observer: texture_observers_) {
@@ -976,7 +1010,7 @@ namespace eka2l1::dispatch {
     
     gles_driver_buffer::~gles_driver_buffer() {
         if (driver_handle_ != 0) {
-            context_.return_handle_to_pool(GLES_OBJECT_BUFFER, driver_handle_);
+            namespace_.return_handle_to_pool(GLES_OBJECT_BUFFER, driver_handle_);
         }
     }
 
@@ -999,7 +1033,7 @@ namespace eka2l1::dispatch {
         if (min_filter_ != min_filter) {
             min_filter_ = min_filter;
             if (change_flags_ == 0) {
-                context_.texture_update_list_.push(&update_link_);
+                namespace_.texture_update_list_.push(&update_link_);
             }
             change_flags_ |= FLAG_MIN_FILTER_CHANGED;
         }
@@ -1009,7 +1043,7 @@ namespace eka2l1::dispatch {
         if (mag_filter_ != mag_filter) {
             mag_filter_ = mag_filter;
             if (change_flags_ == 0) {
-                context_.texture_update_list_.push(&update_link_);
+                namespace_.texture_update_list_.push(&update_link_);
             }
             change_flags_ |= FLAG_MAG_FILTER_CHANGED;
         }
@@ -1019,7 +1053,7 @@ namespace eka2l1::dispatch {
         if (wrap_t_ != wrap_t) {
             wrap_t_ = wrap_t;
             if (change_flags_ == 0) {
-                context_.texture_update_list_.push(&update_link_);
+                namespace_.texture_update_list_.push(&update_link_);
             }
             change_flags_ |= FLAG_WRAP_T_CHANGED;
         }
@@ -1029,7 +1063,7 @@ namespace eka2l1::dispatch {
         if (wrap_s_ != wrap_s) {
             wrap_s_ = wrap_s;
             if (change_flags_ == 0) {
-                context_.texture_update_list_.push(&update_link_);
+                namespace_.texture_update_list_.push(&update_link_);
             }
             change_flags_ |= FLAG_WRAP_S_CHANGED;
         }
@@ -1039,14 +1073,14 @@ namespace eka2l1::dispatch {
         if (change_flags_ & FLAG_MIN_FILTER_CHANGED) {
             drivers::filter_option opt;
             if (gl_enum_to_min_filter(min_filter_, opt)) {
-                context_.cmd_builder_.set_texture_filter(driver_handle_, true, opt);
+                context().cmd_builder_.set_texture_filter(driver_handle_, true, opt);
             }
         }
 
         if (change_flags_ & FLAG_MAG_FILTER_CHANGED) {
             drivers::filter_option opt;
             if (gl_enum_to_mag_filter(mag_filter_, opt)) {
-                context_.cmd_builder_.set_texture_filter(driver_handle_, false, opt);
+                context().cmd_builder_.set_texture_filter(driver_handle_, false, opt);
             }
         }
 
@@ -1054,14 +1088,14 @@ namespace eka2l1::dispatch {
             drivers::addressing_option opt_s;
             gl_enum_to_addressing_option(wrap_s_, opt_s);
 
-            context_.cmd_builder_.set_texture_addressing_mode(driver_handle_, drivers::addressing_direction::s, opt_s);
+            context().cmd_builder_.set_texture_addressing_mode(driver_handle_, drivers::addressing_direction::s, opt_s);
         }
 
         if (change_flags_ & FLAG_WRAP_T_CHANGED) {
             drivers::addressing_option opt_t;
             gl_enum_to_addressing_option(wrap_t_, opt_t);
 
-            context_.cmd_builder_.set_texture_addressing_mode(driver_handle_, drivers::addressing_direction::t, opt_t);
+            context().cmd_builder_.set_texture_addressing_mode(driver_handle_, drivers::addressing_direction::t, opt_t);
         }
 
         change_flags_ = 0;
@@ -1121,7 +1155,7 @@ namespace eka2l1::dispatch {
     }
 
     void gles_driver_texture::try_upscale() {
-        float scale = context_.draw_surface_->backed_screen_->display_scale_factor;
+        float scale = context().draw_surface_->backed_screen_->display_scale_factor;
 
         if (!driver_handle_) {
             current_scale_ = scale;
@@ -1150,14 +1184,14 @@ namespace eka2l1::dispatch {
         get_data_type_to_upload(internal_format_driver, format_driver, dtype, swizzles, internal_format_, 0, false);
 
         if (texture_type_ == GLES_DRIVER_TEXTURE_TYPE_2D) {
-            context_.cmd_builder_.recreate_texture(driver_handle_, 2, 0, internal_format_driver, internal_format_driver,
+            context().cmd_builder_.recreate_texture(driver_handle_, 2, 0, internal_format_driver, internal_format_driver,
                 drivers::texture_data_type::ubyte, nullptr, 0, eka2l1::vec3(size_upscaled.x, size_upscaled.y, 0), 0,
-                context_.unpack_alignment_);
+                context().unpack_alignment_);
         } else {
             for (std::uint32_t i = 0; i < 6; i++) {
-                context_.cmd_builder_.recreate_texture(driver_handle_, 4 + i, 0, internal_format_driver, internal_format_driver,
+                context().cmd_builder_.recreate_texture(driver_handle_, 4 + i, 0, internal_format_driver, internal_format_driver,
                     drivers::texture_data_type::ubyte, nullptr, 0, eka2l1::vec3(size_upscaled.x, size_upscaled.y, 0), 0,
-                    context_.unpack_alignment_);
+                    context().unpack_alignment_);
             }
         }
     }
@@ -1171,15 +1205,15 @@ namespace eka2l1::dispatch {
         gl_enum_to_addressing_option(wrap_s_, opt_s);
         gl_enum_to_addressing_option(wrap_t_, opt_t);
 
-        context_.cmd_builder_.set_texture_addressing_mode(driver_handle_, drivers::addressing_direction::s, opt_s);
-        context_.cmd_builder_.set_texture_addressing_mode(driver_handle_, drivers::addressing_direction::t, opt_t);
+        context().cmd_builder_.set_texture_addressing_mode(driver_handle_, drivers::addressing_direction::s, opt_s);
+        context().cmd_builder_.set_texture_addressing_mode(driver_handle_, drivers::addressing_direction::t, opt_t);
 
         drivers::filter_option fil_mag, fil_min;
         gl_enum_to_mag_filter(mag_filter_, fil_mag);
         gl_enum_to_min_filter(min_filter_, fil_min);
 
-        context_.cmd_builder_.set_texture_filter(driver_handle_, true, fil_min);
-        context_.cmd_builder_.set_texture_filter(driver_handle_, false, fil_mag);
+        context().cmd_builder_.set_texture_filter(driver_handle_, true, fil_min);
+        context().cmd_builder_.set_texture_filter(driver_handle_, false, fil_mag);
     }
 
     void gles_driver_texture::add_texture_observer(gles_driver_texture_observer *observer) {
@@ -1293,7 +1327,7 @@ namespace eka2l1::dispatch {
         return buffer == buffers_.end() ? nullptr : buffer->second.get();
     }
 
-    void egl_context_es_shared::return_handle_to_pool(const gles_object_type type, const drivers::handle h, const int subtype) {
+    void gles_object_namespace::return_handle_to_pool(const gles_object_type type, const drivers::handle h, const int subtype) {
         switch (type) {
         case GLES_OBJECT_BUFFER:
             buffer_pools_.push(h);
@@ -1417,7 +1451,12 @@ namespace eka2l1::dispatch {
             return nullptr;
         }
 
-        return reinterpret_cast<egl_context_es_shared*>(context);
+        egl_context_es_shared *es_context = reinterpret_cast<egl_context_es_shared*>(context);
+        if (context->context_type() != EGL_VG_CONTEXT) {
+            es_context->make_object_issuer();
+        }
+
+        return es_context;
     }
 
     bool egl_context_es_shared::enable(const std::uint32_t feature) {
@@ -2561,7 +2600,7 @@ namespace eka2l1::dispatch {
     std::uint32_t gles_driver_texture::copy_sub_image(egl_controller &controller, drivers::graphics_driver *driver,
         std::uint32_t target, std::int32_t level, const eka2l1::vec2 &offset,
         const eka2l1::vec2 &source_pos, const eka2l1::vec2 &size) {
-        auto &ctx = context_;
+        auto &ctx = context();
         const bool cube_face = target >= GL_TEXTURE_CUBE_MAP_POSITIVE_X_EMU && target <= GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_EMU;
         if (target != GL_TEXTURE_2D_EMU && !(cube_face && ctx.context_type() == EGL_GLES2_CONTEXT)) {
             return GL_INVALID_ENUM;
@@ -3011,13 +3050,13 @@ namespace eka2l1::dispatch {
         dispatch::egl_controller &controller = dp->get_egl_controller();
         drivers::graphics_driver *drv = sys->get_graphics_driver();
 
-        if (!tex) {
-            controller.push_error(ctx, GL_INVALID_OPERATION);
+        if (target != GL_TEXTURE_2D_EMU) {
+            controller.push_error(ctx, GL_INVALID_ENUM);
             return;
         }
 
-        if (target != GL_TEXTURE_2D_EMU) {
-            controller.push_error(ctx, GL_INVALID_ENUM);
+        // Name 0 is the default texture object, which is legal to configure but never materialized.
+        if (!tex) {
             return;
         }
 
@@ -3111,7 +3150,6 @@ namespace eka2l1::dispatch {
             drivers::graphics_driver *drv = sys->get_graphics_driver();
 
             if (!tex) {
-                controller.push_error(ctx, GL_INVALID_OPERATION);
                 return;
             }
 

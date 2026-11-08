@@ -118,6 +118,13 @@ namespace eka2l1::dispatch {
         EGL_WIDTH_EMU = 0x3057,
         EGL_DRAW_EMU = 0x3059,
         EGL_READ_EMU = 0x305A,
+        EGL_NO_TEXTURE_EMU = 0x305C,
+        EGL_TEXTURE_RGB_EMU = 0x305D,
+        EGL_TEXTURE_RGBA_EMU = 0x305E,
+        EGL_TEXTURE_2D_EMU = 0x305F,
+        EGL_TEXTURE_FORMAT_EMU = 0x3080,
+        EGL_TEXTURE_TARGET_EMU = 0x3081,
+        EGL_BACK_BUFFER_EMU = 0x3084,
         EGL_SWAP_BEHAVIOUR = 0x3093,
         EGL_SWAP_BUFFER_PRESERVED = 0x3094,
         EGL_SWAP_BUFFER_DESTROYED = 0x3095,
@@ -573,6 +580,8 @@ namespace eka2l1::dispatch {
 
         float current_scale_;
         egl_context *bounded_context_;
+        bool is_pbuffer_ = false;
+        std::uint32_t texture_format_ = EGL_NO_TEXTURE_EMU;
         std::shared_ptr<std::function<void()>> pixmap_readback_;
         std::function<void()> pixmap_upload_;
 

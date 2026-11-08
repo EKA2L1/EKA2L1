@@ -20,6 +20,7 @@
 #include <dispatch/libraries/egl/egl.h>
 #include <dispatch/libraries/gles1/def.h>
 #include <dispatch/libraries/gles2/def.h>
+#include <dispatch/libraries/gles_shared/gles_shared.h>
 #include <dispatch/libraries/vg/gnuVG_context.hh>
 #include <dispatch/dispatcher.h>
 #include <kernel/kernel.h>
@@ -335,9 +336,12 @@ namespace eka2l1::dispatch {
         }
 
         eka2l1::vec2 dim(0, 0);
+        std::uint32_t texture_format = EGL_NO_TEXTURE_EMU;
+        std::uint32_t texture_target = EGL_NO_TEXTURE_EMU;
+
         while (true) {
             std::int32_t pname = *additional_attribs++;
-            if (pname == 0) {
+            if ((pname == 0) || (pname == EGL_NONE_EMU)) {
                 break;
             }
             std::int32_t param = *additional_attribs++;
@@ -350,6 +354,14 @@ namespace eka2l1::dispatch {
                 dim.y = param;
                 break;
 
+            case EGL_TEXTURE_FORMAT_EMU:
+                texture_format = param;
+                break;
+
+            case EGL_TEXTURE_TARGET_EMU:
+                texture_target = param;
+                break;
+
             default:
                 break;
             }
@@ -357,6 +369,11 @@ namespace eka2l1::dispatch {
 
         if ((dim.x == 0) || (dim.y == 0) || (dim.x > 2048) || (dim.y > 2048)) {
             egl_push_error(sys, EGL_BAD_ATTRIBUTE_EMU);
+            return EGL_NO_SURFACE_EMU;
+        }
+
+        if ((texture_format == EGL_NO_TEXTURE_EMU) != (texture_target == EGL_NO_TEXTURE_EMU)) {
+            egl_push_error(sys, EGL_BAD_MATCH_EMU);
             return EGL_NO_SURFACE_EMU;
         }
 
@@ -371,6 +388,8 @@ namespace eka2l1::dispatch {
         std::unique_ptr<egl_surface> result_surface = std::make_unique<egl_surface>(nullptr, backed_screen, dim, hh, choosen_config);
 
         result_surface->current_scale_ = 1.0f;
+        result_surface->is_pbuffer_ = true;
+        result_surface->texture_format_ = texture_format;
         egl_surface_handle result_handle = controller.add_managed_surface(result_surface);
 
         if (result_handle == EGL_NO_SURFACE_EMU) {
@@ -496,11 +515,16 @@ namespace eka2l1::dispatch {
     }
 
     BRIDGE_FUNC_LIBRARY(egl_context_handle, egl_create_context_emu, egl_display display, std::uint32_t choosen_config_value, egl_context_handle shared_context, std::int32_t *additional_attribs_) {
-        if (shared_context) {
-            LOG_ERROR(HLE_DISPATCHER, "Shared context is not yet supported!");
-            egl_push_error(sys, EGL_BAD_PARAMETER_EMU);
+        dispatcher *dp = sys->get_dispatcher();
+        dispatch::egl_controller &controller = dp->get_egl_controller();
 
-            return EGL_NO_CONTEXT_EMU;
+        egl_context *share_with = nullptr;
+        if (shared_context) {
+            share_with = controller.get_context(shared_context);
+            if (!share_with) {
+                egl_push_error(sys, EGL_BAD_CONTEXT_EMU);
+                return EGL_NO_CONTEXT_EMU;
+            }
         }
 
         egl_config choosen_config(choosen_config_value);
@@ -524,13 +548,34 @@ namespace eka2l1::dispatch {
             }
         }
 
+        std::shared_ptr<gles_object_namespace> shared_namespace;
+        if (share_with) {
+            const egl_context_type wanted_type = (version == egl_config::EGL_TARGET_CONTEXT_ES2) ? EGL_GLES2_CONTEXT
+                : ((version == egl_config::EGL_TARGET_CONTEXT_VG) ? EGL_VG_CONTEXT : EGL_GLES1_CONTEXT);
+
+            if ((share_with->context_type() == EGL_VG_CONTEXT) != (wanted_type == EGL_VG_CONTEXT)) {
+                // The share context must use the same client API.
+                egl_push_error(sys, EGL_BAD_CONTEXT_EMU);
+                return EGL_NO_CONTEXT_EMU;
+            }
+
+            if ((share_with->context_type() != wanted_type) || (wanted_type == EGL_VG_CONTEXT)) {
+                LOG_ERROR(HLE_DISPATCHER, "Sharing objects is only supported between OpenGL ES contexts of the same version");
+                egl_push_error(sys, EGL_BAD_MATCH_EMU);
+
+                return EGL_NO_CONTEXT_EMU;
+            }
+
+            shared_namespace = static_cast<egl_context_es_shared *>(share_with)->namespace_;
+        }
+
         switch (version) {
         case egl_config::EGL_TARGET_CONTEXT_ES11:
-            context_inst = std::make_unique<egl_context_es1>();
+            context_inst = std::make_unique<egl_context_es1>(shared_namespace);
             break;
 
         case egl_config::EGL_TARGET_CONTEXT_ES2:
-            context_inst = std::make_unique<egl_context_es2>();
+            context_inst = std::make_unique<egl_context_es2>(shared_namespace);
             break;
 
         case egl_config::EGL_TARGET_CONTEXT_VG:
@@ -543,9 +588,6 @@ namespace eka2l1::dispatch {
 
             return EGL_NO_CONTEXT_EMU;
         }
-
-        dispatcher *dp = sys->get_dispatcher();
-        dispatch::egl_controller &controller = dp->get_egl_controller();
 
         egl_context_handle hh = controller.add_context(context_inst);
         if (!hh) {
@@ -1121,5 +1163,73 @@ namespace eka2l1::dispatch {
 
         egl_push_error(sys, EGL_SUCCESS);
         return EGL_TRUE;
+    }
+
+    static egl_surface *get_bindable_pbuffer(system *sys, egl_surface_handle surface_h, std::int32_t buffer) {
+        egl_surface *surface = sys->get_dispatcher()->get_egl_controller().get_managed_surface(surface_h);
+        if (!surface || !surface->is_pbuffer_) {
+            egl_push_error(sys, EGL_BAD_SURFACE_EMU);
+            return nullptr;
+        }
+
+        if (buffer != EGL_BACK_BUFFER_EMU) {
+            egl_push_error(sys, EGL_BAD_PARAMETER_EMU);
+            return nullptr;
+        }
+
+        if (surface->texture_format_ == EGL_NO_TEXTURE_EMU) {
+            egl_push_error(sys, EGL_BAD_MATCH_EMU);
+            return nullptr;
+        }
+
+        return surface;
+    }
+
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_bind_tex_image_emu, egl_display display, egl_surface_handle surface_h, std::int32_t buffer) {
+        egl_surface *surface = get_bindable_pbuffer(sys, surface_h, buffer);
+        if (!surface) {
+            return EGL_FALSE;
+        }
+
+        dispatch::egl_controller &controller = sys->get_dispatcher()->get_egl_controller();
+        egl_context *current = controller.current_context(sys->get_kernel_system()->crr_thread()->unique_id());
+
+        // Without a current OpenGL ES context there is no texture to bind to, and the call is ignored.
+        if (!current || (current->context_type() == EGL_VG_CONTEXT)) {
+            return EGL_TRUE;
+        }
+
+        // The default texture object (name 0) is not materialized, so there is nothing to attach the buffer to.
+        egl_context_es_shared *es_context = static_cast<egl_context_es_shared *>(current);
+        if (!es_context->binded_texture()) {
+            return EGL_TRUE;
+        }
+
+        // The pbuffer cannot be rendered to while bound, so a snapshot of it is equivalent to sharing its storage.
+        const std::uint32_t format = (surface->texture_format_ == EGL_TEXTURE_RGBA_EMU) ? GL_RGBA_EMU : GL_RGB_EMU;
+        gl_tex_image_2d_emu(sys, GL_TEXTURE_2D_EMU, 0, format, surface->dimension_.x, surface->dimension_.y, 0, format,
+            GL_UNSIGNED_BYTE_EMU, nullptr);
+
+        gles_driver_texture *tex = es_context->binded_texture();
+        if (!tex->handle_value()) {
+            return EGL_TRUE;
+        }
+
+        eka2l1::rect source_rect(eka2l1::vec2(0, 0), surface->dimension_);
+        source_rect.scale(surface->current_scale_);
+
+        es_context->cmd_builder_.copy_framebuffer_to_texture(surface->handle_, tex->handle_value(), 2, 0, source_rect,
+            eka2l1::rect(eka2l1::vec2(0, 0), surface->dimension_), false);
+
+        if (tex->auto_regenerate_mipmap()) {
+            es_context->cmd_builder_.regenerate_mips(tex->handle_value());
+            tex->set_mipmap_generated(true);
+        }
+
+        return EGL_TRUE;
+    }
+
+    BRIDGE_FUNC_LIBRARY(egl_boolean, egl_release_tex_image_emu, egl_display display, egl_surface_handle surface_h, std::int32_t buffer) {
+        return get_bindable_pbuffer(sys, surface_h, buffer) ? EGL_TRUE : EGL_FALSE;
     }
 }

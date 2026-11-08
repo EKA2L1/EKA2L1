@@ -260,7 +260,7 @@ namespace eka2l1::dispatch {
         std::uint64_t fragment_statuses_;
         float alpha_test_ref_;
 
-        explicit egl_context_es1();
+        explicit egl_context_es1(std::shared_ptr<gles_object_namespace> shared_namespace = nullptr);
         std::uint32_t logic_op_ = GL_COPY_EMU;
         drivers::handle logic_op_destination_ = 0;
         eka2l1::vec2 logic_op_destination_size_ = { 0, 0 };

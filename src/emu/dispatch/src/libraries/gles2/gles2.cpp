@@ -65,7 +65,10 @@ namespace eka2l1::dispatch {
             return nullptr;
         }
 
-        return reinterpret_cast<egl_context_es2*>(context);
+        egl_context_es2 *es2_context = reinterpret_cast<egl_context_es2*>(context);
+        es2_context->make_object_issuer();
+
+        return es2_context;
     }
 
     gles_shader_object::gles_shader_object(egl_context_es_shared &ctx, const drivers::shader_module_type module_type)
@@ -144,7 +147,7 @@ namespace eka2l1::dispatch {
 
     void gles_shader_object::cleanup_current_driver_module() {
         if (driver_handle_) {
-            egl_context_es2 &es2_ctx = static_cast<egl_context_es2&>(context_);
+            egl_context_es2 &es2_ctx = static_cast<egl_context_es2&>(context());
             es2_ctx.compiled_shader_cleanup_.push(driver_handle_);
         }
     }
@@ -171,14 +174,14 @@ namespace eka2l1::dispatch {
         if (attached_programs_.empty() && delete_pending_) {
             delete_pending_ = false;
 
-            egl_context_es2 &es2_ctx = static_cast<egl_context_es2&>(context_);
+            egl_context_es2 &es2_ctx = static_cast<egl_context_es2&>(context());
             es2_ctx.objects_.remove(client_handle_);
         }
     }
 
     void gles_program_object::cleanup_current_driver_program() {
         if (driver_handle_) {
-            egl_context_es2 &es2_ctx = static_cast<egl_context_es2&>(context_);
+            egl_context_es2 &es2_ctx = static_cast<egl_context_es2&>(context());
             es2_ctx.linked_program_cleanup_.push(driver_handle_);
         }
 
@@ -188,7 +191,7 @@ namespace eka2l1::dispatch {
     
     void gles_shader_object::delete_object() {
         if (attached_programs_.empty()) {
-            egl_context_es2 &es2_ctx = static_cast<egl_context_es2&>(context_);
+            egl_context_es2 &es2_ctx = static_cast<egl_context_es2&>(context());
             es2_ctx.objects_.remove(client_handle_);
         } else {
             delete_pending_ = true;
@@ -217,7 +220,7 @@ namespace eka2l1::dispatch {
     }
 
     void gles_program_object::delete_from_object_store() {
-        egl_context_es2 &es2_ctx = static_cast<egl_context_es2&>(context_);
+        egl_context_es2 &es2_ctx = static_cast<egl_context_es2&>(context());
         es2_ctx.objects_.remove(client_handle_);
     }
 
@@ -228,7 +231,7 @@ namespace eka2l1::dispatch {
     }
 
     void gles_program_object::delete_object() {
-        egl_context_es2 &es2_ctx = static_cast<egl_context_es2&>(context_);
+        egl_context_es2 &es2_ctx = static_cast<egl_context_es2&>(context());
         if (es2_ctx.using_program_ == this)  {
             set_delete_pending();
         } else {
@@ -413,8 +416,8 @@ APPLY_PENDING_ROUTES:
             return false;
         }
 
-        if ((static_cast<egl_context_es2&>(context_)).previous_using_program_ != this) {
-            context_.cmd_builder_.use_program(driver_handle_);
+        if ((static_cast<egl_context_es2&>(context())).previous_using_program_ != this) {
+            context().cmd_builder_.use_program(driver_handle_);
         }
 
         for (int dirty_location: dirty_uniform_locations_) {
@@ -440,9 +443,9 @@ APPLY_PENDING_ROUTES:
                     }
                 }
 
-                context_.cmd_builder_.set_dynamic_uniform(dirty_location, info.cached_var_type_, data_temp, info.data_.size());
+                context().cmd_builder_.set_dynamic_uniform(dirty_location, info.cached_var_type_, data_temp, info.data_.size());
             } else {
-                context_.cmd_builder_.set_dynamic_uniform(dirty_location, info.cached_var_type_, info.data_.data(), info.data_.size());
+                context().cmd_builder_.set_dynamic_uniform(dirty_location, info.cached_var_type_, info.data_.data(), info.data_.size());
             }
         }
 
@@ -465,7 +468,7 @@ APPLY_PENDING_ROUTES:
             attached_fbs_[i]->force_detach(this);
         }
         if (driver_handle_) {
-            egl_context_es2 &es2_ctx = static_cast<egl_context_es2&>(context_);
+            egl_context_es2 &es2_ctx = static_cast<egl_context_es2&>(context());
             es2_ctx.renderbuffer_pool_.push(driver_handle_);
         }
     }
@@ -525,10 +528,10 @@ APPLY_PENDING_ROUTES:
         format_ = format;
         size_ = size;
 
-        egl_context_es2 &es2_ctx = static_cast<egl_context_es2&>(context_);
+        egl_context_es2 &es2_ctx = static_cast<egl_context_es2&>(context());
         bool need_recreate = true;
 
-        current_scale_ = context_.draw_surface_->backed_screen_->display_scale_factor;
+        current_scale_ = context().draw_surface_->backed_screen_->display_scale_factor;
 
         if (!driver_handle_) {
             if (!es2_ctx.renderbuffer_pool_.empty()) {
@@ -545,7 +548,7 @@ APPLY_PENDING_ROUTES:
         }
 
         if (need_recreate) {
-            context_.cmd_builder_.recreate_renderbuffer(driver_handle_, size * current_scale_, format_driver);
+            context().cmd_builder_.recreate_renderbuffer(driver_handle_, size * current_scale_, format_driver);
         }
 
         return 0;
@@ -566,7 +569,7 @@ APPLY_PENDING_ROUTES:
     }
 
     void gles_renderbuffer_object::try_upscale() {
-        float scale = context_.draw_surface_->backed_screen_->display_scale_factor;
+        float scale = context().draw_surface_->backed_screen_->display_scale_factor;
 
         if (!driver_handle_) {
             current_scale_ = scale;
@@ -609,7 +612,7 @@ APPLY_PENDING_ROUTES:
         }
 
         current_scale_ = scale;
-        context_.cmd_builder_.recreate_renderbuffer(driver_handle_, size_ * scale, format_driver);
+        context().cmd_builder_.recreate_renderbuffer(driver_handle_, size_ * scale, format_driver);
     }
 
     gles_framebuffer_object::gles_framebuffer_object(egl_context_es_shared &ctx)
@@ -674,7 +677,7 @@ APPLY_PENDING_ROUTES:
         }
 
         if (driver_handle_) {
-            egl_context_es2 &es2_ctx = static_cast<egl_context_es2&>(context_);
+            egl_context_es2 &es2_ctx = static_cast<egl_context_es2&>(context());
             es2_ctx.framebuffer_pool_.push(driver_handle_);
         }
     }
@@ -921,7 +924,7 @@ APPLY_PENDING_ROUTES:
             return err;
         }
 
-        egl_context_es2 &es2_context = static_cast<egl_context_es2&>(context_);
+        egl_context_es2 &es2_context = static_cast<egl_context_es2&>(context());
         bool need_manual_set = true;
 
         try_upscale_attachment(attached_color_);
@@ -951,14 +954,14 @@ APPLY_PENDING_ROUTES:
 
         if (need_manual_set) {
             if (color_changed_) {
-                context_.cmd_builder_.set_framebuffer_color_buffer(driver_handle_, (attached_color_ ? 
+                context().cmd_builder_.set_framebuffer_color_buffer(driver_handle_, (attached_color_ ? 
                     attached_color_->handle_value() : 0), attached_color_face_index_, 0);
 
                 color_changed_ = false;
             }
 
             if (depth_changed_ || stencil_changed_) {
-                context_.cmd_builder_.set_framebuffer_depth_stencil_buffer(driver_handle_, attached_depth_ ? 
+                context().cmd_builder_.set_framebuffer_depth_stencil_buffer(driver_handle_, attached_depth_ ? 
                     attached_depth_->handle_value() : 0, attached_depth_face_index_,
                     attached_stencil_ ? attached_stencil_->handle_value() : 0, attached_stencil_face_index_);
 
@@ -968,13 +971,13 @@ APPLY_PENDING_ROUTES:
         }
 
         // Flush passed renderpass
-        context_.flush_to_driver(controller, drv);
+        context().flush_to_driver(controller, drv);
 
         color_changed_ = false;
         depth_changed_ = false;
         stencil_changed_ = false;
 
-        context_.cmd_builder_.bind_framebuffer(driver_handle_, drivers::framebuffer_bind_read_draw);
+        context().cmd_builder_.bind_framebuffer(driver_handle_, drivers::framebuffer_bind_read_draw);
         return 0;
     }
 
@@ -1045,8 +1048,9 @@ APPLY_PENDING_ROUTES:
         return 0;
     }
 
-    egl_context_es2::egl_context_es2()
-        : binded_renderbuffer_(0)
+    egl_context_es2::egl_context_es2(std::shared_ptr<gles_object_namespace> shared_namespace)
+        : egl_context_es_shared(std::move(shared_namespace))
+        , binded_renderbuffer_(0)
         , binded_framebuffer_(0)
         , previous_using_program_(nullptr)
         , using_program_(nullptr)
@@ -1183,7 +1187,11 @@ APPLY_PENDING_ROUTES:
         std::uint32_t handle = texture_units_[active_texture_unit_];
 
         auto *obj = objects_.get(handle);
-        if (!obj || !obj->get() || (*obj)->object_type() != GLES_OBJECT_TEXTURE) {
+        if (!obj) {
+            return nullptr;
+        }
+
+        if (!obj->get() || (*obj)->object_type() != GLES_OBJECT_TEXTURE) {
             if (!obj->get()) {
                 // The capacity is still enough. Someone has deleted the texture that should not be ! (yes, Pet Me by mBounce)
                 LOG_WARN(HLE_DISPATCHER, "Texture name {} was previously deleted, generate a new one"
