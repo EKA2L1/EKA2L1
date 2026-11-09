@@ -22,6 +22,7 @@
 #include <vfs/vfs.h>
 
 #include <drivers/audio/audio.h>
+#include <drivers/audio/ringtone.h>
 #include <system/epoc.h>
 
 #include <kernel/kernel.h>
@@ -30,6 +31,7 @@
 #include <utils/err.h>
 #include <utils/reqsts.h>
 
+#include <common/buffer.h>
 #include <common/cvt.h>
 #include <common/log.h>
 #include <common/path.h>
@@ -344,7 +346,75 @@ namespace eka2l1::dispatch {
         return epoc::error_none;
     }
 
-    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_supply_buffer, eka2l1::ptr<void> handle, epoc::des8 *buffer, std::uint64_t *duration_us) {
+    namespace {
+        // A sound converted on the host, for the players that take a read write stream
+        class converted_sound_stream : public common::rw_stream {
+            std::vector<std::uint8_t> data_;
+            common::ro_buf_stream reader_;
+
+        public:
+            explicit converted_sound_stream(std::vector<std::uint8_t> &&data)
+                : data_(std::move(data))
+                , reader_(data_.data(), data_.size()) {
+            }
+
+            void seek(const std::int64_t amount, common::seek_where wh) override {
+                reader_.seek(amount, wh);
+            }
+
+            bool valid() override {
+                return reader_.valid();
+            }
+
+            std::uint64_t left() override {
+                return reader_.left();
+            }
+
+            std::uint64_t tell() override {
+                return reader_.tell();
+            }
+
+            std::uint64_t size() override {
+                return reader_.size();
+            }
+
+            std::uint64_t read(void *buf, const std::uint64_t read_size) override {
+                return reader_.read(buf, read_size);
+            }
+
+            std::uint64_t write(const void *, const std::uint64_t) override {
+                return 0;
+            }
+        };
+
+        // The tone sounds of J2ME games are Nokia ringing tones, which no host decoder reads: play them as MIDI.
+        std::unique_ptr<common::rw_stream> convert_unplayable_sound(common::rw_stream &stream) {
+            std::uint8_t header[3];
+
+            stream.seek(0, common::seek_where::beg);
+            const bool is_ringtone = (stream.read(header, sizeof(header)) == sizeof(header)) && drivers::is_nokia_ringtone(header, sizeof(header));
+            stream.seek(0, common::seek_where::beg);
+
+            if (!is_ringtone) {
+                return nullptr;
+            }
+
+            std::vector<std::uint8_t> data(stream.size());
+            data.resize(stream.read(data.data(), data.size()));
+            stream.seek(0, common::seek_where::beg);
+
+            std::vector<std::uint8_t> midi;
+            if (!drivers::nokia_ringtone_to_midi(data.data(), data.size(), midi)) {
+                LOG_WARN(HLE_DISPATCHER, "The sound looks like a Nokia ringing tone, but it could not be read");
+                return nullptr;
+            }
+
+            LOG_TRACE(HLE_DISPATCHER, "Playing a Nokia ringing tone as MIDI");
+            return std::make_unique<converted_sound_stream>(std::move(midi));
+        }
+    }
+
+    BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_supply_buffer,eka2l1::ptr<void> handle, epoc::des8 *buffer, std::uint64_t *duration_us) {
         kernel::process *pr = sys->get_kernel_system()->crr_process();
 
         dispatch::dispatcher *dispatcher = sys->get_dispatcher();
@@ -357,6 +427,11 @@ namespace eka2l1::dispatch {
 
         eplayer->custom_stream_ = std::make_unique<epoc::rw_des_stream>(buffer, pr);
         common::rw_stream *custom_good_stream = reinterpret_cast<common::rw_stream *>(eplayer->custom_stream_.get());
+
+        eplayer->converted_stream_ = convert_unplayable_sound(*custom_good_stream);
+        if (eplayer->converted_stream_) {
+            custom_good_stream = eplayer->converted_stream_.get();
+        }
 
         bool supplied = eplayer->impl_ && eplayer->impl_->open_custom(custom_good_stream);
         if (!supplied) {
