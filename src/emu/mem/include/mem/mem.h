@@ -55,10 +55,6 @@ namespace eka2l1 {
         mem::control_impl impl_;
         mem::page_table_allocator_impl alloc_;
 
-        void *rom_map_;
-        std::size_t rom_size_;
-
-        mem::vm_address rom_addr_;
         config::state *conf_;
 
     public:

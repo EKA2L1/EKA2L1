@@ -41,10 +41,6 @@ namespace eka2l1 {
     }
 
     memory_system::~memory_system() {
-        if (rom_map_) {
-            common::unmap_file(rom_map_);
-        }
-
         impl_.reset();
         alloc_.reset();
     }
