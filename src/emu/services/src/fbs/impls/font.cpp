@@ -486,8 +486,11 @@ namespace eka2l1 {
             of->font_standard_descent = of->metrics.descent;
             of->font_captial_offset = 0;
 
-            // Get the line gap!! This is no stub
-            of->font_line_gap = static_cast<std::uint16_t>(info.adapter->line_gap(info.idx, info.metric_identifier));
+            // FontLineGap() is the full baseline-to-baseline distance, as computed by the native rasterizers.
+            const std::int32_t height = of->font_max_ascent + of->font_max_descent;
+            of->font_line_gap = info.adapter->vectorizable()
+                ? height + static_cast<std::int32_t>(info.adapter->line_gap(info.idx, info.metric_identifier))
+                : (height * 12 + 5) / 10;
         }
 
         // NOTE: Newer version (from S^3 onwards) uses offset. Older version just cast this directly to integer

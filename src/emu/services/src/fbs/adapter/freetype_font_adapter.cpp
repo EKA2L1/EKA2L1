@@ -21,6 +21,7 @@
 #include <common/log.h>
 
 #include <services/fbs/adapter/freetype_font_adapter.h>
+#include <algorithm>
 #include <cstring>
 #include <memory>
 
@@ -196,7 +197,18 @@ namespace eka2l1::epoc::adapter {
             return 0;
         }
 
-        return faces_[idx]->size->metrics.height - faces_[idx]->size->metrics.ascender + faces_[idx]->size->metrics.descender;
+        FT_Face face = faces_[idx];
+        FT_Pos gap = face->size->metrics.height - face->size->metrics.ascender + face->size->metrics.descender;
+
+        if (FT_IS_SFNT(face)) {
+            if (const TT_OS2 *os2 = reinterpret_cast<const TT_OS2 *>(FT_Get_Sfnt_Table(face, FT_SFNT_OS2))) {
+                if (os2->version != 0xFFFF) {
+                    gap = FT_MulFix(os2->sTypoLineGap, face->size->metrics.y_scale);
+                }
+            }
+        }
+
+        return static_cast<std::uint32_t>(std::max<short>(0, ft_convention_to_int_pixel(gap)));
     }
 
     bool freetype_font_adapter::get_face_attrib(const std::size_t idx, open_font_face_attrib &face_attrib) {
