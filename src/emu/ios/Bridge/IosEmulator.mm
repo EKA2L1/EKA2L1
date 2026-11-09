@@ -39,6 +39,7 @@
 #include <common/version.h>
 #include <config/app_settings.h>
 #include <config/config.h>
+#include <control/ngage.h>
 #include <cpu/arm_factory.h>
 #include <dispatch/dispatcher.h>
 #include <drivers/audio/audio.h>
@@ -369,6 +370,7 @@ namespace eka2l1::ios {
         // kill that process when the frontend closes the emulator screen, and
         // cleared once the process exits (so closeRunningApp no-ops afterwards).
         eka2l1::kernel::uid running_thread_id = 0;
+        eka2l1::control::ngage_controller ngage;
 
         // Set once an app has exited / been killed in this booted session. The
         // window + view servers don't fully reset between app instances (the
@@ -1183,6 +1185,7 @@ namespace eka2l1::ios {
     }
 
     auto comp = eka2l1::ios::make_system_components(_state.get());
+    _state->ngage.clear();
     _state->symsys = std::make_unique<eka2l1::system>(comp);
     _state->window = std::make_unique<eka2l1::drivers::emu_window_ios>();
 
@@ -1343,6 +1346,7 @@ namespace eka2l1::ios {
     _state->graphics_driver.reset();
     _state->background_texture = 0;
     _state->background_dirty = true;
+    _state->ngage.clear();
     _state->symsys.reset();
     _state->audio_driver.reset();
     _state->sensor_driver.reset();
@@ -1611,6 +1615,7 @@ namespace eka2l1::ios {
     _state->conf.current_mmc_id = _state->conf.mmc_id;
 
     auto comp = eka2l1::ios::make_system_components(_state.get());
+    _state->ngage.clear();
     _state->symsys = std::make_unique<eka2l1::system>(comp);
     auto *sys = _state->symsys.get();
 
@@ -1838,6 +1843,7 @@ namespace eka2l1::ios {
     _state->present_slot = 0;
 
     auto comp = eka2l1::ios::make_system_components(_state.get());
+    _state->ngage.clear();
     _state->symsys = std::make_unique<eka2l1::system>(comp);
     _state->symsys->startup();
 
@@ -1895,6 +1901,34 @@ namespace eka2l1::ios {
     }
     _lastAppList = out;
     return out;
+}
+
+- (void)ngageControl:(NSString *)command completion:(void (^)(NSData *, NSInteger))completion {
+    dispatch_async(eka2l1::ios::emulator_control_queue(), ^{
+        std::lock_guard<std::recursive_mutex> session_lock(_state->session_mutex);
+        eka2l1::control::response response;
+        try {
+            if (!_state->symsys) {
+                response = eka2l1::control::response::error(409, "no_device", "no device is booted");
+            } else {
+                if ([command hasPrefix:@"cancel "]) {
+                    _state->ngage.cancel(*_state->symsys);
+                    response = eka2l1::control::response::from_json(eka2l1::control::json::object{});
+                } else {
+                    const bool poll = [command hasPrefix:@"poll "];
+                    NSString *operation = poll ? [command substringFromIndex:5] : command;
+                    response = _state->ngage.request(*_state->symsys, operation.UTF8String, poll);
+                }
+            }
+        } catch (const eka2l1::control::api_error &error) {
+            response = eka2l1::control::response::error(error.status, error.code, error.what());
+        } catch (const std::exception &error) {
+            response = eka2l1::control::response::error(500, "internal", error.what());
+        }
+        NSData *data = [NSData dataWithBytes:response.body.data() length:response.body.size()];
+        const NSInteger status = response.status;
+        dispatch_async(dispatch_get_main_queue(), ^{ completion(data, status); });
+    });
 }
 
 - (void)confirmDeviceBoot {
@@ -2081,6 +2115,7 @@ namespace eka2l1::ios {
     // mutate kernel state. The process logon still fires
     // (handleRunningAppExited); callers tearing down the screen clear
     // appExitHandler first so that bounce is a no-op.
+    _state->ngage.reset(*_state->symsys);
     kern->lock();
     auto *thr = kern->get_by_id<eka2l1::kernel::thread>(tid);
     eka2l1::kernel::process *pr = thr ? thr->owning_process() : nullptr;

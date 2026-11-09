@@ -11,6 +11,7 @@
 #include <common/path.h>
 #include <config/config.h>
 #include <control/native.h>
+#include <control/ngage.h>
 #include <drivers/audio/audio.h>
 #include <drivers/graphics/graphics.h>
 #include <drivers/input/common.h>
@@ -85,6 +86,7 @@ namespace eka2l1::control {
         std::set<int> held_pointers;
         json acceleration;
         std::string card_path;
+        ngage_controller ngage;
 
         explicit impl(native_frontend frontend)
             : frontend(std::move(frontend)) {}
@@ -302,6 +304,16 @@ namespace eka2l1::control {
             if (req.method == "RESOLVE" && p == std::vector<std::string>{ "v1", "log" })
                 return response::from_json({ { "hostPath", frontend.log } });
             auto body = req.data();
+            if ((p == std::vector<std::string>{ "v1", "ngage2", "games" } && req.method == "GET")
+                || (p.size() == 5 && p[1] == "ngage2" && p[2] == "games" && p[4] == "launch" && req.method == "POST")) {
+                apps();
+                if (req.param("stage") == "cancel") {
+                    ngage.cancel(sys());
+                    return response::from_json(json::object{});
+                }
+                const auto command = req.method == "GET" ? std::string("list") : "launch " + hex(parse_uid(p[3])).substr(2);
+                return ngage.request(sys(), command, req.param("stage") == "poll");
+            }
             if (p == std::vector<std::string>{ "v1", "status" } && req.method == "GET")
                 return response::from_json(status());
             if (p == std::vector<std::string>{ "v1", "devices" } && req.method == "GET")
@@ -652,6 +664,7 @@ namespace eka2l1::control {
         return ok;
     }
     void native_backend::reset_session() {
+        impl_->ngage.reset(impl_->sys());
         impl_->release();
         std::lock_guard<std::mutex> guard(impl_->session_mutex);
         ++impl_->generation;

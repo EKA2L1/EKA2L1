@@ -1,6 +1,7 @@
 // Copyright (c) 2026 EKA2L1 Team.
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include <catch2/catch.hpp>
+#include <atomic>
 #include <chrono>
 #include <condition_variable>
 #include <config/app_settings.h>
@@ -31,6 +32,78 @@ static response call(service &control, request req) {
         FAIL("control request did not complete");
     }
     return result.get();
+}
+
+TEST_CASE("N-Gage requests wait for Games and poll without relaunching it", "[control][ngage]") {
+    int launches = 0, launch_polls = 0, requests = 0, polls = 0;
+    bool running = false;
+    service control([&](request req, completion done) {
+        if (req.path == std::vector<std::string>{ "v1", "apps", "0x20003B78", "launch" }) {
+            ++launches;
+            done(response::from_json({ { "state", "launching" } }));
+        } else if (req.path == std::vector<std::string>{ "v1", "session" }) {
+            if (launches && ++launch_polls >= 2)
+                running = true;
+            done(response::from_json({ { "state", running ? "running" : launches ? "launching" : "none" }, { "uid", running ? "0x20003B78" : "" }, { "screenVisible", running } }));
+        } else if (req.path.size() >= 3 && req.path[1] == "ngage2") {
+            CHECK(running);
+            if (req.param("stage") == "start") {
+                ++requests;
+                done(response::from_json(json::object{}, 202));
+            } else {
+                ++polls;
+                done(req.method == "GET" ? response::from_json({ { "games", json::array{ json{ { "uid", "0x2000AFBD" }, { "name", "Snakes Subsonic" } } } } })
+                                         : response::from_json({ { "uid", req.path[3] } }));
+            }
+        } else {
+            done(response::from_json(json::object{}));
+        }
+    });
+    const auto list = call(control, { "GET", { "v1", "ngage2", "games" }, {}, {}, {} });
+    REQUIRE(list.status == 200);
+    CHECK(json::parse(list.body)["games"].items()[0]["name"].string() == "Snakes Subsonic");
+    const auto launch = call(control, { "POST", { "v1", "ngage2", "games", "0x2000AFBD", "launch" }, {}, {}, {} });
+    REQUIRE(launch.status == 200);
+    CHECK(json::parse(launch.body)["uid"].string() == "0x2000AFBD");
+    CHECK(json::parse(launch.body)["session"]["uid"].string() == "0x20003B78");
+    CHECK(launches == 1);
+    CHECK(requests == 2);
+    CHECK(polls == 2);
+}
+
+TEST_CASE("Closing a session cancels a pending Games request", "[control][ngage]") {
+    std::promise<void> started;
+    auto ready = started.get_future();
+    std::atomic<bool> cancelled{ false };
+    service control([&](request req, completion done) {
+        if (req.path == std::vector<std::string>{ "v1", "session" }) {
+            done(response::from_json({ { "state", "running" }, { "uid", "0x20003B78" }, { "screenVisible", true } }));
+        } else if (req.path.size() >= 3 && req.path[1] == "ngage2") {
+            if (req.param("stage") == "start")
+                started.set_value();
+            if (req.param("stage") == "cancel")
+                cancelled = true;
+            done(response::from_json(json::object{}, req.param("stage") == "cancel" ? 200 : 202));
+        } else {
+            done(response::from_json(json::object{}));
+        }
+    });
+    auto pending = submit(control, { "GET", { "v1", "ngage2", "games" }, {}, {}, {} });
+    REQUIRE(ready.wait_for(2s) == std::future_status::ready);
+    REQUIRE(call(control, { "DELETE", { "v1", "session" }, {}, {}, {} }).status == 200);
+    REQUIRE(pending.wait_for(2s) == std::future_status::ready);
+    CHECK(pending.get().status == 409);
+    CHECK(cancelled.load());
+}
+
+TEST_CASE("Invalid N-Gage UIDs fail before opening Games", "[control][ngage]") {
+    bool called = false;
+    service control([&](request, completion done) {
+        called = true;
+        done(response::from_json(json::object{}));
+    });
+    CHECK(call(control, { "POST", { "v1", "ngage2", "games", "invalid", "launch" }, {}, {}, {} }).status == 400);
+    CHECK_FALSE(called);
 }
 
 TEST_CASE("Control input sequences preserve order and physical scan codes", "[control]") {

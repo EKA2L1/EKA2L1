@@ -201,6 +201,7 @@ typedef NS_ENUM(NSInteger, EKA2L1InstallResult) {
 
 // Trigger applist rescan + return the resulting (uid, name) list.
 - (NSArray<EKA2L1AppEntry *> *)rescanApps;
+- (void)ngageControl:(NSString *)command completion:(void (^)(NSData *data, NSInteger status))completion;
 
 // Launch a previously-listed app. Runs off the main thread: binding the
 // graphics driver / setting the screen mode issues synchronous graphics

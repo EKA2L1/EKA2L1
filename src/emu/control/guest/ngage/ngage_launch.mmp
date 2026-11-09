@@ -1,0 +1,10 @@
+TARGET          eka2l1_ngage_launch.exe
+TARGETTYPE      exe
+UID             0 0xE000EA02
+CAPABILITY      ALL -TCB
+EPOCSTACKSIZE   0x10000
+EPOCHEAPSIZE    0x1000 0x100000
+SOURCEPATH      .
+SOURCE          ngage_launch.cpp
+SYSTEMINCLUDE   \epoc32\include
+LIBRARY         euser.lib efsrv.lib

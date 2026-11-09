@@ -75,6 +75,8 @@ extension Notification.Name {
 /// | `DELETE /v1/apps/{uid}` | | Uninstall |
 /// | `GET /v1/apps/{uid}/icon` | `?size=96` | PNG |
 /// | `POST /v1/apps/{uid}/launch` | `{"timeoutMs"?}`, `?wait=0` | Closes the current app, pushes the emulator screen and waits for the launch result |
+/// | `GET /v1/ngage2/games` | | Opens Games if needed; asks its PlayServer GamesList service for installed game UIDs and names |
+/// | `POST /v1/ngage2/games/{uid}/launch` | | Opens Games if needed and sends the same game launch request as its GUI; the session remains attached to Games |
 /// | `GET /v1/session` | | `state`: `none`, `launching`, `running`, `launch_failed`, `exited`, `crashed` or `closed`; plus `lastExit` (`fatal` holds the panic text) |
 /// | `DELETE /v1/session` | | Close the running app (the in-game "Exit" menu item) |
 /// | `GET/PUT /v1/session/screen-mode` | `{"mode"}` | |
@@ -148,6 +150,8 @@ extension Notification.Name {
 /// curl -s -X POST $api/devices/rh-29/boot
 /// curl -s -X PUT $api/card -d '{"path":"'"$HOME"'/Documents/Apps Backup/Nokia/n-gage/SystemRush.zip"}'
 /// curl -s -X POST $api/apps/0x101FD40B/launch
+/// curl -s "$api/ngage2/games"
+/// curl -s -X POST $api/ngage2/games/0x2000AFBD/launch    # Snakes Subsonic through Games
 /// curl -s -X POST $api/wait -d '{"until":"frames","count":60}'
 /// curl -s -X POST $api/input/sequence -d '{"steps":[{"key":"down","waitMs":600},{"key":"ok"}]}'
 /// curl -s -X POST $api/input/key -d '{"key":"5","action":"down"}'          # hold accelerate
@@ -331,6 +335,10 @@ private final class DebugControlServer {
             id = key[1]
             key[1] = "*"
         }
+        if key.count == 4, key[0] == "ngage2", key[1] == "games" {
+            id = key[2]
+            key[2] = "*"
+        }
         switch request.method + " " + key.joined(separator: "/") {
         case "GET capabilities":
             return json(["platform": "ios", "hostScreenshot": true, "accelerometer": true])
@@ -350,6 +358,14 @@ private final class DebugControlServer {
         case "DELETE devices/*":
             return json(try await deleteDevice(id))
 
+        case "GET ngage2/games", "POST ngage2/games/*/launch":
+            let command = request.method == "GET" ? "list" : "launch \(String(try parseUID(id), radix: 16))"
+            let stage = request.query["stage"] ?? "start"
+            let operation = stage == "start" ? command : "\(stage) \(command)"
+            let (data, status): (Data, Int) = await withCheckedContinuation { continuation in
+                EKA2L1Emulator.shared().ngageControl(operation) { continuation.resume(returning: ($0, $1)) }
+            }
+            return HTTPResponse(status: status, contentType: "application/json", body: data)
         case "GET apps":
             return json(["apps": appsJSON(includeSystem: boolParam(request.query["system"]) ?? false)])
         case "POST apps":
@@ -767,7 +783,11 @@ private final class DebugControlServer {
         var result: JSON = ["state": effectiveSessionState(), "screenVisible": screenVisible]
         if let uid = sessionUID {
             result["uid"] = hex(uid)
-            result["name"] = store?.apps.first(where: { $0.uid == uid })?.name ?? NSNull()
+            if uid == 0x20003B78 {
+                result["name"] = "Games"
+            } else {
+                result["name"] = store?.apps.first(where: { $0.uid == uid })?.name ?? NSNull()
+            }
         }
         if let lastExit { result["lastExit"] = lastExit }
         return result
@@ -795,7 +815,7 @@ private final class DebugControlServer {
     private func launchApp(_ text: String) async throws -> Any {
         let store = try requireBootedStore()
         let uid = try parseUID(text)
-        guard store.apps.contains(where: { $0.uid == uid }) else { throw APIError.notFound("no app \(hex(uid)) on this device") }
+        guard uid == 0x20003B78 || store.apps.contains(where: { $0.uid == uid }) else { throw APIError.notFound("no app \(hex(uid)) on this device") }
         try await closeScreenIfNeeded()
 
         sessionUID = uid
