@@ -17,7 +17,6 @@ namespace eka2l1::control {
     public:
         ngage_controller();
         ~ngage_controller();
-        // Called on the frontend's lifecycle queue; polling never waits for guest execution.
         response request(system &sys, const std::string &command, bool poll);
         void cancel(system &sys);
         void reset(system &sys);

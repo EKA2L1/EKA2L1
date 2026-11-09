@@ -68,7 +68,5 @@ retain their process-exit behavior.
 
 `GET /v1/ngage2/games` opens Games if needed and reads its PlayServer GamesList
 catalogue. `POST /v1/ngage2/games/{uid}/launch` uses the same launch IPC as the
-Games GUI. Both endpoints keep the session attached to Games. The common service
-waits for frontend launch completion, then polls a guest IPC agent without
-blocking frontend lifecycle queues. The agent is embedded in `control_guest`
-and shared by Qt, Android and iOS; its SDK sources live in `guest/ngage`.
+Games GUI. Both endpoints keep the session attached to Games. The guest IPC
+agent is embedded in `control_guest`; its SDK sources live in `guest/ngage`.
