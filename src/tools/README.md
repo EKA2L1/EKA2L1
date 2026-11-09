@@ -1,3 +1,17 @@
+## e32uncompress
+
+Extract the decompressed code section of an ARM E32Image for disassembly:
+
+```sh
+e32uncompress <input E32Image> <output raw binary>
+```
+
+The command supports byte-pair and deflate compression, as well as uncompressed
+images. It prints the language and image base to use for Ghidra's **Raw Binary**
+import, plus the entry-point offset and text size. The output contains the whole
+code section so addresses after the text remain aligned; only the first text-size
+bytes are necessarily instructions.
+
 - Symbols extract requirements:
 	* A Symbian phone (patched Open4All using ROMPatcher)
 	* Symbian IDT from IDA
