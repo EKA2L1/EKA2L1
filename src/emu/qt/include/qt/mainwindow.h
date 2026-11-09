@@ -176,6 +176,7 @@ private slots:
     void on_app_setting_changed();
     void on_another_rotation_triggered(QAction *action);
     void on_pause_toggled(bool checked);
+    void on_fast_forward_toggled(bool checked);
     void on_package_uninstalled();
     void on_refresh_app_list_requested();
 
@@ -236,6 +237,7 @@ public:
     void control_close();
     void control_changed(eka2l1::control::native_change change);
     void control_pause(bool paused);
+    void control_speed(double speed);
     void setup_and_switch_to_game_mode();
     void draw_enabled_overlay(eka2l1::drivers::graphics_driver *driver,
         eka2l1::drivers::graphics_command_builder &builder, const float scale_factor_x,

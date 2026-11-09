@@ -311,6 +311,7 @@ namespace eka2l1::config {
 
     void state::serialize(const bool with_bindings) {
         audio_master_volume = common::clamp(0, 100, audio_master_volume);
+        fast_forward_speed = common::clamp(1.0, 8.0, fast_forward_speed);
         screen_buffer_sync_string = get_string_from_screen_buffer_sync_option(screen_buffer_sync);
         midi_backend_string = get_string_from_midi_backend(midi_backend);
 
@@ -394,6 +395,7 @@ namespace eka2l1::config {
         }
 
         audio_master_volume = common::clamp(0, 100, audio_master_volume);
+        fast_forward_speed = common::clamp(1.0, 8.0, fast_forward_speed);
         screen_buffer_sync = get_screen_buffer_sync_option_from_string(screen_buffer_sync_string);
         midi_backend = get_midi_backend_from_string(midi_backend_string);
 

@@ -163,7 +163,7 @@ namespace eka2l1::control {
         }
         json status() {
             return { { "api", 1 }, { "started", true }, { "busy", false }, { "device", current_device() },
-                { "card", card() }, { "session", session_snapshot() }, { "frames", frontend.frames() },
+                { "card", card() }, { "session", session_snapshot() }, { "frames", frontend.frames() }, { "speed", sys().get_speed() },
                 { "documents", frontend.documents }, { "log", frontend.log }, { "screen", screen() } };
         }
         fs::path host_path(std::string raw) {
@@ -280,9 +280,15 @@ namespace eka2l1::control {
                     languages.push_back({ { "code", code }, { "name", common::get_language_name_by_code(code) } });
             return { { "current", sys().get_config()->language }, { "available", languages } };
         }
+        void set_speed(const double speed) {
+            if (frontend.speed)
+                frontend.speed(speed);
+            else
+                sys().set_speed(speed);
+        }
         json config_snapshot() {
             auto &c = *sys().get_config();
-            return { { "audioMasterVolume", c.audio_master_volume }, { "cpuBackend", c.cpu_backend }, { "language", c.language },
+            return { { "audioMasterVolume", c.audio_master_volume }, { "fastForwardSpeed", c.fast_forward_speed }, { "cpuBackend", c.cpu_backend }, { "language", c.language },
                 { "cpuLoadSave", c.cpu_load_save }, { "enableHwGles1", c.enable_hw_gles1 }, { "nearestNeighborFiltering", c.nearest_neighbor_filtering },
                 { "integerScaling", c.integer_scaling }, { "rtosLevel", c.rtos_level }, { "imei", c.imei }, { "mmcId", c.mmc_id },
                 { "extensiveLogging", c.extensive_logging }, { "deviceDisplayName", c.device_display_name }, { "backgroundImage", c.background_image },
@@ -566,6 +572,10 @@ namespace eka2l1::control {
                             if (key == "cpuBackend")
                                 require(v == "dynarmic" || v == "dyncom" || v == "r12l1", "bad_request", "invalid CPU backend", 400);
                             apply.emplace_back([target, v] { *target = v; });
+                        } else if (key == "fastForwardSpeed") {
+                            double v = required_number(body, key);
+                            require(v >= 1 && v <= 8, "bad_request", "fastForwardSpeed must be 1..8", 400);
+                            apply.emplace_back([&c, v] { c.fast_forward_speed = v; });
                         } else if (key == "audioMasterVolume" || key == "btnetListenPort" || key == "btnetDiscoveryMode") {
                             double v = required_number(body, key);
                             require(v == std::floor(v) && v >= 0 && v <= 65535, "bad_request", "invalid numeric config value", 400);
@@ -582,6 +592,8 @@ namespace eka2l1::control {
                         change();
                     if (auto *audio = sys().get_audio_driver())
                         audio->master_volume(c.audio_master_volume);
+                    if (body.contains("fastForwardSpeed") && sys().get_speed() != 1.0)
+                        set_speed(c.fast_forward_speed);
                     if (log::filterings)
                         log::filterings->parse_filter_string(c.log_filter);
                     c.serialize();
@@ -590,6 +602,15 @@ namespace eka2l1::control {
                 } else
                     require(req.method == "GET", "not_found", "unknown operation", 404);
                 return response::from_json(config_snapshot());
+            }
+            if (p == std::vector<std::string>{ "v1", "emulator", "speed" }) {
+                if (req.method == "PUT") {
+                    const double speed = required_number(body, "speed");
+                    require(speed >= 1 && speed <= 8, "bad_request", "speed must be 1..8", 400);
+                    set_speed(speed);
+                } else
+                    require(req.method == "GET", "not_found", "unknown operation", 404);
+                return response::from_json({ { "speed", sys().get_speed() }, { "fastForwardSpeed", sys().get_config()->fast_forward_speed } });
             }
             if (p.size() == 3 && p[1] == "emulator" && (p[2] == "pause" || p[2] == "resume") && req.method == "POST") {
                 const bool paused = p[2] == "pause";

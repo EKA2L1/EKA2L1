@@ -27,6 +27,7 @@
 #include <common/time.h>
 #include <ctime>
 #include <cstdlib>
+#include <mutex>
 #include <string>
 
 #if EKA2L1_PLATFORM(WIN32)
@@ -165,26 +166,54 @@ namespace eka2l1::common {
     }
 
     struct basic_teletimer_micro : public teletimer {
-        std::uint64_t start_;
-        std::uint64_t end_;
+        // The clock reads virtual_base_ + (host now - host_base_) * speed_. A speed change
+        // re-anchors both bases at the current reading, so the time never jumps or goes back.
+        std::uint64_t host_base_;
+        std::uint64_t virtual_base_;
+        std::uint64_t stopped_at_;
+        bool stopped_;
+        double speed_;
 
         std::uint32_t target_freq_;
+        mutable std::mutex lock_;
+
+        std::uint64_t read_locked(const std::uint64_t host_now) const {
+            if (stopped_) {
+                return stopped_at_;
+            }
+
+            const std::uint64_t elapsed = host_now - host_base_;
+            if (speed_ == 1.0) {
+                return virtual_base_ + elapsed;
+            }
+
+            return virtual_base_ + static_cast<std::uint64_t>(static_cast<double>(elapsed) * speed_);
+        }
 
     public:
         explicit basic_teletimer_micro(const std::uint32_t freq)
-            : target_freq_(freq) {
+            : host_base_(0)
+            , virtual_base_(0)
+            , stopped_at_(0)
+            , stopped_(true)
+            , speed_(1.0)
+            , target_freq_(freq) {
         }
 
         ~basic_teletimer_micro() override {
         }
 
         void start() override {
-            start_ = get_current_utc_time_in_microseconds_since_epoch();
-            end_ = 0;
+            const std::lock_guard<std::mutex> guard(lock_);
+            host_base_ = get_current_utc_time_in_microseconds_since_epoch();
+            virtual_base_ = 0;
+            stopped_ = false;
         }
 
         void stop() override {
-            end_ = get_current_utc_time_in_microseconds_since_epoch();
+            const std::lock_guard<std::mutex> guard(lock_);
+            stopped_at_ = read_locked(get_current_utc_time_in_microseconds_since_epoch());
+            stopped_ = true;
         }
 
         bool set_target_frequency(const std::uint32_t freq) override {
@@ -192,24 +221,31 @@ namespace eka2l1::common {
             return true;
         }
 
+        void set_speed(const double speed) override {
+            const std::lock_guard<std::mutex> guard(lock_);
+            const std::uint64_t host_now = get_current_utc_time_in_microseconds_since_epoch();
+
+            virtual_base_ = read_locked(host_now);
+            host_base_ = host_now;
+            speed_ = speed;
+        }
+
+        double get_speed() const override {
+            const std::lock_guard<std::mutex> guard(lock_);
+            return speed_;
+        }
+
         std::uint64_t ticks() override {
             return multiply_and_divide_qwords(microseconds(), target_freq_, 1000000);
         }
 
         std::uint64_t microseconds() override {
-            if (end_ == 0) {
-                return get_current_utc_time_in_microseconds_since_epoch() - start_;
-            }
-
-            return end_ - start_;
+            const std::lock_guard<std::mutex> guard(lock_);
+            return read_locked(get_current_utc_time_in_microseconds_since_epoch());
         }
 
         std::uint64_t nanoseconds() override {
-            if (end_ == 0) {
-                return get_current_utc_time_in_nanoseconds_since_epoch() - start_;
-            }
-
-            return end_ - start_;
+            return microseconds() * 1000;
         }
     };
 

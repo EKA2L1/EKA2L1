@@ -21,6 +21,8 @@
 #include <common/log.h>
 #include <drivers/audio/backend/dsp_shared.h>
 
+#include <cmath>
+
 namespace eka2l1::drivers {
     dsp_output_stream_shared::dsp_output_stream_shared(drivers::audio_driver *aud)
         : dsp_output_stream()
@@ -167,7 +169,8 @@ namespace eka2l1::drivers {
         // streams again. Keep a whole guest buffer queued ahead instead, so the guest gets
         // its own buffer period to answer, and cap the lookahead so a title writing huge
         // buffers does not turn into seconds of latency.
-        const std::size_t hardware_low = avg_frame_count_ * channels_ * 4;
+        // Fast-forward drains the ring several times faster; keep the same lookahead in time.
+        const std::size_t hardware_low = static_cast<std::size_t>(avg_frame_count_ * channels_ * 4 * consume_speed());
         const std::size_t half_second = static_cast<std::size_t>(freq_) * common::max<std::size_t>(channels_, 1) / 2;
         const std::size_t guest_buffer = common::min<std::size_t>(
             last_write_samples_.load(std::memory_order_relaxed), half_second);
@@ -192,22 +195,52 @@ namespace eka2l1::drivers {
             avg_frame_count_ = (avg_frame_count_ + frame_count) / 2;
         }
 
+        // Under fast-forward this render period covers speed times as much guest audio.
+        const double speed = consume_speed();
+        const std::size_t source_frames = (speed == 1.0) ? frame_count
+            : static_cast<std::size_t>(std::ceil(static_cast<double>(frame_count) * speed));
+
         if (format_ != PCM16_FOUR_CC_CODE) {
             // Running on low
-            if (buffer_.size() <= (avg_frame_count_ * channels_ * 4)) {
+            const std::size_t low = static_cast<std::size_t>(avg_frame_count_ * channels_ * 4 * speed);
+            for (std::size_t round = 0; (round < static_cast<std::size_t>(std::ceil(speed))) && (buffer_.size() <= low); round++) {
                 std::vector<std::uint8_t> target_buffer;
                 decode_data(target_buffer);
+
+                if (target_buffer.empty()) {
+                    break;
+                }
 
                 buffer_.push(target_buffer.data(), (target_buffer.size() + 1) / 2);
             }
         }
 
-        std::size_t frame_to_wrote = buffer_.pop(buffer, frame_count * channels_) / channels_;
+        std::size_t frame_to_wrote = 0;
+        std::size_t source_taken = 0;
 
-        samples_copied_.fetch_add(frame_to_wrote * channels_, std::memory_order_relaxed);
+        if (speed == 1.0) {
+            frame_to_wrote = buffer_.pop(buffer, frame_count * channels_) / channels_;
+            source_taken = frame_to_wrote;
+        } else {
+            // Play every speed-th frame: the guest buffers drain as fast as its clock
+            // runs, at the cost of a higher pitch.
+            speed_scratch_.resize(source_frames * channels_);
+            source_taken = buffer_.pop(speed_scratch_.data(), source_frames * channels_) / channels_;
 
-        std::size_t sample_to_wrote = frame_to_wrote * channels_;
-        std::size_t size_to_wrote = frame_to_wrote * channels_ * sizeof(std::int16_t);
+            for (; frame_to_wrote < frame_count; frame_to_wrote++) {
+                const std::size_t source = static_cast<std::size_t>(static_cast<double>(frame_to_wrote) * speed);
+                if (source >= source_taken) {
+                    break;
+                }
+
+                std::memcpy(&buffer[frame_to_wrote * channels_], &speed_scratch_[source * channels_],
+                    channels_ * sizeof(std::int16_t));
+            }
+        }
+
+        samples_copied_.fetch_add(source_taken * channels_, std::memory_order_relaxed);
+
+        std::size_t sample_to_wrote = source_taken * channels_;
 
         // If the amount of buffer left is deemed to be insufficient (this takes account of current frame count that is needed)
         if (internal_decode_running_out()) {

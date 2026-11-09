@@ -127,6 +127,7 @@
      <string>Emulation</string>
     </property>
     <addaction name="action_pause"/>
+    <addaction name="action_fast_forward"/>
     <addaction name="action_restart"/>
     <addaction name="separator"/>
     <addaction name="separator"/>
@@ -194,6 +195,20 @@
    </property>
    <property name="text">
     <string>Pause</string>
+   </property>
+  </action>
+  <action name="action_fast_forward">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Fast forward</string>
+   </property>
+   <property name="shortcut">
+    <string notr="true">Tab</string>
+   </property>
+   <property name="shortcutContext">
+    <enum>Qt::WindowShortcut</enum>
    </property>
   </action>
   <action name="action_stop">
