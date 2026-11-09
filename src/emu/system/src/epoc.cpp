@@ -1470,7 +1470,11 @@ namespace eka2l1 {
 
         device *dvc = dvcmngr_->get_current();
 
-        const bool lang_not_found_in_device = (std::find(dvc->languages.begin(), dvc->languages.end(), conf_->language) == dvc->languages.end());
+        // Symbian 9 keeps a language its firmware has no resource files for: those files are then looked for
+        // in the firmware's own language, which ends the locale's downgrade path, while the applications get
+        // the language asked for
+        const bool lang_not_found_in_device = (dvc->ver < epocver::eka2)
+            && (std::find(dvc->languages.begin(), dvc->languages.end(), conf_->language) == dvc->languages.end());
         const bool lang_undetermined = (conf_->language == -1);
 
         if (lang_undetermined || lang_not_found_in_device) {
