@@ -48,6 +48,7 @@
 #include <array>
 #include <atomic>
 #include <fstream>
+#include <map>
 #include <string>
 
 #include <disasm/disasm.h>
@@ -176,6 +177,37 @@ namespace eka2l1 {
         std::size_t ldd_request_load_callback_handle_;
 
         common::identity_container<system_reset_callback_type> reset_callbacks_;
+
+        std::mutex slice_lock_;
+        std::vector<slice_callback_type> slice_tasks_;
+        std::map<std::size_t, slice_callback_type> slice_callbacks_;
+        std::size_t slice_callback_next_ = 0;
+        std::atomic<bool> slice_work_ = false;
+
+        void run_slice_work() {
+            if (!slice_work_.load(std::memory_order_acquire)) {
+                return;
+            }
+
+            std::vector<slice_callback_type> tasks;
+            std::vector<slice_callback_type> callbacks;
+            {
+                const std::lock_guard<std::mutex> guard(slice_lock_);
+                tasks.swap(slice_tasks_);
+                for (const auto &[handle, cb] : slice_callbacks_) {
+                    callbacks.push_back(cb);
+                }
+                slice_work_ = !slice_callbacks_.empty();
+            }
+
+            for (auto &task : tasks) {
+                task(parent_);
+            }
+
+            for (auto &cb : callbacks) {
+                cb(parent_);
+            }
+        }
 
     public:
         explicit system_impl(system *parent, system_create_components &param);
@@ -484,6 +516,31 @@ namespace eka2l1 {
             return reset_callbacks_.remove(h);
         }
 
+        void run_between_slices(slice_callback_type task) {
+            {
+                const std::lock_guard<std::mutex> guard(slice_lock_);
+                slice_tasks_.push_back(std::move(task));
+                slice_work_ = true;
+            }
+
+            // A core waiting for a guest thread to wake up would leave the task waiting too
+            if (kern_) {
+                kern_->stop_cores_idling();
+            }
+        }
+
+        std::size_t add_slice_callback(slice_callback_type cb) {
+            const std::lock_guard<std::mutex> guard(slice_lock_);
+            slice_callbacks_.emplace(slice_callback_next_, std::move(cb));
+            slice_work_ = true;
+            return slice_callback_next_++;
+        }
+
+        bool remove_slice_callback(const std::size_t h) {
+            const std::lock_guard<std::mutex> guard(slice_lock_);
+            return slice_callbacks_.erase(h) != 0;
+        }
+
         void invoke_system_reset_callbacks() {
             for (auto cb : reset_callbacks_) {
                 cb(parent_);
@@ -748,6 +805,8 @@ namespace eka2l1 {
 
     int system_impl::loop() {
         const std::lock_guard<std::mutex> guard(mut);
+
+        run_slice_work();
 
         if (paused) {
             return 1;
@@ -1745,6 +1804,18 @@ namespace eka2l1 {
 
     bool system::remove_system_reset_callback(const std::size_t h) {
         return impl->remove_system_reset_callback(h);
+    }
+
+    void system::run_between_slices(slice_callback_type task) {
+        impl->run_between_slices(std::move(task));
+    }
+
+    std::size_t system::add_slice_callback(slice_callback_type cb) {
+        return impl->add_slice_callback(std::move(cb));
+    }
+
+    bool system::remove_slice_callback(const std::size_t h) {
+        return impl->remove_slice_callback(h);
     }
 
     bool system::rescan_devices(const drive_number romdrv) {

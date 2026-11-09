@@ -65,3 +65,17 @@ In Android control mode the host process survives guest exits so that another
 API launch can use the same listener. Launches still create EmulatorActivity,
 use its profile and wait for its rendering surface. Ordinary Android launches
 retain their process-exit behavior.
+
+`/v1/cheats` searches and changes the memory of the app that has the focus, in
+the way of the Sorcerer tool on S60: a new search keeps the addresses holding a
+value (8, 16 or 32 bits, aligned), or copies the memory when the value is not
+known; the next searches keep the addresses whose value is equal to, different
+from, lower or higher than (or equal to) the one before, changed or unchanged.
+Only the app's own chunks are read (heaps, stacks, static data), page by page
+through its page table, so pages that are not committed are skipped. Results
+become codes, whose value can be written and frozen. All of it runs on the
+emulator thread between two CPU slices (`system::run_between_slices` and
+`add_slice_callback`): no guest code runs and no system call is served there,
+and data pages need no JIT invalidation. Frozen values are written again after
+every slice. Codes are saved in `cheats/<UID>.json` of the data root and come
+back unfrozen at the next launch, until `POST /v1/cheats/codes/restore`.
