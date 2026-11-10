@@ -106,9 +106,11 @@ static inline void BlendColor24(TUint32 *aColorWord, TUint32 aColor24, TUint32 a
 }
 
 static void WriteRgb32ToAddressBlend(TUint8 *aAddress, TUint8 aRed, TUint8 aGreen, TUint8 aBlue, TUint8 aAlpha) {
-    // NOTE (pent0): Some games gives zero alpha, because alpha blending was not documented before.
-    // So if we see a zero alpha, we should only write RGB. This is a hack.
-    if (aAlpha == 255 || aAlpha == 0) {
+    if (aAlpha == 0) {
+        return;
+    }
+
+    if (aAlpha == 255) {
         WriteRgb32ToAddressAlpha(aAddress, aRed, aGreen, aBlue, 255);
         return;
     }
@@ -240,7 +242,6 @@ void CFbsThirtyTwoBitsDrawDevice::WriteLine(TInt aX, TInt aY, TInt aLength, TUin
         PanicAtTheEndOfTheWorld();
 
     // Blits come through here for every pixel, so the common modes skip the per-pixel call.
-    // Both loops produce exactly what writeFunc would.
     if (writeFunc == WriteRgb32ToAddressAlpha) {
         Mem::Copy(pixelAddress, aBuffer, aLength * 4);
         return;
@@ -254,10 +255,10 @@ void CFbsThirtyTwoBitsDrawDevice::WriteLine(TInt aX, TInt aY, TInt aLength, TUin
             const TUint32 color = *source;
             const TUint32 alpha = color >> 24;
 
-            if (alpha == 255 || alpha == 0) {
-                *pixelWord = color | 0xFF000000;
-            } else {
-                BlendColor24(pixelWord, ((color >> 16) & 0xFF) | (color & 0xFF00) | ((color & 0xFF) << 16), alpha);
+            if (alpha == 255) {
+                *pixelWord = color;
+            } else if (alpha != 0) {
+                BlendColor24(pixelWord, color & 0xFFFFFF, alpha);
             }
         }
 
