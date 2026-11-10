@@ -75,9 +75,10 @@ namespace eka2l1::kernel {
             oldt->real_time_active_end();
             run_core->save_context(oldt->ctx);
 
+            // The remaining timeslice is kept, so a thread that never blocks still
+            // gets rotated behind its equal-priority peers once the slice runs out.
             if (oldt->state == thread_state::run) {
                 oldt->state = thread_state::ready;
-                oldt->time = oldt->timeslice;
             }
 
             oldt->decrease_access_count();

@@ -263,6 +263,11 @@ namespace eka2l1 {
                     {
                         // Keep the established kernel -> session lock order.
                         const std::lock_guard<std::mutex> guard(dev_access_lock_);
+                        if (stream_state_ == epoc::mmf_state_idle) {
+                            // A render callback that lost the race with Stop must not reach the client.
+                            return true;
+                        }
+
                         if (last_buffer_) {
                             complete_play(epoc::error_underflow);
                         } else {
@@ -295,6 +300,10 @@ namespace eka2l1 {
                     {
                         // Keep the established kernel -> session lock order.
                         const std::lock_guard<std::mutex> guard(dev_access_lock_);
+                        if (stream_state_ == epoc::mmf_state_idle) {
+                            return true;
+                        }
+
                         if (last_buffer_) {
                             complete_record(epoc::error_underflow);
                         } else {
@@ -688,6 +697,14 @@ namespace eka2l1 {
 
     void mmf_dev_server_session::stop(service::ipc_context *ctx) {
         stop();
+
+        // Events queued before the stop are dropped, the client must not see them afterwards.
+        if (evt_msg_queue_) {
+            epoc::mmf_dev_sound_queue_item stale(0);
+            while (evt_msg_queue_->receive(&stale, sizeof(epoc::mmf_dev_sound_queue_item))) {
+            }
+        }
+
         ctx->complete(epoc::error_none);
     }
 
