@@ -75,7 +75,7 @@ namespace eka2l1::control {
         std::atomic<bool> stopped{ false };
         std::atomic<int> pending{ 0 }, timed_pending{ 0 };
         std::atomic<std::uint64_t> input_epoch{ 0 };
-        std::mutex jobs_mutex, input_mutex, mutation_mutex;
+        std::mutex jobs_mutex, input_mutex, mutation_mutex, ngage_mutex;
         std::map<int, json> jobs;
         int next_job = 1;
         bool job_running = false;
@@ -314,7 +314,7 @@ namespace eka2l1::control {
                 throw api_error(404, "not_found", "unknown API version");
             const auto &p = req.path;
             if (p.size() == 1 && req.method == "GET")
-                return response::from_json({ { "api", 1 }, { "endpoints", json::array{ "GET /v1/status", "GET /v1/capabilities", "GET /v1/devices", "POST /v1/devices", "POST /v1/devices/rescan", "POST /v1/devices/{index|code}/boot", "PATCH /v1/devices/{index|code}", "DELETE /v1/devices/{index|code}", "GET /v1/apps?system=1", "POST /v1/apps", "DELETE /v1/apps/{uid}", "GET /v1/apps/{uid}/icon", "POST /v1/apps/{uid}/launch", "GET /v1/session", "DELETE /v1/session", "GET|PUT /v1/session/screen-mode", "GET|PUT /v1/session/frame-limit", "GET|PUT|DELETE /v1/card", "GET /v1/keys", "POST /v1/input/key", "POST /v1/input/touch", "POST /v1/input/text", "POST /v1/input/sequence", "POST /v1/input/release", "GET|PUT|DELETE /v1/input/accelerometer", "GET /v1/screenshot", "GET /v1/log", "POST /v1/wait", "GET|PATCH /v1/config", "GET|PUT /v1/language", "GET|PUT|DELETE /v1/files?path=", "POST /v1/emulator/pause", "POST /v1/emulator/resume", "GET /v1/jobs", "GET /v1/jobs/{id}" } } });
+                return response::from_json({ { "api", 1 }, { "endpoints", json::array{ "GET /v1/status", "GET /v1/capabilities", "GET /v1/devices", "POST /v1/devices", "POST /v1/devices/rescan", "POST /v1/devices/{index|code}/boot", "PATCH /v1/devices/{index|code}", "DELETE /v1/devices/{index|code}", "GET /v1/apps?system=1", "POST /v1/apps", "DELETE /v1/apps/{uid}", "GET /v1/apps/{uid}/icon", "POST /v1/apps/{uid}/launch", "GET /v1/ngage2/games", "POST /v1/ngage2/games/{uid}/launch", "GET /v1/session", "DELETE /v1/session", "GET|PUT /v1/session/screen-mode", "GET|PUT /v1/session/frame-limit", "GET|PUT|DELETE /v1/card", "GET /v1/keys", "POST /v1/input/key", "POST /v1/input/touch", "POST /v1/input/text", "POST /v1/input/sequence", "POST /v1/input/release", "GET|PUT|DELETE /v1/input/accelerometer", "GET /v1/screenshot", "GET /v1/log", "POST /v1/wait", "GET|PATCH /v1/config", "GET|PUT /v1/language", "GET|PUT|DELETE /v1/files?path=", "POST /v1/emulator/pause", "POST /v1/emulator/resume", "GET /v1/jobs", "GET /v1/jobs/{id}" } } });
             if (p.size() >= 2 && p[1] == "jobs" && req.method == "GET") {
                 std::lock_guard<std::mutex> guard(jobs_mutex);
                 if (p.size() == 2) {
@@ -327,6 +327,46 @@ namespace eka2l1::control {
                 if (p.size() != 3 || !jobs.count(id))
                     throw api_error(404, "not_found", "no such job");
                 return response::from_json(jobs.at(id));
+            }
+            const bool ngage = (p == std::vector<std::string>{ "v1", "ngage2", "games" } && req.method == "GET")
+                || (p.size() == 5 && p[1] == "ngage2" && p[2] == "games" && p[4] == "launch" && req.method == "POST");
+            if (ngage) {
+                if (req.method == "POST")
+                    parse_uid(p[3]);
+                std::unique_lock<std::mutex> guard(ngage_mutex, std::try_to_lock);
+                if (!guard.owns_lock())
+                    throw api_error(409, "busy", "another Games request is in flight");
+                auto session = json::parse(checked({ "GET", { "v1", "session" }, {}, {}, {} }).body);
+                if (session["uid"].string() != "0x20003B78" || session["state"].string() != "running" || !session["screenVisible"].boolean()) {
+                    auto launched = route({ "POST", { "v1", "apps", "0x20003B78", "launch" }, {}, {}, {} });
+                    if (launched.status >= 400)
+                        return launched;
+                    session = json::parse(launched.body);
+                    if (session["state"].string() != "running")
+                        throw api_error(422, "launch_failed", "Games did not launch");
+                }
+                const auto epoch = ++input_epoch;
+                wake.notify_all();
+                {
+                    std::lock_guard<std::mutex> input_guard(input_mutex);
+                    atomic_input("release", json::object{});
+                }
+                req.query["stage"] = "start";
+                auto result = checked(req);
+                try {
+                    while (result.status == 202) {
+                        sleep(20, epoch);
+                        req.query["stage"] = "poll";
+                        result = checked(req);
+                    }
+                } catch (...) {
+                    req.query["stage"] = "cancel";
+                    try { call(req); } catch (...) {}
+                    throw;
+                }
+                auto value = json::parse(result.body);
+                value["session"] = json::parse(checked({ "GET", { "v1", "session" }, {}, {}, {} }).body);
+                return response::from_json(value);
             }
             const bool input = p.size() == 3 && p[1] == "input" && p[2] != "release";
             std::unique_lock<std::mutex> mutation;
@@ -509,6 +549,7 @@ namespace eka2l1::control {
         }
         const auto &p = req.path;
         const bool timed = (req.method == "POST" && p.size() == 2 && p[1] == "wait")
+            || (p.size() >= 3 && p[1] == "ngage2" && p[2] == "games")
             || (req.method == "POST" && p.size() == 3 && p[1] == "input" && p[2] != "release")
             || (req.method == "POST" && p.size() == 4 && p[1] == "apps" && p[3] == "launch");
         auto &pending = timed ? self->timed_pending : self->pending;

@@ -141,6 +141,7 @@ target_compile_definitions(${EKA2L1_IOS_APP} PRIVATE GLES_SILENCE_DEPRECATION)
 # because that target is known-good for a non-Qt frontend.
 target_link_libraries(${EKA2L1_IOS_APP} PRIVATE
     control
+    control_guest
     common
     cpu
     drivers
