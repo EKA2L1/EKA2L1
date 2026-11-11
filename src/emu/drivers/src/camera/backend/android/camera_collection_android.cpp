@@ -69,6 +69,9 @@ namespace eka2l1::drivers::camera {
             if ((ite != current_reserved_.end()) && (ite->second != nullptr)) {
                 const std::lock_guard<std::mutex> callback_guard(ite->second->callback_lock_);
                 callback = ite->second->active_frame_viewfinder_callback_;
+                if (error < 0) {
+                    ite->second->active_frame_viewfinder_callback_ = nullptr;
+                }
             } else {
                 LOG_TRACE(DRIVER_CAM, "Unable to find active reserved camera with index {} for returning capture bytes", index);
             }

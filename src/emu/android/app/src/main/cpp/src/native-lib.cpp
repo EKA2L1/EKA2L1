@@ -498,6 +498,11 @@ Java_com_github_eka2l1_emu_EmulatorCamera_onCaptureImageDelivered(JNIEnv *env, j
             <eka2l1::drivers::camera::collection_android *>(eka2l1::drivers::camera::get_collection());
 
     if (collection) {
+        if (!raw_data) {
+            collection->handle_image_capture_delivered(index, nullptr, 0, error_code);
+            return;
+        }
+
         jboolean is_data_copy = false;
         jsize data_size = env->GetArrayLength(raw_data);
         jbyte *data = env->GetByteArrayElements(raw_data, &is_data_copy);
@@ -515,6 +520,11 @@ Java_com_github_eka2l1_emu_EmulatorCamera_onFrameViewfinderDelivered(JNIEnv *env
             <eka2l1::drivers::camera::collection_android *>(eka2l1::drivers::camera::get_collection());
 
     if (collection) {
+        if (!raw_data) {
+            collection->handle_frame_viewfinder_delivered(index, nullptr, 0, error_code);
+            return;
+        }
+
         jboolean is_data_copy = false;
         jsize data_size = env->GetArrayLength(raw_data);
         jbyte *data = env->GetByteArrayElements(raw_data, &is_data_copy);
