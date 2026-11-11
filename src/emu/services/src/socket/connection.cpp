@@ -31,6 +31,26 @@
 #include <iterator>
 
 namespace eka2l1::epoc::socket {
+    namespace {
+        const central_repo_entry *find_iap_field(service::ipc_context *ctx, std::uint32_t field, std::uint32_t iap) {
+            auto *cenrep = reinterpret_cast<central_repo_server *>(ctx->sys->get_kernel_system()
+                ->get_by_name<service::server>(CENTRAL_REPO_SERVER_NAME));
+            auto *repo = cenrep ? cenrep->load_repo_with_lookup(ctx->sys->get_io_system(),
+                ctx->sys->get_device_manager(), 0xCCCCCC00) : nullptr;
+            if (!repo) {
+                return nullptr;
+            }
+            repo->access_count--;
+            return repo->find_entry(field | (iap << 8));
+        }
+
+        // CommsDat hands IAP link fields to clients as plain record ids, whichever form is stored
+        // (TMDBRecordLinkVisitor::MaintainBCForLegacyLinks).
+        std::uint32_t link_record_id(std::uint32_t link) {
+            return (link > 255) ? ((link & 0xFF00) >> 8) : link;
+        }
+    }
+
     connection_state::~connection_state() {
         if (active) {
             advance(conn_progress_link_layer_closed);
@@ -318,7 +338,7 @@ namespace eka2l1::epoc::socket {
             ctx->complete(epoc::error_not_found);
             return;
         }
-        const connection_info info{1, iap, static_cast<std::uint32_t>(network->data.intd)};
+        const connection_info info{1, iap, link_record_id(static_cast<std::uint32_t>(network->data.intd))};
         auto &registry = parent_->server<socket_server>()->connections();
         auto state = registry.find(info);
         if (!state) {
@@ -357,6 +377,14 @@ namespace eka2l1::epoc::socket {
         } else if (name == u"IAP\\Id" || name == u"IAP\\IAPNetwork") {
             const auto value = name == u"IAP\\Id" ? state->info.iap_id : state->info.network_id;
             ctx->complete(ctx->write_data_to_descriptor_argument(1, value) ? epoc::error_none : epoc::error_argument);
+        } else if (name == u"IAP\\IAPService") {
+            const auto *entry = find_iap_field(ctx, 0x02840000, state->info.iap_id);
+            if (!entry || entry->data.etype != central_repo_entry_type::integer) {
+                ctx->complete(epoc::error_not_found);
+                return;
+            }
+            const auto value = link_record_id(static_cast<std::uint32_t>(entry->data.intd));
+            ctx->complete(ctx->write_data_to_descriptor_argument(1, value) ? epoc::error_none : epoc::error_argument);
         } else {
             ctx->complete(epoc::error_not_found);
         }
@@ -377,14 +405,7 @@ namespace eka2l1::epoc::socket {
         } else if (name == u"IAP\\IAPBearerType") {
             field = 0x02850000;
         }
-        auto *cenrep = reinterpret_cast<central_repo_server *>(ctx->sys->get_kernel_system()
-            ->get_by_name<service::server>(CENTRAL_REPO_SERVER_NAME));
-        auto *repo = field && cenrep ? cenrep->load_repo_with_lookup(ctx->sys->get_io_system(),
-            ctx->sys->get_device_manager(), 0xCCCCCC00) : nullptr;
-        if (repo) {
-            repo->access_count--;
-        }
-        const auto *entry = repo ? repo->find_entry(field | (state->info.iap_id << 8)) : nullptr;
+        const auto *entry = field ? find_iap_field(ctx, field, state->info.iap_id) : nullptr;
         if (!entry || entry->data.etype != central_repo_entry_type::string) {
             ctx->complete(epoc::error_not_found);
             return;
