@@ -351,6 +351,10 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void keysound_session::release_context(eka2l1::service::ipc_context *ctx) {
+        ctx->complete(epoc::error_none);
+    }
+
     void keysound_session::fetch(service::ipc_context *ctx) {
         switch (ctx->msg->function) {
         case epoc::keysound::opcode_init: {
@@ -393,8 +397,15 @@ namespace eka2l1 {
             break;
         }
 
+        case epoc::keysound::opcode_release_context: {
+            release_context(ctx);
+            break;
+        }
+
         default:
+            // Clients send these synchronously; the real server completes unknown requests with KErrNotSupported.
             LOG_ERROR(SERVICE_KEYSOUND, "Unimplemented keysound server opcode: {}", ctx->msg->function);
+            ctx->complete(epoc::error_not_supported);
             break;
         }
     }

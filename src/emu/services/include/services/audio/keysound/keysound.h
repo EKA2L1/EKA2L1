@@ -71,6 +71,7 @@ namespace eka2l1 {
         void add_sids(service::ipc_context *ctx);
         void bring_to_foreground(service::ipc_context *ctx);
         void lock_context(service::ipc_context *ctx);
+        void release_context(service::ipc_context *ctx);
     };
 
     class keysound_server : public service::typical_server {
