@@ -1871,9 +1871,8 @@ namespace eka2l1 {
             return;
         }
         scr->mark_direct_framebuffer_mapped();
-        // The OS 7.0/7.0s ROM screen drivers leave Update() empty and rely on scanout.
-        const epocver ver = kern->get_epoc_version();
-        if ((ver != epocver::epoc70 && ver != epocver::epoc7) || direct_framebuffer_refresh_evt_ >= 0) {
+        // Up to OS 7.0s the panel scans out this memory; clients need not call Update().
+        if ((kern->get_epoc_version() > epocver::epoc7) || direct_framebuffer_refresh_evt_ >= 0) {
             return;
         }
 
