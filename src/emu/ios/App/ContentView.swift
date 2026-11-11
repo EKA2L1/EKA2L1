@@ -91,6 +91,7 @@ struct ContentView: View {
     // Devices, booted index, app list and the busy flag live in one store so
     // the device-manager page works off exactly the same state and operations.
     @StateObject private var store = DeviceStore()
+    @State private var appSearchText = ""
     @State private var bootError: String?
     @State private var banner: String?
     @State private var invalidNGageFilename: String?
@@ -323,20 +324,23 @@ struct ContentView: View {
     }
 
     private var appList: some View {
-        ScrollView {
+        let query = appSearchText.trimmingCharacters(in: .whitespacesAndNewlines)
+        let apps = visibleApps.filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) }
+
+        return ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                Text("home.appsCount \(visibleApps.count)")
+                Text("home.appsCount \(apps.count)")
                     .font(.headline)
 
-                if visibleApps.isEmpty {
-                    Text(emptyAppsHint)
+                if apps.isEmpty {
+                    Text(query.isEmpty ? emptyAppsHint : String(localized: "home.empty.noSearchResults"))
                         .font(.caption).foregroundColor(.secondary)
                 } else {
                     // Narrower columns so a phone-width screen fits four icons
                     // per row (72pt icon + label, ~4pt slack).
-                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 76), spacing: 12)],
+                    LazyVGrid(columns: [GridItem(.adaptive(minimum: 76), spacing: 12, alignment: .top)],
                               spacing: 16) {
-                        ForEach(visibleApps, id: \.uid) { app in
+                        ForEach(apps, id: \.uid) { app in
                             NavigationLink(destination: EmulatorView(uid: app.uid)) {
                                 AppGridCell(uid: app.uid, name: app.name)
                             }
@@ -366,6 +370,7 @@ struct ContentView: View {
         }
         // Pull down on the grid to re-scan the device's app registry.
         .refreshable { await store.refreshApps() }
+        .searchable(text: $appSearchText, placement: .navigationBarDrawer, prompt: Text("home.search.prompt"))
     }
 
     // The navigation title's tap menu (SwiftUI toolbarTitleMenu): the device

@@ -1573,6 +1573,22 @@
         }
       }
     },
+    "home.empty.noSearchResults" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No matching apps."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "没有匹配的应用。"
+          }
+        }
+      }
+    },
     "home.error.bootRomFailed %@" : {
       "localizations" : {
         "en" : {
@@ -2185,6 +2201,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "尚未安装设备"
+          }
+        }
+      }
+    },
+    "home.search.prompt" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search apps"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "搜索应用"
           }
         }
       }
