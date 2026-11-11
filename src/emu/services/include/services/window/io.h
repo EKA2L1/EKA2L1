@@ -75,5 +75,10 @@ namespace eka2l1::epoc {
          * \brief Start delivering key events.
          */
         void start_shipping();
+
+        /**
+         * \brief Deliver a single key event. The caller must hold the kernel lock.
+         */
+        void ship(epoc::event evt);
     };
 }

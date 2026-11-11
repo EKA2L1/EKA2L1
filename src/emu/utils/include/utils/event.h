@@ -24,6 +24,8 @@
 
 namespace eka2l1::epoc {
     enum raw_event_type {
+        raw_event_type_key_down = 3,
+        raw_event_type_key_up = 4,
         raw_event_type_redraw = 5,
         raw_event_type_active = 6,
         raw_event_type_inactive = 7,

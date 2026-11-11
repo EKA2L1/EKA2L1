@@ -1013,6 +1013,12 @@ namespace eka2l1::epoc {
     }
 
     void window_server_client::add_raw_event(service::ipc_context &ctx, ws_cmd &cmd) {
+        static epoc::security_policy policy({ epoc::cap_sw_event });
+        if (!ctx.satisfy(policy)) {
+            ctx.complete(epoc::error_permission_denied);
+            return;
+        }
+
         epoc::raw_event evt;
 
         if (cmd.header.cmd_len > sizeof(epoc::raw_event_eka1)) {
@@ -1024,7 +1030,22 @@ namespace eka2l1::epoc {
             evt.from_eka1_event(evt_eka1);
         }
 
-        LOG_TRACE(SERVICE_WINDOW, "Add raw event stubbed, event type {}", evt.type_);
+        switch (evt.type_) {
+        case epoc::raw_event_type_key_down:
+        case epoc::raw_event_type_key_up: {
+            epoc::event key_evt{};
+            key_evt.type = (evt.type_ == epoc::raw_event_type_key_down) ? epoc::event_code::key_down : epoc::event_code::key_up;
+            key_evt.time = get_ws().get_kernel_system()->universal_time();
+            key_evt.key_evt_.scancode = evt.data_.key_data_.scancode_;
+            get_ws().key_shipper.ship(key_evt);
+            break;
+        }
+
+        default:
+            LOG_TRACE(SERVICE_WINDOW, "Add raw event stubbed, event type {}", evt.type_);
+            break;
+        }
+
         ctx.complete(epoc::error_none);
     }
 
