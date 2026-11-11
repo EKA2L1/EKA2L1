@@ -19,7 +19,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.camera.camera2.interop.Camera2CameraInfo;
 import androidx.camera.core.Camera;
 import androidx.camera.core.CameraControl;
-import androidx.camera.core.CameraInfoUnavailableException;
+import androidx.camera.core.CameraInfo;
 import androidx.camera.core.CameraSelector;
 import androidx.camera.core.ImageAnalysis;
 import androidx.camera.core.ImageCapture;
@@ -81,7 +81,7 @@ public class EmulatorCamera {
     private ImageCapture previousImageCapture;
     private Size[] outputImageSizes;
     private Camera camera;
-    private CameraSelector cameraSelector;
+    private CameraInfo cameraInfo;
     private CameraCharacteristics characteristics;
 
     // Cached parameters for orientation change
@@ -99,36 +99,64 @@ public class EmulatorCamera {
         if (cameraProvider == null) {
             try {
                 cameraProvider = ProcessCameraProvider.getInstance(applicationActivity).get();
+                logAvailableCameras();
             } catch (Exception ex) {
-                Log.e(TAG, "Unable to initialize camera provider, exception=" + ex);
+                Log.e(TAG, "Unable to initialize camera provider", ex);
             }
         }
     }
 
-    // Guest camera indices enumerate at most one back and one front camera, skipping a missing facing.
-    private static List<CameraSelector> getAvailableCameraSelectors() {
-        List<CameraSelector> selectors = new ArrayList<>();
-        if (cameraProvider == null) {
-            return selectors;
-        }
-
+    private static int lensFacingOf(CameraInfo info) {
         try {
-            if (cameraProvider.hasCamera(CameraSelector.DEFAULT_BACK_CAMERA)) {
-                selectors.add(CameraSelector.DEFAULT_BACK_CAMERA);
-            }
+            return info.getLensFacing();
+        } catch (RuntimeException ex) {
+            return CameraSelector.LENS_FACING_UNKNOWN;
+        }
+    }
 
-            if (cameraProvider.hasCamera(CameraSelector.DEFAULT_FRONT_CAMERA)) {
-                selectors.add(CameraSelector.DEFAULT_FRONT_CAMERA);
-            }
-        } catch (CameraInfoUnavailableException ex) {
-            Log.e(TAG, "Unable to query available cameras, exception=" + ex);
+    @SuppressLint("UnsafeOptInUsageError")
+    private static void logAvailableCameras() {
+        List<CameraInfo> infos = cameraProvider.getAvailableCameraInfos();
+        StringBuilder description = new StringBuilder();
+
+        for (CameraInfo info : infos) {
+            description.append(" [id=").append(Camera2CameraInfo.from(info).getCameraId())
+                    .append(", facing=").append(lensFacingOf(info)).append("]");
         }
 
-        return selectors;
+        Log.i(TAG, "CameraX exposes " + infos.size() + " camera(s):" + description
+                + ", " + getAvailableCameras().size() + " offered to the guest");
+    }
+
+    // Guest camera indices: one back camera, then one front camera, then cameras of any other facing.
+    private static List<CameraInfo> getAvailableCameras() {
+        List<CameraInfo> cameras = new ArrayList<>();
+        if (cameraProvider == null) {
+            return cameras;
+        }
+
+        List<CameraInfo> infos = cameraProvider.getAvailableCameraInfos();
+        for (int facing : new int[]{ CameraSelector.LENS_FACING_BACK, CameraSelector.LENS_FACING_FRONT }) {
+            for (CameraInfo info : infos) {
+                if (lensFacingOf(info) == facing) {
+                    cameras.add(info);
+                    break;
+                }
+            }
+        }
+
+        for (CameraInfo info : infos) {
+            int facing = lensFacingOf(info);
+            if ((facing != CameraSelector.LENS_FACING_BACK) && (facing != CameraSelector.LENS_FACING_FRONT)) {
+                cameras.add(info);
+            }
+        }
+
+        return cameras;
     }
 
     public static int getCameraCount() {
-        return getAvailableCameraSelectors().size();
+        return getAvailableCameras().size();
     }
 
     public static int initializeCamera(int index) {
@@ -161,7 +189,7 @@ public class EmulatorCamera {
 
             return cameraIdCounter++;
         } catch (Exception ex) {
-            Log.e(TAG, "Unable to initialize camera " + index + ", exception=" + ex);
+            Log.e(TAG, "Unable to initialize camera " + index, ex);
             return -1;
         }
     }
@@ -257,7 +285,7 @@ public class EmulatorCamera {
     public static boolean isCameraFacingFront(int handle) {
         EmulatorCamera cam = getCameraWith(handle);
         if (cam != null) {
-            return cam.getCameraSelector().getLensFacing() == CameraSelector.LENS_FACING_FRONT;
+            return lensFacingOf(cam.cameraInfo) == CameraSelector.LENS_FACING_FRONT;
         }
         return false;
     }
@@ -279,14 +307,14 @@ public class EmulatorCamera {
         this.configChanged = false;
         this.previousResolutionIndex = -1;
 
-        List<CameraSelector> selectors = getAvailableCameraSelectors();
-        if (index >= selectors.size()) {
+        List<CameraInfo> cameras = getAvailableCameras();
+        if (index >= cameras.size()) {
             throw new IllegalArgumentException("No camera available at index " + index);
         }
-        cameraSelector = selectors.get(index);
+        cameraInfo = cameras.get(index);
 
         // Retrieve possible output sizes
-        characteristics = Camera2CameraInfo.extractCameraCharacteristics(getCameraSelector().filter(cameraProvider.getAvailableCameraInfos()).get(0));
+        characteristics = Camera2CameraInfo.extractCameraCharacteristics(cameraInfo);
         StreamConfigurationMap streamConfigurationMap = characteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP);
         outputImageSizes = buildImageSizeLadder(streamConfigurationMap.getOutputSizes(ImageFormat.JPEG));
         cameraExecutor = Executors.newSingleThreadExecutor();
@@ -335,7 +363,7 @@ public class EmulatorCamera {
     }
 
     private CameraSelector getCameraSelector() {
-        return cameraSelector;
+        return cameraInfo.getCameraSelector();
     }
 
     public boolean setFlashMode(int flashMode) {
@@ -523,7 +551,17 @@ public class EmulatorCamera {
                     .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_RGBA_8888)
                     .build();
 
-            camera = cameraProvider.bindToLifecycle(applicationActivity, getCameraSelector(), currentAnalysis);
+            try {
+                camera = cameraProvider.bindToLifecycle(applicationActivity, getCameraSelector(), currentAnalysis);
+            } catch (RuntimeException ex) {
+                Log.e(TAG, "Unable to bind the viewfinder of camera " + index, ex);
+                currentAnalysis = null;
+                pendingViewfinder = false;
+
+                // Delivery takes the guest kernel lock, which the thread waiting on the UI thread may hold.
+                cameraExecutor.execute(() -> onFrameViewfinderDelivered(index, null, -1));
+                return;
+            }
 
             currentAnalysis.setAnalyzer(cameraExecutor,
                     image -> {
@@ -702,7 +740,16 @@ public class EmulatorCamera {
                             .setTargetResolution(outputSize)
                             .build();
 
-                    camera = cameraProvider.bindToLifecycle(applicationActivity, getCameraSelector(), imageCaptureRequest);
+                    try {
+                        camera = cameraProvider.bindToLifecycle(applicationActivity, getCameraSelector(), imageCaptureRequest);
+                    } catch (RuntimeException ex) {
+                        Log.e(TAG, "Unable to bind the image capture of camera " + index, ex);
+                        pendingImageCapture = false;
+
+                        // Delivery takes the guest kernel lock, which the thread waiting on the UI thread may hold.
+                        cameraExecutor.execute(() -> onCaptureImageDelivered(index, null, -1));
+                        return;
+                    }
 
                     previousImageCapture = imageCaptureRequest;
                     configChanged = false;
@@ -812,7 +859,7 @@ public class EmulatorCamera {
 
                             @Override
                             public void onError(@NonNull ImageCaptureException ex) {
-                                Log.i(TAG, "Image capture encountered exception: " + ex);
+                                Log.e(TAG, "Image capture failed on camera " + index, ex);
                                 onCaptureImageDelivered(index, null, -1);
 
                                 pendingImageCapture = false;
