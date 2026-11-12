@@ -20,6 +20,8 @@
 #include <system/software.h>
 
 #include <algorithm>
+#include <cctype>
+#include <cstdlib>
 #include <cstring>
 #include <map>
 #include <vector>
@@ -208,6 +210,10 @@ namespace eka2l1::loader {
     epocver determine_rpkg_symbian_version(const std::string &extracted_path) {
         if (common::exists(add_path(extracted_path, "system\\install\\uiq21platform.sis"))) {
             return epocver::epoc70;
+        }
+
+        if (common::exists(add_path(extracted_path, "system\\install\\uiq30platform.sis"))) {
+            return epocver::epoc91;
         }
 
         if (common::exists(add_path(extracted_path, "system\\install\\series90v10.sis"))
@@ -435,6 +441,50 @@ namespace eka2l1::loader {
         return true;
     }
 
+    static bool determine_product_info_from_semc_product_ini(const std::string &extracted_path,
+        std::string &manufacturer, std::string &firmcode, std::string &model) {
+        // Sony Ericsson UIQ 3 lists its HAL attributes as "<HALData number>=<decimal value>" lines.
+        common::dynamic_ifile product_file(add_path(extracted_path, "resource\\apps\\productinfo.ini"));
+        if (product_file.fail()) {
+            return false;
+        }
+
+        static constexpr int MODEL_ATTRIBUTE = 4;
+        std::string line;
+
+        while (product_file.getline(line)) {
+            const std::size_t separator = line.find('=');
+            if ((separator == std::string::npos) || line.empty() || !std::isdigit(static_cast<unsigned char>(line[0]))) {
+                continue;
+            }
+
+            if (std::atoi(line.substr(0, separator).c_str()) != MODEL_ATTRIBUTE) {
+                continue;
+            }
+
+            // EModel packs the name as 0xAABBBCCD: series letter, 12-bit number, market letter.
+            const std::uint32_t packed = static_cast<std::uint32_t>(std::strtoul(line.c_str() + separator + 1, nullptr, 10));
+            const char series = static_cast<char>(packed >> 24);
+            const std::uint32_t number = (packed >> 12) & 0xFFF;
+            const char market = static_cast<char>((packed >> 4) & 0xFF);
+
+            if (!std::isalpha(static_cast<unsigned char>(series))) {
+                return false;
+            }
+
+            firmcode = fmt::format("{}{}", series, number);
+            if (std::isalnum(static_cast<unsigned char>(market))) {
+                firmcode += market;
+            }
+
+            manufacturer = "Sony Ericsson";
+            model = manufacturer + " " + firmcode;
+            return true;
+        }
+
+        return false;
+    }
+
     bool determine_rpkg_product_info(const std::string &extracted_path, std::string &manufacturer, std::string &firmcode, std::string &model) {
         if (common::exists(add_path(extracted_path, "system\\install\\sonyericssonp90xplatform.sis"))) {
             if (determine_product_info_from_machine_uid(extracted_path, manufacturer, firmcode, model)) {
@@ -443,6 +493,10 @@ namespace eka2l1::loader {
             manufacturer = "Sony Ericsson";
             firmcode = "P90x";
             model = "Sony Ericsson P90x";
+            return true;
+        }
+
+        if (determine_product_info_from_semc_product_ini(extracted_path, manufacturer, firmcode, model)) {
             return true;
         }
 
