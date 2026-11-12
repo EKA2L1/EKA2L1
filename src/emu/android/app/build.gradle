@@ -113,8 +113,6 @@ dependencies {
     implementation "androidx.camera:camera-video:${camerax_version}"
     implementation "androidx.camera:camera-view:${camerax_version}"
     implementation "androidx.camera:camera-extensions:${camerax_version}"
-    implementation "androidx.camera:camera-mlkit-vision:${camerax_version}"
-    implementation "com.google.mlkit:barcode-scanning:17.2.0"
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation "androidx.test:runner:1.5.2"
     androidTestImplementation "androidx.test:rules:1.5.0"
