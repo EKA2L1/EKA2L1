@@ -34,6 +34,13 @@ namespace eka2l1::common {
         bool is_directory;
     };
 
+    struct archive_file {
+        archive_entry_info info;
+
+        // Empty for a directory.
+        std::vector<char> content;
+    };
+
     /**
      * @brief Read the table of contents of an archive.
      *
@@ -78,4 +85,23 @@ namespace eka2l1::common {
      */
     bool read_archive_entry(const std::string &path, const std::string &entry_path,
         std::vector<char> &content_out, const std::uint64_t max_size = 0);
+
+    /**
+     * @brief Read every entry of an archive into memory, in the order they are stored.
+     *
+     * @param max_size Refuse an archive whose entries add up to more than this many bytes, so a
+     *                 malformed or hostile archive cannot ask for an unbounded allocation. Zero means
+     *                 no limit.
+     *
+     * @returns False if the archive could not be read or is too big.
+     */
+    bool read_archive(const std::string &path, std::vector<archive_file> &files_out,
+        const std::uint64_t max_size = 0);
+
+    /**
+     * @brief Write entries to a new zip file, in the order given, with their content deflated.
+     *
+     * @returns False if the file could not be created or written.
+     */
+    bool write_zip_archive(const std::string &path, const std::vector<archive_file> &files);
 }
