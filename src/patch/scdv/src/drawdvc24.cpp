@@ -21,6 +21,7 @@
 #include <Log.h>
 
 #include "drawdvc24.h"
+#include "rgbconv.h"
 
 TUint8 *CFbsTwentyfourBitDrawDevice::GetPixelStartAddress(TInt aX, TInt aY) const {
     TInt originalX = aX;
@@ -146,7 +147,7 @@ void CFbsTwentyfourBitDrawDevice::WriteRgbMulti(TInt aX, TInt aY, TInt aLength, 
 
 void CFbsTwentyfourBitDrawDevice::WriteRgbAlphaMulti(TInt aX, TInt aY, TInt aLength, TRgb aColor, const TUint8 *aMaskBuffer) {
     TUint8 *pixelAddress = GetPixelStartAddress(aX, aY);
-    TUint32 color24 = aColor.Color16M();
+    TUint32 color24 = Scdv::Color16M(aColor);
 
     if (aX + aLength > LongWidth())
         PanicAtTheEndOfTheWorld();

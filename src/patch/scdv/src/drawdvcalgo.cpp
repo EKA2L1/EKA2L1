@@ -20,6 +20,7 @@
 #include <Log.h>
 
 #include "drawdvcalgo.h"
+#include "rgbconv.h"
 #include "scdv/panic.h"
 
 CFbsDrawDeviceAlgorithm::CFbsDrawDeviceAlgorithm()
@@ -111,52 +112,52 @@ void CFbsDrawDeviceAlgorithm::ReadLine(TInt aX, TInt aY, TInt aLength, TAny *aBu
 
         switch (aDispMode) {
         case EGray2:
-            colorTransformed = color.Gray2();
+            colorTransformed = Scdv::Gray2(color);
             break;
 
         case EGray4:
-            colorTransformed = color.Gray4();
+            colorTransformed = Scdv::Gray4(color);
             break;
 
         case EGray16:
-            colorTransformed = color.Gray16();
+            colorTransformed = Scdv::Gray16(color);
             break;
 
         case EGray256:
-            colorTransformed = color.Gray256();
+            colorTransformed = Scdv::Gray256(color);
             break;
 
         case EColor16:
-            colorTransformed = color.Color16();
+            colorTransformed = Scdv::Color16(color);
             break;
 
         case EColor256:
-            colorTransformed = color.Color256();
+            colorTransformed = Scdv::Color256(color);
             break;
 
         case EColor64K:
-            colorTransformed = color.Color64K();
+            colorTransformed = Scdv::Color64K(color);
             break;
 
         case EColor16M:
-            colorTransformed = color.Color16M();
+            colorTransformed = Scdv::Color16M(color);
             break;
 
         case EColor4K:
-            colorTransformed = color.Color4K();
+            colorTransformed = Scdv::Color4K(color);
             break;
 
 #ifdef EKA2
         case EColor16MU:
-            colorTransformed = color.Color16MU();
+            colorTransformed = Scdv::Color16M(color);
             break;
 
         case EColor16MAP:
-            colorTransformed = color.Color16MAP();
+            colorTransformed = Scdv::Color16MAP(color);
             break;
 
         case EColor16MA:
-            colorTransformed = color.Color16MA();
+            colorTransformed = Scdv::Color16MA(color);
             break;
 #endif
 
@@ -289,23 +290,23 @@ TRgb CFbsDrawDeviceAlgorithm::ExecuteColorDrawMode(TRgb aBufferColor, TRgb aWrit
         break;
 
     case CGraphicsContext::EDrawModeAND:
-        currentColor = TRgb::TRgb(aBufferColor.Red() & aWriteColor.Red(), aBufferColor.Green() & aWriteColor.Green(), aBufferColor.Blue() & aWriteColor.Blue());
+        currentColor = TRgb(aBufferColor.Red() & aWriteColor.Red(), aBufferColor.Green() & aWriteColor.Green(), aBufferColor.Blue() & aWriteColor.Blue());
         break;
 
     case CGraphicsContext::EDrawModeOR:
-        currentColor = TRgb::TRgb(aBufferColor.Red() | aWriteColor.Red(), aBufferColor.Green() | aWriteColor.Green(), aBufferColor.Blue() | aWriteColor.Blue());
+        currentColor = TRgb(aBufferColor.Red() | aWriteColor.Red(), aBufferColor.Green() | aWriteColor.Green(), aBufferColor.Blue() | aWriteColor.Blue());
         break;
 
     case CGraphicsContext::EDrawModeXOR:
-        currentColor = TRgb::TRgb(aBufferColor.Red() ^ aWriteColor.Red(), aBufferColor.Green() ^ aWriteColor.Green(), aBufferColor.Blue() ^ aWriteColor.Blue());
+        currentColor = TRgb(aBufferColor.Red() ^ aWriteColor.Red(), aBufferColor.Green() ^ aWriteColor.Green(), aBufferColor.Blue() ^ aWriteColor.Blue());
         break;
 
     case CGraphicsContext::EDrawModeNOTSCREEN:
-        currentColor = TRgb::TRgb(~aBufferColor.Red(), ~aBufferColor.Green(), ~aBufferColor.Blue());
+        currentColor = TRgb(~aBufferColor.Red(), ~aBufferColor.Green(), ~aBufferColor.Blue());
         break;
 
     case CGraphicsContext::EDrawModeANDNOT:
-        currentColor = TRgb::TRgb((~aBufferColor.Red()) & aWriteColor.Red(), (~aBufferColor.Green()) & aWriteColor.Green(), (~aBufferColor.Blue()) & aWriteColor.Blue());
+        currentColor = TRgb((~aBufferColor.Red()) & aWriteColor.Red(), (~aBufferColor.Green()) & aWriteColor.Green(), (~aBufferColor.Blue()) & aWriteColor.Blue());
         break;
 
     default:
