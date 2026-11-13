@@ -24,6 +24,7 @@
 #include <atomic>
 #include <cassert>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <optional>
 #include <queue>
@@ -366,6 +367,9 @@ namespace eka2l1 {
             epoc::button_map button_input_map;
             epoc::key_map key_input_map;
         } input_mapping;
+
+        // Called with the scan code of every key the device gets, and whether it went down
+        std::function<void(std::uint32_t, bool)> key_watcher;
 
         void delete_key_mapping(const std::uint32_t target);
 
