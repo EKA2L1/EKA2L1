@@ -21,6 +21,7 @@
 
 #include "drawdvcalgo.h"
 #include "rgbconv.h"
+#include "rgbinverse.h"
 #include "scdv/panic.h"
 
 CFbsDrawDeviceAlgorithm::CFbsDrawDeviceAlgorithm()

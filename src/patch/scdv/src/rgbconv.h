@@ -25,14 +25,6 @@
 // TRgb display-mode conversions, kept local because gdi.dll on Symbian 9.1 does not export them.
 // They follow the gdi definitions and use only the component accessors, so any TRgb layout works.
 namespace Scdv {
-    const TUint8 KColor256ExtraLevels[10] = { 0x11, 0x22, 0x44, 0x55, 0x77, 0x88, 0xAA, 0xBB, 0xDD, 0xEE };
-    const TUint32 KColor256ExtraChannels[8] = { 0x010101, 0x010000, 0x000100, 0x000001, 0x000001, 0x000100, 0x010000, 0x010101 };
-
-    const TUint32 KColor16Palette[16] = {
-        0x000000, 0x555555, 0x800000, 0x808000, 0x008000, 0xFF0000, 0xFFFF00, 0x00FF00,
-        0xFF00FF, 0x0000FF, 0x00FFFF, 0x800080, 0x000080, 0x008080, 0xAAAAAA, 0xFFFFFF
-    };
-
     inline TInt Gray256(const TRgb aColor) {
         return ((aColor.Red() << 1) + aColor.Green() + (aColor.Green() << 2) + aColor.Blue()) >> 3;
     }
@@ -71,66 +63,6 @@ namespace Scdv {
         TInt blue = (aColor64K & 0x001F) << 3;
 
         return TRgb(red + (red >> 5), green + (green >> 6), blue + (blue >> 5));
-    }
-
-    inline TInt PaletteDifference(const TInt aRed, const TInt aGreen, const TInt aBlue, const TUint32 a0RGB) {
-        return Abs(aRed - static_cast<TInt>((a0RGB >> 16) & 0xFF)) + Abs(aGreen - static_cast<TInt>((a0RGB >> 8) & 0xFF))
-            + Abs(aBlue - static_cast<TInt>(a0RGB & 0xFF));
-    }
-
-    // Default EColor256 palette: the 0x33-step cube by blue, then red, then green, with
-    // 40 extra grey and primary levels between its blue 0x66 and 0x99 planes.
-    inline TUint32 Color256PaletteEntry(TInt aIndex) {
-        if ((aIndex >= 108) && (aIndex < 148)) {
-            const TInt group = (aIndex - 108) / 5;
-            return KColor256ExtraChannels[group] * KColor256ExtraLevels[(group / 4) * 5 + (aIndex - 108) % 5];
-        }
-
-        if (aIndex >= 148) {
-            aIndex -= 40;
-        }
-
-        return ((aIndex % 6) * 0x33 << 16) | (((aIndex / 6) % 6) * 0x33 << 8) | ((aIndex / 36) * 0x33);
-    }
-
-    // The palette index of the nearest entry, matching gdi's inverse tables, which quantise each
-    // component and take the lowest index at the smallest TRgb::Difference.
-    inline TInt Color16(const TRgb aColor) {
-        const TInt red = (aColor.Red() >> 5) * 255 / 7;
-        const TInt green = (aColor.Green() >> 5) * 255 / 7;
-        const TInt blue = (aColor.Blue() >> 5) * 255 / 7;
-
-        TInt best = 0;
-        TInt bestDifference = KMaxTInt;
-
-        for (TInt i = 0; i < 16; i++) {
-            const TInt difference = PaletteDifference(red, green, blue, KColor16Palette[i]);
-            if (difference < bestDifference) {
-                best = i;
-                bestDifference = difference;
-            }
-        }
-
-        return best;
-    }
-
-    inline TInt Color256(const TRgb aColor) {
-        const TInt red = (aColor.Red() >> 4) * 0x11;
-        const TInt green = (aColor.Green() >> 4) * 0x11;
-        const TInt blue = (aColor.Blue() >> 4) * 0x11;
-
-        TInt best = 0;
-        TInt bestDifference = KMaxTInt;
-
-        for (TInt i = 0; (i < 256) && bestDifference; i++) {
-            const TInt difference = PaletteDifference(red, green, blue, Color256PaletteEntry(i));
-            if (difference < bestDifference) {
-                best = i;
-                bestDifference = difference;
-            }
-        }
-
-        return best;
     }
 
 #ifdef EKA2
