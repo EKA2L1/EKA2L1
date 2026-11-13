@@ -193,7 +193,9 @@ namespace eka2l1 {
         , left_balance_(50)
         , right_balance_(50)
         , underflow_event_(0)
-        , volume_ramp_us_(0) {
+        , volume_ramp_us_(0)
+        , buffer_buf_(nullptr)
+        , evt_msg_queue_(nullptr) {
         conf_.channels_ = 1;
         conf_.rate_ = epoc::mmf_sample_rate_8000hz;
         conf_.buffer_size_ = MMF_BUFFER_SIZE_DEFAULT;
@@ -211,6 +213,21 @@ namespace eka2l1 {
         if (serv->report_inactive_underflow()) {
             timing->unschedule_event(underflow_event_, reinterpret_cast<std::uint64_t>(this));
         }
+
+        set_event_msg_queue(nullptr);
+    }
+
+    void mmf_dev_server_session::set_event_msg_queue(kernel::msg_queue *queue) {
+        // The server opens its own handle to the queue, so it outlives the client's.
+        if (queue) {
+            queue->increase_access_count();
+        }
+
+        if (evt_msg_queue_) {
+            evt_msg_queue_->decrease_access_count();
+        }
+
+        evt_msg_queue_ = queue;
     }
 
     void mmf_dev_server_session::complete_play(const std::int32_t error) {
@@ -482,7 +499,7 @@ namespace eka2l1 {
         }
 
         kernel_system *kern = ctx->sys->get_kernel_system();
-        evt_msg_queue_ = kern->get<kernel::msg_queue>(ctx->get_argument_value<std::uint32_t>(2).value());
+        set_event_msg_queue(kern->get<kernel::msg_queue>(ctx->get_argument_value<std::uint32_t>(2).value()));
 
         std::optional<epoc::mmf_dev_sound_proxy_settings> state_settings
             = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(1);
@@ -537,7 +554,7 @@ namespace eka2l1 {
         }
 
         kernel_system *kern = ctx->sys->get_kernel_system();
-        evt_msg_queue_ = kern->get<kernel::msg_queue>(ctx->get_argument_value<std::uint32_t>(2).value());
+        set_event_msg_queue(kern->get<kernel::msg_queue>(ctx->get_argument_value<std::uint32_t>(2).value()));
 
         std::optional<epoc::mmf_dev_sound_proxy_settings> state_settings
             = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(1);
