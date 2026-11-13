@@ -2340,7 +2340,7 @@ namespace eka2l1 {
     }
 
     epoc::screen *window_server::get_screen(const int number) {
-        if (!screens) {
+        if (!loaded) {
             do_base_init();
         }
 
@@ -2511,6 +2511,11 @@ namespace eka2l1 {
     }
 
     void window_server::do_base_init() {
+        const std::lock_guard<std::mutex> guard(base_init_lock_);
+        if (loaded) {
+            return;
+        }
+
         load_wsini();
         parse_wsini();
         init_screens();

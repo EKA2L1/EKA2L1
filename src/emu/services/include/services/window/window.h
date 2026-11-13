@@ -25,6 +25,7 @@
 #include <cassert>
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <queue>
 #include <set>
@@ -377,7 +378,9 @@ namespace eka2l1 {
             clients;
 
         common::ini_file ws_config;
-        bool loaded{ false };
+        // Frontend threads read screens too, so the lazy base init has to run exactly once.
+        std::atomic<bool> loaded{ false };
+        std::mutex base_init_lock_;
         // Answered on first input: the frontend may mount drive Z only after this server exists.
         std::optional<int> uiq_version_;
         std::int32_t uiq_scancode(const std::int32_t scancode);
