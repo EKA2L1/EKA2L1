@@ -826,7 +826,7 @@ namespace eka2l1 {
         ctx.complete(written ? epoc::error_none : epoc::error_bad_descriptor);
     }
 
-    void applist_server::get_app_icon_sizes(service::ipc_context &ctx) {
+    void applist_server::get_app_icon_sizes(service::ipc_context &ctx, const bool check_client_size) {
         std::optional<epoc::uid> app_uid = ctx.get_argument_value<epoc::uid>(0);
 
         if (!app_uid) {
@@ -844,6 +844,20 @@ namespace eka2l1 {
         if (reg->app_icons.size() == 0) {
             ctx.complete(epoc::error_not_supported);
             return;
+        }
+
+        if (check_client_size) {
+            // SendArrayL: a positive completion asks the client to retry with a buffer of that size.
+            std::optional<std::int32_t> client_buf_size = ctx.get_argument_value<std::int32_t>(1);
+            const std::int32_t size_required = 4 + static_cast<std::int32_t>(reg->app_icons.size()) * 8;
+            if (!client_buf_size) {
+                ctx.complete(epoc::error_argument);
+                return;
+            }
+            if (size_required > client_buf_size.value()) {
+                ctx.complete(size_required);
+                return;
+            }
         }
 
         std::vector<std::uint8_t> buf;
@@ -1383,6 +1397,27 @@ namespace eka2l1 {
         , filter_method_(APP_FILTER_NONE) {
     }
 
+    void applist_session::set_list_change_notify(service::ipc_context &ctx) {
+        if (!list_change_notify_.empty()) {
+            ctx.complete(epoc::error_in_use);
+            return;
+        }
+
+        // Registries are scanned synchronously, so no scan is ever impending when a client asks.
+        std::optional<std::int32_t> complete_if_no_scan = ctx.get_argument_value<std::int32_t>(0);
+        if (complete_if_no_scan && complete_if_no_scan.value()) {
+            ctx.complete(epoc::error_none);
+            return;
+        }
+
+        list_change_notify_ = epoc::notify_info(ctx.msg->request_sts, ctx.msg->own_thr);
+    }
+
+    void applist_session::cancel_list_change_notify(service::ipc_context &ctx) {
+        list_change_notify_.complete(epoc::error_cancel);
+        ctx.complete(epoc::error_none);
+    }
+
     void applist_session::get_filtered_apps_by_flags(service::ipc_context &ctx) {
         std::optional<std::uint32_t> screen_mode = ctx.get_argument_value<std::uint32_t>(0);
         std::optional<std::uint32_t> flags_mask = ctx.get_argument_value<std::uint32_t>(1);
@@ -1608,6 +1643,18 @@ namespace eka2l1 {
 
             case applist_request_get_ownership_infos:
                 server<applist_server>()->get_app_owned_files(*ctx);
+                break;
+
+            case applist_request_get_app_icon_sizes:
+                server<applist_server>()->get_app_icon_sizes(*ctx, true);
+                break;
+
+            case applist_request_set_notify:
+                set_list_change_notify(*ctx);
+                break;
+
+            case applist_request_cancel_notify:
+                cancel_list_change_notify(*ctx);
                 break;
 
             // Registries are scanned before any guest process runs, so the first scan is
