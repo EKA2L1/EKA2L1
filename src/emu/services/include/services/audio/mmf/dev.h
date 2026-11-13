@@ -98,6 +98,7 @@ namespace eka2l1 {
         void deref_audio_buffer_chunk();
         bool prepare_audio_buffer_chunk();
         void send_event_to_msg_queue(const epoc::mmf_dev_sound_queue_item &item);
+        void set_event_msg_queue(kernel::msg_queue *queue);
         void stop();
 
         bool is_recording_stream() const {
