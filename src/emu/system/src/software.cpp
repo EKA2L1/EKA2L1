@@ -496,7 +496,8 @@ namespace eka2l1::loader {
             return true;
         }
 
-        if (determine_product_info_from_semc_product_ini(extracted_path, manufacturer, firmcode, model)) {
+        if (common::exists(add_path(extracted_path, "system\\install\\uiq30platform.sis"))
+            && determine_product_info_from_semc_product_ini(extracted_path, manufacturer, firmcode, model)) {
             return true;
         }
 
