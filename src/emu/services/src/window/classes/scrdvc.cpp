@@ -117,7 +117,7 @@ namespace eka2l1::epoc {
             }
         }
 
-        ctx.write_data_to_descriptor_argument(reply_slot, reinterpret_cast<std::uint8_t *>(&modes[0]),
+        ctx.write_data_to_descriptor_argument(reply_slot, reinterpret_cast<std::uint8_t *>(modes.data()),
             static_cast<std::uint32_t>(sizeof(int) * modes.size()));
 
         ctx.complete(static_cast<int>(modes.size()));
@@ -210,7 +210,7 @@ namespace eka2l1::epoc {
         for (int i = 0; i < scr->total_screen_mode(); i++) {
             const epoc::config::screen_mode *mode = scr->mode_info(i);
 
-            if (mode) {
+            if (mode && mode->defined) {
                 mode_list |= (1 << static_cast<std::int32_t>(get_orientation_from_rotation(mode->rotation)));
             }
         }
@@ -220,9 +220,10 @@ namespace eka2l1::epoc {
 
     void screen_device::set_app_screen_mode(eka2l1::service::ipc_context &ctx, eka2l1::ws_cmd &cmd) {
         int mode = *reinterpret_cast<int*>(cmd.data_ptr);
-        if (mode >= scr->total_screen_mode()) {
-            LOG_ERROR(SERVICE_WINDOW, "Trying to set screen mode number out of range!");
+        const auto *info = scr->mode_info(mode);
+        if (!info || !info->defined) {
             ctx.complete(epoc::error_argument);
+            return;
         }
 
         local_screen_mode_ = mode;
@@ -344,7 +345,7 @@ namespace eka2l1::epoc {
 
             for (int i = 0; i < scr->total_screen_mode(); i++) {
                 const epoc::config::screen_mode *candidate = scr->mode_info(i);
-                if (candidate) {
+                if (candidate && candidate->defined) {
                     alternative_rotations |= 1U << static_cast<std::uint32_t>(
                         get_orientation_from_rotation(candidate->rotation));
                 }

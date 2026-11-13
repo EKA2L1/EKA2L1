@@ -1392,9 +1392,15 @@ namespace eka2l1::epoc {
             get_double_click_settings(ctx, cmd);
             break;
 
+        case ws_cl_op_clear_hot_keys:
+        case ws_cl_op_set_double_click:
+        case ws_cl_op_set_default_fading_params:
+            ctx.complete(epoc::error_none);
+            break;
+
         default:
             LOG_INFO(SERVICE_WINDOW, "Unimplemented ClOp: 0x{:x}", cmd.header.op);
-            ctx.complete(epoc::error_none);
+            ctx.complete(epoc::error_not_supported);
             break;
         }
     }
@@ -1636,8 +1642,12 @@ namespace eka2l1 {
             // NUMSCREENMODES lets the table skip indices; WSERV keeps those as empty slots.
             std::uint32_t sparse_mode_count = 0;
             common::ini_node_ptr num_modes_node = screen_node->get_as<common::ini_section>()->find("NUMSCREENMODES");
-            if (num_modes_node) {
+            if (num_modes_node && common::ini_pair::is_my_type(num_modes_node)) {
                 num_modes_node->get_as<common::ini_pair>()->get(&sparse_mode_count, 1, 0);
+            }
+
+            if (sparse_mode_count > 256) {
+                sparse_mode_count = 0;
             }
 
             do {
@@ -1654,7 +1664,7 @@ namespace eka2l1 {
 
                 total_mode++;
 
-                epoc::config::screen_mode scr_mode;
+                epoc::config::screen_mode scr_mode{};
                 scr_mode.screen_number = total_screen - 1;
                 scr_mode.mode_number = total_mode;
 
@@ -2294,8 +2304,8 @@ namespace eka2l1 {
         // Sony Ericsson's UIQ 3 LCD drivers fix the line length at 256 pixels (0x400 bytes
         // at 32bpp); games that write the HAL screen address rely on that pitch.
         const auto *device = get_system()->get_device_manager()->get_current();
-        const std::uint32_t min_row_pixels = (kern->get_epoc_version() == epocver::epoc91) && device
-                && (device->manufacturer == "Sony Ericsson")
+        const std::uint32_t min_row_pixels = get_system()->is_uiq_3_device_active() && device
+                && (device->machine_uid == 0x20002E69)
             ? 256 : 0;
 
         // Create first screen
@@ -2829,13 +2839,12 @@ namespace eka2l1 {
 
     void window_server::send_event_to_window_groups(const epoc::event &evt, const bool one_per_client) {
         epoc::screen *scr = get_screens();
-        std::vector<epoc::window_server_client *> served;
-
         while (scr) {
+            std::vector<epoc::window_server_client *> served;
             epoc::window_group *group = scr->get_group_chain();
             while (group) {
                 // The chain is in ordinal order, so the first group met is the client's frontmost.
-                if (!one_per_client || (std::find(served.begin(), served.end(), group->client) == served.end())) {
+                if (group->client && (!one_per_client || (std::find(served.begin(), served.end(), group->client) == served.end()))) {
                     send_event_to_window_group(group, evt);
 
                     if (one_per_client) {

@@ -764,7 +764,7 @@ namespace eka2l1::epoc {
 
     void screen::set_screen_mode(window_server *winserv, drivers::graphics_driver *drv, const int mode) {
         const auto *new_mode = mode_info(mode);
-        if (!new_mode) {
+        if (!new_mode || !new_mode->defined) {
             return;
         }
 

@@ -2759,7 +2759,9 @@ namespace eka2l1::ios {
         if (eka2l1::epoc::screen *screen = _state->winserv->get_current_focus_screen()) {
             current = screen->crr_mode;
             for (int mode = 0; mode < screen->total_screen_mode(); ++mode) {
-                [modes addObject:@(mode)];
+                if (screen->mode_info(mode)->defined) {
+                    [modes addObject:@(mode)];
+                }
             }
             size = screen->current_mode().size;
             if ((screen->ui_rotation % 180) != 0) {
@@ -2782,7 +2784,8 @@ namespace eka2l1::ios {
             std::lock_guard<std::recursive_mutex> session_lock(self->_state->session_mutex);
             if (self->_state->winserv && self->_state->graphics_driver) {
                 eka2l1::epoc::screen *screen = self->_state->winserv->get_current_focus_screen();
-                if (screen && mode >= 0 && mode < screen->total_screen_mode()) {
+                if (screen && mode >= 0 && mode < screen->total_screen_mode()
+                    && screen->mode_info(static_cast<int>(mode))->defined) {
                     selected_mode = mode;
                     screen->ui_rotation = 0;
                     screen->set_screen_mode(self->_state->winserv,
