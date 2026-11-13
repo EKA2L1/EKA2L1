@@ -59,6 +59,7 @@ namespace eka2l1::epoc::socket {
     }
 
     void connection_state::advance(std::int32_t new_stage) {
+        const bool was_active = active;
         stage = new_stage;
         active = new_stage == conn_progress_connection_opened || new_stage == conn_progress_link_layer_open;
         const auto callbacks = observers;
@@ -67,12 +68,30 @@ namespace eka2l1::epoc::socket {
                 callback(new_stage);
             }
         }
+        if (active != was_active) {
+            if (const auto listeners = interface_observers_.lock()) {
+                const interface_notification event{ info, active ? 0U : 1U };
+                for (const auto &listener : *listeners) {
+                    if (const auto callback = listener.lock()) {
+                        (*callback)(event);
+                    }
+                }
+            }
+        }
+    }
+
+    void connection_registry::observe_interfaces(const std::shared_ptr<interface_observer> &observer) {
+        auto &listeners = *interface_observers_;
+        listeners.erase(std::remove_if(listeners.begin(), listeners.end(),
+            [](const auto &listener) { return listener.expired(); }), listeners.end());
+        listeners.push_back(observer);
     }
 
     std::shared_ptr<connection_state> connection_registry::create() {
         states_.erase(std::remove_if(states_.begin(), states_.end(),
             [](const auto &state) { return state.expired(); }), states_.end());
         auto state = std::make_shared<connection_state>();
+        state->interface_observers_ = interface_observers_;
         states_.push_back(state);
         return state;
     }
@@ -269,7 +288,48 @@ namespace eka2l1::epoc::socket {
         }
     }
 
+    void socket_connection_proxy::request_interface_notification(service::ipc_context *ctx) {
+        if (interface_request_ || !observed_state_.expired()) {
+            ctx->complete(epoc::error_in_use);
+            return;
+        }
+        if (ctx->get_argument_max_data_size(0) < sizeof(interface_notification)
+            || ctx->msg->args.get_arg_type(0) != ipc_arg_type::des8) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+        if (!interface_observer_) {
+            interface_observer_ = std::make_shared<interface_observer>([this](const interface_notification &event) {
+                constexpr std::size_t MAX_NOTIFICATIONS = 8;
+                if (interface_events_.size() == MAX_NOTIFICATIONS) {
+                    interface_events_.pop_front();
+                }
+                interface_events_.push_back(event);
+                complete_interface_notification();
+            });
+            parent_->server<socket_server>()->connections().observe_interfaces(interface_observer_);
+        }
+        interface_request_ = ctx->move_to_new();
+        complete_interface_notification();
+    }
+
+    void socket_connection_proxy::complete_interface_notification() {
+        if (!interface_request_ || interface_events_.empty()) {
+            return;
+        }
+        auto request = std::move(interface_request_);
+        if (request->sys->get_kernel_system()->is_thread_alive(request->msg->own_thr)) {
+            const bool written = request->write_data_to_descriptor_argument(0, interface_events_.front());
+            if (written) {
+                interface_events_.pop_front();
+            }
+            request->complete(written ? epoc::error_none : epoc::error_bad_descriptor);
+        }
+    }
+
     void socket_connection_proxy::cancel_interface_notification() {
+        interface_observer_.reset();
+        interface_events_.clear();
         if (interface_request_) {
             if (interface_request_->sys->get_kernel_system()->is_thread_alive(interface_request_->msg->own_thr)) {
                 interface_request_->complete(epoc::error_cancel);
@@ -554,11 +614,7 @@ namespace eka2l1::epoc::socket {
                     break;
 
                 case socket_cn_all_interface_notification:
-                    if (interface_request_) {
-                        ctx->complete(epoc::error_in_use);
-                    } else {
-                        interface_request_ = ctx->move_to_new();
-                    }
+                    request_interface_notification(ctx);
                     break;
 
                 case socket_cn_cancel_all_interface_notification:

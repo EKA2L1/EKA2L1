@@ -22,6 +22,7 @@
  */
 
 #include <algorithm>
+#include <filesystem>
 #include <common/chunkyseri.h>
 #include <common/cvt.h>
 #include <common/log.h>
@@ -249,7 +250,7 @@ namespace eka2l1 {
         return 0;
     }
 
-    void central_repo::write_changes(eka2l1::io_system *io, device_manager *mngr) {
+    bool central_repo::write_changes(eka2l1::io_system *io, device_manager *mngr, const bool atomic) {
         std::vector<std::uint8_t> bufs;
 
         {
@@ -267,15 +268,34 @@ namespace eka2l1 {
 
         p += u":\\Private\\10202BE9\\persists\\" + firm_code + u"\\" + common::utf8_to_ucs2(common::to_string(uid, std::hex)) + u".cre";
 
-        symfile f = io->open_file(p, WRITE_MODE | BIN_MODE);
+        const std::u16string output = atomic ? p + u".tmp" : p;
+        symfile f = io->open_file(output, WRITE_MODE | BIN_MODE);
 
         if (!f) {
             LOG_ERROR(SERVICE_CENREP, "Can't write CRE changes, opening {} failed", common::ucs2_to_utf8(p));
-            return;
+            return false;
         }
 
-        f->write_file(&bufs[0], 1, static_cast<std::uint32_t>(bufs.size()));
-        f->close();
+        const bool written = f->write_file(bufs.data(), 1, static_cast<std::uint32_t>(bufs.size())) == bufs.size()
+            && f->flush();
+        const bool closed = f->close();
+        if (!atomic) {
+            return written && closed;
+        }
+
+        if (written && closed) {
+            const auto from = io->get_raw_path(output);
+            const auto to = io->get_raw_path(p);
+            if (from && to) {
+                std::error_code error;
+                std::filesystem::rename(std::filesystem::path(*from), std::filesystem::path(*to), error);
+                if (!error) {
+                    return true;
+                }
+            }
+        }
+        io->delete_entry(output);
+        return false;
     }
 
     void central_repo_client_subsession::write_changes(eka2l1::io_system *io, device_manager *mngr) {

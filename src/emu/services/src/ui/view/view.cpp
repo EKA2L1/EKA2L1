@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <common/log.h>
 #include <loader/rsc.h>
 #include <services/ui/view/view.h>
@@ -128,7 +129,7 @@ namespace eka2l1 {
     }
 
     void view_server::make_view_active(view_session *activator, const ui::view::view_id &active_id, const ui::view::custom_message &msg,
-        const epoc::notify_info &on_activated) {
+        const epoc::security_info &source, const epoc::notify_info &on_activated) {
         view_session *deactivate_ss = active_view_session();
         std::optional<ui::view::view_id> old_id = std::nullopt;
 
@@ -145,7 +146,7 @@ namespace eka2l1 {
 
         activator->set_active_view(active_id);
         activator->queue_event({ ui::view::view_event::event_active_view, active_id, old_id.value(),
-            msg.id_, static_cast<std::int32_t>(msg.data_.size()) }, msg, on_activated);
+            msg.id_, static_cast<std::int32_t>(msg.data_.size()) }, msg, on_activated, source);
 
         call_activation_listener(active_id);
     }
@@ -356,11 +357,12 @@ namespace eka2l1 {
 
         // EVwsActivateView finishes once the view has taken the activation, which the client
         // waits for; EVwsCreateActivateViewEvent only queues it.
+        const auto source = ctx->msg->own_thr->owning_process()->get_sec_info();
         if (should_complete) {
-            server<view_server>()->make_view_active(this, id.value(), { custom_message_buf_cop, custom_message_id.value() },
+            server<view_server>()->make_view_active(this, id.value(), { custom_message_buf_cop, custom_message_id.value() }, source,
                 epoc::notify_info(ctx->msg->request_sts, ctx->msg->own_thr));
         } else {
-            server<view_server>()->make_view_active(this, id.value(), { custom_message_buf_cop, custom_message_id.value() });
+            server<view_server>()->make_view_active(this, id.value(), { custom_message_buf_cop, custom_message_id.value() }, source);
             ctx->complete(epoc::error_none);
         }
     }
@@ -396,10 +398,33 @@ namespace eka2l1 {
     }
 
     void view_session::check_source_of_view_switch(service::ipc_context *ctx) {
-        // Security policies are not enforced, so whoever started the switch passes.
-        const std::int32_t passed = 1;
-        ctx->write_data_to_descriptor_argument<std::int32_t>(0, passed);
-        ctx->complete(epoc::error_none);
+        const auto source = queue_.current_switch_source();
+        if (!source) {
+            ctx->complete(epoc::error_unknown);
+            return;
+        }
+
+        auto policy = ctx->get_argument_data_from_descriptor<epoc::security_policy>(0);
+        if (!policy || ctx->get_argument_data_size(0) != sizeof(epoc::security_policy)) {
+            ctx->complete(epoc::error_bad_descriptor);
+            return;
+        }
+        const auto valid_cap = [](const std::uint8_t cap) {
+            return cap == static_cast<std::uint8_t>(epoc::cap_none) || cap < epoc::cap_limit;
+        };
+        if (policy->type > epoc::security_policy::v3
+            || (policy->type >= epoc::security_policy::c3
+                && !std::all_of(policy->caps, policy->caps + 3, valid_cap))
+            || (policy->type == epoc::security_policy::c7
+                && !std::all_of(policy->extra_caps, policy->extra_caps + 4, valid_cap))) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        epoc::security_info missing;
+        const std::int32_t passed = policy->check(*source, missing);
+        const bool written = ctx->write_data_to_descriptor_argument<std::int32_t>(2, passed);
+        ctx->complete(written ? epoc::error_none : epoc::error_bad_descriptor);
     }
 
     void view_session::get_custom_message(service::ipc_context *ctx) {

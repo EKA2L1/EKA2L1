@@ -753,7 +753,13 @@ namespace eka2l1 {
         std::optional<std::int32_t> icon_size_height = std::nullopt;
 
         if (by_index) {
-            icon_size_width = icon_size_height = 0;
+            static constexpr std::int32_t LEGACY_ICON_SIDES[] = { 24, 32, 48 };
+            const auto index = ctx.get_argument_value<std::int32_t>(1);
+            if (!index || *index < 0 || *index >= 3) {
+                ctx.complete(epoc::error_argument);
+                return;
+            }
+            icon_size_width = icon_size_height = LEGACY_ICON_SIDES[*index];
         } else if (legacy_level() == APA_LEGACY_LEVEL_OLD) {
             std::optional<eka2l1::vec2> size_vec = ctx.get_argument_data_from_descriptor<eka2l1::vec2>(1);
             if (size_vec.has_value()) {
@@ -777,35 +783,39 @@ namespace eka2l1 {
             return;
         }
 
-        if (reg->app_icons.size() == 0) {
-            // Usually it must have 1
+        if (reg->app_icons.size() < 2) {
             ctx.complete(epoc::error_not_supported);
             return;
         }
 
-        app_icon_handles handle_result;
+        std::size_t pair = 0;
+        if (by_index) {
+            const auto icon = get_icon_by_size(*reg, { *icon_size_width, *icon_size_height });
+            if (!icon) {
+                ctx.complete(epoc::error_not_found);
+                return;
+            }
 
-        // TODO: Iterate and choose right size. But have to do many code....
-        if (reg->app_icons[0].bmp_rom_addr_) {
-            handle_result.bmp_handle = reg->app_icons[0].bmp_rom_addr_;
-        } else {
-            handle_result.bmp_handle = reg->app_icons[0].bmp_->id;
+            for (; pair < reg->app_icons.size() / 2; pair++) {
+                const auto candidate = get_icon(*reg, pair);
+                if (candidate == icon) {
+                    break;
+                }
+            }
         }
 
-        if (reg->app_icons[1].bmp_rom_addr_) {
-            handle_result.mask_bmp_handle = reg->app_icons[1].bmp_rom_addr_;
+        const auto get_handle = [](const apa_app_icon &icon) {
+            return icon.bmp_rom_addr_ ? icon.bmp_rom_addr_ : (icon.bmp_ ? icon.bmp_->id : 0);
+        };
+        const app_icon_handles handles{ get_handle(reg->app_icons[pair * 2]), get_handle(reg->app_icons[pair * 2 + 1]) };
+        bool written;
+        if (!by_index && legacy_level() == APA_LEGACY_LEVEL_OLD) {
+            written = ctx.write_data_to_descriptor_argument<std::uint32_t>(2, handles.bmp_handle)
+                && ctx.write_data_to_descriptor_argument<std::uint32_t>(3, handles.mask_bmp_handle);
         } else {
-            handle_result.mask_bmp_handle = reg->app_icons[1].bmp_->id;
+            written = ctx.write_data_to_descriptor_argument<app_icon_handles>(by_index ? 2 : 3, handles);
         }
-
-        if (legacy_level() == APA_LEGACY_LEVEL_OLD) {
-            ctx.write_data_to_descriptor_argument<std::uint32_t>(2, handle_result.bmp_handle);
-            ctx.write_data_to_descriptor_argument<std::uint32_t>(3, handle_result.mask_bmp_handle);
-        } else {
-            ctx.write_data_to_descriptor_argument<app_icon_handles>(by_index ? 2 : 3, handle_result);
-        }
-
-        ctx.complete(epoc::error_none);
+        ctx.complete(written ? epoc::error_none : epoc::error_bad_descriptor);
     }
 
     void applist_server::get_app_icon_sizes(service::ipc_context &ctx) {

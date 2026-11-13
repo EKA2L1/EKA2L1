@@ -1376,7 +1376,7 @@ namespace eka2l1 {
             new_bmp->ref();
 
             // Clients without a handle buffer keep the dirty bitmap and swap to the clean one later.
-            if (ctx->get_argument_data_size(3) >= sizeof(bmp_handles)) {
+            if (ctx->get_argument_max_data_size(3) >= sizeof(bmp_handles)) {
                 bmp_handles handle_info;
 
                 // Add this object to the object table!

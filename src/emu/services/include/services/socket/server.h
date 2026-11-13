@@ -20,6 +20,8 @@
 
 #pragma once
 
+#include <deque>
+
 #include <services/socket/common.h>
 #include <services/socket/connection.h>
 #include <services/socket/host.h>
@@ -51,8 +53,12 @@ namespace eka2l1 {
             std::optional<std::string> start_preferences_;
             std::unique_ptr<service::ipc_context> progress_request_;
 
-            // Interfaces never come or go here, so this only completes when cancelled.
             std::unique_ptr<service::ipc_context> interface_request_;
+            std::shared_ptr<interface_observer> interface_observer_;
+            std::deque<interface_notification> interface_events_;
+
+            void request_interface_notification(service::ipc_context *ctx);
+            void complete_interface_notification();
 
             void cancel_progress();
             void cancel_interface_notification();
