@@ -40,7 +40,7 @@ namespace eka2l1 {
 
             // A new notifier reports every change, so the first logon completes at once with this mask.
             static constexpr std::uint32_t CHANGES_UP_TO_OUT_OF_MEMORY = 0x7F;
-            static constexpr std::uint32_t CHANGES_THRASH_LEVEL = 0x80;
+            static constexpr std::uint32_t CHANGES_THRASH_LEVEL = 0x100;
             changes_ = CHANGES_UP_TO_OUT_OF_MEMORY | ((kern->get_epoc_version() >= epocver::epoc95) ? CHANGES_THRASH_LEVEL : 0);
         }
 
@@ -80,6 +80,7 @@ namespace eka2l1 {
 
         void change_notifier::do_state(common::chunkyseri &seri) {
             req_info_.do_state(seri);
+            seri.absorb(changes_);
         }
     }
 }

@@ -49,6 +49,7 @@
 #include <mem/control.h>
 #include <mem/mem.h>
 #include <mem/ptr.h>
+#include <utils/err.h>
 #include <vfs/vfs.h>
 
 #include <loader/e32img.h>
@@ -904,7 +905,11 @@ namespace eka2l1 {
 
     // We can support also ELF!
     process_ptr kernel_system::spawn_new_process(const std::u16string &path, const std::u16string &cmd_arg, const kernel::uid promised_uid3,
-        const std::uint32_t stack_size) {
+        const std::uint32_t stack_size, int *error) {
+        if (error) {
+            *error = epoc::error_not_found;
+        }
+
         if (path == kernel::BRIDAGED_EXECUTABLE_NAME) {
             // Spawn a fake process that's linked to a real process
             return create<kernel::guomen_process>(mem_, cmd_arg);
@@ -994,10 +999,12 @@ namespace eka2l1 {
             return nullptr;
         }
 
-        // A second starter of a running fixed process shares that instance, as its data address cannot be mapped twice.
-        if (kernel::process *live = cs->fixed_data_owner()) {
+        if (cs->fixed_data_owner()) {
+            if (error) {
+                *error = epoc::error_already_exists;
+            }
             destroy(pr);
-            return live;
+            return nullptr;
         }
 
         LOG_TRACE(KERNEL, "Spawned process: {}, entry point = 0x{:X}", process_name, cs->get_code_run_addr(&(*pr)));
@@ -1026,7 +1033,11 @@ namespace eka2l1 {
             starting_boot_server_ = server_process->unique_id();
         }
 
-        return server_process->run();
+        if (!server_process->run()) {
+            starting_boot_server_ = 0;
+            return false;
+        }
+        return true;
     }
 
     bool kernel_system::run_after_boot_servers(process_ptr pr) {

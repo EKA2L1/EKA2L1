@@ -123,11 +123,12 @@ namespace eka2l1 {
         }
 
         kernel_system *kern = ctx.sys->get_kernel_system();
-        process_ptr pr = kern->spawn_new_process(*process_name16, *process_args, uid3, stack_size);
+        int error;
+        process_ptr pr = kern->spawn_new_process(*process_name16, *process_args, uid3, stack_size, &error);
 
         if (!pr) {
             LOG_DEBUG(SERVICE_LOADER, "Try spawning process {} failed", name_process);
-            ctx.complete(epoc::error_not_found);
+            ctx.complete(error);
             return;
         }
 

@@ -508,7 +508,7 @@ namespace eka2l1 {
 
         process_ptr spawn_new_process(const std::u16string &path,
             const std::u16string &cmd_arg = u"", const kernel::uid promised_uid3 = 0,
-            const std::uint32_t stack_size = 0);
+            const std::uint32_t stack_size = 0, int *error = nullptr);
 
         // Starts a server the device's own startup sequence launches before any application, after the previous one settles.
         bool start_boot_server(const std::u16string &path, const bool wait_for_start = true);

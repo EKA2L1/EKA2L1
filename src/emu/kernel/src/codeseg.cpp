@@ -31,7 +31,7 @@
 
 namespace eka2l1::kernel {
     static bool is_fixed_process_data(kernel_system *kern, const address data_base) {
-        return !kern->is_eka1() && (data_base >= mem::shared_data) && (data_base < mem::ram_code_addr);
+        return !kern->is_eka1() && (kern->get_epoc_version() < epocver::epoc95) && (data_base >= mem::shared_data) && (data_base < mem::ram_code_addr);
     }
 
     codeseg::codeseg(kernel_system *kern, const std::string &name, codeseg_create_info &info)
@@ -567,7 +567,7 @@ namespace eka2l1::kernel {
     }
 
     kernel::process *codeseg::fixed_data_owner() {
-        if (attaches.empty() || !data_size || !is_fixed_process_data(kern, data_base)) {
+        if (attaches.empty() || !is_rom() || !(data_size || bss_size) || !is_fixed_process_data(kern, data_base)) {
             return nullptr;
         }
 
