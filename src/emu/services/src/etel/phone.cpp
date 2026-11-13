@@ -68,7 +68,7 @@ namespace eka2l1 {
         }
 
         if ((info_to_fill->index_ < 0) || (info_to_fill->index_ >= phone_->lines_.size())) {
-            ctx->complete(epoc::error_argument);
+            ctx->complete(epoc::error_not_found);
             return;
         }
 

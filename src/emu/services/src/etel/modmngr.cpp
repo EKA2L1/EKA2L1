@@ -51,18 +51,33 @@ namespace eka2l1::epoc::etel {
 
         LOG_TRACE(SERVICE_ETEL, "Loading TSY temporary stubbed with module name {}", module_name);
 
-        // TODO: We need to give it a proper info
-        // Give a line first, add it to phone later
-        etel_module_entry line_entry;
-        line_entry.tsy_name_ = module_lowercased;
-
         epoc::etel_line_info line_info;
         line_info.hook_sts_ = epoc::etel_line_hook_sts_off;
         line_info.sts_ = epoc::etel_line_status_idle;
         line_info.last_call_added_.set_length(nullptr, 0);
         line_info.last_call_answering_.set_length(nullptr, 0);
 
-        line_entry.entity_ = std::make_unique<etel_line>(line_info, "Voice1", epoc::etel_line_caps_voice);
+        // The common TSY always reports these four lines, in this order. Clients open a line by the
+        // name at a fixed index without checking the result, so every index must resolve.
+        struct line_layout {
+            const char *name_;
+            std::uint32_t caps_;
+        };
+
+        static constexpr line_layout TSY_LINES[] = {
+            { "Voice1", epoc::etel_line_caps_voice | epoc::etel_line_caps_event_incoming_call },
+            { "Voice2", epoc::etel_line_caps_aux_voice | epoc::etel_line_caps_event_incoming_call },
+            { "Data", epoc::etel_line_caps_data | epoc::etel_line_caps_event_incoming_call },
+            { "Fax", epoc::etel_line_caps_fax | epoc::etel_line_caps_event_incoming_call }
+        };
+
+        std::vector<etel_module_entry> line_entries;
+        for (const line_layout &layout : TSY_LINES) {
+            etel_module_entry line_entry;
+            line_entry.tsy_name_ = module_lowercased;
+            line_entry.entity_ = std::make_unique<etel_line>(line_info, layout.name_, layout.caps_);
+            line_entries.push_back(std::move(line_entry));
+        }
 
         etel_module_entry phone_entry;
         phone_entry.tsy_name_ = module_lowercased;
@@ -82,12 +97,16 @@ namespace eka2l1::epoc::etel {
         phone_info.phone_name_.assign(nullptr, phone_name_meme);
 
         auto phone_obj = std::make_unique<etel_phone>(phone_info);
-        phone_obj->lines_.push_back(reinterpret_cast<etel_line *>(line_entry.entity_.get()));
+        for (etel_module_entry &line_entry : line_entries) {
+            phone_obj->lines_.push_back(reinterpret_cast<etel_line *>(line_entry.entity_.get()));
+        }
 
         phone_entry.entity_ = std::move(phone_obj);
 
         entries_.push_back(std::move(phone_entry));
-        entries_.push_back(std::move(line_entry));
+        for (etel_module_entry &line_entry : line_entries) {
+            entries_.push_back(std::move(line_entry));
+        }
 
         tsy_module_info info;
         info.name_ = module_lowercased;
