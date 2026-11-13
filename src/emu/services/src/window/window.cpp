@@ -1897,12 +1897,49 @@ namespace eka2l1 {
         return scancode;
     }
 
-    bool window_server::is_uiq_2_device() {
-        if (!uiq_2_device_) {
-            uiq_2_device_ = get_system()->is_uiq_2_device_active();
+    // UIQ 3 navigates with a four-way controller and its action key (DeviceKeys.h); the S60 OK key becomes the action key.
+    static std::int32_t uiq_3_scancode(const std::int32_t scancode) {
+        switch (scancode) {
+        case epoc::std_key_up_arrow:
+            return epoc::std_key_device_4;
+
+        case epoc::std_key_down_arrow:
+            return epoc::std_key_device_5;
+
+        case epoc::std_key_left_arrow:
+            return epoc::std_key_device_6;
+
+        case epoc::std_key_right_arrow:
+            return epoc::std_key_device_7;
+
+        case epoc::std_key_device_3:
+            return epoc::std_key_device_8;
+
+        default:
+            break;
         }
 
-        return uiq_2_device_.value();
+        return scancode;
+    }
+
+    std::int32_t window_server::uiq_scancode(const std::int32_t scancode) {
+        if (!uiq_version_) {
+            system *sys = get_system();
+            uiq_version_ = sys->is_uiq_2_device_active() ? 2 : (sys->is_uiq_3_device_active() ? 3 : 0);
+        }
+
+        switch (uiq_version_.value()) {
+        case 2:
+            return uiq_2_scancode(scancode);
+
+        case 3:
+            return uiq_3_scancode(scancode);
+
+        default:
+            break;
+        }
+
+        return scancode;
     }
 
     static constexpr std::uint64_t DIRECT_FRAMEBUFFER_REFRESH_INTERVAL_US = 1000000 / 60;
@@ -2131,8 +2168,8 @@ namespace eka2l1 {
                     } else if (scancode == '5') {
                         guest_event.key_evt_.scancode = epoc::std_key_space;
                     }
-                } else if (is_uiq_2_device()) {
-                    guest_event.key_evt_.scancode = uiq_2_scancode(guest_event.key_evt_.scancode);
+                } else {
+                    guest_event.key_evt_.scancode = uiq_scancode(guest_event.key_evt_.scancode);
                 }
 
                 key_shipper.add_new_event(guest_event);
@@ -2145,9 +2182,7 @@ namespace eka2l1 {
 
         case drivers::input_event_type::button:
             if (make_button_event(input_mapping.button_input_map, input_event, guest_event)) {
-                if (is_uiq_2_device()) {
-                    guest_event.key_evt_.scancode = uiq_2_scancode(guest_event.key_evt_.scancode);
-                }
+                guest_event.key_evt_.scancode = uiq_scancode(guest_event.key_evt_.scancode);
                 key_shipper.add_new_event(guest_event);
                 key_shipper.start_shipping();
 

@@ -401,7 +401,7 @@ namespace eka2l1 {
             init_symbian_app_launch_to_host_launch(sys);
         }
         
-        // Processes the device's own startup sequence launches before any application, in its order.
+        // Processes the UIQ 3 startup sequence launches before any application, in its order.
         // Their clients only connect and never start them.
         static void start_rom_boot_servers(system *sys) {
             struct boot_process {
@@ -410,18 +410,18 @@ namespace eka2l1 {
             };
 
             static const boot_process BOOT_PROCESSES[] = {
-                // UIQ 3. The shell owns the priority 0 window group the memory manager expects.
+                // The shell owns the priority 0 window group the memory manager expects.
                 { u"z:\\sys\\bin\\thmsrv.exe", true },
                 { u"z:\\sys\\bin\\memorymanagerserver.exe", true },
                 { u"z:\\sys\\bin\\linshell.exe", false },
                 { u"z:\\sys\\bin\\tisrvs.exe", true }
             };
 
-            kernel_system *kern = sys->get_kernel_system();
-            if (kern->is_eka1()) {
+            if (!sys->is_uiq_3_device_active()) {
                 return;
             }
 
+            kernel_system *kern = sys->get_kernel_system();
             for (const boot_process &process : BOOT_PROCESSES) {
                 if (sys->get_io_system()->exist(process.path)) {
                     kern->start_boot_server(process.path, process.wait_for_start);

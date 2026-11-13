@@ -379,8 +379,8 @@ namespace eka2l1 {
         common::ini_file ws_config;
         bool loaded{ false };
         // Answered on first input: the frontend may mount drive Z only after this server exists.
-        std::optional<bool> uiq_2_device_;
-        bool is_uiq_2_device();
+        std::optional<int> uiq_version_;
+        std::int32_t uiq_scancode(const std::int32_t scancode);
 
         std::atomic<epoc::ws::uid> key_capture_uid_counter{ 0 };
         std::atomic<epoc::ws::uid> obj_uid{ 0 };
