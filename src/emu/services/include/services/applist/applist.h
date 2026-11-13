@@ -305,6 +305,7 @@ namespace eka2l1 {
         void get_app_icon(service::ipc_context &ctx, const bool by_index = false);
 
         void get_app_icon_sizes(service::ipc_context &ctx);
+        void get_app_owned_files(service::ipc_context &ctx);
         void get_native_executable_name_if_non_native(service::ipc_context &ctx);
         void app_info_provided_by_reg_file(service::ipc_context &ctx);
 

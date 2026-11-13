@@ -77,6 +77,14 @@ namespace eka2l1 {
         }
     } 
 
+    static void populate_owned_files(common::chunkyseri &seri, apa_app_registry *reg) {
+        std::uint32_t count = static_cast<std::uint32_t>(reg->ownership_list.size());
+        seri.absorb(count);
+        for (auto &file : reg->ownership_list) {
+            epoc::absorb_des_string(file, seri, true);
+        }
+    }
+
     static void populate_icon_sizes(common::chunkyseri &seri, apa_app_registry *reg) {
         std::uint32_t size = reg->app_icons.size();
         seri.absorb(size);
@@ -850,6 +858,43 @@ namespace eka2l1 {
         ctx.complete(epoc::error_none);
     }
 
+    void applist_server::get_app_owned_files(service::ipc_context &ctx) {
+        std::optional<epoc::uid> app_uid = ctx.get_argument_value<epoc::uid>(0);
+        std::optional<std::int32_t> client_buf_size = ctx.get_argument_value<std::int32_t>(1);
+
+        if (!app_uid || !client_buf_size) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+
+        apa_app_registry *reg = get_registration(app_uid.value());
+
+        if (!reg) {
+            ctx.complete(epoc::error_not_found);
+            return;
+        }
+
+        // The server reserves a TFileName per entry; a positive completion asks the client to retry with that size.
+        constexpr std::int32_t TFILENAME_SIZE = 8 + 256 * 2;
+        const std::int32_t size_required = 4 + static_cast<std::int32_t>(reg->ownership_list.size()) * TFILENAME_SIZE;
+
+        if (size_required > client_buf_size.value()) {
+            ctx.complete(size_required);
+            return;
+        }
+
+        std::vector<std::uint8_t> buf;
+        common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
+        populate_owned_files(seri, reg);
+
+        buf.resize(seri.size());
+        seri = common::chunkyseri(buf.data(), buf.size(), common::SERI_MODE_WRITE);
+        populate_owned_files(seri, reg);
+
+        ctx.write_data_to_descriptor_argument(2, buf.data(), static_cast<std::uint32_t>(buf.size()));
+        ctx.complete(epoc::error_none);
+    }
+
     void applist_server::launch_app(service::ipc_context &ctx, const bool return_thread_id) {
         std::optional<std::u16string> cmd_line = ctx.get_argument_value<std::u16string>(0);
         if (!cmd_line) {
@@ -1414,6 +1459,7 @@ namespace eka2l1 {
 
             default:
                 LOG_ERROR(SERVICE_APPLIST, "Unimplemented applist opcode {}", ctx->msg->function);
+                ctx->complete(epoc::error_not_supported);
                 break;
             }
         } else if (llevel == APA_LEGACY_LEVEL_S60V2) {
@@ -1432,6 +1478,7 @@ namespace eka2l1 {
 
             default:
                 LOG_ERROR(SERVICE_APPLIST, "Unimplemented applist opcode {}", ctx->msg->function);
+                ctx->complete(epoc::error_not_supported);
                 break;
             }
         } else if (llevel == APA_LEGACY_LEVEL_TRANSITION) {
@@ -1462,6 +1509,7 @@ namespace eka2l1 {
 
             default:
                 LOG_ERROR(SERVICE_APPLIST, "Unimplemented applist opcode 0x{:X}", ctx->msg->function);
+                ctx->complete(epoc::error_not_supported);
                 break;
             }
         } else {
@@ -1558,6 +1606,10 @@ namespace eka2l1 {
                 get_next_app(*ctx);
                 break;
 
+            case applist_request_get_ownership_infos:
+                server<applist_server>()->get_app_owned_files(*ctx);
+                break;
+
             // Registries are scanned before any guest process runs, so the first scan is
             // always complete already and the observer is satisfied as it registers.
             case applist_request_register_list_population_complete_observer:
@@ -1567,6 +1619,7 @@ namespace eka2l1 {
 
             default:
                 LOG_ERROR(SERVICE_APPLIST, "Unimplemented applist opcode 0x{:X}", ctx->msg->function);
+                ctx->complete(epoc::error_not_supported);
                 break;
             }
         }
