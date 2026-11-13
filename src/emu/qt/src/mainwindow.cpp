@@ -79,6 +79,7 @@
 #include <QProgressDialog>
 #include <QSettings>
 #include <QLineEdit>
+#include <QThread>
 #include <QThreadPool>
 #include <QtConcurrent/QtConcurrent>
 
@@ -542,12 +543,21 @@ void main_window::setup_package_installer_ui_hooks() {
     eka2l1::system *system = emulator_state_.symsys.get();
     eka2l1::manager::packages *pkgmngr = system->get_packages();
 
+    // Installs requested through the control API already run on the GUI thread, where a
+    // blocking queued emit would wait on itself.
     pkgmngr->show_text = [this](const char *text, const bool one_button) -> bool {
-        // We only have one receiver, so it's ok ;)
+        if (QThread::currentThread() == thread()) {
+            return on_package_install_text_ask(text, one_button);
+        }
+
         return emit package_install_text_ask(text, one_button);
     };
 
     pkgmngr->choose_lang = [this](const int *languages, const int language_count) -> int {
+        if (QThread::currentThread() == thread()) {
+            return on_package_install_language_choose(languages, language_count);
+        }
+
         return emit package_install_language_choose(languages, language_count);
     };
 }
