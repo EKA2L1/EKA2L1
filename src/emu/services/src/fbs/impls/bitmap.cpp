@@ -1938,7 +1938,10 @@ namespace eka2l1 {
 
             for (std::size_t i = 0; i < width * height; i++) {
                 const auto *pixel = mask_rgba + i * 4;
-                if (composition == icon_mask_composition::alf_canvas) {
+                if (composition == icon_mask_composition::uiq) {
+                    // UIQ draws app icons with a non-inverted mask: white is opaque at every depth.
+                    icon_rgba[i * 4 + 3] = static_cast<std::uint8_t>((2 * pixel[0] + 5 * pixel[1] + pixel[2]) >> 3);
+                } else if (composition == icon_mask_composition::alf_canvas) {
                     // ALF Canvas inverts EGray2 before ReplaceAlphaChannelL converts to Gray256.
                     const std::uint8_t alpha = (2 * pixel[0] + 5 * pixel[1] + pixel[2]) >> 3;
                     icon_rgba[i * 4 + 3] = mask_mode == epoc::display_mode::gray2 ? 255 - alpha : alpha;
