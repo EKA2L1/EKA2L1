@@ -106,8 +106,15 @@ namespace eka2l1::epoc {
          * trailing components of a linked typeface, which is the same
          * arrangement link.ini describes, with the device's own face canonical
          * so nothing about its appearance or metrics changes.
+         *
+         * When `system_font` names the family of an imported font, that family
+         * is put in front of every device face that draws Latin text instead:
+         * its glyphs replace the device's, sized so its capitals are
+         * `system_font_scale` percent as tall as the device face's, while the
+         * device face stays canonical and supplies whatever the imported font
+         * lacks.
          */
-        void attach_user_font_fallbacks();
+        void attach_user_font_fallbacks(const std::u16string &system_font = u"", const int system_font_scale = 100);
 
         open_font_info *seek_the_open_font(epoc::font_spec_base &spec);
         open_font_info *seek_the_font_by_uid(const epoc::uid the_uid, epoc::open_font_metrics &target_metric, std::uint32_t *metric_identifier = nullptr);
