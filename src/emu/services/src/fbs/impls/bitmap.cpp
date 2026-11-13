@@ -1375,15 +1375,18 @@ namespace eka2l1 {
             // Own a reference to the clean bitmap, until it is removed
             new_bmp->ref();
 
-            bmp_handles handle_info;
+            // Clients without a handle buffer keep the dirty bitmap and swap to the clean one later.
+            if (ctx->get_argument_data_size(3) >= sizeof(bmp_handles)) {
+                bmp_handles handle_info;
 
-            // Add this object to the object table!
-            handle_info.handle = obj_table_.add(new_bmp);
-            handle_info.server_handle = new_bmp->id;
-            handle_info.address_offset = server<fbs_server>()->host_ptr_to_guest_shared_offset(new_bmp->bitmap_);
+                // Add this object to the object table!
+                handle_info.handle = obj_table_.add(new_bmp);
+                handle_info.server_handle = new_bmp->id;
+                handle_info.address_offset = server<fbs_server>()->host_ptr_to_guest_shared_offset(new_bmp->bitmap_);
 
-            ctx->write_data_to_descriptor_argument(3, handle_info);
-            obj_table_.remove(handle);
+                ctx->write_data_to_descriptor_argument(3, handle_info);
+                obj_table_.remove(handle);
+            }
 
             // Notify dirty
             if (fbss->compressor)

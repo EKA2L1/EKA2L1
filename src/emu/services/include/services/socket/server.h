@@ -51,7 +51,11 @@ namespace eka2l1 {
             std::optional<std::string> start_preferences_;
             std::unique_ptr<service::ipc_context> progress_request_;
 
+            // Interfaces never come or go here, so this only completes when cancelled.
+            std::unique_ptr<service::ipc_context> interface_request_;
+
             void cancel_progress();
+            void cancel_interface_notification();
             void set_progress(std::int32_t stage);
             void bind_state(const std::shared_ptr<connection_state> &state, bool monitor = false);
             void attach(service::ipc_context *ctx);
@@ -226,6 +230,8 @@ namespace eka2l1 {
         socket_cn_get_connection_info = 0x52,
         socket_cn_control = 0x53,
         socket_cn_attach = 0x54,
+        socket_cn_all_interface_notification = 0x55,
+        socket_cn_cancel_all_interface_notification = 0x56,
         socket_so_open_with_subconnection = 0x71,
         socket_ss_request_optimal_dealer = 0x3EE,
         socket_cm_api_ext_interface_send_receive = 0x3F0

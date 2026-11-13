@@ -12,6 +12,7 @@ namespace eka2l1::kernel {
 
     class change_notifier : public eka2l1::kernel::kernel_obj {
         epoc::notify_info req_info_;
+        std::uint32_t changes_;
 
     public:
         explicit change_notifier(kernel_system *kern);

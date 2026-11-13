@@ -30,6 +30,10 @@
 #include <unordered_set>
 
 namespace eka2l1::kernel {
+    static bool is_fixed_process_data(kernel_system *kern, const address data_base) {
+        return !kern->is_eka1() && (data_base >= mem::shared_data) && (data_base < mem::ram_code_addr);
+    }
+
     codeseg::codeseg(kernel_system *kern, const std::string &name, codeseg_create_info &info)
         : kernel_obj(kern, name, nullptr, kernel::access_type::global_access)
         , patched_(false)
@@ -314,8 +318,17 @@ namespace eka2l1::kernel {
                     dt_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, data_size_align, data_size_align,
                         prot_read_write, kernel::chunk_type::normal, acc, kernel::chunk_attrib::anonymous,
                         0x00, false, data_base, nullptr);
+                } else if (is_fixed_process_data(kern, data_base)) {
+                    // The moving model links the data of a fixed ROM process into the kernel section, mapped in every process.
+                    dt_chunk = kern->create<kernel::chunk>(mem, new_foe, "", 0, data_size_align, data_size_align,
+                        prot_read_write, kernel::chunk_type::normal, kernel::chunk_access::global, kernel::chunk_attrib::anonymous,
+                        0x00, false, data_base, nullptr);
                 } else {
                     dt_chunk = new_foe->get_rom_bss_chunk(data_base);
+                    if (!dt_chunk) {
+                        return false;
+                    }
+
                     add_offset = data_base - dt_chunk->base(new_foe).ptr_address();
 
                     if (!dt_chunk->commit(add_offset, data_size_align)) {
@@ -553,6 +566,14 @@ namespace eka2l1::kernel {
         }
     }
 
+    kernel::process *codeseg::fixed_data_owner() {
+        if (attaches.empty() || !data_size || !is_fixed_process_data(kern, data_base)) {
+            return nullptr;
+        }
+
+        return attaches.front()->attached_process;
+    }
+
     codeseg_state codeseg::state_with(kernel::process *foe) {
         auto attach_info = common::find_and_ret_if(attaches, [=](const std::unique_ptr<attached_info> &info) {
             return info->attached_process == foe;
@@ -671,7 +692,7 @@ namespace eka2l1::kernel {
     address codeseg::lookup(kernel::process *pr, const std::uint32_t ord) {
         const address lookup_res = lookup_no_relocate(ord);
 
-        if (code_addr != 0 || !lookup_res || patched_) {
+        if (code_addr != 0 || !lookup_res || ((ord <= absolute_exports_.size()) && absolute_exports_[ord - 1])) {
             return lookup_res;
         }
 
@@ -804,11 +825,16 @@ namespace eka2l1::kernel {
     }
 
     void codeseg::set_export(const std::uint32_t ordinal, eka2l1::ptr<void> address) {
-        if (export_table.size() < ordinal) {
+        if ((ordinal == 0) || (export_table.size() < ordinal)) {
             return;
         }
 
         export_table[ordinal - 1] = address.ptr_address();
+
+        if (absolute_exports_.size() < export_table.size()) {
+            absolute_exports_.resize(export_table.size(), false);
+        }
+        absolute_exports_[ordinal - 1] = true;
     }
 
     void codeseg::set_entry_point(eka2l1::ptr<void> address) {

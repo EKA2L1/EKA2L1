@@ -343,10 +343,31 @@ namespace eka2l1::arm {
         return std::make_unique<Dynarmic::A32::Jit>(config);
     }
 
+    // An unused TLB tag is 0, which the JIT's inline lookup takes for guest page 0. Page 0 looks up
+    // slot 0, so keep that slot's unused tags on a page that can never land there.
+    static void guard_null_page_tlb_entry(Dynarmic::TLB<9> &tlb) {
+        static constexpr std::uint32_t UNMATCHED_TAG = 0xFFFFF000;
+        Dynarmic::TLBEntry &entry = tlb.entries[0];
+
+        if (!entry.read_addr) {
+            entry.read_addr = UNMATCHED_TAG;
+        }
+
+        if (!entry.write_addr) {
+            entry.write_addr = UNMATCHED_TAG;
+        }
+
+        if (!entry.execute_addr) {
+            entry.execute_addr = UNMATCHED_TAG;
+        }
+    }
+
     dynarmic_core::dynarmic_core(arm::exclusive_monitor *monitor)
         : tlb_obj(12)
         , interpreter(monitor, 12)
         , interpreter_callback_inited(false) {
+        guard_null_page_tlb_entry(tlb_obj);
+
         std::shared_ptr<dynarmic_core_cp15> cp15 = std::make_shared<dynarmic_core_cp15>();
         cb = std::make_unique<dynarmic_core_callback>(*this, cp15);
 
@@ -487,14 +508,17 @@ namespace eka2l1::arm {
         }
 
         tlb_obj.Add(vaddr, ptr, prot_flags);
+        guard_null_page_tlb_entry(tlb_obj);
     }
 
     void dynarmic_core::dirty_tlb_page(address addr) {
         tlb_obj.MakeDirty(addr);
+        guard_null_page_tlb_entry(tlb_obj);
     }
 
     void dynarmic_core::flush_tlb() {
         tlb_obj.Flush();
+        guard_null_page_tlb_entry(tlb_obj);
     }
 
     void dynarmic_core::clear_instruction_cache() {

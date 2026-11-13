@@ -105,6 +105,9 @@ namespace eka2l1 {
 
     void kernel_system::wipeout() {
         wiping_ = true;
+        queued_boot_servers_.clear();
+        starting_boot_server_ = 0;
+        processes_awaiting_boot_.clear();
         timing_->remove_event(realtime_ipc_signal_evt_);
 
 #define OBJECT_CONTAINER_CLEANUP(container) \
@@ -991,6 +994,12 @@ namespace eka2l1 {
             return nullptr;
         }
 
+        // A second starter of a running fixed process shares that instance, as its data address cannot be mapped twice.
+        if (kernel::process *live = cs->fixed_data_owner()) {
+            destroy(pr);
+            return live;
+        }
+
         LOG_TRACE(KERNEL, "Spawned process: {}, entry point = 0x{:X}", process_name, cs->get_code_run_addr(&(*pr)));
         
         if (eka2l1::has_root_name(path, true)) {
@@ -1000,6 +1009,57 @@ namespace eka2l1 {
         pr->construct_with_codeseg(cs, new_stack_size, heap_min, heap_max, pri);
 
         return pr;
+    }
+
+    bool kernel_system::start_boot_server(const std::u16string &path, const bool wait_for_start) {
+        if (starting_boot_server_) {
+            queued_boot_servers_.emplace_back(path, wait_for_start);
+            return true;
+        }
+
+        process_ptr server_process = spawn_new_process(path);
+        if (!server_process) {
+            return false;
+        }
+
+        if (wait_for_start) {
+            starting_boot_server_ = server_process->unique_id();
+        }
+
+        return server_process->run();
+    }
+
+    bool kernel_system::run_after_boot_servers(process_ptr pr) {
+        if (!starting_boot_server_) {
+            return pr->run();
+        }
+
+        processes_awaiting_boot_.push_back(pr->unique_id());
+        return true;
+    }
+
+    void kernel_system::boot_server_settled(kernel::process *server_process) {
+        if (!starting_boot_server_ || (server_process->unique_id() != starting_boot_server_)) {
+            return;
+        }
+
+        starting_boot_server_ = 0;
+
+        while (!starting_boot_server_ && !queued_boot_servers_.empty()) {
+            const auto [next, wait_for_start] = std::move(queued_boot_servers_.front());
+            queued_boot_servers_.erase(queued_boot_servers_.begin());
+            start_boot_server(next, wait_for_start);
+        }
+
+        if (starting_boot_server_) {
+            return;
+        }
+
+        for (const kernel::uid waiting : std::exchange(processes_awaiting_boot_, {})) {
+            if (kernel::process *pr = get_by_id<kernel::process>(waiting)) {
+                pr->run();
+            }
+        }
     }
 
     int kernel_system::close(std::uint32_t handle) {

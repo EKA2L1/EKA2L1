@@ -1196,6 +1196,19 @@ namespace eka2l1::hle {
         return open_and_get(lib_path);
     }
 
+    bool lib_manager::is_dll_tls_keyed_by_uid() {
+        if (!dll_tls_keyed_by_uid_.has_value()) {
+            // EUSER ordinal of UserSvr::DllSetTls(TInt, TInt, TAny*), which only exists with the UID-keyed executive.
+            static constexpr std::uint32_t DLL_SET_TLS_WITH_UID_ORDINAL = 2177;
+
+            codeseg_ptr euser = load(u"euser.dll");
+            dll_tls_keyed_by_uid_ = (kern_->get_epoc_version() != epocver::epoc91)
+                || (euser && (euser->export_count() >= DLL_SET_TLS_WITH_UID_ORDINAL));
+        }
+
+        return dll_tls_keyed_by_uid_.value();
+    }
+
     codeseg_ptr lib_manager::load(const std::u16string &name) {
         bool is_driver_lib = false;
 

@@ -92,6 +92,7 @@ namespace eka2l1 {
         void deactive_view(service::ipc_context *ctx, const bool should_complete);
         void get_custom_message(service::ipc_context *ctx);
         void get_current_active_view_id(service::ipc_context *ctx);
+        void check_source_of_view_switch(service::ipc_context *ctx);
         void notify_next_transition(service::ipc_context *ctx, const bool activation);
 
         explicit view_session(service::typical_server *server, const kernel::uid session_uid, epoc::version client_version);

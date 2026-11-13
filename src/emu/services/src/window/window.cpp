@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <algorithm>
 #include <services/window/io.h>
 #include <services/window/op.h>
 #include <services/window/window.h>
@@ -543,7 +544,7 @@ namespace eka2l1::epoc {
 
     void window_server_client::send_event_to_all_window_groups(service::ipc_context &ctx, ws_cmd &cmd) {
         ws_cmd_send_event_to_window_group evt = *reinterpret_cast<ws_cmd_send_event_to_window_group *>(cmd.data_ptr);
-        get_ws().send_event_to_window_groups(evt.evt);
+        get_ws().send_event_to_window_groups(evt.evt, cmd.header.op == ws_cl_op_send_event_to_one_window_group_per_cli);
 
         ctx.complete(epoc::error_none);
     }
@@ -1167,7 +1168,8 @@ namespace eka2l1::epoc {
             break;
         }
 
-        case ws_cl_op_send_event_to_all_window_groups: {
+        case ws_cl_op_send_event_to_all_window_groups:
+        case ws_cl_op_send_event_to_one_window_group_per_cli: {
             send_event_to_all_window_groups(ctx, cmd);
             break;
         }
@@ -1392,6 +1394,7 @@ namespace eka2l1::epoc {
 
         default:
             LOG_INFO(SERVICE_WINDOW, "Unimplemented ClOp: 0x{:x}", cmd.header.op);
+            ctx.complete(epoc::error_none);
             break;
         }
     }
@@ -1630,6 +1633,13 @@ namespace eka2l1 {
             int total_mode = 0;
             bool one_mode_only = false;
 
+            // NUMSCREENMODES lets the table skip indices; WSERV keeps those as empty slots.
+            std::uint32_t sparse_mode_count = 0;
+            common::ini_node_ptr num_modes_node = screen_node->get_as<common::ini_section>()->find("NUMSCREENMODES");
+            if (num_modes_node) {
+                num_modes_node->get_as<common::ini_pair>()->get(&sparse_mode_count, 1, 0);
+            }
+
             do {
                 std::string current_mode_str = std::to_string(total_mode + 1);
                 std::string screen_mode_width_key = "SCR_WIDTH";
@@ -1647,6 +1657,13 @@ namespace eka2l1 {
                 epoc::config::screen_mode scr_mode;
                 scr_mode.screen_number = total_screen - 1;
                 scr_mode.mode_number = total_mode;
+
+                if ((!mode_width || !mode_height) && (static_cast<std::uint32_t>(total_mode) <= sparse_mode_count)) {
+                    scr_mode.defined = false;
+                    scr.modes.push_back(scr_mode);
+
+                    continue;
+                }
 
                 if (mode_width) {
                     mode_width->get_as<common::ini_pair>()->get(reinterpret_cast<std::uint32_t *>(&scr_mode.size.x),
@@ -1728,6 +1745,30 @@ namespace eka2l1 {
                 scr.modes.push_back(scr_mode);
             } while (!one_mode_only);
 
+            auto first_defined = std::find_if(scr.modes.begin(), scr.modes.end(),
+                [](const epoc::config::screen_mode &mode) { return mode.defined; });
+
+            if (first_defined == scr.modes.end()) {
+                first_defined = scr.modes.begin();
+
+                first_defined->defined = true;
+                first_defined->size = default_screen_size;
+                first_defined->rotation = 0;
+                first_defined->disp_mode = scr_mode_global;
+                first_defined->dsa_disp_mode = scr_mode_global;
+            }
+
+            const epoc::config::screen_mode mirrored = *first_defined;
+            for (epoc::config::screen_mode &mode : scr.modes) {
+                if (!mode.defined) {
+                    const int mode_number = mode.mode_number;
+
+                    mode = mirrored;
+                    mode.mode_number = mode_number;
+                    mode.defined = false;
+                }
+            }
+
             int total_hardware_state = 0;
 
             do {
@@ -1767,8 +1808,8 @@ namespace eka2l1 {
                 epoc::config::hardware_state only_state;
 
                 only_state.state_number = 0;
-                only_state.mode_normal = scr.modes[0].mode_number;
-                only_state.mode_alternative = scr.modes[0].mode_number;
+                only_state.mode_normal = mirrored.mode_number;
+                only_state.mode_alternative = mirrored.mode_number;
 
                 scr.hardware_states.push_back(only_state);
             }
@@ -1871,8 +1912,9 @@ namespace eka2l1 {
             return;
         }
         scr->mark_direct_framebuffer_mapped();
-        // Up to OS 7.0s the panel scans out this memory; clients need not call Update().
-        if ((kern->get_epoc_version() > epocver::epoc7) || direct_framebuffer_refresh_evt_ >= 0) {
+        // Up to OS 7.0s, and on 9.1, the panel scans out this memory; clients need not call Update().
+        const epocver ver = kern->get_epoc_version();
+        if (((ver > epocver::epoc7) && (ver != epocver::epoc91)) || direct_framebuffer_refresh_evt_ >= 0) {
             return;
         }
 
@@ -2214,9 +2256,17 @@ namespace eka2l1 {
         kernel_system *kern = get_kernel_system();
         const bool is_screenplay = (kern->get_epoc_version() >= epocver::epoc10);
 
+        // Sony Ericsson's UIQ 3 LCD drivers fix the line length at 256 pixels (0x400 bytes
+        // at 32bpp); games that write the HAL screen address rely on that pitch.
+        const auto *device = get_system()->get_device_manager()->get_current();
+        const std::uint32_t min_row_pixels = (kern->get_epoc_version() == epocver::epoc91) && device
+                && (device->manufacturer == "Sony Ericsson")
+            ? 256 : 0;
+
         // Create first screen
         screens = new epoc::screen(0, get_screen_config(0), kern->is_eka1());
         screens->set_is_screenplay_architecture(is_screenplay);
+        screens->set_min_row_pixels(min_row_pixels);
 
         epoc::screen *crr = screens;
         create_screen_buffer_for_dsa(kern, crr);
@@ -2225,6 +2275,7 @@ namespace eka2l1 {
         for (std::size_t i = 0; i < screen_configs.size() - 1; i++) {
             crr->next = new epoc::screen(1, get_screen_config(1), kern->is_eka1());
             crr->next->set_is_screenplay_architecture(is_screenplay);
+            crr->next->set_min_row_pixels(min_row_pixels);
 
             crr = crr->next;
 
@@ -2741,13 +2792,22 @@ namespace eka2l1 {
         cli->queue_event(evt_copy);
     }
 
-    void window_server::send_event_to_window_groups(const epoc::event &evt) {
+    void window_server::send_event_to_window_groups(const epoc::event &evt, const bool one_per_client) {
         epoc::screen *scr = get_screens();
+        std::vector<epoc::window_server_client *> served;
 
         while (scr) {
             epoc::window_group *group = scr->get_group_chain();
             while (group) {
-                send_event_to_window_group(group, evt);
+                // The chain is in ordinal order, so the first group met is the client's frontmost.
+                if (!one_per_client || (std::find(served.begin(), served.end(), group->client) == served.end())) {
+                    send_event_to_window_group(group, evt);
+
+                    if (one_per_client) {
+                        served.push_back(group->client);
+                    }
+                }
+
                 group = reinterpret_cast<epoc::window_group *>(group->sibling);
             }
 

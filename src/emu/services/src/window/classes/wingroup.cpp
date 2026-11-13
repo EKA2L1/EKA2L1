@@ -89,7 +89,7 @@ namespace eka2l1::epoc {
     window_group::window_group(window_server_client_ptr client, screen *scr, epoc::window *parent, const std::uint32_t client_handle)
         : window(client, scr, parent, window_kind::group)
         , uid_owner_change_callback_handle(0)
-        , uid_owner_change_process(nullptr)
+        , uid_owner_change_process(0)
         , screen_change_event_handle(0) {
         if (!client) {
             return;
@@ -109,12 +109,15 @@ namespace eka2l1::epoc {
         uid_owner_change_callback_handle = mama->register_uid_type_change_callback(this,
             window_group_process_uid_type_change_callback);
 
-        uid_owner_change_process = mama;
+        uid_owner_change_process = mama->unique_id();
     }
 
     window_group::~window_group() {
-        if (uid_owner_change_process) {
-            uid_owner_change_process->unregister_uid_type_change_callback(uid_owner_change_callback_handle);
+        if (client && uid_owner_change_process) {
+            kernel_system *kern = client->get_ws().get_kernel_system();
+            if (kernel::process *owner = kern->get_by_id<kernel::process>(uid_owner_change_process)) {
+                owner->unregister_uid_type_change_callback(uid_owner_change_callback_handle);
+            }
         }
         
         remove_from_sibling_list();

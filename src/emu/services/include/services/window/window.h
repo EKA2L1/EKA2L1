@@ -555,7 +555,7 @@ namespace eka2l1 {
         void do_base_init();
 
         void send_event_to_window_group(epoc::window_group *group, const epoc::event &evt);
-        void send_event_to_window_groups(const epoc::event &evt);
+        void send_event_to_window_groups(const epoc::event &evt, const bool one_per_client = false);
 
         void send_screen_change_events(epoc::screen *scr);
         void send_focus_group_change_events(epoc::screen *scr);

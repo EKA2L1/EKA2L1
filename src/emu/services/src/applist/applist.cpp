@@ -747,12 +747,14 @@ namespace eka2l1 {
         std::uint32_t mask_bmp_handle;
     };
 
-    void applist_server::get_app_icon(service::ipc_context &ctx) {
+    void applist_server::get_app_icon(service::ipc_context &ctx, const bool by_index) {
         std::optional<epoc::uid> app_uid = ctx.get_argument_value<epoc::uid>(0);
         std::optional<std::int32_t> icon_size_width = std::nullopt;
         std::optional<std::int32_t> icon_size_height = std::nullopt;
 
-        if (legacy_level() == APA_LEGACY_LEVEL_OLD) {
+        if (by_index) {
+            icon_size_width = icon_size_height = 0;
+        } else if (legacy_level() == APA_LEGACY_LEVEL_OLD) {
             std::optional<eka2l1::vec2> size_vec = ctx.get_argument_data_from_descriptor<eka2l1::vec2>(1);
             if (size_vec.has_value()) {
                 icon_size_width = size_vec->x;
@@ -800,7 +802,7 @@ namespace eka2l1 {
             ctx.write_data_to_descriptor_argument<std::uint32_t>(2, handle_result.bmp_handle);
             ctx.write_data_to_descriptor_argument<std::uint32_t>(3, handle_result.mask_bmp_handle);
         } else {
-            ctx.write_data_to_descriptor_argument<app_icon_handles>(3, handle_result);
+            ctx.write_data_to_descriptor_argument<app_icon_handles>(by_index ? 2 : 3, handle_result);
         }
 
         ctx.complete(epoc::error_none);
@@ -1494,6 +1496,10 @@ namespace eka2l1 {
                 server<applist_server>()->get_app_icon(*ctx);
                 break;
 
+            case applist_request_app_icon_by_uid:
+                server<applist_server>()->get_app_icon(*ctx, true);
+                break;
+
             case applist_request_preferred_buf_size:
                 server<applist_server>()->get_preferred_buf_size(*ctx);
                 break;
@@ -1668,8 +1674,7 @@ namespace eka2l1 {
             pr->set_uid_type(current_uid_type);
         }
 
-        // Add it into our app running list
-        return pr->run();
+        return kern->run_after_boot_servers(pr);
     }
 
     bool applist_server::launch_app(apa_app_registry &registry, epoc::apa::command_line &parameter, kernel::uid *thread_id,

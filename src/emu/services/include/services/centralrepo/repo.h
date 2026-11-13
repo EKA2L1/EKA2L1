@@ -210,6 +210,7 @@ namespace eka2l1 {
         void notify_cancel(service::ipc_context *ctx);
         void get_find_result(service::ipc_context *ctx);
         void start_transaction(service::ipc_context *ctx);
+        void commit_transaction(service::ipc_context *ctx);
         void cancel_transaction(service::ipc_context *ctx);
         void create_value(service::ipc_context *ctx);
 
@@ -289,6 +290,9 @@ namespace eka2l1 {
          * This iters through all notify requests, if it matchs than notify request client.
         */
         void modification_success(const std::uint32_t key);
+
+        // Changes are applied as they are made; a commit only reports how many there were.
+        std::uint32_t transaction_changes = 0;
 
         /*! \brief Request to notify when a group of key have changed.
          *

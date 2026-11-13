@@ -163,6 +163,13 @@ namespace eka2l1::epoc {
             launcher->set_receive_focus(true);
             host_launcher_group = std::move(launcher);
         }
+        for (std::size_t i = 0; i < scr_config.modes.size(); i++) {
+            if (scr_config.modes[i].defined) {
+                crr_mode = static_cast<std::uint8_t>(i);
+                break;
+            }
+        }
+
         disp_mode = current_mode().disp_mode;
         dsa_disp_mode = current_mode().dsa_disp_mode;
         dsa_disp_mode_initial = current_mode().dsa_disp_mode;
@@ -170,7 +177,7 @@ namespace eka2l1::epoc {
         // A wsini can list several unrotated modes (P900 has 208x320 and 208x208); the
         // first one is the physical panel, the rest are alternative layouts.
         for (std::size_t i = 0; i < scr_config.modes.size(); i++) {
-            if (scr_config.modes[i].rotation == 0) {
+            if (scr_config.modes[i].defined && (scr_config.modes[i].rotation == 0)) {
                 physical_mode = static_cast<std::uint8_t>(i);
                 break;
             }
@@ -868,7 +875,7 @@ namespace eka2l1::epoc {
         } else {
             // We need to confirm this rotation exists
             for (std::size_t i = 0; i < scr_config.modes.size(); i++) {
-                if (scr_config.modes[i].rotation == rot) {
+                if (scr_config.modes[i].defined && (scr_config.modes[i].rotation == rot)) {
                     // Reset the UI rotation
                     ui_rotation = 0;
                     set_screen_mode(winserv, drv, static_cast<int>(i));
@@ -918,7 +925,8 @@ namespace eka2l1::epoc {
 
         // The buffer is laid out for the mode currently displayed, not for the panel's
         // native orientation, so a rotated mode gets its own row length.
-        const std::uint32_t tight_pitch = epoc::get_byte_width(current_mode().size.x, bits_per_pixel);
+        const std::uint32_t row_pixels = common::max<std::uint32_t>(current_mode().size.x, min_row_pixels_);
+        const std::uint32_t tight_pitch = epoc::get_byte_width(row_pixels, bits_per_pixel);
 
         // ScreenPlay phones expose their 32-bit display framebuffer with a
         // 64-byte-aligned pitch. Keep older bitmap-screen architectures on

@@ -131,6 +131,7 @@ namespace eka2l1::epoc {
         eka2l1::vec2 pointer_cursor_pos_;
 
         std::uint32_t flags_ = 0;
+        std::uint32_t min_row_pixels_ = 0;
         std::int32_t active_dsa_count_ = 0;
 
         bool sync_screen_buffer = false;
@@ -348,6 +349,11 @@ namespace eka2l1::epoc {
 
         bool is_screenplay_architecture() const {
             return flags_ & FLAG_IS_SCREENPLAY;
+        }
+
+        // Rows the panel controller scans out, which can be wider than the visible mode.
+        void set_min_row_pixels(const std::uint32_t pixels) {
+            min_row_pixels_ = pixels;
         }
 
         void need_update_visible_regions(const bool value);

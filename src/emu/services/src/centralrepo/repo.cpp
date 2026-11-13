@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <utility>
 #include <services/centralrepo/centralrepo.h>
 #include <services/centralrepo/repo.h>
 #include <services/context.h>
@@ -25,6 +26,7 @@
 
 #include <common/cvt.h>
 #include <system/devices.h>
+#include <kernel/kernel.h>
 
 #include <algorithm>
 #include <chrono>
@@ -110,6 +112,8 @@ namespace eka2l1 {
     }
 
     void central_repo_client_subsession::modification_success(const std::uint32_t key) {
+        transaction_changes++;
+
         // Iters through all
         for (std::size_t i = 0; i < notifies.size(); i++) {
             cenrep_notify_info &notify = notifies[i];
@@ -358,10 +362,32 @@ namespace eka2l1 {
     void central_repo_client_subsession::set_value(service::ipc_context *ctx) {
         // We get the entry.
         // Use mode 1 (write) to get the entry, since we are modifying data.
-        central_repo_entry *entry = get_entry(*ctx->get_argument_value<std::uint32_t>(0), 1);
+        const std::uint32_t key = *ctx->get_argument_value<std::uint32_t>(0);
+        central_repo_entry *entry = get_entry(key, 1);
 
-        // If it does not exist, or it is in different type, discard.
-        // Depends on the invalid type, we set error code
+        if (!entry) {
+            // CRepository::Set creates the setting when it does not exist yet.
+            central_repo_entry_variant new_var;
+
+            switch (ctx->msg->function) {
+            case cen_rep_set_int:
+                new_var.etype = central_repo_entry_type::integer;
+                break;
+
+            case cen_rep_set_real:
+                new_var.etype = central_repo_entry_type::real;
+                break;
+
+            default:
+                new_var.etype = central_repo_entry_type::string;
+                break;
+            }
+
+            if (attach_repo->add_new_entry(key, new_var)) {
+                entry = get_entry(key, 1);
+            }
+        }
+
         if (!entry) {
             ctx->complete(epoc::error_not_found);
             return;
@@ -519,10 +545,20 @@ namespace eka2l1 {
         // TODO: Should we?
         key_found_result.clear();
 
-        // Get the filter
-        std::optional<central_repo_key_filter> filter = ctx->get_argument_data_from_descriptor<central_repo_key_filter>(0);
-        std::uint32_t *found_uid_result_array = reinterpret_cast<std::uint32_t *>(ctx->get_descriptor_argument_ptr(2));
-        const std::size_t found_uid_max_uids = (ctx->get_argument_max_data_size(2) / sizeof(std::uint32_t)) - 1;
+        // 9.1 passes the key and mask as plain values, and the result buffer in the last slot.
+        const bool plain_filter = (ctx->sys->get_kernel_system()->get_epoc_version() == epocver::epoc91);
+        const int value_slot = plain_filter ? 2 : 1;
+        const int result_slot = plain_filter ? 3 : 2;
+
+        std::optional<central_repo_key_filter> filter;
+        if (plain_filter) {
+            filter = central_repo_key_filter{ *ctx->get_argument_value<std::uint32_t>(0), *ctx->get_argument_value<std::uint32_t>(1) };
+        } else {
+            filter = ctx->get_argument_data_from_descriptor<central_repo_key_filter>(0);
+        }
+
+        std::uint32_t *found_uid_result_array = reinterpret_cast<std::uint32_t *>(ctx->get_descriptor_argument_ptr(result_slot));
+        const std::size_t found_uid_max_uids = (ctx->get_argument_max_data_size(result_slot) / sizeof(std::uint32_t)) - 1;
 
         if (!filter || !found_uid_result_array) {
             LOG_ERROR(SERVICE_CENREP, "Trying to find equal value in cenrep, but arguments are invalid!");
@@ -566,7 +602,7 @@ namespace eka2l1 {
 
                 // Index 1 argument contains the value we should look for
                 // TODO: Signed/unsigned is dangerous
-                if (static_cast<std::int32_t>(entry.data.intd) == *ctx->get_argument_value<std::int32_t>(1)) {
+                if (static_cast<std::int32_t>(entry.data.intd) == *ctx->get_argument_value<std::int32_t>(value_slot)) {
                     if (!find_not_eq) {
                         key_found = entry.key;
                     }
@@ -584,7 +620,7 @@ namespace eka2l1 {
                 bool is_ok = false;
 
                 if (cache_arg.empty()) {
-                    auto ss = ctx->get_argument_value<std::string>(1);
+                    auto ss = ctx->get_argument_value<std::string>(value_slot);
 
                     if (!ss.has_value()) {
                         ctx->complete(epoc::error_argument);
@@ -735,6 +771,12 @@ namespace eka2l1 {
 
     void central_repo_client_subsession::start_transaction(service::ipc_context *ctx) {
         LOG_TRACE(SERVICE_CENREP, "TransactionStart stubbed");
+        transaction_changes = 0;
+        ctx->complete(epoc::error_none);
+    }
+
+    void central_repo_client_subsession::commit_transaction(service::ipc_context *ctx) {
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(0, std::exchange(transaction_changes, 0));
         ctx->complete(epoc::error_none);
     }
 

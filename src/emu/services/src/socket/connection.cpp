@@ -176,6 +176,7 @@ namespace eka2l1::epoc::socket {
             state->observers.erase(this);
         }
         cancel_progress();
+        cancel_interface_notification();
     }
 
     void socket_connection_proxy::bind_state(const std::shared_ptr<connection_state> &state, bool monitor) {
@@ -265,6 +266,15 @@ namespace eka2l1::epoc::socket {
                 progress_request_->complete(epoc::error_cancel);
             }
             progress_request_.reset();
+        }
+    }
+
+    void socket_connection_proxy::cancel_interface_notification() {
+        if (interface_request_) {
+            if (interface_request_->sys->get_kernel_system()->is_thread_alive(interface_request_->msg->own_thr)) {
+                interface_request_->complete(epoc::error_cancel);
+            }
+            interface_request_.reset();
         }
     }
 
@@ -541,6 +551,19 @@ namespace eka2l1::epoc::socket {
 
                 case socket_cn_progress_notification:
                     progress_notify(ctx);
+                    break;
+
+                case socket_cn_all_interface_notification:
+                    if (interface_request_) {
+                        ctx->complete(epoc::error_in_use);
+                    } else {
+                        interface_request_ = ctx->move_to_new();
+                    }
+                    break;
+
+                case socket_cn_cancel_all_interface_notification:
+                    cancel_interface_notification();
+                    ctx->complete(epoc::error_none);
                     break;
 
                 default:

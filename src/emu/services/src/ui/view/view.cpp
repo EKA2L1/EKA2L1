@@ -395,6 +395,13 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    void view_session::check_source_of_view_switch(service::ipc_context *ctx) {
+        // Security policies are not enforced, so whoever started the switch passes.
+        const std::int32_t passed = 1;
+        ctx->write_data_to_descriptor_argument<std::int32_t>(0, passed);
+        ctx->complete(epoc::error_none);
+    }
+
     void view_session::get_custom_message(service::ipc_context *ctx) {
         const ui::view::custom_message custom = queue_.current_custom_message();
         ctx->write_data_to_descriptor_argument(0, custom.data_.data(), static_cast<std::uint32_t>(custom.data_.size()), nullptr, true);
@@ -511,6 +518,10 @@ namespace eka2l1 {
 
         case view_opcode_request_view_event_cancel:
             request_view_event_cancel(ctx);
+            break;
+
+        case view_opcode_check_source_of_view_switch:
+            check_source_of_view_switch(ctx);
             break;
 
         default:

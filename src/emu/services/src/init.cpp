@@ -401,6 +401,34 @@ namespace eka2l1 {
             init_symbian_app_launch_to_host_launch(sys);
         }
         
+        // Processes the device's own startup sequence launches before any application, in its order.
+        // Their clients only connect and never start them.
+        static void start_rom_boot_servers(system *sys) {
+            struct boot_process {
+                const char16_t *path;
+                bool wait_for_start;
+            };
+
+            static const boot_process BOOT_PROCESSES[] = {
+                // UIQ 3. The shell owns the priority 0 window group the memory manager expects.
+                { u"z:\\sys\\bin\\thmsrv.exe", true },
+                { u"z:\\sys\\bin\\memorymanagerserver.exe", true },
+                { u"z:\\sys\\bin\\linshell.exe", false },
+                { u"z:\\sys\\bin\\tisrvs.exe", true }
+            };
+
+            kernel_system *kern = sys->get_kernel_system();
+            if (kern->is_eka1()) {
+                return;
+            }
+
+            for (const boot_process &process : BOOT_PROCESSES) {
+                if (sys->get_io_system()->exist(process.path)) {
+                    kern->start_boot_server(process.path, process.wait_for_start);
+                }
+            }
+        }
+
         void init_services_post_bootup(system *sys) {
             // ROM libraries only become loadable once the frontend has mounted drive Z.
             if (auto fbss = reinterpret_cast<fbs_server *>(sys->get_kernel_system()->get_by_name<service::server>(
@@ -410,6 +438,7 @@ namespace eka2l1 {
 
             epoc::sms::supply_sim_settings(sys);
             supply_plpvariant_machine_id(sys);
+            start_rom_boot_servers(sys);
         }
     }
 }

@@ -302,7 +302,7 @@ namespace eka2l1 {
         /**
          * \brief Get app icon bitmap handles.
          */
-        void get_app_icon(service::ipc_context &ctx);
+        void get_app_icon(service::ipc_context &ctx, const bool by_index = false);
 
         void get_app_icon_sizes(service::ipc_context &ctx);
         void get_native_executable_name_if_non_native(service::ipc_context &ctx);
