@@ -162,6 +162,35 @@ namespace {
     }
 }
 
+TEST_CASE("Screen modes change before graphics is available", "[screen_mode]") {
+    epoc::config::screen config{};
+    config.modes = {
+        { 0, 1, { 176, 208 }, 0, "", epoc::display_mode::color16mu, epoc::display_mode::color64k },
+        { 90, 2, { 208, 176 }, 0, "", epoc::display_mode::color64k, epoc::display_mode::color64k }
+    };
+    epoc::screen screen(0, config);
+    int notified_old_mode = -1;
+    screen.add_screen_mode_change_callback(&notified_old_mode, [](void *data, epoc::screen *, int old_mode) {
+        *static_cast<int *>(data) = old_mode;
+    });
+
+    screen.set_screen_mode(nullptr, nullptr, 1);
+    screen.redraw(nullptr);
+    screen.present_framebuffer(nullptr, nullptr);
+    CHECK(screen.crr_mode == 1);
+    CHECK(screen.current_mode().size == vec2(208, 176));
+    CHECK(screen.disp_mode == epoc::display_mode::color64k);
+    CHECK(notified_old_mode == 0);
+    CHECK(screen.screen_texture == 0);
+
+    surface_driver driver;
+    screen.redraw(&driver);
+    CHECK(driver.images.count(screen.screen_texture) == 1);
+    CHECK(screen.crr_mode == 1);
+    screen.deinit(&driver);
+    CHECK_FALSE(driver.invalid_use);
+}
+
 TEST_CASE("Same-size screen modes switch color depth and discard the old DSA texture", "[screen_mode]") {
     epoc::config::screen config{};
     config.modes = {

@@ -251,6 +251,10 @@ namespace eka2l1::epoc {
 
     void screen::present_framebuffer(drivers::graphics_driver *driver, kernel_system *kern,
         const eka2l1::rect *symbian_rects, const std::uint32_t rect_count) {
+        if (!driver) {
+            return;
+        }
+
         // Update the DSA screen texture
         const epoc::config::screen_mode &mode_info = current_mode();
         const eka2l1::vec2 screen_size = mode_info.size;
@@ -487,6 +491,10 @@ namespace eka2l1::epoc {
     }
 
     void screen::redraw(drivers::graphics_driver *driver) {
+        if (!driver) {
+            return;
+        }
+
         if (!screen_texture) {
             set_screen_mode(nullptr, driver, crr_mode);
         }
@@ -533,6 +541,10 @@ namespace eka2l1::epoc {
     }
 
     void screen::resize(drivers::graphics_driver *driver, const eka2l1::vec2 &new_size) {
+        if (!driver) {
+            return;
+        }
+
         // Make command list first, and bind our screen bitmap
         drivers::graphics_command_builder builder;
         bool need_bind = true;
@@ -787,7 +799,7 @@ namespace eka2l1::epoc {
             dsa_disp_mode_initial = new_mode->dsa_disp_mode;
             reset_framebuffer_tracking();
 
-            if (dsa_texture) {
+            if (drv && dsa_texture) {
                 drivers::graphics_command_builder builder;
                 builder.destroy_bitmap(dsa_texture);
                 auto commands = builder.retrieve_command_list();

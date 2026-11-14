@@ -1258,12 +1258,16 @@ namespace eka2l1::ios {
             }
             try {
                 std::lock_guard<std::mutex> loop_lock(state->loop_mutex);
-                state->symsys->loop();
+                if (!state->paused && state->mounted && state->symsys->get_graphics_driver()) {
+                    state->symsys->loop();
+                    continue;
+                }
             } catch (std::exception &exc) {
                 LOG_ERROR(eka2l1::FRONTEND_CMDLINE, "Emu loop exception: {}", exc.what());
                 state->running = false;
                 break;
             }
+            std::this_thread::sleep_for(std::chrono::milliseconds(16));
         }
     });
 
@@ -1991,7 +1995,12 @@ namespace eka2l1::ios {
         }
     }
 
-    eka2l1::ios::bind_graphics_driver(_state.get());
+    if (!_state->symsys->get_graphics_driver()) {
+        const std::lock_guard<std::mutex> loop_lock(_state->loop_mutex);
+        if (!eka2l1::ios::bind_graphics_driver(_state.get())) {
+            return NO;
+        }
+    }
 
     auto *kern = _state->symsys->get_kernel_system();
     auto *alserv = eka2l1::ios::get_applist_server(kern);
