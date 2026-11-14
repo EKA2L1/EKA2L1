@@ -157,13 +157,7 @@ namespace eka2l1::android {
 
     package::installation_result launcher::install_app(std::string &path) {
         std::u16string upath = common::utf8_to_ucs2(path);
-        drive_number install_drive = drive_number::drive_e;
-
-        if (sys->is_s80_device_active()) {
-            install_drive = drive_number::drive_d;
-        }
-
-        return static_cast<package::installation_result>(sys->install_package(upath, install_drive));
+        return static_cast<package::installation_result>(sys->install_package(upath, sys->get_default_install_drive()));
     }
 
     std::vector<std::string> launcher::get_devices() {

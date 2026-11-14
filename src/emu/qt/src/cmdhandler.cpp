@@ -137,7 +137,7 @@ bool app_install_option_handler(eka2l1::common::arg_parser *parser, void *userda
     // and it's better to install in C since there is many apps required
     // to be in it and hardcoded the drive, just hardcode drive E here.
     // An installation_result, where success is 0
-    const int result = emu->symsys->install_package(common::utf8_to_ucs2(path), drive_e);
+    const int result = emu->symsys->install_package(common::utf8_to_ucs2(path), emu->symsys->get_default_install_drive());
 
     if (result != package::installation_result_success) {
         *err = "Installation of SIS failed";

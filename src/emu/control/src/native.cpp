@@ -376,7 +376,7 @@ namespace eka2l1::control {
                                                                                                                : "ngage");
                     bool ok = false;
                     if (type == "sis")
-                        frontend.run_blocking([&] { ok = sys().install_package(common::utf8_to_ucs2(path), sys().is_s80_device_active() ? drive_d : drive_e) == package::installation_result_success; });
+                        frontend.run_blocking([&] { ok = sys().install_package(common::utf8_to_ucs2(path), sys().get_default_install_drive()) == package::installation_result_success; });
                     else if (type == "ngage")
                         frontend.run_blocking([&] { ok = int(sys().install_ngage_game_card(path, nullptr)) == 0; });
                     else if (type == "ngage2") {

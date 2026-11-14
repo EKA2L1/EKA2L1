@@ -2140,9 +2140,7 @@ namespace eka2l1::ios {
         return NO;
     }
     std::u16string upath = eka2l1::common::utf8_to_ucs2(sisPath.UTF8String);
-    drive_number install_drive = _state->symsys->is_s80_device_active()
-        ? drive_number::drive_d
-        : drive_number::drive_e;
+    const drive_number install_drive = _state->symsys->get_default_install_drive();
     auto result = static_cast<eka2l1::package::installation_result>(
         _state->symsys->install_package(upath, install_drive));
     return result == eka2l1::package::installation_result_success ? YES : NO;

@@ -145,6 +145,7 @@ namespace eka2l1 {
         bool is_s80_device_active();
         bool is_uiq_2_device_active();
         bool is_uiq_3_device_active();
+        drive_number get_default_install_drive();
 
         void prepare_reschedule();
 

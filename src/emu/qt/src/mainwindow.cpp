@@ -1275,10 +1275,7 @@ void main_window::spawn_package_install_camper(QString package_file_path) {
             current_progress_dialog_->setAttribute(Qt::WA_DeleteOnClose, true);
             current_progress_dialog_->show();
 
-            drive_number install_drive = drive_e;
-            if (emulator_state_.symsys->is_s80_device_active()) {
-                install_drive = drive_d;
-            }
+            const drive_number install_drive = emulator_state_.symsys->get_default_install_drive();
 
             const eka2l1::package::installation_result install_result = run_off_gui_thread([this, pkgmngr, package_file_path, install_drive]() {
                 return pkgmngr->install_package(
