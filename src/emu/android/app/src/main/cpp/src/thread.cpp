@@ -129,15 +129,13 @@ namespace eka2l1::android {
 
         const bool result = state.stage_two();
 
-        // Instantiate UI and High-level interface threads
-        if (result) {
-            os_thread_obj = std::make_unique<std::thread>(os_thread, std::ref(state));
-        }
-
-        // Run graphics driver on main entry.
         state.graphics_init_done.reset();
         gr_thread_obj = std::make_unique<std::thread>(graphics_driver_thread, std::ref(state));
         state.graphics_init_done.wait();
+
+        if (result) {
+            os_thread_obj = std::make_unique<std::thread>(os_thread, std::ref(state));
+        }
 
         return result;
     }
