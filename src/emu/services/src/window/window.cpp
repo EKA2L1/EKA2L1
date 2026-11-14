@@ -1948,6 +1948,13 @@ namespace eka2l1 {
             return uiq_2_scancode(scancode);
 
         case 3:
+            // The P1i has no soft keys; games label the two actions with the outer keys of its top row.
+            if ((scancode == epoc::std_key_device_0) || (scancode == epoc::std_key_device_1)) {
+                if (is_sony_ericsson_p1i(get_system())) {
+                    return (scancode == epoc::std_key_device_0) ? 'Q' : 'P';
+                }
+            }
+
             return uiq_3_scancode(scancode);
 
         default:
