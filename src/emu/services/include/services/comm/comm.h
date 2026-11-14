@@ -32,6 +32,7 @@ namespace eka2l1 {
     class comm_server : public service::typical_server {
     protected:
         service::property *c32start_prop_;
+        service::property *configured_prop_;
 
     public:
         explicit comm_server(eka2l1::system *sys);

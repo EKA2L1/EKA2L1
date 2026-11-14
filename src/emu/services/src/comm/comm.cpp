@@ -22,6 +22,7 @@
 
 #include <kernel/property.h>
 #include <utils/err.h>
+#include <utils/system.h>
 
 namespace eka2l1 {
     std::string get_comm_server_name_by_epocver(const epocver ver) {
@@ -34,9 +35,14 @@ namespace eka2l1 {
 
     static constexpr std::uint32_t C32START_FIRST_UID = 0x101F7988;
 
+    // KUidC32StartPropertyKey and TRSStartState::EConfigurationComplete (rsshared.h, rscommon.h).
+    static constexpr std::uint32_t C32START_PROPERTY_KEY = 0x102045DD;
+    static constexpr int C32_CONFIGURATION_COMPLETE = 32;
+
     comm_server::comm_server(eka2l1::system *sys)
         : service::typical_server(sys, get_comm_server_name_by_epocver(sys->get_symbian_version_use()))
-        , c32start_prop_(nullptr) {
+        , c32start_prop_(nullptr)
+        , configured_prop_(nullptr) {
         c32start_prop_ = kern->create<service::property>();
         c32start_prop_->first = C32START_FIRST_UID;
         c32start_prop_->second = 1;
@@ -44,6 +50,15 @@ namespace eka2l1 {
         // On S60v2 it will keep spin loop until this value reach larger then 9. Not sure what it is...
         c32start_prop_->define(service::property_type::int_data, 4);
         c32start_prop_->set_int(10);
+
+        if (!kern->is_eka1()) {
+            // StartC32 launches the ROM comms process unless this says it is already configured.
+            configured_prop_ = kern->create<service::property>();
+            configured_prop_->first = epoc::SYS_CATEGORY;
+            configured_prop_->second = C32START_PROPERTY_KEY;
+            configured_prop_->define(service::property_type::int_data, 4);
+            configured_prop_->set_int(C32_CONFIGURATION_COMPLETE);
+        }
     }
 
     void comm_server::connect(service::ipc_context &context) {
