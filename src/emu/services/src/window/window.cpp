@@ -1932,6 +1932,11 @@ namespace eka2l1 {
         return scancode;
     }
 
+    static bool is_sony_ericsson_p1i(system *sys) {
+        const auto *device = sys->get_device_manager()->get_current();
+        return sys->is_uiq_3_device_active() && device && (device->machine_uid == 0x20002E69);
+    }
+
     std::int32_t window_server::uiq_scancode(const std::int32_t scancode) {
         if (!uiq_version_) {
             system *sys = get_system();
@@ -1959,9 +1964,10 @@ namespace eka2l1 {
             return;
         }
         scr->mark_direct_framebuffer_mapped();
-        // Up to OS 7.0s, and on 9.1, the panel scans out this memory; clients need not call Update().
-        const epocver ver = kern->get_epoc_version();
-        if (((ver > epocver::epoc7) && (ver != epocver::epoc91)) || direct_framebuffer_refresh_evt_ >= 0) {
+        // Panels up to OS 7.0s, and the P1i's (LCDSonyACX522/562Drv), scan out this memory;
+        // clients need not call Update().
+        if (((kern->get_epoc_version() > epocver::epoc7) && !is_sony_ericsson_p1i(get_system()))
+            || direct_framebuffer_refresh_evt_ >= 0) {
             return;
         }
 
@@ -2303,10 +2309,7 @@ namespace eka2l1 {
 
         // Sony Ericsson's UIQ 3 LCD drivers fix the line length at 256 pixels (0x400 bytes
         // at 32bpp); games that write the HAL screen address rely on that pitch.
-        const auto *device = get_system()->get_device_manager()->get_current();
-        const std::uint32_t min_row_pixels = get_system()->is_uiq_3_device_active() && device
-                && (device->machine_uid == 0x20002E69)
-            ? 256 : 0;
+        const std::uint32_t min_row_pixels = is_sony_ericsson_p1i(get_system()) ? 256 : 0;
 
         // Create first screen
         screens = new epoc::screen(0, get_screen_config(0), kern->is_eka1());
