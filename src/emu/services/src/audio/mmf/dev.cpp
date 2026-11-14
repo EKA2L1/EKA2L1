@@ -492,16 +492,23 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    void mmf_dev_server_session::init3(service::ipc_context *ctx) {
+    bool mmf_dev_server_session::open_event_msg_queue(service::ipc_context *ctx) {
+        kernel_system *kern = ctx->sys->get_kernel_system();
+        auto *queue = kern->get_kernel_obj_raw(ctx->msg->args.args[2], ctx->msg->own_thr);
+        if (!queue || queue->get_object_type() != kernel::object_type::msg_queue) {
+            ctx->complete(epoc::error_bad_handle);
+            return false;
+        }
+
+        set_event_msg_queue(static_cast<kernel::msg_queue *>(queue));
+        return true;
+    }
+
+    void mmf_dev_server_session::init3(service::ipc_context *ctx, bool uses_event_queue) {
         if (stream_ && stream_->is_playing()) {
             ctx->complete(epoc::error_in_use);
             return;
         }
-
-        kernel_system *kern = ctx->sys->get_kernel_system();
-        auto *queue = kern->get_kernel_obj_raw(ctx->msg->args.args[2], ctx->msg->own_thr);
-        auto *event_queue = (queue && queue->get_object_type() == kernel::object_type::msg_queue)
-            ? static_cast<kernel::msg_queue *>(queue) : nullptr;
 
         std::optional<epoc::mmf_dev_sound_proxy_settings> state_settings
             = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(1);
@@ -518,11 +525,9 @@ namespace eka2l1 {
             return;
         }
 
-        if (!event_queue) {
-            ctx->complete(epoc::error_bad_handle);
+        if (uses_event_queue && !open_event_msg_queue(ctx)) {
             return;
         }
-        set_event_msg_queue(event_queue);
 
         std::uint32_t target_fourcc = state_settings->four_cc_;
 
@@ -556,16 +561,11 @@ namespace eka2l1 {
         evt_msg_queue_->send(&item, sizeof(epoc::mmf_dev_sound_queue_item));
     }
 
-    void mmf_dev_server_session::init0(service::ipc_context *ctx) {
+    void mmf_dev_server_session::init0(service::ipc_context *ctx, bool uses_event_queue) {
         if (stream_ && stream_->is_playing()) {
             ctx->complete(epoc::error_in_use);
             return;
         }
-
-        kernel_system *kern = ctx->sys->get_kernel_system();
-        auto *queue = kern->get_kernel_obj_raw(ctx->msg->args.args[2], ctx->msg->own_thr);
-        auto *event_queue = (queue && queue->get_object_type() == kernel::object_type::msg_queue)
-            ? static_cast<kernel::msg_queue *>(queue) : nullptr;
 
         std::optional<epoc::mmf_dev_sound_proxy_settings> state_settings
             = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(1);
@@ -582,11 +582,9 @@ namespace eka2l1 {
             return;
         }
 
-        if (!event_queue) {
-            ctx->complete(epoc::error_bad_handle);
+        if (uses_event_queue && !open_event_msg_queue(ctx)) {
             return;
         }
-        set_event_msg_queue(event_queue);
 
         desired_state_ = state_wanted;
         init_stream_through_state();
@@ -628,6 +626,11 @@ namespace eka2l1 {
     }
 
     void mmf_dev_server_session::set_config(service::ipc_context *ctx) {
+        if (!stream_) {
+            ctx->complete(epoc::error_not_ready);
+            return;
+        }
+
         std::optional<epoc::mmf_dev_sound_proxy_settings> settings
             = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(1);
 
@@ -1146,11 +1149,11 @@ namespace eka2l1 {
         if ((ver == epocver::epoc91) || (ver == epocver::epoc93fp1) || (ver == epocver::epoc93fp2) || (ver == epocver::epoc94)) {
             switch (ctx->msg->function) {
             case epoc::mmf_dev_init0:
-                init0(ctx);
+                init0(ctx, false);
                 break;
 
             case epoc::mmf_dev_init3:
-                init3(ctx);
+                init3(ctx, false);
                 break;
 
             case epoc::mmf_dev_config:
@@ -1271,11 +1274,11 @@ namespace eka2l1 {
                 break;
 
             case epoc::mmf_dev_newarch_init0:
-                init0(ctx);
+                init0(ctx, true);
                 break;
 
             case epoc::mmf_dev_newarch_init3:
-                init3(ctx);
+                init3(ctx, true);
                 break;
 
             case epoc::mmf_dev_newarch_config:
