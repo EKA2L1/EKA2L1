@@ -1767,4 +1767,14 @@ namespace eka2l1 {
         return (impl->get_symbian_version_use() == epocver::epoc70)
             && impl->get_io_system()->exist(u"Z:\\System\\Libs\\qikctl.dll");
     }
+
+    bool system::is_uiq_3_device_active() {
+        return (impl->get_symbian_version_use() == epocver::epoc91)
+            && impl->get_io_system()->exist(u"Z:\\sys\\bin\\qikctl.dll");
+    }
+
+    drive_number system::get_default_install_drive() {
+        // Series 80 and UIQ 3 phones mount their memory card as D:.
+        return (is_s80_device_active() || is_uiq_3_device_active()) ? drive_d : drive_e;
+    }
 }

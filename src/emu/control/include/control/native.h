@@ -29,6 +29,8 @@ namespace eka2l1::control {
         std::function<void(bool)> pause;
         std::function<void(native_change)> changed;
         std::function<void(const double *)> acceleration;
+        // Runs blocking work such as a package install whose prompts the frontend answers on its own UI thread.
+        std::function<void(const std::function<void()> &)> run_blocking = [](const std::function<void()> &work) { work(); };
     };
 
     class native_backend {

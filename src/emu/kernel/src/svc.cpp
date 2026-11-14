@@ -330,6 +330,18 @@ namespace eka2l1::epoc {
         type->uid3 = std::get<2>(tup);
     }
 
+    BRIDGE_FUNC(void, library_type, kernel::handle h, eka2l1::ptr<epoc::uid_type> uid_type) {
+        library_ptr lib = kern->get<kernel::library>(h);
+        epoc::uid_type *type = uid_type.get(kern->crr_process());
+
+        if (!lib || !type) {
+            LOG_ERROR(KERNEL, "Invalid library handle 0x{:x} or UID type buffer", h);
+            return;
+        }
+
+        std::tie(type->uid1, type->uid2, type->uid3) = lib->get_codeseg()->get_uids();
+    }
+
     BRIDGE_FUNC(void, process_type_eka1, eka2l1::ptr<epoc::uid_type> uid_type, kernel::handle h) {
         process_ptr pr_real = kern->get<kernel::process>(h);
 
@@ -502,6 +514,11 @@ namespace eka2l1::epoc {
         data->set_length(crr_process, static_cast<std::uint32_t>(cmdline.length() << 1));
     }
 
+    BRIDGE_FUNC(std::uint32_t, process_flags, kernel::handle h) {
+        process_ptr pr = kern->get<kernel::process>(h);
+        return pr ? pr->get_flags() : 0;
+    }
+
     BRIDGE_FUNC(void, process_set_flags, kernel::handle h, std::uint32_t clear_mask, std::uint32_t set_mask) {
         process_ptr pr = kern->get<kernel::process>(h);
 
@@ -666,9 +683,21 @@ namespace eka2l1::epoc {
         return epoc::error_none;
     }
 
-    // Symbian 9.1 keys TLS by the DLL handle, like EKA1.
-    BRIDGE_FUNC(std::int32_t, dll_set_tls_no_uid, kernel::handle h, eka2l1::ptr<void> data_set) {
-        return dll_set_tls(kern, h, static_cast<std::int32_t>(h), data_set);
+    // Early Symbian 9.1 keys TLS by the DLL handle like EKA1; later 9.1 kernels already pass the DLL UID.
+    BRIDGE_FUNC(eka2l1::ptr<void>, dll_tls_v91, kernel::handle h, std::int32_t dll_uid) {
+        if (kern->get_lib_manager()->is_dll_tls_keyed_by_uid()) {
+            return dll_tls(kern, h, dll_uid);
+        }
+
+        return dll_tls_eka1(kern, h);
+    }
+
+    BRIDGE_FUNC(std::int32_t, dll_set_tls_v91, kernel::handle h, std::uint32_t uid_or_data, eka2l1::ptr<void> data_set) {
+        if (kern->get_lib_manager()->is_dll_tls_keyed_by_uid()) {
+            return dll_set_tls(kern, h, static_cast<std::int32_t>(uid_or_data), data_set);
+        }
+
+        return dll_set_tls(kern, h, static_cast<std::int32_t>(h), eka2l1::ptr<void>(uid_or_data));
     }
 
     BRIDGE_FUNC(void, dll_free_tls, kernel::handle h) {
@@ -2472,6 +2501,17 @@ namespace eka2l1::epoc {
         }
 
         return epoc::error_general;
+    }
+
+    BRIDGE_FUNC(std::uint32_t, thread_flags, kernel::handle h) {
+        thread_ptr thr = kern->get<kernel::thread>(h);
+
+        if (!thr) {
+            LOG_ERROR(KERNEL, "invalid thread handle 0x{:x}", h);
+            return 0;
+        }
+
+        return thr->get_flags();
     }
 
     BRIDGE_FUNC(void, thread_set_flags, kernel::handle h, std::uint32_t clear_mask, std::uint32_t set_mask) {
@@ -6025,6 +6065,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x1A, process_exit_category),
         BRIDGE_REGISTER(0x1B, process_priority),
         BRIDGE_REGISTER(0x1C, process_set_priority),
+        BRIDGE_REGISTER(0x1D, process_flags),
         BRIDGE_REGISTER(0x1E, process_set_flags),
         BRIDGE_REGISTER(0x1F, semaphore_wait),
         BRIDGE_REGISTER(0x20, semaphore_signal),
@@ -6039,6 +6080,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x29, thread_suspend),
         BRIDGE_REGISTER(0x2A, thread_priority),
         BRIDGE_REGISTER(0x2B, thread_set_priority),
+        BRIDGE_REGISTER(0x2E, thread_flags),
         BRIDGE_REGISTER(0x2F, thread_set_flags),
         BRIDGE_REGISTER(0x30, thread_request_count),
         BRIDGE_REGISTER(0x31, thread_exit_type),
@@ -6070,6 +6112,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x5E, is_exception_handled),
         BRIDGE_REGISTER(0x5F, process_get_memory_info),
         BRIDGE_REGISTER(0x60, library_get_memory_info),
+        BRIDGE_REGISTER(0x63, library_type),
         BRIDGE_REGISTER(0x64, process_type),
         BRIDGE_REGISTER(0x68, thread_create),
         BRIDGE_REGISTER(0x69, handle_open_object_by_find_handle),
@@ -6213,6 +6256,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x1A, process_exit_category),
         BRIDGE_REGISTER(0x1B, process_priority),
         BRIDGE_REGISTER(0x1C, process_set_priority),
+        BRIDGE_REGISTER(0x1D, process_flags),
         BRIDGE_REGISTER(0x1E, process_set_flags),
         BRIDGE_REGISTER(0x1F, semaphore_wait),
         BRIDGE_REGISTER(0x20, semaphore_signal),
@@ -6227,6 +6271,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x29, thread_suspend),
         BRIDGE_REGISTER(0x2A, thread_priority),
         BRIDGE_REGISTER(0x2B, thread_set_priority),
+        BRIDGE_REGISTER(0x2E, thread_flags),
         BRIDGE_REGISTER(0x2F, thread_set_flags),
         BRIDGE_REGISTER(0x30, thread_request_count),
         BRIDGE_REGISTER(0x31, thread_exit_type),
@@ -6258,6 +6303,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x5E, is_exception_handled),
         BRIDGE_REGISTER(0x5F, process_get_memory_info),
         BRIDGE_REGISTER(0x60, library_get_memory_info),
+        BRIDGE_REGISTER(0x63, library_type),
         BRIDGE_REGISTER(0x64, process_type),
         BRIDGE_REGISTER(0x68, thread_create),
         BRIDGE_REGISTER(0x69, handle_open_object_by_find_handle),
@@ -6350,8 +6396,8 @@ namespace eka2l1::epoc {
     const eka2l1::hle::func_map svc_register_funcs_v91_diff = {
         BRIDGE_REGISTER(0x0080000A, locked_inc_32),
         BRIDGE_REGISTER(0x0080000B, locked_dec_32),
-        BRIDGE_REGISTER(0x4D, dll_tls_eka1),
-        BRIDGE_REGISTER(0x75, dll_set_tls_no_uid)
+        BRIDGE_REGISTER(0x4D, dll_tls_v91),
+        BRIDGE_REGISTER(0x75, dll_set_tls_v91)
     };
 
     const eka2l1::hle::func_map svc_register_funcs_v93 = {
@@ -6398,6 +6444,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x1A, process_exit_category),
         BRIDGE_REGISTER(0x1B, process_priority),
         BRIDGE_REGISTER(0x1C, process_set_priority),
+        BRIDGE_REGISTER(0x1D, process_flags),
         BRIDGE_REGISTER(0x1E, process_set_flags),
         BRIDGE_REGISTER(0x1F, semaphore_wait),
         BRIDGE_REGISTER(0x20, semaphore_signal),
@@ -6412,6 +6459,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x29, thread_suspend),
         BRIDGE_REGISTER(0x2A, thread_priority),
         BRIDGE_REGISTER(0x2B, thread_set_priority),
+        BRIDGE_REGISTER(0x2E, thread_flags),
         BRIDGE_REGISTER(0x2F, thread_set_flags),
         BRIDGE_REGISTER(0x30, thread_request_count),
         BRIDGE_REGISTER(0x31, thread_exit_type),
@@ -6444,6 +6492,7 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x5D, is_exception_handled),
         BRIDGE_REGISTER(0x5E, process_get_memory_info),
         BRIDGE_REGISTER(0x5F, library_get_memory_info),
+        BRIDGE_REGISTER(0x62, library_type),
         BRIDGE_REGISTER(0x63, process_type),
         BRIDGE_REGISTER(0x65, chunk_top),
         BRIDGE_REGISTER(0x67, thread_create),

@@ -167,7 +167,8 @@ namespace eka2l1::epoc {
 
     enum class icon_mask_composition {
         avkon,
-        alf_canvas
+        alf_canvas,
+        uiq
     };
 
     // Buffers must be equal-sized RGBA8888; decode the mask with make_standard_mask.

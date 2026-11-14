@@ -190,7 +190,8 @@ namespace eka2l1::epoc {
         etel_line_caps_data = 1 << 0,
         etel_line_caps_fax = 1 << 1,
         etel_line_caps_voice = 1 << 2,
-        etel_line_caps_dial = 1 << 3
+        etel_line_caps_aux_voice = 1 << 3,
+        etel_line_caps_event_incoming_call = 1 << 16
     };
 
     enum etel_line_hook_sts {

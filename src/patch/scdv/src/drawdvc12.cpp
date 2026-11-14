@@ -20,6 +20,7 @@
 #include <Log.h>
 
 #include "drawdvc12.h"
+#include "rgbconv.h"
 #include "scdv/panic.h"
 
 #include <gdi.h>
@@ -33,20 +34,19 @@ TRgb CFbsTwelveBitDrawDevice::ReadPixel(TInt aX, TInt aY) const {
 
     // Try to access that pixel
     TUint8 *pixelStart = GetPixelStartAddress(aX, aY);
-    return TRgb::Color4K((TInt)(*reinterpret_cast<TUint16 *>(pixelStart)));
+    return Scdv::Color4KToRgb((TInt)(*reinterpret_cast<TUint16 *>(pixelStart)));
 }
 
 void CFbsTwelveBitDrawDevice::WriteRgbToAddress(TUint8 *aAddress, TUint8 *aRawColor, CGraphicsContext::TDrawMode aDrawMode) {
-    WriteRgbToAddress(aAddress, TRgb::Color4K(*reinterpret_cast<TUint16 *>(aRawColor)), aDrawMode);
+    WriteRgbToAddress(aAddress, Scdv::Color4KToRgb(*reinterpret_cast<TUint16 *>(aRawColor)), aDrawMode);
 }
 
 void CFbsTwelveBitDrawDevice::WriteRgbToAddress(TUint8 *aAddress, TRgb aColor, CGraphicsContext::TDrawMode aDrawMode) {
     TUint16 *colorAddr = reinterpret_cast<TUint16 *>(aAddress);
-    TRgb currentColor = TRgb::Color4K((TInt)(*colorAddr));
+    TRgb currentColor = Scdv::Color4KToRgb((TInt)(*colorAddr));
 
-    *colorAddr = static_cast<TUint16>(CFbsDrawDeviceAlgorithm::ExecuteColorDrawMode(currentColor,
-        aColor, aDrawMode)
-                                          .Color4K());
+    *colorAddr = static_cast<TUint16>(Scdv::Color4K(CFbsDrawDeviceAlgorithm::ExecuteColorDrawMode(currentColor,
+        aColor, aDrawMode)));
 }
 
 void CFbsTwelveBitDrawDevice::SetSize(TSize aSize) {

@@ -166,6 +166,8 @@ namespace eka2l1::kernel {
         std::vector<std::uint64_t> relocation_list;
         std::uint32_t hash_;
 
+        // Ordinals whose export holds an absolute address set by set_export.
+        std::vector<bool> absolute_exports_;
         bool patched_{ false };
         bool ep_disabled_{ false };
         bool hash_inited_{ false };
@@ -215,6 +217,9 @@ namespace eka2l1::kernel {
         bool detaching_report(kernel::process *foe);
 
         codeseg_state state_with(kernel::process *foe);
+
+        // The process holding this executable's fixed data address, which admits one instance. Null when the data is not fixed.
+        kernel::process *fixed_data_owner();
 
         void deref(kernel::thread *foe_thread);
 

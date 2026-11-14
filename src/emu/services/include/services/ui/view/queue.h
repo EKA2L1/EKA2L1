@@ -21,6 +21,9 @@
 
 #include <services/ui/view/common.h>
 #include <utils/reqsts.h>
+#include <utils/sec.h>
+
+#include <optional>
 
 #include <mutex>
 #include <queue>
@@ -38,6 +41,7 @@ namespace eka2l1::ui::view {
 
         // Completed when the client acknowledges this event by asking for the next one.
         epoc::notify_info on_acknowledged_;
+        std::optional<epoc::security_info> switch_source_;
     };
 
     class event_queue {
@@ -51,11 +55,14 @@ namespace eka2l1::ui::view {
         std::mutex lock_;
 
         custom_message current_custom_;
+        std::optional<epoc::security_info> current_switch_source_;
 
     public:
         explicit event_queue();
 
-        void queue_event(const view_event &evt, const custom_message &msg = {}, const epoc::notify_info &on_acknowledged = epoc::notify_info{});
+        void queue_event(const view_event &evt, const custom_message &msg = {},
+            const epoc::notify_info &on_acknowledged = epoc::notify_info{}, const std::optional<epoc::security_info> &switch_source = {});
+        std::optional<epoc::security_info> current_switch_source();
         bool hear(epoc::notify_info info, std::uint8_t *complete_buffer);
         void cancel();
 

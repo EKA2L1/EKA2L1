@@ -152,11 +152,19 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
+    static char drive_list_entry(eka2l1::drive &drv) {
+        epoc::fs::drive_info_v1 info;
+        fill_drive_info(&info, &drv, epoc::version{ 1, 0, 0 });
+        return static_cast<char>(info.drive_att);
+    }
+
     void fs_server_client::drive_list(service::ipc_context *ctx) {
         kernel_system *kern = ctx->sys->get_kernel_system();
+        // Symbian 9.1 clients send only the list; slot 1 holds whatever the caller left there.
+        const bool has_flags = kern->get_epoc_version() >= epocver::epoc93fp1;
         std::optional<std::int32_t> flags = ctx->get_argument_value<std::int32_t>(1);
 
-        if (!kern->is_eka1() && !flags) {
+        if (has_flags && !flags) {
             ctx->complete(epoc::error_argument);
             return;
         }
@@ -164,8 +172,7 @@ namespace eka2l1 {
         std::vector<io_attrib> exclude_attribs;
         std::vector<io_attrib> include_attribs;
 
-        // Fetch flags
-        if (!kern->is_eka1()) {
+        if (has_flags) {
             if (*flags & epoc::fs::drive_att_hidden) {
                 if (*flags & epoc::fs::drive_att_exclude) {
                     exclude_attribs.push_back(io_attrib_hidden);
@@ -200,7 +207,7 @@ namespace eka2l1 {
                 if (!out) {
                     if (include_attribs.empty()) {
                         if (drv.media_type != drive_media::none) {
-                            dlist[i] = 1;
+                            dlist[i] = drive_list_entry(drv);
                         }
 
                         continue;
@@ -210,7 +217,7 @@ namespace eka2l1 {
                         [=](io_attrib attrib) { return static_cast<int>(attrib) & static_cast<int>(drv.attribute); });
 
                     if (meet_one_condition != include_attribs.end()) {
-                        dlist[i] = 1;
+                        dlist[i] = drive_list_entry(drv);
                     }
                 }
             }

@@ -1275,10 +1275,7 @@ void main_window::spawn_package_install_camper(QString package_file_path) {
             current_progress_dialog_->setAttribute(Qt::WA_DeleteOnClose, true);
             current_progress_dialog_->show();
 
-            drive_number install_drive = drive_e;
-            if (emulator_state_.symsys->is_s80_device_active()) {
-                install_drive = drive_d;
-            }
+            const drive_number install_drive = emulator_state_.symsys->get_default_install_drive();
 
             const eka2l1::package::installation_result install_result = run_off_gui_thread([this, pkgmngr, package_file_path, install_drive]() {
                 return pkgmngr->install_package(
@@ -2047,6 +2044,13 @@ void main_window::control_changed(eka2l1::control::native_change change) {
     }
     refresh_current_device_label();
     refresh_mount_availbility();
+}
+
+void main_window::control_run_blocking(const std::function<void()> &work) {
+    run_off_gui_thread([&work] {
+        work();
+        return true;
+    });
 }
 
 void main_window::control_pause(bool paused) {

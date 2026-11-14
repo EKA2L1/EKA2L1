@@ -499,7 +499,9 @@ namespace eka2l1 {
         }
 
         kernel_system *kern = ctx->sys->get_kernel_system();
-        set_event_msg_queue(kern->get<kernel::msg_queue>(ctx->get_argument_value<std::uint32_t>(2).value()));
+        auto *queue = kern->get_kernel_obj_raw(ctx->msg->args.args[2], ctx->msg->own_thr);
+        auto *event_queue = (queue && queue->get_object_type() == kernel::object_type::msg_queue)
+            ? static_cast<kernel::msg_queue *>(queue) : nullptr;
 
         std::optional<epoc::mmf_dev_sound_proxy_settings> state_settings
             = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(1);
@@ -513,7 +515,14 @@ namespace eka2l1 {
         if ((state_wanted != epoc::mmf_state_playing) && (state_wanted != epoc::mmf_state_tone_playing)
             && (state_wanted != epoc::mmf_state_playing_recording)) {
             ctx->complete(epoc::error_not_supported);
+            return;
         }
+
+        if (!event_queue) {
+            ctx->complete(epoc::error_bad_handle);
+            return;
+        }
+        set_event_msg_queue(event_queue);
 
         std::uint32_t target_fourcc = state_settings->four_cc_;
 
@@ -554,7 +563,9 @@ namespace eka2l1 {
         }
 
         kernel_system *kern = ctx->sys->get_kernel_system();
-        set_event_msg_queue(kern->get<kernel::msg_queue>(ctx->get_argument_value<std::uint32_t>(2).value()));
+        auto *queue = kern->get_kernel_obj_raw(ctx->msg->args.args[2], ctx->msg->own_thr);
+        auto *event_queue = (queue && queue->get_object_type() == kernel::object_type::msg_queue)
+            ? static_cast<kernel::msg_queue *>(queue) : nullptr;
 
         std::optional<epoc::mmf_dev_sound_proxy_settings> state_settings
             = ctx->get_argument_data_from_descriptor<epoc::mmf_dev_sound_proxy_settings>(1);
@@ -568,7 +579,14 @@ namespace eka2l1 {
         if ((state_wanted != epoc::mmf_state_playing) && (state_wanted != epoc::mmf_state_tone_playing)
             && (state_wanted != epoc::mmf_state_playing_recording)) {
             ctx->complete(epoc::error_not_supported);
+            return;
         }
+
+        if (!event_queue) {
+            ctx->complete(epoc::error_bad_handle);
+            return;
+        }
+        set_event_msg_queue(event_queue);
 
         desired_state_ = state_wanted;
         init_stream_through_state();

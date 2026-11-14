@@ -417,6 +417,7 @@ namespace eka2l1::desktop {
             frontend.boot = [&state](int index) { return state.ui_main->control_boot(index); };
             frontend.pause = [&state](bool paused) { state.ui_main->control_pause(paused); };
             frontend.changed = [&state](auto change) { state.ui_main->control_changed(change); };
+            frontend.run_blocking = [&state](const std::function<void()> &work) { state.ui_main->control_run_blocking(work); };
             if (state.sensor_driver) {
                 state.sensor_driver->set_acceleration_override(nullptr);
                 frontend.acceleration = [&state](const double *values) { state.sensor_driver->set_acceleration_override(values); };

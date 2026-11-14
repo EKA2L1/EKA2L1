@@ -12,6 +12,7 @@
 #include <system/devices.h>
 #include <system/epoc.h>
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <lunasvg.h>
@@ -34,23 +35,41 @@ namespace eka2l1 {
         }
     }
 
-    std::optional<app_icon_image> decode_mbm_app_icon(fbs_server *fbs, common::ro_stream &stream, const epocver version) {
+    std::optional<app_icon_image> decode_mbm_app_icon(fbs_server *fbs, common::ro_stream &stream, const epocver version,
+        const bool uiq, const int icon_count) {
         loader::mbm_file parser(&stream);
         if (!parser.do_read_headers() || parser.sbm_headers.empty()) {
             return std::nullopt;
         }
-        auto icon = allocate_icon(parser.sbm_headers[0].size_pixels);
+
+        // Icons are stored as bitmap/mask pairs, one per size; show the largest pair whose mask fits.
+        std::size_t bitmap_index = 0;
+        bool has_mask = false;
+        const std::size_t pair_count = std::min<std::size_t>(std::max(icon_count, 1), parser.sbm_headers.size() / 2);
+        for (std::size_t i = 0; i < pair_count; i++) {
+            const vec2 size = parser.sbm_headers[i * 2].size_pixels;
+            if (parser.sbm_headers[i * 2 + 1].size_pixels != size) {
+                continue;
+            }
+            const vec2 best = parser.sbm_headers[bitmap_index].size_pixels;
+            if (!has_mask || static_cast<std::int64_t>(size.x) * size.y > static_cast<std::int64_t>(best.x) * best.y) {
+                bitmap_index = i * 2;
+                has_mask = true;
+            }
+        }
+
+        auto icon = allocate_icon(parser.sbm_headers[bitmap_index].size_pixels);
         if (!icon) return std::nullopt;
         common::wo_buf_stream output(icon->pixels.data(), icon->pixels.size());
-        if (!epoc::convert_to_rgba8888(fbs, parser, 0, output)) return std::nullopt;
+        if (!epoc::convert_to_rgba8888(fbs, parser, bitmap_index, output)) return std::nullopt;
 
-        if (parser.sbm_headers.size() > 1 && parser.sbm_headers[1].size_pixels == icon->size) {
+        if (has_mask) {
             std::vector<std::uint8_t> mask(icon->pixels.size());
             common::wo_buf_stream mask_output(mask.data(), mask.size());
-            if (epoc::convert_to_rgba8888(fbs, parser, 1, mask_output, true)) {
-                const auto &header = parser.sbm_headers[1];
-                const auto composition = version >= epocver::epoc10
-                    ? epoc::icon_mask_composition::alf_canvas : epoc::icon_mask_composition::avkon;
+            if (epoc::convert_to_rgba8888(fbs, parser, bitmap_index + 1, mask_output, true)) {
+                const auto &header = parser.sbm_headers[bitmap_index + 1];
+                const auto composition = uiq ? epoc::icon_mask_composition::uiq
+                    : (version >= epocver::epoc10 ? epoc::icon_mask_composition::alf_canvas : epoc::icon_mask_composition::avkon);
                 epoc::apply_icon_mask_alpha(icon->pixels.data(), mask.data(), icon->size.x, icon->size.y,
                     epoc::get_display_mode_from_bpp(header.bit_per_pixels, header.color), composition);
             }
@@ -125,7 +144,8 @@ namespace eka2l1 {
             auto file = io->open_file(registry.icon_file_path, READ_MODE | BIN_MODE);
             if (file) {
                 ro_file_stream stream(file.get());
-                if (auto icon = decode_mbm_app_icon(fbsserv, stream, sys->get_symbian_version_use())) return icon;
+                if (auto icon = decode_mbm_app_icon(fbsserv, stream, sys->get_symbian_version_use(),
+                        sys->is_uiq_3_device_active(), registry.icon_count)) return icon;
             }
         }
 

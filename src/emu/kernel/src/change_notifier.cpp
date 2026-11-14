@@ -29,12 +29,19 @@
 
 #include <utils/err.h>
 
+#include <utility>
+
 namespace eka2l1 {
     namespace kernel {
         change_notifier::change_notifier(kernel_system *kern)
             : eka2l1::kernel::kernel_obj(kern, "changenotifier" + common::to_string(eka2l1::random()),
                 nullptr, kernel::access_type::local_access) {
             obj_type = object_type::change_notifier;
+
+            // A new notifier reports every change, so the first logon completes at once with this mask.
+            static constexpr std::uint32_t CHANGES_UP_TO_OUT_OF_MEMORY = 0x7F;
+            static constexpr std::uint32_t CHANGES_THRASH_LEVEL = 0x100;
+            changes_ = CHANGES_UP_TO_OUT_OF_MEMORY | ((kern->get_epoc_version() >= epocver::epoc95) ? CHANGES_THRASH_LEVEL : 0);
         }
 
         bool change_notifier::logon(eka2l1::ptr<epoc::request_status> request_sts) {
@@ -50,6 +57,10 @@ namespace eka2l1 {
             // So we need to do extra check here. So far this seems like the only instance in the library
             // This should fix stray signal
             req_info_.pending();
+
+            if (changes_) {
+                req_info_.complete(static_cast<int>(std::exchange(changes_, 0)));
+            }
 
             return true;
         }
@@ -69,6 +80,7 @@ namespace eka2l1 {
 
         void change_notifier::do_state(common::chunkyseri &seri) {
             req_info_.do_state(seri);
+            seri.absorb(changes_);
         }
     }
 }

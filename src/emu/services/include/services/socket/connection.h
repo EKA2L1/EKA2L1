@@ -60,6 +60,14 @@ namespace eka2l1::epoc::socket {
         std::uint32_t network_id = 0;
     };
 
+    struct interface_notification {
+        connection_info info;
+        std::uint32_t state;
+    };
+
+    using interface_observer = std::function<void(const interface_notification &)>;
+    using interface_observers = std::vector<std::weak_ptr<interface_observer>>;
+
     struct connection_control_description {
         std::uint32_t option;
         std::uint32_t descriptor;
@@ -71,6 +79,8 @@ namespace eka2l1::epoc::socket {
         bool active = false;
         std::int32_t stage = 0;
         std::map<const void *, std::function<void(std::int32_t)>> observers;
+
+        std::weak_ptr<interface_observers> interface_observers_;
 
         ~connection_state();
         void advance(std::int32_t new_stage);
@@ -89,9 +99,11 @@ namespace eka2l1::epoc::socket {
         std::vector<std::weak_ptr<connection_state>> states_;
         std::map<std::u16string, std::weak_ptr<connection_reference>> references_;
         std::uint64_t next_reference_ = 0;
+        std::shared_ptr<interface_observers> interface_observers_ = std::make_shared<interface_observers>();
 
     public:
         std::shared_ptr<connection_state> create();
+        void observe_interfaces(const std::shared_ptr<interface_observer> &observer);
         std::shared_ptr<connection_state> find(const connection_info &info);
         std::vector<connection_info> enumerate();
         std::shared_ptr<connection_reference> create_reference();

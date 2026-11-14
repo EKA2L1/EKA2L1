@@ -37,6 +37,9 @@ namespace eka2l1::epoc {
             std::string style;
             epoc::display_mode disp_mode;
             epoc::display_mode dsa_disp_mode;
+
+            // False for an index a sparse NUMSCREENMODES table leaves out; it then mirrors the first defined mode.
+            bool defined = true;
         };
 
         struct hardware_state {

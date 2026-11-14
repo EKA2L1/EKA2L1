@@ -520,9 +520,12 @@ namespace eka2l1::kernel {
         }
 
         rendezvous_requests.clear();
+        kern->boot_server_settled(this);
     }
 
     void process::finish_logons() {
+        kern->boot_server_settled(this);
+
         // The thread that armed a Logon/Rendezvous lives in another process and may
         // already have exited, leaving a dangling requester in the queues.
         // notify_info::complete() dereferences that requester to translate the

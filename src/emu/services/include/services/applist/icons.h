@@ -20,5 +20,6 @@ namespace eka2l1 {
         std::vector<std::uint8_t> pixels;
     };
 
-    std::optional<app_icon_image> decode_mbm_app_icon(fbs_server *fbs, common::ro_stream &stream, epocver version);
+    std::optional<app_icon_image> decode_mbm_app_icon(fbs_server *fbs, common::ro_stream &stream, epocver version,
+        bool uiq = false, int icon_count = 1);
 }

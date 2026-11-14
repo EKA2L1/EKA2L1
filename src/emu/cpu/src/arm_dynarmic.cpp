@@ -347,6 +347,7 @@ namespace eka2l1::arm {
         : tlb_obj(12)
         , interpreter(monitor, 12)
         , interpreter_callback_inited(false) {
+
         std::shared_ptr<dynarmic_core_cp15> cp15 = std::make_shared<dynarmic_core_cp15>();
         cb = std::make_unique<dynarmic_core_callback>(*this, cp15);
 

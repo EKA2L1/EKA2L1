@@ -25,6 +25,7 @@
 
 #include <common/cvt.h>
 #include <system/devices.h>
+#include <kernel/kernel.h>
 
 #include <algorithm>
 #include <chrono>
@@ -104,24 +105,23 @@ namespace eka2l1 {
         }
     }
 
-    central_repo_client_subsession::central_repo_client_subsession()
-        : flags(0) {
-        set_transaction_mode(central_repo_transaction_mode::read_write);
-    }
-
-    void central_repo_client_subsession::modification_success(const std::uint32_t key) {
-        // Iters through all
-        for (std::size_t i = 0; i < notifies.size(); i++) {
-            cenrep_notify_info &notify = notifies[i];
-
-            if ((key & (notify.match & notify.mask))) {
-                // Notify and delete this request from the list
-                notify.sts.complete(0);
-                notifies.erase(notifies.begin() + i);
+    void central_repo_client_subsession::modification_success(const std::uint32_t key, const bool committing) {
+        for (auto *session : attach_repo->attached) {
+            if (session != this && session->is_active() && !session->transaction_error
+                && (committing || session->transaction_mode == central_repo_transaction_mode::concurrent_read_write)) {
+                session->transaction_error = epoc::error_locked;
             }
-        }
 
-        // Done all requests
+            common::erase_elements(session->notifies, [key, this](cenrep_notify_info &notify) {
+                if ((key & notify.mask) != (notify.match & notify.mask)) {
+                    return false;
+                }
+                if (server->get_kernel_object_owner()->is_thread_alive(notify.sts.requester)) {
+                    notify.sts.complete(static_cast<std::int32_t>(key));
+                }
+                return true;
+            });
+        }
     }
 
     int central_repo_client_subsession::add_notify_request(epoc::notify_info &info,
@@ -161,39 +161,29 @@ namespace eka2l1 {
         });
     }
 
-    central_repo_entry *central_repo_client_subsession::get_entry(const std::uint32_t key, int mode) {
-        // Repo is in transaction
-        bool active = is_active();
+    central_repo_entry *central_repo_client_subsession::get_entry(const std::uint32_t key) {
+        const auto entry = transaction_entries.find(key);
+        return (entry != transaction_entries.end()) ? &entry->second : attach_repo->find_entry(key);
+    }
 
-        // Resolve
-        // If get entry for write but the transaction mode is read only, we can't allow that
-        if ((mode == 1) && (get_transaction_mode() == central_repo_transaction_mode::read_only)) {
-            return nullptr;
+    int central_repo_client_subsession::prepare_write() {
+        using mode = central_repo_transaction_mode;
+        if (transaction_error) {
+            return epoc::error_abort;
         }
-
-        // Check transactor, only if its in transaction
-        if (active) {
-            auto entry_ite = transactor.changes.find(key);
-            if (entry_ite != transactor.changes.end()) {
-                return &(entry_ite->second);
+        for (const auto *session : attach_repo->attached) {
+            if (session == this || session->transaction_error) {
+                continue;
+            }
+            if (session->transaction_mode == mode::read_write
+                || ((transaction_mode != mode::concurrent_read_write) && session->transaction_mode == mode::read)) {
+                return epoc::error_locked;
             }
         }
-
-        // If not in transaction, or if we are in transaction but read-mode
-        // Directly get the repo data
-        if (!active || mode == 0) {
-            auto result = std::find_if(attach_repo->entries.begin(), attach_repo->entries.end(),
-                [&](const central_repo_entry &entry) { return entry.key == key; });
-
-            if (result == attach_repo->entries.end()) {
-                return nullptr;
-            }
-
-            return &(*result);
+        if (transaction_mode == mode::read) {
+            transaction_mode = mode::read_write;
         }
-
-        transactor.changes.emplace(key, central_repo_entry{});
-        return &(transactor.changes[key]);
+        return epoc::error_none;
     }
 
     bool central_repos_cacher::free_oldest() {
@@ -289,140 +279,107 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    void central_repo_client_subsession::create_value(service::ipc_context *ctx) {
-        std::optional<std::uint32_t> id = ctx->get_argument_value<std::uint32_t>(0);
-
-        if (!id) {
-            ctx->complete(epoc::error_argument);
-            return;
-        }
-
-        central_repo_entry_variant new_var;
-        bool hit = true;
-
+    static std::optional<central_repo_entry_variant> read_setting(service::ipc_context *ctx) {
+        central_repo_entry_variant value{};
         switch (ctx->msg->function) {
         case cen_rep_create_int:
-            new_var.etype = central_repo_entry_type::integer;
-            new_var.intd = ctx->msg->args.args[1];
-
+        case cen_rep_set_int:
+            value.etype = central_repo_entry_type::integer;
+            value.intd = ctx->msg->args.args[1];
             break;
 
-        case cen_rep_create_real: {
-            new_var.etype = central_repo_entry_type::real;
-            std::optional<double> dd_val = ctx->get_argument_data_from_descriptor<double>(1);
-
-            if (!dd_val.has_value()) {
-                ctx->complete(epoc::error_argument);
-                return;
-            }
-
-            new_var.reald = dd_val.value();
-            break;
-        }
-
-        case cen_rep_create_string: {
-            new_var.etype = central_repo_entry_type::string;
-            std::optional<std::string> bb_val = ctx->get_argument_value<std::string>(1);
-
-            if (!bb_val.has_value()) {
-                ctx->complete(epoc::error_argument);
-                return;
-            }
-
-            new_var.strd.resize(bb_val->length());
-            std::memcpy(new_var.strd.data(), bb_val->data(), bb_val->size());
-
-            break;
-        }
-
-        default:
-            hit = false;
-            break;
-        }
-
-        if (!hit) {
-            LOG_ERROR(SERVICE_CENREP, "Unknown create value type!");
-            ctx->complete(epoc::error_general);
-            return;
-        }
-
-        if (!attach_repo->add_new_entry(id.value(), new_var)) {
-            LOG_ERROR(SERVICE_CENREP, "Fail to add new entry with id {}", id.value());
-            ctx->complete(epoc::error_general);
-            return;
-        }
-
-        ctx->complete(epoc::error_none);
-    }
-
-    void central_repo_client_subsession::set_value(service::ipc_context *ctx) {
-        // We get the entry.
-        // Use mode 1 (write) to get the entry, since we are modifying data.
-        central_repo_entry *entry = get_entry(*ctx->get_argument_value<std::uint32_t>(0), 1);
-
-        // If it does not exist, or it is in different type, discard.
-        // Depends on the invalid type, we set error code
-        if (!entry) {
-            ctx->complete(epoc::error_not_found);
-            return;
-        }
-
-        // TODO: Capability supply (+Policy)
-        // This is really bad... We are not really care about accuracy right now
-        // Assuming programs did right things, and accept the rules
-        switch (ctx->msg->function) {
-        case cen_rep_set_int: {
-            if (entry->data.etype != central_repo_entry_type::integer) {
-                ctx->complete(epoc::error_argument);
-                break;
-            }
-
-            entry->data.intd = static_cast<std::uint64_t>(*ctx->get_argument_value<std::uint32_t>(1));
-            break;
-        }
-
+        case cen_rep_create_real:
         case cen_rep_set_real: {
-            if (entry->data.etype != central_repo_entry_type::real) {
-                ctx->complete(epoc::error_argument);
-                break;
+            const auto real = ctx->get_argument_data_from_descriptor<double>(1);
+            if (!real || ctx->get_argument_data_size(1) != sizeof(double)) {
+                return std::nullopt;
             }
-
-            std::optional<double> data = ctx->get_argument_data_from_descriptor<double>(1);
-            if (!data.has_value()) {
-                ctx->complete(epoc::error_argument);
-                break;
-            }
-
-            entry->data.reald = data.value();
-            break;
-        }
-
-        case cen_rep_set_string: {
-            if (entry->data.etype != central_repo_entry_type::string) {
-                ctx->complete(epoc::error_argument);
-                break;
-            }
-
-            entry->data.strd = *ctx->get_argument_value<std::string>(1);
+            value.etype = central_repo_entry_type::real;
+            value.reald = *real;
             break;
         }
 
         default: {
-            // Unreachable
-            assert(false);
+            auto string = ctx->get_argument_value<std::string>(1);
+            if (!string) {
+                return std::nullopt;
+            }
+            value.etype = central_repo_entry_type::string;
+            value.strd = std::move(*string);
             break;
         }
         }
+        return value;
+    }
 
-        // Success in modifying
-        modification_success(entry->key);
-        ctx->complete(epoc::error_none);
+    static bool same_setting(const central_repo_entry_variant &a, const central_repo_entry_variant &b) {
+        if (a.etype != b.etype) {
+            return false;
+        }
+        switch (a.etype) {
+        case central_repo_entry_type::integer:
+            return a.intd == b.intd;
+        case central_repo_entry_type::real:
+            return a.reald == b.reald;
+        case central_repo_entry_type::string:
+            return a.strd == b.strd;
+        default:
+            return false;
+        }
+    }
+
+    void central_repo_client_subsession::set_entry(service::ipc_context *ctx, const bool create) {
+        const std::uint32_t key = ctx->msg->args.args[0];
+        int error = prepare_write();
+        if (!error) {
+            auto value = read_setting(ctx);
+            const auto *existing = get_entry(key);
+            if (create && existing) {
+                error = epoc::error_already_exists;
+            } else if (!value || (existing && existing->data.etype != value->etype)) {
+                error = epoc::error_argument;
+            } else if (!existing || !same_setting(existing->data, *value)) {
+                if (is_active()) {
+                    central_repo_entry entry = existing ? *existing : central_repo_entry{};
+                    entry.key = key;
+                    if (!existing) {
+                        entry.metadata_val = attach_repo->get_default_meta_for_new_key(key);
+                    }
+                    entry.data = std::move(*value);
+                    transaction_entries.insert_or_assign(key, std::move(entry));
+                } else {
+                    if (existing) {
+                        attach_repo->find_entry(key)->data = std::move(*value);
+                    } else {
+                        attach_repo->add_new_entry(key, *value);
+                    }
+                    modification_success(key);
+                }
+            }
+        }
+        if (error && is_active() && !transaction_error) {
+            transaction_error = error;
+            transaction_error_key = key;
+        }
+        ctx->complete(error);
+    }
+
+    void central_repo_client_subsession::create_value(service::ipc_context *ctx) {
+        set_entry(ctx, true);
+    }
+
+    void central_repo_client_subsession::set_value(service::ipc_context *ctx) {
+        set_entry(ctx, false);
     }
 
 #ifdef _MSC_VER
 #pragma optimize("", off)
 #endif
     void central_repo_client_subsession::get_value(service::ipc_context *ctx) {
+        if (transaction_error) {
+            ctx->complete(epoc::error_abort);
+            return;
+        }
         // We get the entry.
         // Use mode 0 (write) to get the entry, since we are modifying data.
         std::optional<std::uint32_t> the_key = ctx->get_argument_value<std::uint32_t>(0);
@@ -432,7 +389,7 @@ namespace eka2l1 {
             return;
         }
 
-        central_repo_entry *entry = get_entry(the_key.value(), 0);
+        central_repo_entry *entry = get_entry(the_key.value());
 
         if (!entry) {
             ctx->complete(epoc::error_not_found);
@@ -501,150 +458,96 @@ namespace eka2l1 {
 #pragma optimize("", on)
 #endif
 
-    void central_repo_client_subsession::append_new_key_to_found_eq_list(std::uint32_t *array, const std::uint32_t key, const std::uint32_t max_uids_buf) {
-        // We have to push it to the temporary array, since this array can be retrieve anytime before another FindEq call
-        // Even if the provided array is not full
-        array[0]++;
-
-        if (array[0] <= max_uids_buf) {
-            // Increase the length, than add the keey
-            array[array[0]] = key;
-        } else {
-            key_found_result.push_back(key);
-        }
-    }
-
     void central_repo_client_subsession::find(service::ipc_context *ctx) {
-        // Clear found result
-        // TODO: Should we?
         key_found_result.clear();
+        if (transaction_error) {
+            ctx->complete(epoc::error_abort);
+            return;
+        }
 
-        // Get the filter
-        std::optional<central_repo_key_filter> filter = ctx->get_argument_data_from_descriptor<central_repo_key_filter>(0);
-        std::uint32_t *found_uid_result_array = reinterpret_cast<std::uint32_t *>(ctx->get_descriptor_argument_ptr(2));
-        const std::size_t found_uid_max_uids = (ctx->get_argument_max_data_size(2) / sizeof(std::uint32_t)) - 1;
-
-        if (!filter || !found_uid_result_array) {
-            LOG_ERROR(SERVICE_CENREP, "Trying to find equal value in cenrep, but arguments are invalid!");
+        // The 9.1 client passes raw key and mask; the later client packages them in slot 0.
+        const bool plain_filter = !(static_cast<int>(ctx->msg->args.get_arg_type(0))
+            & static_cast<int>(ipc_arg_type::flag_des));
+        const int value_slot = plain_filter ? 2 : 1;
+        const int result_slot = plain_filter ? 3 : 2;
+        const auto filter = plain_filter
+            ? std::optional<central_repo_key_filter>{{ static_cast<std::uint32_t>(ctx->msg->args.args[0]),
+                static_cast<std::uint32_t>(ctx->msg->args.args[1]) }}
+            : ctx->get_argument_data_from_descriptor<central_repo_key_filter>(0);
+        const auto capacity = ctx->get_argument_max_data_size(result_slot) / sizeof(std::uint32_t);
+        if (!filter || (!plain_filter && ctx->get_argument_data_size(0) != sizeof(central_repo_key_filter))
+            || !capacity || ctx->msg->args.get_arg_type(result_slot) != ipc_arg_type::des8) {
             ctx->complete(epoc::error_argument);
             return;
         }
 
-        // Set found count to 0
-        found_uid_result_array[0] = 0;
-        std::string cache_arg;
-
-        for (auto &entry : attach_repo->entries) {
-            // Try to match the key first
-            if ((entry.key & filter->id_mask) != (filter->partial_key & filter->id_mask)) {
-                // Mask doesn't match, abandon this entry
-                continue;
-            }
-
-            std::uint32_t key_found = 0;
-            bool find_not_eq = false;
-
-            switch (ctx->msg->function) {
-            case cen_rep_find_neq_int:
-            case cen_rep_find_neq_real:
-            case cen_rep_find_neq_string:
-                find_not_eq = true;
-                break;
-
-            default:
-                break;
-            }
-
-            // Depends on the opcode, we try to match the value
-            switch (ctx->msg->function) {
+        std::optional<central_repo_entry_variant> value;
+        const auto function = ctx->msg->function;
+        const bool not_equal = function >= cen_rep_find_neq_int && function <= cen_rep_find_neq_string;
+        if (function != cen_rep_find) {
+            central_repo_entry_variant expected{};
+            switch (function) {
             case cen_rep_find_eq_int:
-            case cen_rep_find_neq_int: {
-                if (entry.data.etype != central_repo_entry_type::integer) {
-                    // It must be integer type
-                    break;
-                }
-
-                // Index 1 argument contains the value we should look for
-                // TODO: Signed/unsigned is dangerous
-                if (static_cast<std::int32_t>(entry.data.intd) == *ctx->get_argument_value<std::int32_t>(1)) {
-                    if (!find_not_eq) {
-                        key_found = entry.key;
-                    }
-                } else {
-                    if (find_not_eq) {
-                        key_found = entry.key;
-                    }
-                }
-
+            case cen_rep_find_neq_int:
+                expected.etype = central_repo_entry_type::integer;
+                expected.intd = ctx->msg->args.args[value_slot];
+                value = expected;
                 break;
-            }
-
-            case cen_rep_find_eq_string:
-            case cen_rep_find_neq_string: {
-                bool is_ok = false;
-
-                if (cache_arg.empty()) {
-                    auto ss = ctx->get_argument_value<std::string>(1);
-
-                    if (!ss.has_value()) {
-                        ctx->complete(epoc::error_argument);
-                        return;
-                    }
-
-                    cache_arg = ss.value();
+            case cen_rep_find_eq_real:
+            case cen_rep_find_neq_real:
+                if (const auto real = ctx->get_argument_data_from_descriptor<double>(value_slot);
+                    real && ctx->get_argument_data_size(value_slot) == sizeof(double)) {
+                    expected.etype = central_repo_entry_type::real;
+                    expected.reald = *real;
+                    value = expected;
                 }
-
-                if (entry.data.etype == central_repo_entry_type::string) {
-                    // It must be string type
-                    is_ok = (entry.data.strd == cache_arg);
-                } else {
-                    break;
-                }
-
-                if (is_ok) {
-                    if (!find_not_eq) {
-                        key_found = entry.key;
-                    }
-                } else {
-                    if (find_not_eq) {
-                        key_found = entry.key;
-                    }
+                break;
+            default:
+                if (auto str = ctx->get_argument_value<std::string>(value_slot)) {
+                    expected.etype = central_repo_entry_type::string;
+                    expected.strd = std::move(*str);
+                    value = std::move(expected);
                 }
                 break;
             }
-
-            case cen_rep_find:
-                key_found = entry.key;
-                break;
-
-            default: {
-                LOG_ERROR(SERVICE_CENREP, "Unimplemented Cenrep's find function for opcode {}", ctx->msg->function);
-                break;
-            }
-            }
-
-            // If we found the key, append it
-            if (key_found != 0) {
-                append_new_key_to_found_eq_list(found_uid_result_array, key_found, static_cast<std::uint32_t>(found_uid_max_uids));
+            if (!value) {
+                ctx->complete(epoc::error_argument);
+                return;
             }
         }
 
-        if (found_uid_result_array[0] == 0) {
-            // NOTHING! NOTHING! omg no
-            ctx->complete(epoc::error_not_found);
-            return;
+        std::vector<std::uint32_t> result{0};
+        const auto append = [&](const central_repo_entry &entry) {
+            if ((entry.key & filter->id_mask) == (filter->partial_key & filter->id_mask)
+                && (!value || (entry.data.etype == value->etype && same_setting(entry.data, *value) != not_equal))) {
+                ++result[0];
+                if (result.size() < capacity) {
+                    result.push_back(entry.key);
+                } else {
+                    key_found_result.push_back(entry.key);
+                }
+            }
+        };
+        for (const auto &entry : attach_repo->entries) {
+            if (transaction_entries.find(entry.key) == transaction_entries.end()) {
+                append(entry);
+            }
+        }
+        for (const auto &[key, entry] : transaction_entries) {
+            append(entry);
         }
 
-        ctx->complete(epoc::error_none);
+        const bool written = ctx->write_data_to_descriptor_argument(result_slot,
+            reinterpret_cast<const std::uint8_t *>(result.data()), static_cast<std::uint32_t>(result.size() * sizeof(std::uint32_t)));
+        ctx->complete(!written ? epoc::error_bad_descriptor : (result[0] ? epoc::error_none : epoc::error_not_found));
     }
 
     void central_repo_client_subsession::get_find_result(service::ipc_context *ctx) {
-        std::uint32_t *found_uid_result_array = reinterpret_cast<std::uint32_t *>(ctx->get_descriptor_argument_ptr(0));
-        const std::size_t found_uid_max_uids = (ctx->get_argument_max_data_size(0) / sizeof(std::uint32_t));
-
-        ctx->write_data_to_descriptor_argument(0, reinterpret_cast<std::uint8_t *>(&key_found_result[0]), static_cast<std::uint32_t>(common::min(found_uid_max_uids, key_found_result.size()) * sizeof(std::uint32_t)));
-
-        ctx->complete(epoc::error_none);
+        const auto capacity = ctx->get_argument_max_data_size(0) / sizeof(std::uint32_t);
+        const auto count = std::min(capacity, key_found_result.size());
+        const bool written = ctx->write_data_to_descriptor_argument(0,
+            reinterpret_cast<const std::uint8_t *>(key_found_result.data()), static_cast<std::uint32_t>(count * sizeof(std::uint32_t)));
+        ctx->complete(written ? epoc::error_none : epoc::error_bad_descriptor);
     }
 
     void central_repo_client_subsession::notify_nof_check(service::ipc_context *ctx) {
@@ -734,12 +637,82 @@ namespace eka2l1 {
     }
 
     void central_repo_client_subsession::start_transaction(service::ipc_context *ctx) {
-        LOG_TRACE(SERVICE_CENREP, "TransactionStart stubbed");
+        using mode = central_repo_transaction_mode;
+        const auto requested = ctx->msg->args.args[0];
+        if (is_active() || requested < static_cast<unsigned>(mode::read)
+            || requested > static_cast<unsigned>(mode::read_write)) {
+            ctx->complete(epoc::error_argument);
+            return;
+        }
+
+        for (const auto *session : attach_repo->attached) {
+            if (!session->transaction_error && requested != static_cast<unsigned>(mode::concurrent_read_write)
+                && (session->transaction_mode == mode::read_write
+                    || (requested == static_cast<unsigned>(mode::read_write) && session->transaction_mode == mode::read))) {
+                ctx->complete(epoc::error_locked);
+                return;
+            }
+        }
+        transaction_mode = static_cast<mode>(requested);
         ctx->complete(epoc::error_none);
     }
 
+    void central_repo_client_subsession::clear_transaction() {
+        transaction_mode = central_repo_transaction_mode::none;
+        transaction_entries.clear();
+        transaction_error = 0;
+        transaction_error_key = 0xFFFFFFFF;
+    }
+
+    void central_repo_client_subsession::commit_transaction(service::ipc_context *ctx) {
+        if (!is_active()) {
+            ctx->complete(epoc::error_not_ready);
+            return;
+        }
+
+        if (ctx->msg->args.get_arg_type(0) != ipc_arg_type::des8
+            || !ctx->get_descriptor_argument_ptr(0) || ctx->get_argument_max_data_size(0) < sizeof(std::uint32_t)) {
+            clear_transaction();
+            ctx->complete(epoc::error_bad_descriptor);
+            return;
+        }
+
+        int error = transaction_error;
+        std::uint32_t key_info = transaction_error_key;
+        std::vector<std::uint32_t> changed;
+        if (!error && !transaction_entries.empty()) {
+            auto previous = attach_repo->entries;
+            for (auto &[key, entry] : transaction_entries) {
+                if (auto *current = attach_repo->find_entry(key)) {
+                    if (same_setting(current->data, entry.data)) {
+                        continue;
+                    }
+                    *current = std::move(entry);
+                } else {
+                    attach_repo->entries.push_back(std::move(entry));
+                }
+                changed.push_back(key);
+            }
+
+            if (!changed.empty() && !attach_repo->write_changes(ctx->sys->get_io_system(), ctx->sys->get_device_manager(), true)) {
+                attach_repo->entries = std::move(previous);
+                error = epoc::error_write;
+            }
+        }
+
+        clear_transaction();
+        if (!error) {
+            key_info = static_cast<std::uint32_t>(changed.size());
+            for (const auto key : changed) {
+                modification_success(key, true);
+            }
+        }
+        ctx->write_data_to_descriptor_argument<std::uint32_t>(0, key_info);
+        ctx->complete(error);
+    }
+
     void central_repo_client_subsession::cancel_transaction(service::ipc_context *ctx) {
-        LOG_TRACE(SERVICE_CENREP, "TransactionCancel stubbed");
+        clear_transaction();
         ctx->complete(epoc::error_none);
     }
 }

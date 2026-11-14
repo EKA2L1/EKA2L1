@@ -266,3 +266,31 @@ TEST_CASE("legacy_socket_shutdown_sits_between_close_and_the_cancel_run", "socke
     REQUIRE(socket_so_cancel_recv == 0x20);
     REQUIRE(socket_so_shutdown == 0x1E);
 }
+
+TEST_CASE("RConnection interface monitors receive one event per link transition", "[internet][connection]") {
+    using namespace epoc::socket;
+    static_assert(sizeof(interface_notification) == 16);
+    connection_registry registry;
+    std::vector<interface_notification> events;
+    auto observer = std::make_shared<interface_observer>(
+        [&](const interface_notification &event) { events.push_back(event); });
+    registry.observe_interfaces(observer);
+
+    auto connection = registry.create();
+    connection->info = {1, 7, 3};
+    connection->advance(conn_progress_connection_opened);
+    connection->advance(conn_progress_link_layer_open);
+    REQUIRE(events.size() == 1);
+    REQUIRE(events[0].info.iap_id == 7);
+    REQUIRE(events[0].info.network_id == 3);
+    REQUIRE(events[0].state == 0);
+
+    connection.reset();
+    REQUIRE(events.size() == 2);
+    REQUIRE(events[1].state == 1);
+
+    observer.reset();
+    auto second = registry.create();
+    second->advance(conn_progress_link_layer_open);
+    REQUIRE(events.size() == 2);
+}

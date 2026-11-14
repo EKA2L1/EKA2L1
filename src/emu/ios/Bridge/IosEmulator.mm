@@ -2140,9 +2140,7 @@ namespace eka2l1::ios {
         return NO;
     }
     std::u16string upath = eka2l1::common::utf8_to_ucs2(sisPath.UTF8String);
-    drive_number install_drive = _state->symsys->is_s80_device_active()
-        ? drive_number::drive_d
-        : drive_number::drive_e;
+    const drive_number install_drive = _state->symsys->get_default_install_drive();
     auto result = static_cast<eka2l1::package::installation_result>(
         _state->symsys->install_package(upath, install_drive));
     return result == eka2l1::package::installation_result_success ? YES : NO;
@@ -2759,7 +2757,9 @@ namespace eka2l1::ios {
         if (eka2l1::epoc::screen *screen = _state->winserv->get_current_focus_screen()) {
             current = screen->crr_mode;
             for (int mode = 0; mode < screen->total_screen_mode(); ++mode) {
-                [modes addObject:@(mode)];
+                if (screen->mode_info(mode)->defined) {
+                    [modes addObject:@(mode)];
+                }
             }
             size = screen->current_mode().size;
             if ((screen->ui_rotation % 180) != 0) {
@@ -2782,7 +2782,8 @@ namespace eka2l1::ios {
             std::lock_guard<std::recursive_mutex> session_lock(self->_state->session_mutex);
             if (self->_state->winserv && self->_state->graphics_driver) {
                 eka2l1::epoc::screen *screen = self->_state->winserv->get_current_focus_screen();
-                if (screen && mode >= 0 && mode < screen->total_screen_mode()) {
+                if (screen && mode >= 0 && mode < screen->total_screen_mode()
+                    && screen->mode_info(static_cast<int>(mode))->defined) {
                     selected_mode = mode;
                     screen->ui_rotation = 0;
                     screen->set_screen_mode(self->_state->winserv,

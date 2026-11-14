@@ -1375,15 +1375,18 @@ namespace eka2l1 {
             // Own a reference to the clean bitmap, until it is removed
             new_bmp->ref();
 
-            bmp_handles handle_info;
+            // Clients without a handle buffer keep the dirty bitmap and swap to the clean one later.
+            if (ctx->get_argument_max_data_size(3) >= sizeof(bmp_handles)) {
+                bmp_handles handle_info;
 
-            // Add this object to the object table!
-            handle_info.handle = obj_table_.add(new_bmp);
-            handle_info.server_handle = new_bmp->id;
-            handle_info.address_offset = server<fbs_server>()->host_ptr_to_guest_shared_offset(new_bmp->bitmap_);
+                // Add this object to the object table!
+                handle_info.handle = obj_table_.add(new_bmp);
+                handle_info.server_handle = new_bmp->id;
+                handle_info.address_offset = server<fbs_server>()->host_ptr_to_guest_shared_offset(new_bmp->bitmap_);
 
-            ctx->write_data_to_descriptor_argument(3, handle_info);
-            obj_table_.remove(handle);
+                ctx->write_data_to_descriptor_argument(3, handle_info);
+                obj_table_.remove(handle);
+            }
 
             // Notify dirty
             if (fbss->compressor)
@@ -1935,7 +1938,10 @@ namespace eka2l1 {
 
             for (std::size_t i = 0; i < width * height; i++) {
                 const auto *pixel = mask_rgba + i * 4;
-                if (composition == icon_mask_composition::alf_canvas) {
+                if (composition == icon_mask_composition::uiq) {
+                    // UIQ draws app icons with a non-inverted mask: white is opaque at every depth.
+                    icon_rgba[i * 4 + 3] = static_cast<std::uint8_t>((2 * pixel[0] + 5 * pixel[1] + pixel[2]) >> 3);
+                } else if (composition == icon_mask_composition::alf_canvas) {
                     // ALF Canvas inverts EGray2 before ReplaceAlphaChannelL converts to Gray256.
                     const std::uint8_t alpha = (2 * pixel[0] + 5 * pixel[1] + pixel[2]) >> 3;
                     icon_rgba[i * 4 + 3] = mask_mode == epoc::display_mode::gray2 ? 255 - alpha : alpha;

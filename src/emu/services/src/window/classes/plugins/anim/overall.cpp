@@ -23,6 +23,8 @@
 namespace eka2l1::epoc {
     void add_anim_executor_factory_to_list(anim_dll_filename_and_factory_list &factories) {
         factories.emplace_back(u"Z:\\SYSTEM\\LIBS\\CLOCKA.DLL", std::make_unique<clock_anim_executor_factory>());
+        // UIQ ships the same clock/message window animations under this name.
+        factories.emplace_back(u"Z:\\SYSTEM\\LIBS\\QIKCLOCKA.DLL", std::make_unique<clock_anim_executor_factory>());
     }
 }
     

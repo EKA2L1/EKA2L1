@@ -77,6 +77,14 @@ namespace eka2l1 {
         }
     } 
 
+    static void populate_owned_files(common::chunkyseri &seri, apa_app_registry *reg) {
+        std::uint32_t count = static_cast<std::uint32_t>(reg->ownership_list.size());
+        seri.absorb(count);
+        for (auto &file : reg->ownership_list) {
+            epoc::absorb_des_string(file, seri, true);
+        }
+    }
+
     static void populate_icon_sizes(common::chunkyseri &seri, apa_app_registry *reg) {
         std::uint32_t size = reg->app_icons.size();
         seri.absorb(size);
@@ -747,12 +755,20 @@ namespace eka2l1 {
         std::uint32_t mask_bmp_handle;
     };
 
-    void applist_server::get_app_icon(service::ipc_context &ctx) {
+    void applist_server::get_app_icon(service::ipc_context &ctx, const bool by_index) {
         std::optional<epoc::uid> app_uid = ctx.get_argument_value<epoc::uid>(0);
         std::optional<std::int32_t> icon_size_width = std::nullopt;
         std::optional<std::int32_t> icon_size_height = std::nullopt;
 
-        if (legacy_level() == APA_LEGACY_LEVEL_OLD) {
+        if (by_index) {
+            static constexpr std::int32_t LEGACY_ICON_SIDES[] = { 24, 32, 48 };
+            const auto index = ctx.get_argument_value<std::int32_t>(1);
+            if (!index || *index < 0 || *index >= 3) {
+                ctx.complete(epoc::error_argument);
+                return;
+            }
+            icon_size_width = icon_size_height = LEGACY_ICON_SIDES[*index];
+        } else if (legacy_level() == APA_LEGACY_LEVEL_OLD) {
             std::optional<eka2l1::vec2> size_vec = ctx.get_argument_data_from_descriptor<eka2l1::vec2>(1);
             if (size_vec.has_value()) {
                 icon_size_width = size_vec->x;
@@ -775,38 +791,42 @@ namespace eka2l1 {
             return;
         }
 
-        if (reg->app_icons.size() == 0) {
-            // Usually it must have 1
+        if (reg->app_icons.size() < 2) {
             ctx.complete(epoc::error_not_supported);
             return;
         }
 
-        app_icon_handles handle_result;
+        std::size_t pair = 0;
+        if (by_index) {
+            const auto icon = get_icon_by_size(*reg, { *icon_size_width, *icon_size_height });
+            if (!icon) {
+                ctx.complete(epoc::error_not_found);
+                return;
+            }
 
-        // TODO: Iterate and choose right size. But have to do many code....
-        if (reg->app_icons[0].bmp_rom_addr_) {
-            handle_result.bmp_handle = reg->app_icons[0].bmp_rom_addr_;
-        } else {
-            handle_result.bmp_handle = reg->app_icons[0].bmp_->id;
+            for (; pair < reg->app_icons.size() / 2; pair++) {
+                const auto candidate = get_icon(*reg, pair);
+                if (candidate == icon) {
+                    break;
+                }
+            }
         }
 
-        if (reg->app_icons[1].bmp_rom_addr_) {
-            handle_result.mask_bmp_handle = reg->app_icons[1].bmp_rom_addr_;
+        const auto get_handle = [](const apa_app_icon &icon) {
+            return icon.bmp_rom_addr_ ? icon.bmp_rom_addr_ : (icon.bmp_ ? icon.bmp_->id : 0);
+        };
+        const app_icon_handles handles{ get_handle(reg->app_icons[pair * 2]), get_handle(reg->app_icons[pair * 2 + 1]) };
+        bool written;
+        if (!by_index && legacy_level() == APA_LEGACY_LEVEL_OLD) {
+            written = ctx.write_data_to_descriptor_argument<std::uint32_t>(2, handles.bmp_handle)
+                && ctx.write_data_to_descriptor_argument<std::uint32_t>(3, handles.mask_bmp_handle);
         } else {
-            handle_result.mask_bmp_handle = reg->app_icons[1].bmp_->id;
+            written = ctx.write_data_to_descriptor_argument<app_icon_handles>(by_index ? 2 : 3, handles);
         }
-
-        if (legacy_level() == APA_LEGACY_LEVEL_OLD) {
-            ctx.write_data_to_descriptor_argument<std::uint32_t>(2, handle_result.bmp_handle);
-            ctx.write_data_to_descriptor_argument<std::uint32_t>(3, handle_result.mask_bmp_handle);
-        } else {
-            ctx.write_data_to_descriptor_argument<app_icon_handles>(3, handle_result);
-        }
-
-        ctx.complete(epoc::error_none);
+        ctx.complete(written ? epoc::error_none : epoc::error_bad_descriptor);
     }
 
-    void applist_server::get_app_icon_sizes(service::ipc_context &ctx) {
+    void applist_server::get_app_icon_sizes(service::ipc_context &ctx, const bool check_client_size) {
         std::optional<epoc::uid> app_uid = ctx.get_argument_value<epoc::uid>(0);
 
         if (!app_uid) {
@@ -826,6 +846,20 @@ namespace eka2l1 {
             return;
         }
 
+        if (check_client_size) {
+            // SendArrayL: a positive completion asks the client to retry with a buffer of that size.
+            std::optional<std::int32_t> client_buf_size = ctx.get_argument_value<std::int32_t>(1);
+            const std::int32_t size_required = 4 + static_cast<std::int32_t>(reg->app_icons.size()) * 8;
+            if (!client_buf_size) {
+                ctx.complete(epoc::error_argument);
+                return;
+            }
+            if (size_required > client_buf_size.value()) {
+                ctx.complete(size_required);
+                return;
+            }
+        }
+
         std::vector<std::uint8_t> buf;
         common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
         populate_icon_sizes(seri, reg);
@@ -833,6 +867,43 @@ namespace eka2l1 {
         buf.resize(seri.size());
         seri = common::chunkyseri(buf.data(), buf.size(), common::SERI_MODE_WRITE);
         populate_icon_sizes(seri, reg);
+
+        ctx.write_data_to_descriptor_argument(2, buf.data(), static_cast<std::uint32_t>(buf.size()));
+        ctx.complete(epoc::error_none);
+    }
+
+    void applist_server::get_app_owned_files(service::ipc_context &ctx) {
+        std::optional<epoc::uid> app_uid = ctx.get_argument_value<epoc::uid>(0);
+        std::optional<std::int32_t> client_buf_size = ctx.get_argument_value<std::int32_t>(1);
+
+        if (!app_uid || !client_buf_size) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+
+        apa_app_registry *reg = get_registration(app_uid.value());
+
+        if (!reg) {
+            ctx.complete(epoc::error_not_found);
+            return;
+        }
+
+        // The server reserves a TFileName per entry; a positive completion asks the client to retry with that size.
+        constexpr std::int32_t TFILENAME_SIZE = 8 + 256 * 2;
+        const std::int32_t size_required = 4 + static_cast<std::int32_t>(reg->ownership_list.size()) * TFILENAME_SIZE;
+
+        if (size_required > client_buf_size.value()) {
+            ctx.complete(size_required);
+            return;
+        }
+
+        std::vector<std::uint8_t> buf;
+        common::chunkyseri seri(nullptr, 0, common::SERI_MODE_MEASURE);
+        populate_owned_files(seri, reg);
+
+        buf.resize(seri.size());
+        seri = common::chunkyseri(buf.data(), buf.size(), common::SERI_MODE_WRITE);
+        populate_owned_files(seri, reg);
 
         ctx.write_data_to_descriptor_argument(2, buf.data(), static_cast<std::uint32_t>(buf.size()));
         ctx.complete(epoc::error_none);
@@ -1326,6 +1397,27 @@ namespace eka2l1 {
         , filter_method_(APP_FILTER_NONE) {
     }
 
+    void applist_session::set_list_change_notify(service::ipc_context &ctx) {
+        if (!list_change_notify_.empty()) {
+            ctx.complete(epoc::error_in_use);
+            return;
+        }
+
+        // Registries are scanned synchronously, so no scan is ever impending when a client asks.
+        std::optional<std::int32_t> complete_if_no_scan = ctx.get_argument_value<std::int32_t>(0);
+        if (complete_if_no_scan && complete_if_no_scan.value()) {
+            ctx.complete(epoc::error_none);
+            return;
+        }
+
+        list_change_notify_ = epoc::notify_info(ctx.msg->request_sts, ctx.msg->own_thr);
+    }
+
+    void applist_session::cancel_list_change_notify(service::ipc_context &ctx) {
+        list_change_notify_.complete(epoc::error_cancel);
+        ctx.complete(epoc::error_none);
+    }
+
     void applist_session::get_filtered_apps_by_flags(service::ipc_context &ctx) {
         std::optional<std::uint32_t> screen_mode = ctx.get_argument_value<std::uint32_t>(0);
         std::optional<std::uint32_t> flags_mask = ctx.get_argument_value<std::uint32_t>(1);
@@ -1402,6 +1494,7 @@ namespace eka2l1 {
 
             default:
                 LOG_ERROR(SERVICE_APPLIST, "Unimplemented applist opcode {}", ctx->msg->function);
+                ctx->complete(epoc::error_not_supported);
                 break;
             }
         } else if (llevel == APA_LEGACY_LEVEL_S60V2) {
@@ -1420,6 +1513,7 @@ namespace eka2l1 {
 
             default:
                 LOG_ERROR(SERVICE_APPLIST, "Unimplemented applist opcode {}", ctx->msg->function);
+                ctx->complete(epoc::error_not_supported);
                 break;
             }
         } else if (llevel == APA_LEGACY_LEVEL_TRANSITION) {
@@ -1450,6 +1544,7 @@ namespace eka2l1 {
 
             default:
                 LOG_ERROR(SERVICE_APPLIST, "Unimplemented applist opcode 0x{:X}", ctx->msg->function);
+                ctx->complete(epoc::error_not_supported);
                 break;
             }
         } else {
@@ -1492,6 +1587,10 @@ namespace eka2l1 {
 
             case applist_request_app_icon_by_uid_and_size:
                 server<applist_server>()->get_app_icon(*ctx);
+                break;
+
+            case applist_request_app_icon_by_uid:
+                server<applist_server>()->get_app_icon(*ctx, true);
                 break;
 
             case applist_request_preferred_buf_size:
@@ -1542,6 +1641,22 @@ namespace eka2l1 {
                 get_next_app(*ctx);
                 break;
 
+            case applist_request_get_ownership_infos:
+                server<applist_server>()->get_app_owned_files(*ctx);
+                break;
+
+            case applist_request_get_app_icon_sizes:
+                server<applist_server>()->get_app_icon_sizes(*ctx, true);
+                break;
+
+            case applist_request_set_notify:
+                set_list_change_notify(*ctx);
+                break;
+
+            case applist_request_cancel_notify:
+                cancel_list_change_notify(*ctx);
+                break;
+
             // Registries are scanned before any guest process runs, so the first scan is
             // always complete already and the observer is satisfied as it registers.
             case applist_request_register_list_population_complete_observer:
@@ -1551,6 +1666,7 @@ namespace eka2l1 {
 
             default:
                 LOG_ERROR(SERVICE_APPLIST, "Unimplemented applist opcode 0x{:X}", ctx->msg->function);
+                ctx->complete(epoc::error_not_supported);
                 break;
             }
         }
@@ -1668,8 +1784,7 @@ namespace eka2l1 {
             pr->set_uid_type(current_uid_type);
         }
 
-        // Add it into our app running list
-        return pr->run();
+        return kern->run_after_boot_servers(pr);
     }
 
     bool applist_server::launch_app(apa_app_registry &registry, epoc::apa::command_line &parameter, kernel::uid *thread_id,

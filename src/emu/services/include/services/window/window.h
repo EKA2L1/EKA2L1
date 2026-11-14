@@ -25,6 +25,7 @@
 #include <cassert>
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <queue>
 #include <set>
@@ -377,10 +378,12 @@ namespace eka2l1 {
             clients;
 
         common::ini_file ws_config;
-        bool loaded{ false };
+        // Frontend threads read screens too, so the lazy base init has to run exactly once.
+        std::atomic<bool> loaded{ false };
+        std::mutex base_init_lock_;
         // Answered on first input: the frontend may mount drive Z only after this server exists.
-        std::optional<bool> uiq_2_device_;
-        bool is_uiq_2_device();
+        std::optional<int> uiq_version_;
+        std::int32_t uiq_scancode(const std::int32_t scancode);
 
         std::atomic<epoc::ws::uid> key_capture_uid_counter{ 0 };
         std::atomic<epoc::ws::uid> obj_uid{ 0 };
@@ -555,7 +558,7 @@ namespace eka2l1 {
         void do_base_init();
 
         void send_event_to_window_group(epoc::window_group *group, const epoc::event &evt);
-        void send_event_to_window_groups(const epoc::event &evt);
+        void send_event_to_window_groups(const epoc::event &evt, const bool one_per_client = false);
 
         void send_screen_change_events(epoc::screen *scr);
         void send_focus_group_change_events(epoc::screen *scr);

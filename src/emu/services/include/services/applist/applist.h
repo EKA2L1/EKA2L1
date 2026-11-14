@@ -26,6 +26,7 @@
 
 #include <common/vecx.h>
 #include <utils/des.h>
+#include <utils/reqsts.h>
 #include <vfs/vfs.h>
 
 #include <functional>
@@ -194,6 +195,7 @@ namespace eka2l1 {
         std::uint32_t requested_screen_mode_ = 0;
 
         app_filter_method filter_method_;
+        epoc::notify_info list_change_notify_;
 
     public:
         explicit applist_session(service::typical_server *svr, kernel::uid client_ss_uid, epoc::version client_ver);
@@ -201,6 +203,8 @@ namespace eka2l1 {
 
         void get_filtered_apps_by_flags(service::ipc_context &ctx);
         void get_next_app(service::ipc_context &ctx);
+        void set_list_change_notify(service::ipc_context &ctx);
+        void cancel_list_change_notify(service::ipc_context &ctx);
     };
 
     /*! \brief Applist services
@@ -302,9 +306,10 @@ namespace eka2l1 {
         /**
          * \brief Get app icon bitmap handles.
          */
-        void get_app_icon(service::ipc_context &ctx);
+        void get_app_icon(service::ipc_context &ctx, const bool by_index = false);
 
-        void get_app_icon_sizes(service::ipc_context &ctx);
+        void get_app_icon_sizes(service::ipc_context &ctx, const bool check_client_size = false);
+        void get_app_owned_files(service::ipc_context &ctx);
         void get_native_executable_name_if_non_native(service::ipc_context &ctx);
         void app_info_provided_by_reg_file(service::ipc_context &ctx);
 
