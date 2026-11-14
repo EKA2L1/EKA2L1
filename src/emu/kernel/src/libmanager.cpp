@@ -207,6 +207,14 @@ namespace eka2l1::hle {
         return res;
     }
 
+    // EKA1 does not call the entry point of a DLL flagged KImageNoCallEntryPoint (petran and
+    // rombuild set it on DLLs without static data, so almost every one of them).
+    static bool no_entry_point_call(kernel_system *kern, const std::uint32_t uid1, const std::uint32_t flags) {
+        static constexpr std::uint32_t DLL_UID1 = 0x10000079;
+        static constexpr std::uint32_t IMAGE_NO_CALL_ENTRY_POINT = 0x2;
+        return kern->is_eka1() && (uid1 == DLL_UID1) && (flags & IMAGE_NO_CALL_ENTRY_POINT);
+    }
+
     codeseg_ptr lib_manager::import_e32img(loader::e32img *img, const std::u16string &path, const address force_code_addr) {
         std::uint32_t data_seg_size = img->header.data_size + img->header.bss_size;
         kernel::codeseg_create_info info;
@@ -265,6 +273,10 @@ namespace eka2l1::hle {
         if (!cs) {
             LOG_ERROR(KERNEL, "E32 image loading failed!");
             return nullptr;
+        }
+
+        if (no_entry_point_call(kern_, static_cast<std::uint32_t>(img->header.uid1), img->header.flags)) {
+            cs->set_entry_point_disabled();
         }
 
         const std::size_t first = loading_codesegs_.size();
@@ -968,6 +980,10 @@ namespace eka2l1::hle {
             common::lowercase_string(common::ucs2_to_utf8(eka2l1::filename(path)));
 
         auto cs = kern_->create<kernel::codeseg>(seg_name, info);
+
+        if (cs && no_entry_point_call(kern_, romimg.header.uid1, romimg.header.flags_raw)) {
+            cs->set_entry_point_disabled();
+        }
 
         if (only_shell) {
             return cs;
