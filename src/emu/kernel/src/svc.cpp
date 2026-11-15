@@ -2096,7 +2096,7 @@ namespace eka2l1::epoc {
         kernel::codeseg *seg = pr->get_codeseg();
 
         const std::int32_t res = get_call_list_from_codeseg(seg, pr, total, list_ptr);
-        if ((res == 0) && (kern->get_epoc_version() < epocver::epoc10)) {
+        if ((res == 0) && (kern->get_epoc_version() < epocver::epoc95)) {
             seg->attached_report(pr);
         }
 

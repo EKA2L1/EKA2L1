@@ -1714,7 +1714,7 @@ namespace eka2l1 {
                 }
 
                 // NGA render stages expose 32-bit targets as EColor16MA.
-                if ((kern->get_epoc_version() >= epocver::epoc10)
+                if ((kern->get_epoc_version() >= epocver::epoc95)
                     && (epoc::get_bpp_from_display_mode(scr_mode.disp_mode) == 32)) {
                     scr_mode.disp_mode = epoc::display_mode::color16ma;
                 }
@@ -2312,7 +2312,7 @@ namespace eka2l1 {
 
     void window_server::init_screens() {
         kernel_system *kern = get_kernel_system();
-        const bool is_screenplay = (kern->get_epoc_version() >= epocver::epoc10);
+        const bool is_screenplay = (kern->get_epoc_version() >= epocver::epoc95);
 
         // Sony Ericsson's UIQ 3 LCD drivers fix the line length at 256 pixels (0x400 bytes
         // at 32bpp); games that write the HAL screen address rely on that pitch.
