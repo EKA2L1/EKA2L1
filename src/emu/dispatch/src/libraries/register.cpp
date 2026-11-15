@@ -61,7 +61,7 @@ namespace eka2l1::dispatch::libraries {
                 disp->patch_libraries(u"Z:\\Sys\\Bin\\libglesv2.dll", LIBGLESV2_PATCH_INFOS, LIBGLESV2_PATCH_COUNT);
             }
             
-            if (kern->get_epoc_version() >= epocver::epoc10) {
+            if (kern->get_epoc_version() >= epocver::epoc95) {
                 disp->patch_libraries(u"Z:\\Sys\\Bin\\libopenvg.dll", LIBOPENVG11_PATCH_INFOS, LIBOPENVG11_PATCH_COUNT);
                 disp->patch_libraries(u"Z:\\Sys\\Bin\\libopenvgu.dll", LIBOPENVGU11_PATCH_INFOS, LIBOPENVGU11_PATCH_COUNT);
             }

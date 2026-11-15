@@ -397,9 +397,9 @@ namespace eka2l1 {
         base_shared_chunk = reinterpret_cast<std::uint8_t *>(shared_chunk->host_base());
         base_large_chunk = reinterpret_cast<std::uint8_t *>(large_chunk->host_base());
 
-        // Belle fbscli keeps an 8-byte header (touch count, volatile flag) in front of plain large
+        // Anna/Belle fbscli keeps an 8-byte header (touch count, volatile flag) in front of plain large
         // bitmap pixels, because clients can no longer write the read-only shared heap.
-        bitmap_data_header_size_ = (kern->get_epoc_version() >= epocver::epoc10) ? 8 : 0;
+        bitmap_data_header_size_ = (kern->get_epoc_version() >= epocver::epoc95) ? 8 : 0;
 
         shared_chunk_allocator = std::make_unique<epoc::chunk_allocator>(shared_chunk);
         large_chunk_allocator = std::make_unique<epoc::chunk_allocator>(large_chunk);

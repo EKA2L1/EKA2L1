@@ -1163,8 +1163,7 @@ namespace eka2l1 {
         bmp_specs_legacy specs;
 
         const bool use_spec_legacy = ctx->get_argument_data_size(0) >= sizeof(bmp_specs_legacy);
-        const bool use_bmp_handles_writeback = (server<fbs_server>()->get_system()->get_symbian_version_use()
-            >= epocver::epoc10);
+        const bool use_bmp_handles_writeback = !use_spec_legacy && (ctx->get_argument_data_size(0) >= sizeof(bmp_specs_v2));
 
         std::uint32_t assign_uid = epoc::NORMAL_BITMAP_UID_REV2;
         std::uint32_t force_size = 0;

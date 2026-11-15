@@ -349,9 +349,8 @@ namespace eka2l1 {
                 std::memcpy(thread_free_modify_local_storage_ptr, ldata, NATIVE_THREAD_LOCAL_DATA_COPY_SIZE);
 
                 if (kern->get_epoc_version() < epocver::epoc10) {
-                    // Anna and above add thread ID to the local storage at offset 12
-                    // While the TLS heap is expected on at least OS version S60v3 to be at offset 12 instead
-                    // So nullify the thread ID
+                    // Only Belle euser has iThreadId at offset 12; earlier releases, Anna included,
+                    // keep iTlsHeap there and lazily initialise the TLS array only while it is null.
                     reinterpret_cast<thread_local_data*>(thread_free_modify_local_storage_ptr)->thread_id = 0;
                 }
 

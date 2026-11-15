@@ -86,6 +86,11 @@ namespace eka2l1::loader {
                     ver = epocver::epoc94;
                     break;
                 }
+
+                case 5: {
+                    ver = epocver::epoc95;
+                    break;
+                }
                 }
 
                 break;

@@ -69,7 +69,7 @@ namespace eka2l1 {
             if (epoc::convert_to_rgba8888(fbs, parser, bitmap_index + 1, mask_output, true)) {
                 const auto &header = parser.sbm_headers[bitmap_index + 1];
                 const auto composition = uiq ? epoc::icon_mask_composition::uiq
-                    : (version >= epocver::epoc10 ? epoc::icon_mask_composition::alf_canvas : epoc::icon_mask_composition::avkon);
+                    : (version >= epocver::epoc95 ? epoc::icon_mask_composition::alf_canvas : epoc::icon_mask_composition::avkon);
                 epoc::apply_icon_mask_alpha(icon->pixels.data(), mask.data(), icon->size.x, icon->size.y,
                     epoc::get_display_mode_from_bpp(header.bit_per_pixels, header.color), composition);
             }
