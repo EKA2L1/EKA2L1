@@ -45,4 +45,6 @@ public class Keycode {
     public static final int KEY_CALL = 0xB4;
     public static final int KEY_END = 0xB5;
     public static final int KEY_EDIT = 0x12;
+    public static final int KEY_A = 'A';
+    public static final int KEY_SPACE = 0x05;
 }

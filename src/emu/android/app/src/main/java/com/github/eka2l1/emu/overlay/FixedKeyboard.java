@@ -117,6 +117,7 @@ public class FixedKeyboard extends VirtualKeyboard {
 		}
 		setSnap(KEY_EDIT, KEY_FIRE, RectSnap.EXT_NORTH);
 		keypad[KEY_EDIT].setVisible(editVisible);
+		resetLetterKeys();
 	}
 
 	@Override
