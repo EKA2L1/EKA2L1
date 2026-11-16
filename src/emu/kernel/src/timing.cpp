@@ -163,11 +163,12 @@ namespace eka2l1 {
                 return lhs.event_time > rhs.event_time;
             });
 
+            // Copy under the lock: register_event may grow the vector meanwhile
+            timed_callback callback = event_types_[evt.event_type].callback;
             unq.unlock();
 
-            if (event_types_[evt.event_type].callback) {
-                event_types_[evt.event_type]
-                    .callback(evt.event_user_data, static_cast<int>(global_timer - evt.event_time));
+            if (callback) {
+                callback(evt.event_user_data, static_cast<int>(global_timer - evt.event_time));
             }
 
             unq.lock();
@@ -263,6 +264,11 @@ namespace eka2l1 {
         }
 
         event_types_[event_type].callback = nullptr;
+
+        // The slot is reused by the next registration, so pending events must not outlive it
+        events_.erase(std::remove_if(events_.begin(), events_.end(),
+                          [event_type](const event &evt) { return evt.event_type == event_type; }),
+            events_.end());
     }
 
     int ntimer::get_register_event(const std::string &name) {

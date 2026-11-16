@@ -36,5 +36,6 @@ namespace eka2l1::kernel {
         void priority_change();
 
         void on_timeout(std::uint64_t userdata, int late);
+        void cancel_wait(thread *thr);
     };
 }

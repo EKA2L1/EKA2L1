@@ -1784,9 +1784,11 @@ namespace eka2l1::epoc {
         }
 
         if (timeout == -1) {
-            // Try lock
-            mut->try_wait(kern->crr_thread());
-            return epoc::error_none;
+            return mut->try_wait(kern->crr_thread()) ? epoc::error_none : epoc::error_timed_out;
+        }
+
+        if (timeout < -1) {
+            return epoc::error_argument;
         }
 
         mut->wait_for(timeout);

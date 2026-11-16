@@ -504,6 +504,12 @@ namespace eka2l1 {
         }
 
         bool thread::stop() {
+            // A dead thread left in a wait queue would later be handed the mutex or a semaphore count
+            if (wait_obj && !kern->is_eka1() && !kern->wipeout_in_progress()) {
+                end_timeout_early();
+                cancel_wait_object();
+            }
+
             return scheduler->stop(this);
         }
 
@@ -1042,6 +1048,25 @@ namespace eka2l1 {
             }
         }
 
+        void thread::cancel_wait_object() {
+            switch (wait_obj->get_object_type()) {
+            case object_type::mutex:
+                reinterpret_cast<mutex *>(wait_obj)->cancel_wait(this);
+                break;
+
+            case object_type::sema:
+                reinterpret_cast<semaphore *>(wait_obj)->cancel_wait(this);
+                break;
+
+            case object_type::condvar:
+                reinterpret_cast<condvar *>(wait_obj)->cancel_wait(this);
+                break;
+
+            default:
+                break;
+            }
+        }
+
         void thread::handle_wait_object_timeout() {
             // The wait object's native signal may got the upper hands
             if (!is_in_timeout) {
@@ -1054,13 +1079,14 @@ namespace eka2l1 {
             }
 
             if (!kern->is_eka1()) {
-                switch (wait_obj->get_object_type()) {
-                case kernel::object_type::sema:
-                    reinterpret_cast<kernel::semaphore*>(wait_obj)->timeouted(this);
-                    break;
+                const bool suspended = is_suspended();
+                cancel_wait_object();
 
-                default:
-                    break;
+                // A suspended thread stays blocked until it is resumed
+                if (suspended) {
+                    state = thread_state::wait;
+                } else {
+                    scheduler->dewait(this);
                 }
 
                 // Set the return value of the previous wait function to timed out

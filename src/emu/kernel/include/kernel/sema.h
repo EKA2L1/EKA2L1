@@ -47,7 +47,7 @@ namespace eka2l1 {
             ~semaphore() override;
 
             void signal(int32_t signal_count);
-            void timeouted(thread *thr);
+            void cancel_wait(thread *thr);
             void wait(const std::int32_t timeout_us = 0);
 
             bool suspend_waiting_thread(thread *thr);
