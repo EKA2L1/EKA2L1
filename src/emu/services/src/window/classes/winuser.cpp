@@ -528,6 +528,16 @@ namespace eka2l1::epoc {
         }
 
         if (should_trigger_redraw) {
+            // NGA repaints the area the window covered (CWsClientWindow::ResetHiddenFlag): a translucent
+            // window leaves the visible regions below unchanged, so nothing else would repaint it.
+            if (scr->region_redraw_supported()) {
+                for (const auto &area : visible_region.rects_) {
+                    scr->add_server_redraw_region(area);
+                }
+            } else {
+                scr->flags_ |= screen::FLAG_SERVER_REDRAW_PENDING;
+            }
+
             scr->need_update_visible_regions(true);
 
             // Redraw the screen. NOW!
