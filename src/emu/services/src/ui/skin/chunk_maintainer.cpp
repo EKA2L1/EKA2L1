@@ -679,13 +679,13 @@ namespace eka2l1::epoc {
         item.id_ = make_pid_from_id_hash(queue.id_hash);
 
         if (queue.ref_major && queue.ref_minor) {
-            akns_srv_effect_queue_def queue_def;
+            akns_srv_effect_queue_def queue_def{};
             queue_def.size_ = sizeof(akns_srv_effect_queue_def);
             queue_def.count_ = 0;
             queue_def.ref_major_ = queue.ref_major;
             queue_def.ref_minor_ = queue.ref_minor;
 
-            return update_definition(item, &queue_def, sizeof(akns_item_type_effect_queue), AKNS_OLD_DATA_SIZE_FIRST_WORD_OF_DATA);
+            return update_definition(item, &queue_def, sizeof(queue_def), AKNS_OLD_DATA_SIZE_FIRST_WORD_OF_DATA);
         }
 
         using effect_def_data = std::vector<std::uint8_t>;
@@ -721,7 +721,7 @@ namespace eka2l1::epoc {
             temp_effect_data.clear();
         }
 
-        return update_definition(item, &buffer[0], buffer.size(), -1);
+        return update_definition(item, &buffer[0], buffer.size(), AKNS_OLD_DATA_SIZE_FIRST_WORD_OF_DATA);
     }
 
     bool akn_skin_chunk_maintainer::import_bitmap(const skn_bitmap_info &info) {

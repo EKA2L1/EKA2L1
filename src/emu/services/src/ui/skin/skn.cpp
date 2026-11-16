@@ -454,8 +454,9 @@ namespace eka2l1::epoc {
             return;
         }
 
+        // A reference queue carries no effects; clients follow it to the concrete queue.
         if (effect_queue.ref_major && effect_queue.ref_minor) {
-            // TODO: ????
+            effect_queues_.push_back(std::move(effect_queue));
             return;
         }
 
