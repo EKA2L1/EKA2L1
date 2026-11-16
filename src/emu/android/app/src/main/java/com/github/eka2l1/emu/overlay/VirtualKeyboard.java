@@ -882,7 +882,10 @@ public class VirtualKeyboard implements Overlay, Runnable {
     }
 
     protected void repaint() {
-        overlayView.postInvalidate();
+        // Keys are configured before the keyboard is attached to its view.
+        if (overlayView != null) {
+            overlayView.postInvalidate();
+        }
     }
 
     /**
