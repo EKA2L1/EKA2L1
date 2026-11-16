@@ -49,6 +49,7 @@ namespace eka2l1::epoc {
         bool read_ah_mirroring_active();
         bool read_active_skin_id();
         bool read_highlight_anim_enabled();
+        void disable_anim_background();
 
         void set_pid_to_skins_repo(const std::uint32_t key, const epoc::pid pid, const bool uid_only);
 
