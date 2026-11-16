@@ -60,6 +60,25 @@ TEST_CASE("Edit key modifies navigation and softkeys until released", "[window][
     REQUIRE(translator.translate(right)->key_evt_.modifiers == event_modifier_repeatable);
 }
 
+// The base conversion table of keymap.cpp maps 'A'..'Z' to lower case; the caps table Shift selects keeps upper case.
+TEST_CASE("Letter keys are lower case unless Shift is held", "[window][keyboard]") {
+    key_event_translator translator;
+    auto letter = raw_key(static_cast<std_scan_code>('A'), true);
+    REQUIRE(translator.translate(letter)->key_evt_.code == 'a');
+    REQUIRE(letter.key_evt_.scancode == 'A');
+
+    auto shift = raw_key(std_key_right_shift, true);
+    translator.translate(shift);
+    REQUIRE(translator.translate(letter)->key_evt_.code == 'A');
+    REQUIRE(translator.key_code('Z') == 'Z');
+
+    shift.type = event_code::key_up;
+    translator.translate(shift);
+    REQUIRE(translator.key_code('Z') == 'z');
+    REQUIRE(translator.key_code('5') == '5');
+    REQUIRE(translator.key_code(std_key_space) == key_space);
+}
+
 TEST_CASE("Releasing either Shift preserves the other held Shift", "[window][keyboard]") {
     key_event_translator translator;
     auto left = raw_key(std_key_left_shift, true);

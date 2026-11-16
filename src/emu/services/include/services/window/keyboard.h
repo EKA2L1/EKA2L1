@@ -25,6 +25,15 @@ namespace eka2l1::epoc {
             return !is_shift(scan) && scan != std_key_device_0 && scan != std_key_device_1;
         }
 
+        // Letter keys give lower case unless Shift is held, as in the base and caps tables of keymap.cpp.
+        std::uint32_t key_code(std::uint32_t scan) const {
+            const std::uint32_t code = map_scancode_to_keycode(static_cast<std_scan_code>(scan));
+            if ((scan >= 'A') && (scan <= 'Z') && !(modifiers_ & event_modifier_shift)) {
+                return code - 'A' + 'a';
+            }
+            return code;
+        }
+
         std::optional<event> translate(event &raw) {
             const auto scan = static_cast<std_scan_code>(raw.key_evt_.scancode);
             if (is_shift(scan)) {
@@ -48,7 +57,7 @@ namespace eka2l1::epoc {
 
             event key = raw;
             key.type = event_code::key;
-            key.key_evt_.code = map_scancode_to_keycode(scan);
+            key.key_evt_.code = key_code(scan);
             if (is_repeatable(scan)) {
                 key.key_evt_.modifiers |= event_modifier_repeatable;
             }

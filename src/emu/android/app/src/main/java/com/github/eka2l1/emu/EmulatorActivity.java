@@ -412,6 +412,8 @@ public class EmulatorActivity extends AppCompatActivity {
             showSetLayoutDialog();
         } else if (id == R.id.action_hide_buttons) {
             showHideButtonDialog();
+        } else if (id == R.id.action_letter_keys) {
+            showLetterKeysDialog();
         }
     }
 
@@ -428,7 +430,16 @@ public class EmulatorActivity extends AppCompatActivity {
         AlertDialog.Builder builder = new AlertDialog.Builder(this)
                 .setTitle(R.string.hide_buttons)
                 .setMultiChoiceItems(keyboard.getKeyNames(), keyboard.getKeyVisibility(),
-                        (dialogInterface, i, b) -> keyboard.setKeyVisibility(i, b))
+                        (dialogInterface, i, b) -> keyboard.setPhoneKeyHidden(i, b))
+                .setPositiveButton(android.R.string.ok, null);
+        builder.show();
+    }
+
+    private void showLetterKeysDialog() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                .setTitle(R.string.letter_keys)
+                .setMultiChoiceItems(keyboard.getLetterKeyNames(), keyboard.getLetterKeysShown(),
+                        (dialogInterface, i, b) -> keyboard.setLetterKeyShown(i, b))
                 .setPositiveButton(android.R.string.ok, null);
         builder.show();
     }

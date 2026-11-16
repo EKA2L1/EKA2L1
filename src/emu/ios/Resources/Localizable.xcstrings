@@ -2973,6 +2973,22 @@
         }
       }
     },
+    "key.space" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Space"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "空格"
+          }
+        }
+      }
+    },
     "key.up" : {
       "localizations" : {
         "en" : {
@@ -3145,6 +3161,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "拖动控件以调整布局"
+          }
+        }
+      }
+    },
+    "keypad.editor.letterKeys" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letter keys"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "字母键"
           }
         }
       }

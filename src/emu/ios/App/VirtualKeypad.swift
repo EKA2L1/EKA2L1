@@ -4,7 +4,7 @@ import UIKit
 // The keypad now has one user-positionable layout instead of a set of fixed
 // portrait/landscape presets. Positions are normalized so they survive changes
 // in screen size; portrait and landscape use separate stored configurations.
-enum KeypadElement: String, CaseIterable, Hashable {
+enum KeypadElement: Hashable {
     case dpad
     case leftSoft
     case rightSoft
@@ -14,6 +14,28 @@ enum KeypadElement: String, CaseIterable, Hashable {
     case call
     case end
     case edit
+    case key(QwertyKey)
+
+    static let controls: [KeypadElement] = [
+        .dpad, .leftSoft, .rightSoft, .numeric, .menu, .clear, .call, .end, .edit
+    ]
+    static let allCases = controls + QwertyKey.allCases.map(KeypadElement.key)
+
+    // The name a control is stored under in hiddenElements.
+    var rawValue: String {
+        switch self {
+        case .dpad: return "dpad"
+        case .leftSoft: return "leftSoft"
+        case .rightSoft: return "rightSoft"
+        case .numeric: return "numeric"
+        case .menu: return "menu"
+        case .clear: return "clear"
+        case .call: return "call"
+        case .end: return "end"
+        case .edit: return "edit"
+        case .key(let key): return key.rawValue
+        }
+    }
 
     var title: String {
         switch self {
@@ -26,13 +48,14 @@ enum KeypadElement: String, CaseIterable, Hashable {
         case .call: return String(localized: "keypad.accessibility.call")
         case .end: return String(localized: "keypad.accessibility.end")
         case .edit: return String(localized: "key.edit")
+        case .key(let key): return key.title
         }
     }
 
-    // Every key the user may switch off. Menu stays: it is the only way back into
+    // Every control the user may switch off. Menu stays: it is the only way back into
     // this editor once the keypad is off.
     static var hideable: [KeypadElement] {
-        allCases.filter { $0 != .menu }
+        controls.filter { $0 != .menu }
     }
 
     static let hiddenByDefault: [String] = [KeypadElement.call, .end, .edit].map(\.rawValue).sorted()
@@ -52,7 +75,42 @@ enum KeypadElement: String, CaseIterable, Hashable {
             return CGSize(width: 56 * scale, height: 36 * scale)
         case .numeric:
             return CGSize(width: majorWidth, height: majorWidth * 190 / 150)
+        case .key(let key):
+            // Ten letters fit across the short edge, as on a QWERTY phone.
+            let width = min(44, (shortEdge - 24 - QwertyKey.spacing * 9) / 10)
+            let columns = CGFloat(key.columns)
+            return CGSize(width: width * columns + QwertyKey.spacing * (columns - 1),
+                          height: 36 * scale)
         }
+    }
+}
+
+// Letter keys and space of a QWERTY keyboard. Each one is off until the user
+// switches it on in the layout editor.
+enum QwertyKey: String, CaseIterable, Hashable {
+    case a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p, q, r, s, t, u, v, w, x, y, z
+    case space
+
+    static let spacing: CGFloat = 4
+
+    static let rows: [[QwertyKey]] = [
+        [.q, .w, .e, .r, .t, .y, .u, .i, .o, .p],
+        [.a, .s, .d, .f, .g, .h, .j, .k, .l],
+        [.z, .x, .c, .v, .b, .n, .m, .space]
+    ]
+
+    // Space fills the bottom row out to the width of the top one.
+    var columns: Int {
+        self == .space ? 3 : 1
+    }
+
+    var title: String {
+        self == .space ? String(localized: "key.space") : rawValue.uppercased()
+    }
+
+    // Symbian scan codes of letter keys are their upper-case ASCII codes.
+    var scan: UInt32 {
+        self == .space ? Scan.space : UInt32(rawValue.uppercased().unicodeScalars.first!.value)
     }
 }
 
@@ -89,13 +147,29 @@ struct KeypadLayoutConfiguration: Codable, Equatable {
     var edit: NormalizedKeypadPoint?
     // Nil for layouts saved before the setting existed; they take the reset layout's default.
     var hiddenElements: [String]?
+    // QWERTY keys are listed when shown, so a layout saved before they existed keeps them off.
+    var shownKeys: [String]?
+    var keyPoints: [String: NormalizedKeypadPoint]?
 
     func isHidden(_ element: KeypadElement) -> Bool {
-        hiddenElements?.contains(element.rawValue) ?? false
+        if case .key(let key) = element {
+            return !(shownKeys?.contains(key.rawValue) ?? false)
+        }
+        return hiddenElements?.contains(element.rawValue) ?? false
     }
 
     mutating func setHidden(_ hidden: Bool, for element: KeypadElement) {
         guard element != .menu else { return }
+        if case .key(let key) = element {
+            var current = Set(shownKeys ?? [])
+            if hidden {
+                current.remove(key.rawValue)
+            } else {
+                current.insert(key.rawValue)
+            }
+            shownKeys = current.sorted()
+            return
+        }
         var current = Set(hiddenElements ?? [])
         if hidden {
             current.insert(element.rawValue)
@@ -110,7 +184,7 @@ struct KeypadLayoutConfiguration: Codable, Equatable {
     }
 
     func visibleElements(fullScreen: Bool) -> [KeypadElement] {
-        fullScreen ? [.menu] : KeypadElement.hideable.filter { !isHidden($0) } + [.menu]
+        fullScreen ? [.menu] : KeypadElement.allCases.filter { $0 != .menu && !isHidden($0) } + [.menu]
     }
 
     // Keep hit regions in the same local geometry as the controls, without
@@ -140,6 +214,7 @@ struct KeypadLayoutConfiguration: Codable, Equatable {
         case .call: call = normalized
         case .end: end = normalized
         case .edit: edit = normalized
+        case .key(let key): keyPoints = (keyPoints ?? [:]).merging([key.rawValue: normalized]) { $1 }
         }
     }
 
@@ -193,6 +268,8 @@ struct KeypadLayoutConfiguration: Codable, Equatable {
                 configuration.edit = fallback.edit
                 configuration.setHidden(true, for: .edit)
             }
+            configuration.keyPoints = (fallback.keyPoints ?? [:])
+                .merging(configuration.keyPoints ?? [:]) { $1 }
             return configuration
         }
         return classicDefault(in: size, safeAreaInsets: safeAreaInsets)
@@ -260,7 +337,13 @@ struct KeypadLayoutConfiguration: Codable, Equatable {
                 call: .make(call, in: size),
                 end: .make(end, in: size),
                 edit: .make(CGPoint(x: softRowCenterX, y: menu.y), in: size),
-                hiddenElements: KeypadElement.hiddenByDefault
+                hiddenElements: KeypadElement.hiddenByDefault,
+                keyPoints: qwertyPoints(
+                    centerX: softRowCenterX,
+                    bottom: safeAreaInsets.top + size.height,
+                    controlSize: controlSize,
+                    in: size
+                )
             )
         }
 
@@ -313,8 +396,38 @@ struct KeypadLayoutConfiguration: Codable, Equatable {
             call: .make(call, in: size),
             end: .make(end, in: size),
             edit: .make(CGPoint(x: softRowCenterX, y: softCenterY - softKeySize.height - 12), in: size),
-            hiddenElements: KeypadElement.hiddenByDefault
+            hiddenElements: KeypadElement.hiddenByDefault,
+            keyPoints: qwertyPoints(
+                centerX: softRowCenterX,
+                bottom: softCenterY - softKeySize.height * 1.5 - 24,
+                controlSize: controlSize,
+                in: size
+            )
         )
+    }
+
+    // The reset places of the QWERTY keys: centred rows stacked up from `bottom`.
+    private static func qwertyPoints(
+        centerX: CGFloat,
+        bottom: CGFloat,
+        controlSize: CGSize,
+        in size: CGSize
+    ) -> [String: NormalizedKeypadPoint] {
+        let letterSize = KeypadElement.key(.a).size(in: controlSize)
+        let pitch = CGSize(width: letterSize.width + QwertyKey.spacing,
+                           height: letterSize.height + QwertyKey.spacing)
+        var points: [String: NormalizedKeypadPoint] = [:]
+        for (rowIndex, row) in QwertyKey.rows.enumerated() {
+            let y = bottom - letterSize.height / 2
+                - CGFloat(QwertyKey.rows.count - 1 - rowIndex) * pitch.height
+            var column = -CGFloat(row.map(\.columns).reduce(0, +)) / 2
+            for key in row {
+                let x = centerX + (column + CGFloat(key.columns) / 2) * pitch.width
+                points[key.rawValue] = .make(CGPoint(x: x, y: y), in: size)
+                column += CGFloat(key.columns)
+            }
+        }
+        return points
     }
 
     private func normalizedPoint(for element: KeypadElement) -> NormalizedKeypadPoint {
@@ -328,6 +441,7 @@ struct KeypadLayoutConfiguration: Codable, Equatable {
         case .call: return call ?? NormalizedKeypadPoint(x: 0.5, y: 0.5)
         case .end: return end ?? NormalizedKeypadPoint(x: 0.5, y: 0.5)
         case .edit: return edit ?? NormalizedKeypadPoint(x: 0.5, y: 0.5)
+        case .key(let key): return keyPoints?[key.rawValue] ?? NormalizedKeypadPoint(x: 0.5, y: 0.5)
         }
     }
 
@@ -504,6 +618,8 @@ struct VirtualKeypad: View {
                         PhoneKey(side: .end, size: KeypadElement.end.size(in: controlSize))
                     case .edit:
                         EditKey(size: KeypadElement.edit.size(in: controlSize))
+                    case .key(let key):
+                        QwertyKeyCap(key: key, size: element.size(in: controlSize))
                     }
                 }
             }
@@ -601,15 +717,17 @@ struct KeypadLayoutEditor: View {
             Divider()
 
             ForEach(KeypadElement.hideable, id: \.self) { element in
-                let shown = !fullScreen && !configuration.isHidden(element)
-                visibilityItem(title: element.title, on: shown) {
-                    if fullScreen {
-                        fullScreen = false
-                        configuration.setHidden(false, for: element)
-                    } else {
-                        configuration.setHidden(shown, for: element)
-                    }
+                visibilityItem(for: element)
+            }
+
+            Divider()
+
+            Menu {
+                ForEach(QwertyKey.allCases, id: \.self) { key in
+                    visibilityItem(for: .key(key))
                 }
+            } label: {
+                Label("keypad.editor.letterKeys", systemImage: "keyboard")
             }
         } label: {
             HStack(spacing: 8) {
@@ -631,6 +749,18 @@ struct KeypadLayoutEditor: View {
             menu.menuActionDismissBehavior(.disabled)
         } else {
             menu
+        }
+    }
+
+    private func visibilityItem(for element: KeypadElement) -> some View {
+        let shown = !fullScreen && !configuration.isHidden(element)
+        return visibilityItem(title: element.title, on: shown) {
+            if fullScreen {
+                fullScreen = false
+                configuration.setHidden(false, for: element)
+            } else {
+                configuration.setHidden(shown, for: element)
+            }
         }
     }
 
@@ -781,6 +911,8 @@ struct KeypadLayoutEditor: View {
             PhoneKey(side: .end, size: elementSize)
         case .edit:
             EditKey(size: elementSize)
+        case .key(let key):
+            QwertyKeyCap(key: key, size: elementSize)
         }
     }
 
