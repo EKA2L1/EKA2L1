@@ -36,7 +36,6 @@ namespace eka2l1 {
 
             //! Thread holding
             kernel::thread *holding;
-            bool wait_for_timeout;
 
             kernel::thread_priority_queue waits;
             common::roundabout pendings;
@@ -45,8 +44,6 @@ namespace eka2l1 {
             std::uint32_t suspend_count;
 
             ntimer *timing;
-
-            int mutex_event_type;
 
         protected:
             void wake_next_thread();
@@ -64,12 +61,10 @@ namespace eka2l1 {
 
             int destroy() override;
 
-            /*! \brief Timeout reached, whether it's on the pendings
-            */
-            void waking_up_from_suspension(std::uint64_t userdata, int cycles_late);
+            void cancel_wait(thread *thr);
 
             void wait(thread *thr);
-            void try_wait(thread *thr);
+            bool try_wait(thread *thr);
 
             void wait_for(int usecs);
 

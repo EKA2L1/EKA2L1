@@ -34,12 +34,8 @@ namespace eka2l1 {
             , timing(timing)
             , lock_count(0)
             , holding(nullptr)
-            , suspend_count(0)
-            , wait_for_timeout(false) {
+            , suspend_count(0) {
             obj_type = object_type::mutex;
-
-            mutex_event_type = timing->register_event("MutexWaking" + common::to_string(uid),
-                std::bind(&mutex::waking_up_from_suspension, this, std::placeholders::_1, std::placeholders::_2));
 
             if (init_locked) {
                 wait(kern->crr_thread());
@@ -53,13 +49,21 @@ namespace eka2l1 {
                 thr->wait_obj = nullptr;
             }
 
-            while (!suspended.empty()) {
-                thread *thr = E_LOFF(suspended.first()->deque(), thread, suspend_link);
+            auto release = [](thread *thr) {
+                thr->end_timeout_early();
                 thr->wait_obj = nullptr;
                 thr->get_scheduler()->dewait(thr);
+            };
+
+            while (!suspended.empty()) {
+                release(E_LOFF(suspended.first()->deque(), thread, suspend_link));
             }
 
-            timing->remove_event(mutex_event_type);
+            while (!waits.empty()) {
+                thread *thr = waits.top();
+                waits.pop();
+                release(thr);
+            }
 
             kernel::process *own = reinterpret_cast<kernel::process*>(owner);
             if (own)
@@ -96,7 +100,7 @@ namespace eka2l1 {
             }
         }
 
-        void mutex::try_wait(thread *thr) {
+        bool mutex::try_wait(thread *thr) {
             if (!holding) {
                 holding = thr;
 
@@ -110,82 +114,41 @@ namespace eka2l1 {
 
             if (holding == thr) {
                 lock_count++;
+                return true;
             }
+
+            return false;
         }
 
-        void mutex::waking_up_from_suspension(std::uint64_t userdata, int cycles_late) {
-            kernel::thread *thread_to_wake = reinterpret_cast<kernel::thread *>(userdata);
-            kernel_system *kern = thread_to_wake->get_kernel_object_owner();
+        void mutex::cancel_wait(thread *thr) {
+            // Check the links, not the state: a pending thread may already be ready or running
+            if (!thr->pending_link.alone()) {
+                thr->pending_link.deque();
 
-            kern->lock();
-
-            if (!wait_for_timeout) {
-                kern->unlock();
-                return;
-            }
-            
-            wait_for_timeout = false;
-
-            if (!thread_to_wake || thread_to_wake->get_object_type() != kernel::object_type::thread) {
-                LOG_ERROR(KERNEL, "Waking up invalid object!!!!!");
-                kern->unlock();
-                return;
-            }
-
-            switch (thread_to_wake->current_state()) {
-            case thread_state::hold_mutex_pending: {
-                if (thread_to_wake->pending_link.alone()) {
-                    LOG_ERROR(KERNEL, "Thread request to wake up with this mutex is not in hold pending queue"); 
-                    kern->unlock();
-                    return;
+                if (thr->state == thread_state::hold_mutex_pending) {
+                    thr->state = thread_state::ready;
                 }
 
-                thread_to_wake->pending_link.deque();
-
-                break;
-            }
-
-            case thread_state::wait_mutex: {
-                auto thr_ite = std::find(waits.begin(), waits.end(), thread_to_wake);
-
-                if (thr_ite == waits.end()) {
-                    LOG_ERROR(KERNEL, "Thread request to wake up with this mutex is not in hold pending queue");
-                    kern->unlock();
-
-                    return;
+                // The released mutex must still go to someone
+                if (!holding && pendings.empty() && !waits.empty()) {
+                    wake_next_thread();
                 }
-
-                waits.remove(thread_to_wake);
-                break;
+            } else if (!thr->suspend_link.alone()) {
+                thr->suspend_link.deque();
+                suspend_count--;
+            } else {
+                waits.remove(thr);
             }
 
-            default: {
-                LOG_ERROR(KERNEL, "Unknown thread state to wake up");
-                kern->unlock();
-                return;
-            }
-            }
-
-            if (thread_to_wake->wait_obj == this) {
-                thread_to_wake->wait_obj = nullptr;
-            }
-
-            thread_to_wake->scheduler->dewait(thread_to_wake);
-            kern->unlock();
+            thr->wait_obj = nullptr;
         }
 
         void mutex::wait_for(int usecs) {
-            bool should_schedule = false;
-            if (!holding) {
-                should_schedule = true;
-            }
+            kernel::thread *thr = kern->crr_thread();
+            wait(thr);
 
-            wait(kern->crr_thread());
-
-            // Schedule event to wake up
-            if (should_schedule) {
-                wait_for_timeout = true;
-                timing->schedule_event(usecs, mutex_event_type, reinterpret_cast<std::uint64_t>(kern->crr_thread()));
+            if (thr->current_state() == thread_state::wait_mutex) {
+                thr->start_timeout(usecs);
             }
         }
 
@@ -215,10 +178,7 @@ namespace eka2l1 {
 
                 assert(top_wait->wait_obj == this);
 
-                if (wait_for_timeout) {
-                    timing->unschedule_event(mutex_event_type, reinterpret_cast<std::uint64_t>(top_wait));
-                    wait_for_timeout = false;
-                }
+                top_wait->end_timeout_early();
 
                 top_wait->state = kernel::thread_state::hold_mutex_pending;
             };
@@ -254,6 +214,7 @@ namespace eka2l1 {
                 kernel::thread *ready_thread = std::move(waits.top());
                 waits.pop();
 
+                ready_thread->end_timeout_early();
                 ready_thread->get_scheduler()->dewait(ready_thread);
                 ready_thread->state = thread_state::ready;
                 ready_thread->wait_obj = nullptr;
@@ -275,6 +236,7 @@ namespace eka2l1 {
 
             pendings.push(&thr->pending_link);
 
+            thr->end_timeout_early();
             thr->scheduler->dewait(thr);
             thr->state = thread_state::hold_mutex_pending;
         }
@@ -307,6 +269,7 @@ namespace eka2l1 {
                         waits.remove(thr);
                         pendings.push(&thr->pending_link);
 
+                        thr->end_timeout_early();
                         thr->get_scheduler()->dewait(thr);
                         thr->state = thread_state::hold_mutex_pending;
                     }

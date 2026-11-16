@@ -370,6 +370,7 @@ namespace eka2l1 {
 
             void real_time_active_begin();
             void real_time_active_end();
+            void cancel_wait_object();
             void handle_wait_object_timeout();
 
             std::uint64_t get_real_active_time() const {
