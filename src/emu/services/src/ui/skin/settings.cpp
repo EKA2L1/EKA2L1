@@ -35,7 +35,8 @@ namespace eka2l1::epoc {
         ACTIVE_SKIN_UID_KEY = 0x02,
         DEFAULT_SKIN_ID_KEY = 0x13,
         AKN_LAYOUT_ID_KEY = 0x01,
-        HIGHTLIGHT_ANIM_ENABLED_KEY = 0x10
+        HIGHTLIGHT_ANIM_ENABLED_KEY = 0x10,
+        THEMES_ANIM_BACKGROUND_SUPPORT_KEY = 0x0E
     };
 
     akn_ss_settings::akn_ss_settings(io_system *io, central_repo_server *svr)
@@ -58,6 +59,7 @@ namespace eka2l1::epoc {
 
             read_ah_mirroring_active();
             read_highlight_anim_enabled();
+            disable_anim_background();
 
             // Dump the info
             LOG_INFO(SERVICE_UI, "Arabic/hebrew mirroring active: {}", ah_mirroring_active ? "True" : "False");
@@ -173,6 +175,18 @@ namespace eka2l1::epoc {
         }
 
         return true;
+    }
+
+    void akn_ss_settings::disable_anim_background() {
+        // Zero makes clients clear the background to transparent for an animated background renderer
+        // (CAknsSrv::StartAnimBackgroundL), which the emulator does not run.
+        central_repo_entry *entry = theme_rep_ ? theme_rep_->find_entry(THEMES_ANIM_BACKGROUND_SUPPORT_KEY) : nullptr;
+        if (!entry || (entry->data.etype != central_repo_entry_type::integer) || (entry->data.intd == 0x7FFFFFFF)) {
+            return;
+        }
+
+        entry->data.intd = 0x7FFFFFFF;
+        theme_rep_->write_changes(io_, dvcmngr_);
     }
 
     void akn_ss_settings::set_pid_to_skins_repo(const std::uint32_t key, const epoc::pid id, const bool uid_only) {
