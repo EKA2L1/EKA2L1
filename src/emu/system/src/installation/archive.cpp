@@ -243,7 +243,7 @@ namespace eka2l1::loader {
      */
     static bool extract_planned(const std::string &archive_path, const std::vector<std::string> &destinations,
         const std::size_t progress_ceiling, progress_changed_callback progress_cb,
-        cancel_requested_callback cancel_cb) {
+        cancel_requested_callback cancel_cb, const std::string &case_preserving_root = {}) {
         std::size_t next_index = 0;
 
         progress_changed_callback wrapped_cb = nullptr;
@@ -261,7 +261,16 @@ namespace eka2l1::loader {
         return common::extract_archive(archive_path,
             [&](const common::archive_entry_info &) -> std::string {
                 const std::size_t index = next_index++;
-                return (index < destinations.size()) ? destinations[index] : std::string();
+                if (index >= destinations.size()) {
+                    return {};
+                }
+                const std::string &destination = destinations[index];
+                if (!case_preserving_root.empty()
+                    && destination.compare(0, case_preserving_root.size(), case_preserving_root) == 0) {
+                    return common::resolve_case_insensitive_path(case_preserving_root,
+                        destination.substr(case_preserving_root.size()));
+                }
+                return destination;
             },
             wrapped_cb, cancel_cb);
     }
@@ -389,11 +398,8 @@ namespace eka2l1::loader {
 
         std::vector<std::string> destinations(entries.size());
 
-        // Drive Z is stored lowercased (see install_rpkg), and everything that reads it back - the
-        // product info probe, the emulator's own VFS - assumes that. On a case-sensitive host, keeping
-        // the archive's `System\` spelling would make the dump unreadable.
         for (const std::size_t index : layout.z_files) {
-            const std::string relative = common::lowercase_string(entries[index].path.substr(layout.z_prefix.size()));
+            const std::string relative = entries[index].path.substr(layout.z_prefix.size());
 
             if (!relative.empty()) {
                 destinations[index] = add_path(temp_z_path, relative);
@@ -416,7 +422,7 @@ namespace eka2l1::loader {
             destinations[layout.devices_yml_index] = packaged_devices_yml;
         }
 
-        if (!extract_planned(archive_path, destinations, ARCHIVE_PROGRESS_TOTAL * 9 / 10, progress_cb, cancel_cb)) {
+        if (!extract_planned(archive_path, destinations, ARCHIVE_PROGRESS_TOTAL * 9 / 10, progress_cb, cancel_cb, temp_z_path)) {
             revert();
 
             return (cancel_cb && cancel_cb()) ? device_installation_general_failure

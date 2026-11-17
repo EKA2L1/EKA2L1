@@ -398,12 +398,7 @@ namespace eka2l1::loader {
 
     static bool dump_rom_file(common::ro_stream *stream, rom_entry &entry, const std::string &path_base, const std::uint32_t rom_base,
         std::size_t &passed_size, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
-        std::u16string fname = entry.name;
-        if (common::is_platform_case_sensitive()) {
-            fname = common::lowercase_ucs2_string(fname);
-        }
-
-        fname = eka2l1::add_path(common::utf8_to_ucs2(path_base), fname);
+        const std::u16string fname = eka2l1::add_path(common::utf8_to_ucs2(path_base), entry.name);
 
         common::wo_std_file_stream file_out_stream(common::ucs2_to_utf8(fname), true);
         stream->seek(entry.address_lin - rom_base, common::seek_where::beg);
@@ -448,13 +443,7 @@ namespace eka2l1::loader {
         }
 
         for (auto &subdir : dir.subdirs) {
-            std::string new_base;
-
-            if (common::is_platform_case_sensitive()) {
-                new_base = eka2l1::add_path(base, common::lowercase_string(common::ucs2_to_utf8(subdir.name)));
-            } else {
-                new_base = eka2l1::add_path(base, common::ucs2_to_utf8(subdir.name));
-            }
+            const std::string new_base = eka2l1::add_path(base, common::ucs2_to_utf8(subdir.name));
 
             if (!dump_rom_directory(stream, subdir, new_base, rom_base, passed_size, progress_cb, cancel_cb)) {
                 return false;

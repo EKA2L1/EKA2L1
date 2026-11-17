@@ -70,11 +70,9 @@ namespace eka2l1::loader {
     static bool extract_file(const std::string &devices_rom_path, FILE *parent, rpkg_entry &ent, const std::size_t total,
         std::unordered_set<std::string> &created_directories, progress_changed_callback progress_cb,
         cancel_requested_callback cancel_cb) {
-        std::string file_full_relative = common::ucs2_to_utf8(ent.path.substr(3));
-        std::transform(file_full_relative.begin(), file_full_relative.end(), file_full_relative.begin(),
-            ::tolower);
-
-        std::string real_path = add_path(add_path(devices_rom_path, "/temp/"), file_full_relative);
+        const std::string file_full_relative = common::ucs2_to_utf8(ent.path.substr(3));
+        const std::string real_path = common::resolve_case_insensitive_path(
+            add_path(devices_rom_path, "/temp/"), file_full_relative);
 
         std::string dir = eka2l1::file_directory(real_path);
         const bool directory_is_cached = created_directories.find(dir) != created_directories.end();
