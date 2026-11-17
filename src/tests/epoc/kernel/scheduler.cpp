@@ -48,11 +48,24 @@ TEST_CASE("timeslices preserve strict priority and rotate equal-priority threads
             high->add_ticks(high->get_remaining_screenticks());
             scheduler->reschedule();
             REQUIRE(scheduler->current_thread() == high);
-            REQUIRE(high->get_remaining_screenticks() > 0);
+            REQUIRE(high->get_remaining_screenticks() == 0);
+            REQUIRE(high->get_execution_budget() > 0);
         }
         high->suspend();
         scheduler->reschedule();
         REQUIRE(scheduler->current_thread() == low);
+    }
+
+    SECTION("an expired lone thread yields as soon as an equal-priority peer becomes ready") {
+        high->add_ticks(high->get_remaining_screenticks());
+        scheduler->reschedule();
+        REQUIRE(scheduler->current_thread() == high);
+        REQUIRE(high->get_remaining_screenticks() == 0);
+        auto *peer = make_thread("peer", kernel::priority_real_time);
+        peer->resume();
+        scheduler->reschedule();
+        REQUIRE(scheduler->current_thread() == peer);
+        REQUIRE(high->get_remaining_screenticks() > 0);
     }
 
     SECTION("an expired thread rotates among its equal-priority peers") {

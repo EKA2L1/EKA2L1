@@ -794,7 +794,7 @@ namespace eka2l1 {
 
         if (to_run != nullptr) {
             if (!should_step) {
-                cpu->run(to_run->get_remaining_screenticks());
+                cpu->run(to_run->get_execution_budget());
             } else {
                 cpu->step();
 

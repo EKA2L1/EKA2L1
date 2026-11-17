@@ -314,6 +314,11 @@ namespace eka2l1 {
                 return time;
             }
 
+            int get_execution_budget() const {
+                // A lone expired thread can run without losing its pending rotation.
+                return time ? time : timeslice;
+            }
+
             explicit thread();
 
             explicit thread(kernel_system *kern, memory_system *mem, ntimer *timing)

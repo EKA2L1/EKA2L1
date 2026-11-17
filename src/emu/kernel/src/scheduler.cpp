@@ -165,10 +165,9 @@ namespace eka2l1::kernel {
         kernel::thread *next_thread = next_ready_thread();
 
         if (next_thread && next_thread->time == 0) {
-            next_thread->time = next_thread->timeslice;
-
             // A timeslice only yields to ready threads at the same priority.
             if (next_thread->scheduler_link.next != next_thread || next_thread->scheduler_link.previous != next_thread) {
+                next_thread->time = next_thread->timeslice;
                 // Move it to the end, and get the new thread next to it.
                 readys[next_thread->real_priority] = next_thread->scheduler_link.next;
                 next_thread = next_thread->scheduler_link.next;
