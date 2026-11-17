@@ -397,10 +397,12 @@ namespace eka2l1 {
 
         void thread::do_cleanup() {
             // Close all thread handles
-            if (!kern->wipeout_in_progress())
+            if (!kern->wipeout_in_progress()) {
                 thread_handles.reset();
 
-            kern->free_msg(sync_msg);
+                // Wipeout destroys every message before the threads.
+                kern->free_msg(sync_msg);
+            }
             cleanup_detachs();
         }
 

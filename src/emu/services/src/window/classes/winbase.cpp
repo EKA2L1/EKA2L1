@@ -97,6 +97,11 @@ namespace eka2l1::epoc {
         if (client) {
             client->remove_modifier_changed_events(this);
         }
+
+        // Members of derived windows (a group's top canvas) die before this runs,
+        // so each window must unlink itself or its parent keeps a dangling child.
+        remove_from_sibling_list();
+
         while (child != nullptr) {
             child->parent = nullptr;
             child = child->sibling;
