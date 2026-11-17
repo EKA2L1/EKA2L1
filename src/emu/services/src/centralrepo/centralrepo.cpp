@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <common/algorithm.h>
 #include <common/chunkyseri.h>
 #include <common/cvt.h>
@@ -543,7 +544,7 @@ namespace eka2l1 {
             return false;
         }
 
-        bool parse_centrep_ini_default_meta(centrep_ini_reader &reader, central_repo &repo, const std::string &path) {
+        bool parse_centrep_ini_default_meta(centrep_ini_reader &reader, central_repo &repo, const host_path &path) {
             // The section opens with the repository-wide default, then lists ranges.
             reader.skip_comments();
             reader.read_uint32(repo.default_meta);
@@ -603,8 +604,8 @@ namespace eka2l1 {
         }
     }
 
-    bool parse_new_centrep_ini(const std::string &path, central_repo &repo) {
-        common::dynamic_ifile creini(path);
+    bool parse_new_centrep_ini(const host_path &path, central_repo &repo) {
+        common::dynamic_ifile creini(eka2l1::host_path{path});
 
         if (creini.fail()) {
             return false;
@@ -958,12 +959,12 @@ namespace eka2l1 {
             repo_folder_to_searches.push_back(repo_dir + private_dir_persists);
 
             for (const std::u16string &repo_folder : repo_folder_to_searches) {
-                if (is_first_repo && !io->exist(repo_folder)) {
+                if (is_first_repo && !io->exist(eka2l1::guest_path{repo_folder})) {
                     // Create one if it doesn't exist, for the future
-                    io->create_directories(repo_folder);
+                    io->create_directories(eka2l1::guest_path{repo_folder});
                 } else {
                     // We can continue already
-                    std::u16string repo_path = repo_folder + repocre;
+                    guest_path repo_path(repo_folder + repocre);
 
                     if (io->exist(repo_path)) {
                         // Load and check for success
@@ -1004,14 +1005,14 @@ namespace eka2l1 {
                     }
 
                     // Try to load the INI
-                    auto path = io->get_raw_path(repo_folder + repoini);
+                    auto path = io->get_raw_path(eka2l1::guest_path{repo_folder + repoini});
 
                     if (!path) {
                         continue;
                     }
 
                     repo->uid = key;
-                    if (parse_new_centrep_ini(common::ucs2_to_utf8(*path), *repo)) {
+                    if (parse_new_centrep_ini(*path, *repo)) {
                         repo->reside_place = avail_drives[0];
                         repo->access_count = 1;
                         avail_drives.pop_back();

@@ -51,16 +51,16 @@ namespace eka2l1 {
         return "!Loader";
     }
 
-    std::vector<std::u16string> get_library_search_paths(const std::u16string &search_list) {
+    std::vector<guest_path> get_library_search_paths(const std::u16string &search_list) {
         common::pystr16 str(search_list);
-        std::vector<std::u16string> paths;
+        std::vector<guest_path> paths;
         for (const auto &entry : str.split(u';')) {
             auto path = entry.std_str();
             if (!path.empty()) {
                 if (!eka2l1::is_separator(path.back())) {
                     path += u'\\';
                 }
-                paths.push_back(std::move(path));
+                paths.emplace_back(std::move(path));
             }
         }
         return paths;
@@ -71,7 +71,7 @@ namespace eka2l1 {
         std::optional<epoc::ldr_info_eka1> info_eka1 = std::nullopt;
 
         epoc::owner_type handle_owner = epoc::owner_thread;
-        std::optional<std::u16string> process_name16 = std::nullopt;
+        std::optional<guest_path> process_name16 = std::nullopt;
         std::optional<std::u16string> process_args = std::nullopt;
 
         std::uint32_t stack_size = 0;
@@ -85,7 +85,7 @@ namespace eka2l1 {
                 return;
             }
 
-            process_name16 = info_eka1->full_path_.to_std_string(nullptr);
+            process_name16 = guest_path(info_eka1->full_path_.to_std_string(nullptr));
             process_args = ctx.get_argument_value<std::u16string>(1);
 
             uid3 = info_eka1->uid3_;
@@ -93,7 +93,7 @@ namespace eka2l1 {
             stack_size = 0; // Eka1 does not allow custom stack size
         } else {
             info = ctx.get_argument_data_from_descriptor<epoc::ldr_info>(0);
-            process_name16 = ctx.get_argument_value<std::u16string>(1);
+            process_name16 = ctx.get_path_argument(1);
             process_args = ctx.get_argument_value<std::u16string>(2);
 
             if (!info) {
@@ -115,7 +115,7 @@ namespace eka2l1 {
 
         LOG_TRACE(SERVICE_LOADER, "Trying to summon: {}", name_process);
 
-        std::u16string pext = path_extension(*process_name16);
+        guest_path pext = process_name16->extension();
 
         if (pext.empty()) {
             // Just append it
@@ -161,7 +161,7 @@ namespace eka2l1 {
         std::optional<epoc::ldr_info_eka1> info_eka1 = std::nullopt;
 
         epoc::owner_type handle_owner = epoc::owner_thread;
-        std::optional<std::u16string> lib_path = std::nullopt;
+        std::optional<guest_path> lib_path = std::nullopt;
 
         if (kern->is_eka1()) {
             info_eka1 = ctx.get_argument_data_from_descriptor<epoc::ldr_info_eka1>(0);
@@ -171,7 +171,7 @@ namespace eka2l1 {
                 return;
             }
 
-            lib_path = info_eka1->full_path_.to_std_string(nullptr);
+            lib_path = guest_path(info_eka1->full_path_.to_std_string(nullptr));
         } else {
             info = ctx.get_argument_data_from_descriptor<epoc::ldr_info>(0);
 
@@ -181,7 +181,7 @@ namespace eka2l1 {
             }
 
             handle_owner = info->owner_type;
-            lib_path = ctx.get_argument_value<std::u16string>(1);
+            lib_path = ctx.get_path_argument(1);
         }
 
         if (!lib_path) {
@@ -190,7 +190,7 @@ namespace eka2l1 {
         }
 
         const std::string lib_name = eka2l1::filename(common::ucs2_to_utf8(*lib_path));
-        const std::u16string pext = path_extension(*lib_path);
+        const guest_path pext = lib_path->extension();
 
         // This hack prevents the lib manager from loading wrong file.
         // For example, if there is no extension, and the file is load must be DLL, and two files with same name
@@ -204,7 +204,7 @@ namespace eka2l1 {
         hle::lib_manager *mngr = ctx.sys->get_lib_manager();
         kernel::process *own_pr = ctx.msg->own_thr->owning_process();
 
-        std::vector<std::u16string> search_list;
+        std::vector<guest_path> search_list;
 
         if (info_eka1) {
             std::u16string search_list_str = info_eka1->search_path_.to_std_string(own_pr);
@@ -256,7 +256,7 @@ namespace eka2l1 {
     }
 
     void loader_server::get_info(service::ipc_context &ctx) {
-        std::optional<utf16_str> lib_name = ctx.get_argument_value<utf16_str>(1);
+        std::optional<guest_path> lib_name = ctx.get_path_argument(1);
         epoc::des8 *buffer = eka2l1::ptr<epoc::des8>(ctx.msg->args.args[2]).get(ctx.sys->get_kernel_system()->crr_process());
 
         if (!lib_name || !buffer) {
@@ -341,7 +341,7 @@ namespace eka2l1 {
     }
 
     void loader_server::delete_loader(service::ipc_context &ctx) {
-        std::optional<utf16_str> lib_name = ctx.get_argument_value<utf16_str>(1);
+        std::optional<guest_path> lib_name = ctx.get_path_argument(1);
 
         if (!lib_name) {
             ctx.complete(epoc::error_argument);
@@ -349,17 +349,17 @@ namespace eka2l1 {
         }
 
         io_system *io_sys = sys->get_io_system();
-        if (!io_sys->exist(lib_name.value())) {
+        if (!io_sys->exist(eka2l1::guest_path{lib_name.value()})) {
             ctx.complete(epoc::error_not_found);
             return;
         }
-        io_sys->delete_entry(lib_name.value());
+        io_sys->delete_entry(eka2l1::guest_path{lib_name.value()});
 
         ctx.complete(epoc::error_none);
     }
 
     void loader_server::check_library_hash(service::ipc_context &ctx) {
-        std::optional<utf16_str> lib_name = ctx.get_argument_value<utf16_str>(1);
+        std::optional<guest_path> lib_name = ctx.get_path_argument(1);
 
         if (!lib_name) {
             ctx.complete(epoc::error_argument);

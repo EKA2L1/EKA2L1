@@ -35,7 +35,7 @@ namespace eka2l1::epoc {
         panic_node.reset();
 
         try {
-            common::ro_std_file_stream panic_json_stream("panic.json", true);
+            common::ro_std_file_stream panic_json_stream(eka2l1::host_path{"panic.json"}, true);
             if (!panic_json_stream.valid()) {
                 return false;
             }

@@ -261,7 +261,7 @@ namespace eka2l1::manager {
             LOG_INFO(SCRIPTING, "Applying S^3 and higher patch (native)");
 
             if (hle::lib_manager *libmngr = sys->get_lib_manager()) {
-                libmngr->load(u"z:\\sys\\bin\\domaincli.dll");
+                libmngr->load(guest_path(u"z:\\sys\\bin\\domaincli.dll"));
             }
         }
 

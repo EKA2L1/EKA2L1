@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -45,7 +46,7 @@ namespace eka2l1::common {
     };
 
     struct directory_change {
-        std::string filename_;
+        host_path filename_;
         std::uint32_t change_;
     };
 
@@ -87,7 +88,7 @@ namespace eka2l1::common {
          * 
          * \see     unwatch
          */
-        std::int32_t watch(const std::string &folder, directory_watcher_callback callback,
+        std::int32_t watch(const host_path &folder, directory_watcher_callback callback,
             void *callback_userdata, const std::uint32_t filters);
 
         /**

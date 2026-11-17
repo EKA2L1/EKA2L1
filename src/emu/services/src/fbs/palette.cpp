@@ -122,7 +122,7 @@ namespace eka2l1::epoc {
 namespace eka2l1 {
     void fbs_server::initialize_palette() {
         std::optional<epoc::palette_256> rom_palette;
-        if (const auto palette = sys->get_lib_manager()->load(u"palette.dll"); palette && palette->is_rom()) {
+        if (const auto palette = sys->get_lib_manager()->load(guest_path(u"palette.dll")); palette && palette->is_rom()) {
             std::uint8_t *code = nullptr;
             const auto code_address = palette->get_code_run_addr(nullptr, &code);
             // DynamicPalette ordinals 3/4 are DefaultColor256Util/SetColor256Util.
@@ -130,7 +130,7 @@ namespace eka2l1 {
                 code_address, palette->lookup_no_relocate(3), palette->lookup_no_relocate(4));
         }
         if (!rom_palette && kern->is_eka1()) {
-            if (const auto gdi = sys->get_lib_manager()->load(u"gdi.dll"); gdi && gdi->is_rom()) {
+            if (const auto gdi = sys->get_lib_manager()->load(guest_path(u"gdi.dll")); gdi && gdi->is_rom()) {
                 std::uint8_t *code = nullptr;
                 const auto code_address = gdi->get_code_run_addr(nullptr, &code);
                 // EKA1 GDI ordinal 164 is TRgb::Color256(TInt).

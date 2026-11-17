@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include "./ui_mainwindow.h"
 #include "./links.h"
 
@@ -386,7 +387,7 @@ main_window::main_window(QApplication &application, QWidget *parent, eka2l1::des
     bindings_watcher->addPath(QDir::current().absoluteFilePath(QStringLiteral("bindings")));
     connect(bindings_watcher, &QFileSystemWatcher::directoryChanged, this, [this](const QString &) {
         const std::lock_guard<std::mutex> guard(emulator_state_.lockdown);
-        const std::string profile_path = "bindings/" + emulator_state_.conf.current_keybind_profile + ".yml";
+        const eka2l1::host_path profile_path("bindings/" + emulator_state_.conf.current_keybind_profile + ".yml");
         if (!eka2l1::common::exists(profile_path)) {
             return;
         }
@@ -824,7 +825,7 @@ void main_window::on_install_ngage_card_game_clicked() {
         current_progress_dialog_->show();
 
         const eka2l1::ngage_game_card_install_error install_future_result = run_off_gui_thread([this, install_folder]() -> eka2l1::ngage_game_card_install_error {
-            return emulator_state_.symsys->install_ngage_game_card(install_folder.toStdString(), [this](const std::string &game_name) {
+            return emulator_state_.symsys->install_ngage_game_card(eka2l1::host_path(install_folder.toStdString()), [this](const std::string &game_name) {
                 emit install_ngage_game_name_available(QString::fromStdString(game_name));
             }, [this](const std::size_t done, const std::size_t total) {
                 emit progress_dialog_change(done, total);
@@ -928,7 +929,7 @@ void main_window::mount_game_card_dump(QString mount_path) {
     }
 
     auto do_check_and_assign_mmc_id = [mount_path, this]() {
-        std::optional<std::string> mmc_id_found = get_mmc_id_from_path(mount_path.toStdString());
+        std::optional<std::string> mmc_id_found = get_mmc_id_from_path(eka2l1::host_path(mount_path.toStdString()));
         if (mmc_id_found.has_value()) {
             emulator_state_.conf.current_mmc_id = mmc_id_found.value();
             tray_icon_->showMessage(tr("MMC ID found"), tr("MMC ID found in folder name. Using it as current MMC ID."), emu_icon_, 2000);
@@ -938,7 +939,7 @@ void main_window::mount_game_card_dump(QString mount_path) {
     eka2l1::io_system *io = emulator_state_.symsys->get_io_system();
 
     const std::string path_ext = eka2l1::path_extension(mount_path.toStdString());
-    if (!eka2l1::common::is_dir(mount_path.toStdString()) && (eka2l1::common::compare_ignore_case(path_ext.c_str(), ".zip") == 0)) {
+    if (!eka2l1::common::is_dir(eka2l1::host_path{mount_path.toStdString()}) && (eka2l1::common::compare_ignore_case(path_ext.c_str(), ".zip") == 0)) {
         io->unmount(drive_e);
         current_progress_dialog_ = new QProgressDialog(QString{}, tr("Cancel"), 0, 100, this);
 
@@ -950,7 +951,7 @@ void main_window::mount_game_card_dump(QString mount_path) {
 
         const eka2l1::zip_mount_error extract_result = run_off_gui_thread([this, mount_path]() -> eka2l1::zip_mount_error {
             return emulator_state_.symsys->mount_game_zip(
-                drive_e, drive_media::physical, mount_path.toStdString(), 0, [this](const std::size_t done, const std::size_t total) { emit progress_dialog_change(done, total); }, [this] { return current_progress_dialog_->wasCanceled(); });
+                drive_e, drive_media::physical, eka2l1::host_path(mount_path.toStdString()), 0, [this](const std::size_t done, const std::size_t total) { emit progress_dialog_change(done, total); }, [this] { return current_progress_dialog_->wasCanceled(); });
         });
 
         bool no_more_info = false;
@@ -988,7 +989,7 @@ void main_window::mount_game_card_dump(QString mount_path) {
         }
     } else {
         io->unmount(drive_e);
-        io->mount_physical_path(drive_e, drive_media::physical, io_attrib_removeable | io_attrib_write_protected, mount_path.toStdU16String());
+        io->mount_physical_path(drive_e, drive_media::physical, io_attrib_removeable | io_attrib_write_protected, eka2l1::host_path::from_utf16(mount_path.toStdU16String()));
 
         if (mount_path.endsWith("system", Qt::CaseInsensitive)) {
 #if !EKA2L1_PLATFORM(WIN32)
@@ -1279,7 +1280,7 @@ void main_window::spawn_package_install_camper(QString package_file_path) {
 
             const eka2l1::package::installation_result install_result = run_off_gui_thread([this, pkgmngr, package_file_path, install_drive]() {
                 return pkgmngr->install_package(
-                    package_file_path.toStdU16String(),
+                    eka2l1::host_path::from_utf16(package_file_path.toStdU16String()),
                     install_drive,
                     [this](const std::size_t done, const std::size_t total) { emit progress_dialog_change(done, total); }, [this] { return current_progress_dialog_->wasCanceled(); });
             });
@@ -1405,7 +1406,7 @@ bool main_window::controller_event_handler(eka2l1::drivers::input_event &event) 
 
 void main_window::make_default_binding_profile() {
     // Create default profile if there is none
-    auto ite = eka2l1::common::make_directory_iterator("bindings\\", "");
+    auto ite = eka2l1::common::make_directory_iterator(eka2l1::host_path{"bindings\\"}, "");
     if (!ite) {
         return;
     }
@@ -1453,7 +1454,7 @@ void main_window::on_app_setting_changed() {
     setting.screen_rotation = scr->ui_rotation;
     setting.screen_upscale = scr->requested_ui_scale_factor;
     setting.screen_upscale_method = ((scr->flags_ & eka2l1::epoc::screen::FLAG_SCREEN_UPSCALE_FACTOR_LOCK) ? 1 : 0);
-    setting.filter_shader_path = settings_dialog_->active_upscale_shader().toStdString();
+    setting.filter_shader_name = settings_dialog_->active_upscale_shader().toStdString();
 
     emulator_state_.app_settings->add_or_replace_setting(info->app_uid_, setting);
 }
@@ -1818,7 +1819,7 @@ void main_window::on_action_jar_triggered() {
         settings.setValue(LAST_JAR_FOLDER_SETTING, QFileInfo(package_file_path).absoluteDir().path());
 
         eka2l1::j2me::app_entry entry_res;
-        const eka2l1::j2me::install_error err = eka2l1::j2me::install(emulator_state_.symsys.get(), package_file_path.toStdString(), entry_res);
+        const eka2l1::j2me::install_error err = eka2l1::j2me::install(emulator_state_.symsys.get(), eka2l1::host_path(package_file_path.toStdString()), entry_res);
 
         if (err == eka2l1::j2me::INSTALL_ERROR_JAR_SUCCESS) {
             QString info_str = tr("%1 version %2 (by %3) has been installed!").arg(QString::fromStdString(entry_res.title_),
@@ -1910,7 +1911,7 @@ void main_window::on_action_stretch_to_fill_toggled(bool checked) {
     settings.setValue(STRETCH_DISPLAY_SETTING, checked);
 }
 
-bool main_window::load_background_image(const std::string &path) {
+bool main_window::load_background_image(const eka2l1::host_path &path) {
     if (!eka2l1::common::exists(path)) {
         return false;
     }

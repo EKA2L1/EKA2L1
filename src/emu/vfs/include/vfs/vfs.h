@@ -22,6 +22,7 @@
 #include <common/buffer.h>
 #include <common/container.h>
 #include <common/types.h>
+#include <common/path_types.h>
 #include <common/uid.h>
 #include <common/watcher.h>
 
@@ -132,7 +133,7 @@ namespace eka2l1 {
         /*! \brief Get the full path of the file. 
          * \returns The full path of the file.
          */
-        virtual std::u16string file_name() const = 0;
+        virtual guest_path file_name() const = 0;
 
         /*! \brief Size of the file. 
          * \returns The size of the file.
@@ -192,12 +193,12 @@ namespace eka2l1 {
         /*! Lowercase of uppercase (c: or C:) doesn't matter. Like Windows,
         * path in Symbian are insensitive.
         */
-        std::string drive_name;
+        guest_path drive_name;
 
         //! The physical path of the drive.
         /*! This exists if the drive is physically available
         */
-        std::string real_path;
+        host_path real_path;
 
         //! The media type of the drive
         drive_media media_type;
@@ -209,8 +210,8 @@ namespace eka2l1 {
 
         bool has_raw_attribute = false;
 
-        std::string name;
-        std::string full_path;
+        guest_path name;
+        guest_path full_path;
 
         io_component_type type;
         std::size_t size;
@@ -249,38 +250,38 @@ namespace eka2l1 {
     */
     class abstract_file_system {
     public:
-        virtual bool exists(const std::u16string &path) = 0;
-        virtual bool replace(const std::u16string &old_path, const std::u16string &new_path) = 0;
+        virtual bool exists(const guest_path &path) = 0;
+        virtual bool replace(const guest_path &old_path, const guest_path &new_path) = 0;
 
         /*! \brief Mount a drive with a physical host path.
         */
         virtual bool mount_volume_from_path(const drive_number drv, const drive_media media, const std::uint32_t attrib,
-            const std::u16string &physical_path) {
+            const host_path &physical_path) {
             return false;
         }
 
         virtual bool unmount(const drive_number drv) = 0;
 
-        virtual std::unique_ptr<file> open_file(const std::u16string &path, const int mode) = 0;
-        virtual std::unique_ptr<directory> open_directory(const std::u16string &path,
+        virtual std::unique_ptr<file> open_file(const guest_path &path, const int mode) = 0;
+        virtual std::unique_ptr<directory> open_directory(const guest_path &path,
             epoc::uid_type type, const std::uint32_t attrib)
             = 0;
 
         // Try to find an entry with specified address, with clue as base finding path. This is not recursive.
-        virtual std::optional<std::u16string> find_entry_with_address(const std::u16string &clue, const address addr) {
+        virtual std::optional<guest_path> find_entry_with_address(const guest_path &clue, const address addr) {
             return std::nullopt;
         }
 
-        virtual std::optional<entry_info> get_entry_info(const std::u16string &path) = 0;
+        virtual std::optional<entry_info> get_entry_info(const guest_path &path) = 0;
 
-        virtual abstract_file_system_err_code is_entry_in_rom(const std::u16string &path) {
+        virtual abstract_file_system_err_code is_entry_in_rom(const guest_path &path) {
             return abstract_file_system_err_code::unsupported;
         }
 
-        virtual bool delete_entry(const std::u16string &path) = 0;
+        virtual bool delete_entry(const guest_path &path) = 0;
 
-        virtual bool create_directory(const std::u16string &path) = 0;
-        virtual bool create_directories(const std::u16string &path) = 0;
+        virtual bool create_directory(const guest_path &path) = 0;
+        virtual bool create_directories(const guest_path &path) = 0;
 
         virtual std::optional<drive> get_drive_entry(const drive_number drv) = 0;
 
@@ -292,9 +293,9 @@ namespace eka2l1 {
             return;
         }
 
-        virtual std::optional<std::u16string> get_raw_path(const std::u16string &path) = 0;
+        virtual std::optional<host_path> get_raw_path(const guest_path &path) = 0;
 
-        virtual std::int64_t watch_directory(const std::u16string &path, common::directory_watcher_callback callback,
+        virtual std::int64_t watch_directory(const guest_path &path, common::directory_watcher_callback callback,
             void *callback_userdata, const std::uint32_t filters) {
             return -1;
         }
@@ -345,7 +346,7 @@ namespace eka2l1 {
         std::size_t register_drive_change_notify(drive_change_notify_callback callback, void *userdata);
         bool remove_drive_change_notify(const std::size_t handle);
 
-        std::optional<std::u16string> get_raw_path(const std::u16string &path);
+        std::optional<host_path> get_raw_path(const guest_path &path);
 
         /*! \brief Add a new file system to the IO system
         *
@@ -365,7 +366,7 @@ namespace eka2l1 {
         * report that this file exist, stop and returns true. Else
         * return false.
         */
-        bool exist(const std::u16string &path);
+        bool exist(const guest_path &path);
 
         /*! \brief Replace the old file with new file.
         *
@@ -375,7 +376,7 @@ namespace eka2l1 {
         * \params old_path The target path.
         * \params new_path The new path to replaced the old.
         */
-        bool rename(const std::u16string &old_path, const std::u16string &new_path);
+        bool rename(const guest_path &old_path, const guest_path &new_path);
 
         /*! \brief Mount a physical path.
         *
@@ -385,7 +386,7 @@ namespace eka2l1 {
         * \returns True if at least one file system can mount this drive.
         */
         bool mount_physical_path(const drive_number dvc, const drive_media media, const std::uint32_t attrib,
-            const std::u16string &path);
+            const host_path &path);
 
         /*! \brief Unount a drive.
         *
@@ -400,17 +401,17 @@ namespace eka2l1 {
         *
         * \returns False if the entry doesn't exist or is not a directory.
         */
-        bool is_directory(const std::u16string &path);
+        bool is_directory(const guest_path &path);
 
         /*! \brief Open the file in guest.
         *
         * \returns Null if the file doesn't exist or can't be open with given mode.
         */
-        std::unique_ptr<file> open_file(std::u16string vir_path, int mode);
+        std::unique_ptr<file> open_file(guest_path vir_path, int mode);
 
         /*! \brief Open the directory in guest.
         */
-        std::unique_ptr<directory> open_dir(std::u16string vir_path,
+        std::unique_ptr<directory> open_dir(guest_path vir_path,
             epoc::uid_type type = {}, const std::uint32_t attrib = io_attrib_none);
 
         /*! \brief Get a drive info.
@@ -424,7 +425,7 @@ namespace eka2l1 {
         * 
         * \returns Nullopt if the given path doesn't exist, else the info
         */
-        std::optional<entry_info> get_entry_info(const std::u16string &path);
+        std::optional<entry_info> get_entry_info(const guest_path &path);
 
         /*! \brief Check the entry is in ROM or not
         *
@@ -432,17 +433,17 @@ namespace eka2l1 {
         * the IO that it supported or is the entry actually in the filesystem,
         * here the case is ROM. 
         */
-        bool is_entry_in_rom(const std::u16string &path);
+        bool is_entry_in_rom(const guest_path &path);
 
-        bool delete_entry(const std::u16string &path);
+        bool delete_entry(const guest_path &path);
 
-        bool create_directory(const std::u16string &path);
+        bool create_directory(const guest_path &path);
 
-        bool create_directories(const std::u16string &path);
+        bool create_directories(const guest_path &path);
 
-        std::optional<std::u16string> find_entry_with_address(const std::u16string &clue, const address addr);
+        std::optional<guest_path> find_entry_with_address(const guest_path &clue, const address addr);
 
-        std::int64_t watch_directory(const std::u16string &path, common::directory_watcher_callback callback,
+        std::int64_t watch_directory(const guest_path &path, common::directory_watcher_callback callback,
             void *callback_userdata, const std::uint32_t filters);
 
         bool unwatch_directory(const std::int64_t handle);
@@ -450,7 +451,7 @@ namespace eka2l1 {
         bool install_memory(memory_system *mem);
     };
 
-    symfile physical_file_proxy(const std::string &path, int mode);
+    symfile physical_file_proxy(const host_path &path, int mode);
 
     class ro_file_stream : public common::ro_stream {
         file *f_;

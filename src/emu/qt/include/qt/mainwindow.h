@@ -20,6 +20,7 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include <common/path_types.h>
 #include <drivers/input/common.h>
 #include <drivers/graphics/context.h>
 #include <drivers/ui/input_dialog.h>
@@ -123,7 +124,7 @@ private:
     std::map<int, int> mouse_to_touch_index_emu_;
     eka2l1::drivers::handle background_image_texture_;
     eka2l1::vec2 previous_background_image_size_;
-    std::string previous_background_image_path_;
+    eka2l1::host_path previous_background_image_path_;
     
     QSystemTrayIcon *tray_icon_;
     QIcon emu_icon_;
@@ -151,7 +152,7 @@ private:
 
     void save_ui_layouts();
     void restore_ui_layouts();
-    bool load_background_image(const std::string &path);
+    bool load_background_image(const eka2l1::host_path &path);
 
 private slots:
     void on_about_triggered();

@@ -33,7 +33,7 @@ using namespace eka2l1;
 // Syncing result with Symbian's CResourceFile class
 TEST_CASE("no_compress_but_may_contain_unicode", "rsc_file") {
     const char *rsc_name = "loaderassets//sample_0xed3e09d5.rsc";
-    symfile f = eka2l1::physical_file_proxy(rsc_name, READ_MODE | BIN_MODE);
+    symfile f = eka2l1::physical_file_proxy(eka2l1::host_path{rsc_name}, READ_MODE | BIN_MODE);
 
     REQUIRE(f);
 
@@ -74,7 +74,7 @@ TEST_CASE("no_compress_but_may_contain_unicode", "rsc_file") {
 
 TEST_CASE("no_compress_but_may_contain_unicode_2", "rsc_file") {
     const char *rsc_name = "loaderassets//javadrmmanager.rsc";
-    symfile f = eka2l1::physical_file_proxy(rsc_name, READ_MODE | BIN_MODE);
+    symfile f = eka2l1::physical_file_proxy(eka2l1::host_path{rsc_name}, READ_MODE | BIN_MODE);
 
     REQUIRE(f);
 
@@ -117,7 +117,7 @@ TEST_CASE("no_compress_but_may_contain_unicode_2", "rsc_file") {
 
 TEST_CASE("no_compress_but_may_contain_unicode_3", "rsc_file") {
     const char *rsc_name = "loaderassets//obscurersc.rsc";
-    symfile f = eka2l1::physical_file_proxy(rsc_name, READ_MODE | BIN_MODE);
+    symfile f = eka2l1::physical_file_proxy(eka2l1::host_path{rsc_name}, READ_MODE | BIN_MODE);
 
     REQUIRE(f);
 

@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <services/allocator.h>
 #include <services/fbs/adapter/font_adapter.h>
 #include <services/fbs/bitmap.h>
@@ -301,7 +302,7 @@ namespace eka2l1 {
     };
 
     struct fbsbitmap_cache_info {
-        std::u16string path;
+        guest_path path;
         int bitmap_idx;
     };
 
@@ -395,7 +396,7 @@ namespace eka2l1 {
         std::array<std::uint32_t, 256> palette_256_{};
 
         void load_fonts(eka2l1::io_system *io);
-        void load_custom_fonts(const std::string &storage);
+        void load_custom_fonts(const host_path &storage);
         void load_linked_fonts(eka2l1::io_system *io);
 
         std::atomic<service::uid> connection_id_counter{ 0x1234 }; // Easier to debug
@@ -407,11 +408,11 @@ namespace eka2l1 {
 
     protected:
         void load_fonts_from_directory(eka2l1::io_system *io, eka2l1::directory *dir);
-        void load_linked_fonts_from_directory(eka2l1::io_system *io, const std::u16string &fonts_folder_path);
+        void load_linked_fonts_from_directory(eka2l1::io_system *io, const guest_path &fonts_folder_path);
         void initialize_server();
 
         bool add_font(common::ro_stream &stream, const std::string &name, const bool user_font = false);
-        bool add_single_font(eka2l1::io_system *io, const std::u16string &path);
+        bool add_single_font(eka2l1::io_system *io, const guest_path &path);
 
     public:
         explicit fbs_server(eka2l1::system *sys);

@@ -30,7 +30,7 @@ TEST_CASE("timeslices preserve strict priority and rotate equal-priority threads
     timing->stop();
     memory = std::make_unique<memory_system>(nullptr, &config, mem::mem_model_type::multiple, false);
     kernel->install_memory(memory.get());
-    auto *process = kernel->create<kernel::process>(memory.get(), "scheduler test", u"", u"");
+    auto *process = kernel->create<kernel::process>(memory.get(), "scheduler test", guest_path{}, u"");
     auto make_thread = [&](const char *name, kernel::thread_priority priority) {
         return kernel->create<kernel::thread>(memory.get(), timing, process, kernel::access_type::local_access,
             name, 0, 0x1000, 0, 0, true, ptr<void>(0), ptr<void>(0), priority);

@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <common/types.h>
 #include <system/installation/common.h>
 
@@ -38,8 +39,8 @@ namespace eka2l1 {
      *                        firmware's drive C content to the device's drive C folder.
      * @param isolate_drives  Give the device drives C, D and E of its own.
      */
-    device_installation_error install_firmware(device_manager *dvc, const std::string &vpl_path,
-        const std::string &storage_path, const std::string &rom_resident_path, const bool isolate_drives,
+    device_installation_error install_firmware(device_manager *dvc, const host_path &vpl_path,
+        const host_path &storage_path, const host_path &rom_resident_path, const bool isolate_drives,
         device_firmware_choose_variant_callback choose_callback, progress_changed_callback progress_callback,
         cancel_requested_callback cancel_cb);
 }

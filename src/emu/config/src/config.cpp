@@ -220,15 +220,21 @@ namespace eka2l1::config {
     template <typename T, typename Q = T>
     void get_yaml_value(YAML::Node &config_node, const char *key, T *target_val, Q default_val) {
         try {
-            *target_val = config_node[key].as<T>();
+            if constexpr (std::is_same_v<T, host_path>) {
+                *target_val = host_path(config_node[key].as<std::string>());
+            } else {
+                *target_val = config_node[key].as<T>();
+            }
         } catch (...) {
-            *target_val = std::move(default_val);
+            *target_val = T(std::move(default_val));
         }
     }
 
     template <typename T>
     void config_file_emit_single(YAML::Emitter &emitter, const char *name, T &val) {
-        emitter << YAML::Key << name << YAML::Value << val;
+        emitter << YAML::Key << name << YAML::Value;
+        if constexpr (std::is_same_v<T, host_path>) emitter << val.utf8();
+        else emitter << val;
     }
 
     template <typename T>
@@ -265,7 +271,7 @@ namespace eka2l1::config {
         emitter << YAML::EndMap;
     }
 
-    void keybind_profile::serialize(const std::string &file) {
+    void keybind_profile::serialize(const host_path &file) {
         YAML::Emitter keybind_emitter;
         keybind_emitter << YAML::BeginSeq;
         for (const auto &kb : keybinds) {
@@ -277,7 +283,7 @@ namespace eka2l1::config {
         keybind_file.write(keybind_emitter.c_str(), keybind_emitter.size());
     }
 
-    void keybind_profile::deserialize(const std::string &file) {
+    void keybind_profile::deserialize(const host_path &file) {
         YAML::Node keybind_node;
         try {
             common::ro_std_file_stream keybind_stream(file, true);
@@ -341,13 +347,13 @@ namespace eka2l1::config {
         emitter << YAML::EndMap;
 
         {
-            common::wo_std_file_stream file("config.yml", true);
+            common::wo_std_file_stream file(eka2l1::host_path{"config.yml"}, true);
             file.write(emitter.c_str(), emitter.size());
         }
 
         if (with_bindings) {
-            common::create_directories("bindings");
-            keybinds.serialize(fmt::format("bindings/{}.yml", current_keybind_profile));
+            common::create_directories(eka2l1::host_path{"bindings"});
+            keybinds.serialize(host_path(fmt::format("bindings/{}.yml", current_keybind_profile)));
         }
 
         if (current_mmc_id.empty()) {
@@ -359,7 +365,7 @@ namespace eka2l1::config {
         YAML::Node node;
 
         try {
-            common::ro_std_file_stream config_stream("config.yml", true);
+            common::ro_std_file_stream config_stream(eka2l1::host_path{"config.yml"}, true);
             if (!config_stream.valid()) {
                 return;
             }
@@ -397,16 +403,16 @@ namespace eka2l1::config {
         screen_buffer_sync = get_screen_buffer_sync_option_from_string(screen_buffer_sync_string);
         midi_backend = get_midi_backend_from_string(midi_backend_string);
 
-        if (!eka2l1::common::exists(hsb_bank_path)) {
-            hsb_bank_path = "resources/defaultbank.hsb";
+        if (!eka2l1::common::exists(eka2l1::host_path{hsb_bank_path})) {
+            hsb_bank_path = host_path("resources/defaultbank.hsb");
         }
         
-        if (!eka2l1::common::exists(sf2_bank_path)) {
-            sf2_bank_path = "resources/defaultbank.sf2";
+        if (!eka2l1::common::exists(eka2l1::host_path{sf2_bank_path})) {
+            sf2_bank_path = host_path("resources/defaultbank.sf2");
         }
 
         if (with_bindings)
-            keybinds.deserialize(fmt::format("bindings/{}.yml", current_keybind_profile));
+            keybinds.deserialize(host_path(fmt::format("bindings/{}.yml", current_keybind_profile)));
 
 #if BUILD_FOR_USER
         // If not yet been modified by user, see extensive logging option

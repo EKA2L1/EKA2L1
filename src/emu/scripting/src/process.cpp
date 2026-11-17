@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <scripting/instance.h>
 #include <scripting/process.h>
 #include <scripting/thread.h>
@@ -89,8 +90,8 @@ namespace eka2l1::scripting {
         READ_TEMPLATE(std::uint64_t);
     }
 
-    std::string process::get_executable_path() {
-        return common::ucs2_to_utf8(process_handle->get_exe_path());
+    guest_path process::get_executable_path() {
+        return process_handle->get_exe_path();
     }
 
     std::string process::get_name() {
@@ -190,7 +191,7 @@ EKA2L1_EXPORT const char *eka2l1_process_name(eka2l1::scripting::process *pr) {
 }
 
 EKA2L1_EXPORT const char *eka2l1_process_executable_path(eka2l1::scripting::process *pr) {
-    std::string data = pr->get_executable_path();
+    std::string data = pr->get_executable_path().utf8();
     char *ret_val = new char[data.length() + 1];
 
     std::memcpy(ret_val, data.data(), data.length());

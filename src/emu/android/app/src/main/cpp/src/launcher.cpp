@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <android/bitmap.h>
 #include <android/launcher.h>
 #include <android/state.h>
@@ -117,7 +118,7 @@ namespace eka2l1::android {
     jobject launcher::get_app_icon(JNIEnv *env, std::uint32_t uid) {
         auto *reg = alserv->get_registration(uid);
         if (!reg) return nullptr;
-        auto icon = alserv->get_host_icon(*reg, conf ? add_path(conf->storage, "cache/icons") : std::string());
+        auto icon = alserv->get_host_icon(*reg, conf ? add_path(conf->storage, "cache/icons") : eka2l1::host_path{});
         if (!icon) return nullptr;
         jobject bitmap = make_new_bitmap(env, icon->size.x, icon->size.y);
         if (!bitmap) return nullptr;
@@ -155,9 +156,9 @@ namespace eka2l1::android {
         kern->unlock();
     }
 
-    package::installation_result launcher::install_app(std::string &path) {
-        std::u16string upath = common::utf8_to_ucs2(path);
-        return static_cast<package::installation_result>(sys->install_package(upath, sys->get_default_install_drive()));
+    package::installation_result launcher::install_app(const eka2l1::host_path &path) {
+        const auto &upath = path;
+        return static_cast<package::installation_result>(sys->install_package(eka2l1::host_path{upath}, sys->get_default_install_drive()));
     }
 
     std::vector<std::string> launcher::get_devices() {
@@ -271,17 +272,17 @@ namespace eka2l1::android {
         return sys->get_symbian_version_use() >= epocver::epoc94;
     }
 
-    bool launcher::does_rom_need_rpkg(const std::string &rom_path) {
+    bool launcher::does_rom_need_rpkg(const eka2l1::host_path &rom_path) {
         return loader::should_install_requires_additional_rpkg(rom_path);
     }
 
-    device_installation_error launcher::install_device(std::string &rpkg_path, std::string &rom_path, bool install_rpkg, bool isolate_drives) {
+    device_installation_error launcher::install_device(const eka2l1::host_path &rpkg_path, const eka2l1::host_path &rom_path, bool install_rpkg, bool isolate_drives) {
         std::string firmware_code;
         device_manager *dvc_mngr = sys->get_device_manager();
         device_installation_error result;
 
-        std::string root_z_path = add_path(conf->storage, "drives/z/");
-        std::string rom_resident_path = add_path(conf->storage, "roms/");
+        eka2l1::host_path root_z_path(add_path(conf->storage, "drives/z/"));
+        eka2l1::host_path rom_resident_path(add_path(conf->storage, "roms/"));
 
         eka2l1::common::create_directories(rom_resident_path);
 
@@ -307,10 +308,10 @@ namespace eka2l1::android {
         dvc_mngr->save_devices();
 
         if (need_add_rpkg) {
-            const std::string rom_directory = add_path(conf->storage, add_path("roms", firmware_code + "\\"));
+            const eka2l1::host_path rom_directory(add_path(conf->storage, add_path("roms", firmware_code + "\\")));
 
             eka2l1::common::create_directories(rom_directory);
-            common::copy_file(rom_path, add_path(rom_directory, "SYM.ROM"), true);
+            common::copy_file(rom_path, eka2l1::host_path{add_path(rom_directory, "SYM.ROM")}, true);
         }
 
         return device_installation_none;
@@ -341,13 +342,13 @@ namespace eka2l1::android {
             manager->uninstall_package(*obj);
     }
 
-    void launcher::mount_sd_card(std::string &path) {
-        std::u16string upath = common::utf8_to_ucs2(path);
+    void launcher::mount_sd_card(const eka2l1::host_path &path) {
+        const auto &upath = path;
 
         io_system *io = sys->get_io_system();
         io->unmount(drive_e);
         io->mount_physical_path(drive_e, drive_media::physical,
-            io_attrib_removeable | io_attrib_write_protected, upath);
+            io_attrib_removeable | io_attrib_write_protected, eka2l1::host_path{upath});
     }
 
     void launcher::load_config() {
@@ -406,7 +407,7 @@ namespace eka2l1::android {
         if (!background_img_ && !background_img_path_.empty()) {
             int x, y, comp = 0;
 
-            FILE *f = eka2l1::common::open_c_file(background_img_path_, "rb");
+            FILE *f = eka2l1::common::open_c_file(eka2l1::host_path{background_img_path_}, "rb");
             if (!f) {
                 LOG_ERROR(eka2l1::FRONTEND_UI, "Unable to load background texture!");
             } else {
@@ -599,7 +600,7 @@ namespace eka2l1::android {
 
     void launcher::set_screen_params(std::uint32_t background_color, std::uint32_t scale_ratio,
                                      std::uint32_t scale_type, std::uint32_t gravity,
-                                     const std::string &bg_img_path,
+                                     const eka2l1::host_path &bg_img_path,
                                      float bg_img_opacity, bool bg_keep_aspect_ratio) {
         background_color_[0] = (background_color >> 16) & 0xFF;
         background_color_[1] = (background_color >> 8) & 0xFF;
@@ -697,7 +698,7 @@ namespace eka2l1::android {
         }
     }
 
-    int launcher::install_ngage_game(const std::string &path) {
+    int launcher::install_ngage_game(const eka2l1::host_path &path) {
         return static_cast<int>(sys->install_ngage_game_card(path,
                                                              nullptr, nullptr));
     }
@@ -718,7 +719,7 @@ namespace eka2l1::android {
         conf->current_mmc_id = new_mmc_id;
     }
 
-    bool launcher::save_screenshot_to(const std::string &path) {
+    bool launcher::save_screenshot_to(const eka2l1::host_path &path) {
         if (!winserv) {
             return false;
         }
@@ -743,9 +744,9 @@ namespace eka2l1::android {
 
         struct write_png_context {
             FILE *dest_file_;
-            std::string path_;
+            eka2l1::host_path path_;
 
-            explicit write_png_context(const std::string &path)
+            explicit write_png_context(const eka2l1::host_path &path)
                 : path_(path) {
                  dest_file_ = common::open_c_file(path, "wb");
             }

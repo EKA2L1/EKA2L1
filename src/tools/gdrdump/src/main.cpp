@@ -118,7 +118,7 @@ int main(int argc, char **argv) {
 
     const char *target_gdr = argv[1];
 
-    eka2l1::common::ro_std_file_stream stream(target_gdr, true);
+    eka2l1::common::ro_std_file_stream stream(eka2l1::host_path{target_gdr}, true);
     eka2l1::loader::gdr::file_store store;
 
     if (!eka2l1::loader::gdr::parse_store(reinterpret_cast<eka2l1::common::ro_stream *>(&stream), store)) {

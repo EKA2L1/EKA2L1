@@ -13,6 +13,7 @@ set(COMMON_TEST_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/logsink.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/paint.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/path.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/path_types.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/pystr.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/region.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/runlen.cpp

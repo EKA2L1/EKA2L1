@@ -95,9 +95,9 @@ namespace eka2l1::epoc::sms {
                 sys_progress_.id_ = ids[i];
 
                 // Edit the store of this message, to indicates the destination address and send state
-                std::optional<std::u16string> target_file_path = indexer->get_entry_data_file(ent);
-                if (target_file_path.has_value() && io->exist(target_file_path.value())) {
-                    symfile target_file_obj = io->open_file(target_file_path.value(), READ_MODE | BIN_MODE);
+                std::optional<guest_path> target_file_path = indexer->get_entry_data_file(ent);
+                if (target_file_path.has_value() && io->exist(eka2l1::guest_path{target_file_path.value()})) {
+                    symfile target_file_obj = io->open_file(eka2l1::guest_path{target_file_path.value()}, READ_MODE | BIN_MODE);
                     
                     if (target_file_obj) {
                         eka2l1::ro_file_stream target_file_read_stream(target_file_obj.get());
@@ -142,7 +142,7 @@ namespace eka2l1::epoc::sms {
                         target_header.absorb(seri);
 
                         target_file_obj->close();
-                        target_file_obj = io->open_file(target_file_path.value(), WRITE_MODE | BIN_MODE);
+                        target_file_obj = io->open_file(eka2l1::guest_path{target_file_path.value()}, WRITE_MODE | BIN_MODE);
 
                         if (!target_file_obj) {
                             LOG_ERROR(SERVICE_SMS, "Can't reopen store 0x{:X} for write!", ids[i]);

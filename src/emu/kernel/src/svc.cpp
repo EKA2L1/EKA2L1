@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <common/uid.h>
 #include <utils/chunk.h>
 #include <utils/des.h>
@@ -83,8 +84,8 @@ namespace eka2l1::epoc {
         return nullptr;
     }
 
-    static bool find_rom_entry_containing_addr(const loader::rom_dir &dir, const std::u16string &path_so_far,
-        const std::uint32_t addr, std::u16string &result) {
+    static bool find_rom_entry_containing_addr(const loader::rom_dir &dir, const guest_path &path_so_far,
+        const std::uint32_t addr, guest_path &result) {
         static constexpr std::uint8_t FILE_ATTRIB_DIR = 0x10;
 
         for (const auto &entry : dir.entries) {
@@ -107,7 +108,7 @@ namespace eka2l1::epoc {
         return false;
     }
 
-    static std::optional<std::u16string> get_dll_full_path(kernel_system *kern, const std::uint32_t addr) {
+    static std::optional<guest_path> get_dll_full_path(kernel_system *kern, const std::uint32_t addr) {
         codeseg_ptr ss = get_codeseg_from_addr(kern, kern->crr_process(), addr, true);
         if (ss) {
             return ss->get_full_path();
@@ -120,11 +121,11 @@ namespace eka2l1::epoc {
         // the address belongs to.
         loader::rom *rom_info = kern->get_rom_info();
         if (rom_info) {
-            std::u16string prefix(1, drive_to_char16(kern->get_lib_manager()->get_drive_rom()));
+            guest_path prefix(std::u16string(1, drive_to_char16(kern->get_lib_manager()->get_drive_rom())));
             prefix += u":\\";
 
             for (const auto &root : rom_info->root.root_dirs) {
-                std::u16string result;
+                guest_path result;
                 if (find_rom_entry_containing_addr(root.dir, prefix, addr, result)) {
                     return result;
                 }
@@ -267,7 +268,7 @@ namespace eka2l1::epoc {
         }
 
         epoc::des8 *des = name.get(cr_process);
-        const std::u16string full_path_u16 = pr_real->get_exe_path();
+        const guest_path full_path_u16(pr_real->get_exe_path());
 
         // Why???...
         const std::string full_path = common::ucs2_to_utf8(full_path_u16);
@@ -708,7 +709,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, dll_filename, std::int32_t entry_addr, eka2l1::ptr<epoc::des8> full_path_ptr) {
-        std::optional<std::u16string> dll_full_path = get_dll_full_path(kern, entry_addr);
+        std::optional<guest_path> dll_full_path = get_dll_full_path(kern, entry_addr);
 
         if (!dll_full_path) {
             LOG_WARN(KERNEL, "Unable to find DLL name for address: 0x{:x}", entry_addr);
@@ -727,7 +728,7 @@ namespace eka2l1::epoc {
     // whether the address could be attributed at all, and its callers branch on that
     // code: TExtendedLocale::GetLocaleDllName, and the SQL server on startup.
     BRIDGE_FUNC(std::int32_t, get_module_name_from_address, std::int32_t addr, eka2l1::ptr<epoc::des8> module_name_ptr) {
-        std::optional<std::u16string> full_path = get_dll_full_path(kern, addr);
+        std::optional<guest_path> full_path = get_dll_full_path(kern, addr);
 
         if (!full_path) {
             LOG_TRACE(KERNEL, "No module contains address 0x{:X}", static_cast<std::uint32_t>(addr));
@@ -2240,8 +2241,8 @@ namespace eka2l1::epoc {
             return;
         }
 
-        const std::u16string lib_filename = lib->get_codeseg()->get_full_path();
-        path_to_fill->assign(kern->crr_process(), lib_filename);
+        const guest_path lib_filename = lib->get_codeseg()->get_full_path();
+        path_to_fill->assign(kern->crr_process(), lib_filename.utf16());
     }
     
     BRIDGE_FUNC(void, library_filename, kernel::handle h, epoc::des8 *path_to_fill) {
@@ -2251,7 +2252,7 @@ namespace eka2l1::epoc {
             return;
         }
 
-        const std::u16string lib_filename = lib->get_codeseg()->get_full_path();
+        const guest_path lib_filename = lib->get_codeseg()->get_full_path();
         path_to_fill->assign(kern->crr_process(), common::ucs2_to_utf8(lib_filename));
     }
 
@@ -3580,7 +3581,7 @@ namespace eka2l1::epoc {
     }
 
     BRIDGE_FUNC(void, user_svr_dll_filename, std::int32_t entry_addr, epoc::des16 *full_path_ptr) {
-        std::optional<std::u16string> dll_full_path = get_dll_full_path(kern, entry_addr);
+        std::optional<guest_path> dll_full_path = get_dll_full_path(kern, entry_addr);
 
         if (!dll_full_path) {
             LOG_WARN(KERNEL, "Unable to find DLL name for address: 0x{:x}", entry_addr);
@@ -3588,7 +3589,7 @@ namespace eka2l1::epoc {
         }
 
         LOG_TRACE(KERNEL, "Find DLL for address 0x{:x} with name: {}", static_cast<std::uint32_t>(entry_addr), common::ucs2_to_utf8(*dll_full_path));
-        full_path_ptr->assign(kern->crr_process(), dll_full_path.value());
+        full_path_ptr->assign(kern->crr_process(), dll_full_path->utf16());
     }
 
     // NOTE(pent0): This call may be slow when the OS kernel is crowded.
@@ -3646,8 +3647,8 @@ namespace eka2l1::epoc {
             return;
         }
 
-        const std::u16string process_filename = pr->get_codeseg()->get_full_path();
-        path_to_fill->assign(kern->crr_process(), process_filename);
+        const guest_path process_filename = pr->get_codeseg()->get_full_path();
+        path_to_fill->assign(kern->crr_process(), process_filename.utf16());
     }
 
     std::int32_t chunk_create_eka1(kernel_system *kern, const std::uint32_t attribute, epoc::eka1_executor *create_info,

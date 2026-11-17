@@ -758,7 +758,7 @@ namespace eka2l1 {
                     LOG_ERROR(GDBSTUB, "Please specify absolute path of this DLL/EXE in emulated device!");
                 }
 
-                target_codeseg_path = target_string;
+                target_codeseg_path = guest_path::from_utf8(target_string);
             }
         }
 
@@ -796,8 +796,9 @@ namespace eka2l1 {
 
             gdb_hex_to_mem(reinterpret_cast<std::uint8_t *>(filename.data()), reinterpret_cast<const std::uint8_t *>(filename_in_hex.data()), filename_in_hex.length());
 
-            if (!eka2l1::has_root_dir(filename)) {
-                filename = eka2l1::absolute_path(filename, eka2l1::file_directory(target_codeseg_path));
+            guest_path requested_path = guest_path::from_utf8(filename);
+            if (requested_path.root_directory().empty()) {
+                requested_path = requested_path.absolute(target_codeseg_path.parent());
             }
 
             const std::uint32_t flags = arguments[1].as_int<std::uint32_t>(0, 16);
@@ -826,14 +827,14 @@ namespace eka2l1 {
 
             // Check for file create
             if (!(flags & 0x200)) {
-                if (!io->exist(common::utf8_to_ucs2(filename))) {
+                if (!io->exist(requested_path)) {
                     const std::string reply = fmt::format(error_format, ERRNO_NO_ENT);
                     send_reply(reply.c_str());
                     return;
                 }
             }
 
-            symfile f = io->open_file(common::utf8_to_ucs2(filename), translate_mode);
+            symfile f = io->open_file(requested_path, translate_mode);
 
             const std::string reply = fmt::format("F{}", file_container.add(f));
             send_reply(reply.c_str());

@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <system/devices.h>
 #include <system/installation/archive.h>
 #include <system/installation/rpkg.h>
@@ -156,7 +157,7 @@ namespace eka2l1::loader {
             // installed devices, so writing into it would be a side effect the user never asked for.
             const std::string data_prefix = z_prefix.substr(0, z_prefix.find(Z_DRIVE_MARKER));
             const std::string rom_prefix = data_prefix + "roms/" + code + "/";
-            const std::string devices_yml_path = data_prefix + "devices.yml";
+            const std::string devices_yml_path(data_prefix + "devices.yml");
 
             for (std::size_t i = 0; i < entries.size(); i++) {
                 if (entries[i].is_directory) {
@@ -241,9 +242,9 @@ namespace eka2l1::loader {
      * @param progress_ceiling Where on the shared 0..ARCHIVE_PROGRESS_TOTAL scale unpacking should land
      *                         when it finishes; the caller owns whatever is left for its own work.
      */
-    static bool extract_planned(const std::string &archive_path, const std::vector<std::string> &destinations,
+    static bool extract_planned(const host_path &archive_path, const std::vector<host_path> &destinations,
         const std::size_t progress_ceiling, progress_changed_callback progress_cb,
-        cancel_requested_callback cancel_cb, const std::string &case_preserving_root = {}) {
+        cancel_requested_callback cancel_cb, const host_path &case_preserving_root = {}) {
         std::size_t next_index = 0;
 
         progress_changed_callback wrapped_cb = nullptr;
@@ -259,16 +260,15 @@ namespace eka2l1::loader {
         }
 
         return common::extract_archive(archive_path,
-            [&](const common::archive_entry_info &) -> std::string {
+            [&](const common::archive_entry_info &) -> host_path {
                 const std::size_t index = next_index++;
                 if (index >= destinations.size()) {
                     return {};
                 }
-                const std::string &destination = destinations[index];
+                const host_path &destination = destinations[index];
                 if (!case_preserving_root.empty()
-                    && destination.compare(0, case_preserving_root.size(), case_preserving_root) == 0) {
-                    return common::resolve_case_insensitive_path(case_preserving_root,
-                        destination.substr(case_preserving_root.size()));
+                    && destination.utf8().starts_with(case_preserving_root.utf8())) {
+                    return case_preserving_root.resolve_guest(eka2l1::guest_path::from_utf8(destination.utf8().substr(case_preserving_root.size())));
                 }
                 return destination;
             },
@@ -276,22 +276,22 @@ namespace eka2l1::loader {
     }
 
     static device_installation_error install_archive_rom_and_rpkg(device_manager *dvcmngr,
-        const std::string &archive_path, const std::vector<common::archive_entry_info> &entries,
-        const archive_device_layout &layout, const std::string &rom_resident_path,
-        const std::string &drives_z_resident_path, const bool isolate_drives, progress_changed_callback progress_cb,
+        const host_path &archive_path, const std::vector<common::archive_entry_info> &entries,
+        const archive_device_layout &layout, const host_path &rom_resident_path,
+        const host_path &drives_z_resident_path, const bool isolate_drives, progress_changed_callback progress_cb,
         cancel_requested_callback cancel_cb) {
         // The ROM and the RPKG are read several times over by the installers (the ROM is parsed, then
         // copied; the RPKG is streamed through), so they are unpacked to a scratch folder first rather
         // than being decompressed again for every pass.
-        const std::string staging = add_path(rom_resident_path, "temparchive\\");
+        const host_path staging = add_path(rom_resident_path, "temparchive\\");
         common::delete_folder(staging);
 
-        std::vector<std::string> destinations(entries.size());
+        std::vector<host_path> destinations(entries.size());
 
-        const std::string rom_path = add_path(staging, eka2l1::filename(entries[layout.rom_index].path, false));
+        const host_path rom_path(add_path(staging, eka2l1::filename(entries[layout.rom_index].path, false)));
         destinations[layout.rom_index] = rom_path;
 
-        std::string rpkg_path;
+        host_path rpkg_path;
 
         if (layout.has_rpkg) {
             rpkg_path = add_path(staging, eka2l1::filename(entries[layout.rpkg_index].path, false));
@@ -336,9 +336,9 @@ namespace eka2l1::loader {
      * the firmware code stays whatever the dump says, since that is what every path on disk is named
      * after, and the Symbian version stays with the probe, which reads the same files the emulator will.
      */
-    static void apply_packaged_device_name(const std::string &devices_yml_path, const std::string &firmcode,
+    static void apply_packaged_device_name(const host_path &devices_yml_path, const std::string &firmcode,
         std::string &manufacturer, std::string &model, std::uint32_t &machine_uid) {
-        common::ro_std_file_stream stream(devices_yml_path, true);
+        common::ro_std_file_stream stream(eka2l1::host_path{devices_yml_path}, true);
 
         if (!stream.valid()) {
             return;
@@ -378,15 +378,15 @@ namespace eka2l1::loader {
     }
 
     static device_installation_error install_archive_data_dump(device_manager *dvcmngr,
-        const std::string &archive_path, const std::vector<common::archive_entry_info> &entries,
-        const archive_device_layout &layout, const std::string &rom_resident_path,
-        const std::string &drives_z_resident_path, const bool isolate_drives, progress_changed_callback progress_cb,
+        const host_path &archive_path, const std::vector<common::archive_entry_info> &entries,
+        const archive_device_layout &layout, const host_path &rom_resident_path,
+        const host_path &drives_z_resident_path, const bool isolate_drives, progress_changed_callback progress_cb,
         cancel_requested_callback cancel_cb) {
         // Same staging convention as install_rom/install_rpkg: unpack into a temp folder, and only rename
         // it to the firmware code once the dump has proven to describe a device we can register. A run
         // that dies in between leaves a `temp` folder behind rather than a half-installed device.
-        const std::string temp_z_path = add_path(drives_z_resident_path, "temp\\");
-        const std::string temp_rom_path = add_path(rom_resident_path, "temparchive\\");
+        const host_path temp_z_path(add_path(drives_z_resident_path, "temp\\"));
+        const host_path temp_rom_path(add_path(rom_resident_path, "temparchive\\"));
 
         common::delete_folder(temp_z_path);
         common::delete_folder(temp_rom_path);
@@ -396,7 +396,7 @@ namespace eka2l1::loader {
             common::delete_folder(temp_rom_path);
         };
 
-        std::vector<std::string> destinations(entries.size());
+        std::vector<host_path> destinations(entries.size());
 
         for (const std::size_t index : layout.z_files) {
             const std::string relative = entries[index].path.substr(layout.z_prefix.size());
@@ -408,7 +408,7 @@ namespace eka2l1::loader {
 
         // The ROM is written under the name the emulator looks for straight away, so placing it later is
         // just a move.
-        const std::string rom_temp_file = add_path(temp_rom_path, "SYM.ROM");
+        const host_path rom_temp_file = add_path(temp_rom_path, "SYM.ROM");
         destinations[layout.rom_index] = rom_temp_file;
 
         if (layout.rom_files.size() > 1) {
@@ -416,7 +416,7 @@ namespace eka2l1::loader {
                 entries[layout.rom_index].path);
         }
 
-        const std::string packaged_devices_yml = add_path(temp_rom_path, "devices.yml");
+        const host_path packaged_devices_yml = add_path(temp_rom_path, "devices.yml");
 
         if (layout.has_devices_yml) {
             destinations[layout.devices_yml_index] = packaged_devices_yml;
@@ -462,8 +462,8 @@ namespace eka2l1::loader {
         }
 
         const std::string firmcode_low = common::lowercase_string(firmcode);
-        const std::string final_z_path = add_path(drives_z_resident_path, firmcode_low + "\\");
-        const std::string final_rom_folder = add_path(rom_resident_path, firmcode_low + "\\");
+        const host_path final_z_path(add_path(drives_z_resident_path, firmcode_low + "\\"));
+        const host_path final_rom_folder = add_path(rom_resident_path, firmcode_low + "\\");
 
         if (!common::move_file(temp_z_path, final_z_path)) {
             LOG_ERROR(SYSTEM, "Unable to move the drive Z of {} into place, revert all changes", firmcode);
@@ -485,7 +485,7 @@ namespace eka2l1::loader {
 
         common::create_directories(final_rom_folder);
 
-        if (!common::move_file(rom_temp_file, add_path(final_rom_folder, "SYM.ROM"))) {
+        if (!common::move_file(rom_temp_file, eka2l1::host_path{add_path(final_rom_folder, "SYM.ROM")})) {
             LOG_ERROR(SYSTEM, "Unable to place the ROM of {}, revert all changes", firmcode);
             dvcmngr->delete_device(firmcode);
             common::delete_folder(final_z_path);
@@ -504,8 +504,8 @@ namespace eka2l1::loader {
         return device_installation_none;
     }
 
-    device_installation_error install_archive(device_manager *dvcmngr, const std::string &path,
-        const std::string &rom_resident_path, const std::string &drives_z_resident_path,
+    device_installation_error install_archive(device_manager *dvcmngr, const host_path &path,
+        const host_path &rom_resident_path, const host_path &drives_z_resident_path,
         const bool isolate_drives, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         if (!common::exists(path)) {
             return device_installation_not_exist;

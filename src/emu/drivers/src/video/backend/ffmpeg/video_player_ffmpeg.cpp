@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <drivers/video/backend/ffmpeg/video_player_ffmpeg.h>
 #include <drivers/audio/audio.h>
 
@@ -188,7 +189,7 @@ namespace eka2l1::drivers {
         return true;
     }
 
-    bool video_player_ffmpeg::open_file(const std::string &path) {
+    bool video_player_ffmpeg::open_file(const host_path &path) {
         if (format_ctx_) {
             LOG_ERROR(DRIVER_VID, "Another video is still in play queue, can't open another one!");
             return false;

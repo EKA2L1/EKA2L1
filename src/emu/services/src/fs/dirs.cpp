@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <services/fs/fs.h>
 #include <services/fs/std.h>
 
@@ -36,7 +37,7 @@
 
 namespace eka2l1 {
     void fs_server_client::open_dir(service::ipc_context *ctx) {
-        auto dir = ctx->get_argument_value<std::u16string>(0);
+        auto dir = ctx->get_path_argument(0);
         std::optional<epoc::uid_type> utype = ctx->get_argument_data_from_descriptor<epoc::uid_type>(2);
 
         if (!dir.has_value()) {
@@ -44,7 +45,7 @@ namespace eka2l1 {
             return;
         }
 
-        std::u16string path_relative = ss_path;
+        guest_path path_relative(ss_path);
         kernel_system *kern = ctx->sys->get_kernel_system();
 
         if (kern->is_eka1()) {
@@ -55,13 +56,13 @@ namespace eka2l1 {
             config::app_setting *setting = settings->get_setting(ctx->msg->own_thr->owning_process()->get_uid());
 
             if (setting && setting->t9_bypass_hack) {
-                if ((common::compare_ignore_case(dir.value(), u"*.dll") == 0) || ((common::compare_ignore_case(dir.value(), u"*.rsc") == 0))) {
-                    path_relative = T9LDB_PATH_FULL;
+                if ((dir.value() == u"*.dll") || ((dir.value() == u"*.rsc"))) {
+                    path_relative = guest_path(T9LDB_PATH_FULL);
                 }
             }
         }
 
-        dir.value() = get_full_symbian_path(path_relative, dir.value());
+        dir.value() = get_full_symbian_path(path_relative, eka2l1::guest_path{dir.value()});
         LOG_TRACE(SERVICE_EFSRV, "Opening directory: {}", common::ucs2_to_utf8(*dir));
 
         if (!dir || !utype.has_value()) {
@@ -103,7 +104,7 @@ namespace eka2l1 {
         fs_server *serv = server<fs_server>();
         fs_node *node = serv->make_new<fs_node>();
 
-        node->vfs_node = ctx->sys->get_io_system()->open_dir(*dir, utype.value(), attrib);
+        node->vfs_node = ctx->sys->get_io_system()->open_dir(eka2l1::guest_path{*dir}, utype.value(), attrib);
         node->serv = serv;
 
         if (!node->vfs_node) {

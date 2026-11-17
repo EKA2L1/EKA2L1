@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -39,7 +40,7 @@ namespace eka2l1::j2me {
         std::uint32_t id_;
         std::string name_;
         std::string author_;
-        std::string icon_path_;
+        host_path icon_path_;
         std::string version_;
         std::string title_;
         std::string original_title_;

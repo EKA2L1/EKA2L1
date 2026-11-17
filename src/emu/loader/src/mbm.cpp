@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <common/bitmap.h>
 #include <common/buffer.h>
 #include <common/log.h>
@@ -283,7 +284,7 @@ namespace eka2l1::loader {
         return true;
     }
 
-    bool mbm_file::save_bitmap_to_file(const std::size_t index, const char *name) {
+    bool mbm_file::save_bitmap_to_file(const std::size_t index, const host_path &name) {
         if (!is_header_loaded(index)) {
             return false;
         }

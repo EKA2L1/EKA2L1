@@ -19,6 +19,7 @@
  */
 #pragma once
 
+#include <common/path_types.h>
 #include <common/types.h>
 #include <package/registry.h>
 #include <package/common.h>
@@ -141,7 +142,7 @@ namespace eka2l1 {
              *
              * \returns Null when no installed package claims it.
              */
-            package::object *package_owning_file(const std::u16string &file_path);
+            package::object *package_owning_file(const guest_path &file_path);
 
             bool uninstall_package(package::object &pkg);
             bool remove_registeration(package::object &pkg);
@@ -153,7 +154,7 @@ namespace eka2l1 {
              * \param as_stub   The package is a stub describing software already in
              *                   the ROM, so it must not be reported as removable.
              */
-            package::installation_result install_package(const std::u16string &path, const drive_number drive, progress_changed_callback progress_cb = nullptr,
+            package::installation_result install_package(const host_path &path, const drive_number drive, progress_changed_callback progress_cb = nullptr,
                 cancel_requested_callback cancel_cb = nullptr, const bool silent = false, const bool as_stub = false);
         };
     }

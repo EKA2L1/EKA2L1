@@ -79,15 +79,15 @@ namespace eka2l1 {
     }
 
     static std::optional<app_icon_image> decode_mif_app_icon(io_system *io, const apa_app_registry &registry,
-        const std::string &cache_dir) {
-        auto file = io->open_file(registry.icon_file_path, READ_MODE | BIN_MODE);
+        const host_path &cache_dir) {
+        auto file = io->open_file(eka2l1::guest_path{registry.icon_file_path}, READ_MODE | BIN_MODE);
         if (!file) return std::nullopt;
-        const std::string cached_path = cache_dir.empty() ? std::string()
+        const host_path cached_path = cache_dir.empty() ? host_path()
             : add_path(cache_dir, fmt::format("debinarized_{:08X}.svg", registry.mandatory_info.uid));
         std::unique_ptr<lunasvg::Document> document;
         if (!cached_path.empty() && common::exists(cached_path)
-            && common::get_last_modifiy_since_ad(common::utf8_to_ucs2(cached_path)) >= file->last_modify_since_0ad()) {
-            document = lunasvg::Document::loadFromFile(cached_path);
+            && common::get_last_modifiy_since_ad(cached_path) >= file->last_modify_since_0ad()) {
+            document = lunasvg::Document::loadFromFile(cached_path.utf8());
         }
         if (!document) {
             ro_file_stream stream(file.get());
@@ -129,11 +129,11 @@ namespace eka2l1 {
         return icon;
     }
 
-    std::optional<app_icon_image> applist_server::get_host_icon(apa_app_registry &registry, const std::string &cache_root) {
+    std::optional<app_icon_image> applist_server::get_host_icon(apa_app_registry &registry, const host_path &cache_root) {
         auto *io = sys->get_io_system();
-        const auto extension = common::lowercase_ucs2_string(path_extension(registry.icon_file_path));
+        const auto extension = registry.icon_file_path.extension().lookup_key();
         if (extension == u".mif") {
-            std::string cache_dir = cache_root;
+            host_path cache_dir = cache_root;
             if (!cache_dir.empty()) {
                 if (auto *device = sys->get_device_manager()->get_current()) {
                     cache_dir = add_path(cache_dir, common::lowercase_string(device->firmware_code));
@@ -141,7 +141,7 @@ namespace eka2l1 {
             }
             if (auto icon = decode_mif_app_icon(io, registry, cache_dir)) return icon;
         } else if (extension == u".mbm") {
-            auto file = io->open_file(registry.icon_file_path, READ_MODE | BIN_MODE);
+            auto file = io->open_file(eka2l1::guest_path{registry.icon_file_path}, READ_MODE | BIN_MODE);
             if (file) {
                 ro_file_stream stream(file.get());
                 if (auto icon = decode_mbm_app_icon(fbsserv, stream, sys->get_symbian_version_use(),

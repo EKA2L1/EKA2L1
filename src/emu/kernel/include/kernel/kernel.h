@@ -19,6 +19,7 @@
  */
 #pragma once
 
+#include <common/path_types.h>
 #include <kernel/btrace.h>
 #include <kernel/change_notifier.h>
 #include <kernel/chunk.h>
@@ -382,7 +383,7 @@ namespace eka2l1 {
         address exception_handler_guard_;
 
         bool wiping_;
-        std::vector<std::pair<std::u16string, bool>> queued_boot_servers_;
+        std::vector<std::pair<guest_path, bool>> queued_boot_servers_;
         kernel::uid starting_boot_server_ = 0;
         std::vector<kernel::uid> processes_awaiting_boot_;
 
@@ -506,12 +507,12 @@ namespace eka2l1 {
         kernel::thread *crr_thread();
         kernel::process *crr_process();
 
-        process_ptr spawn_new_process(const std::u16string &path,
+        process_ptr spawn_new_process(const guest_path &path,
             const std::u16string &cmd_arg = u"", const kernel::uid promised_uid3 = 0,
             const std::uint32_t stack_size = 0, int *error = nullptr);
 
         // Starts a server the device's own startup sequence launches before any application, after the previous one settles.
-        bool start_boot_server(const std::u16string &path, const bool wait_for_start = true);
+        bool start_boot_server(const guest_path &path, const bool wait_for_start = true);
 
         // Runs the process once every boot server has rendezvoused or died; at once when none is pending.
         bool run_after_boot_servers(process_ptr pr);
@@ -525,7 +526,7 @@ namespace eka2l1 {
 
         codeseg_ptr pull_codeseg_by_ep(const address ep);
 
-        bool map_rom(const mem::vm_address addr, const std::string &path);
+        bool map_rom(const mem::vm_address addr, const host_path &path);
         void unmap_rom();
 
         bool is_address_in_rom(const address addr) const;

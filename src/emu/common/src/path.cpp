@@ -424,13 +424,13 @@ namespace eka2l1 {
         return path.rfind("content://", 0) == 0;
     }
 
-    static std::string runtime_resource_root;
+    static host_path runtime_resource_root;
 
-    void set_runtime_resource_root(const std::string &root) {
+    void set_runtime_resource_root(const host_path &root) {
         runtime_resource_root = root;
     }
 
-    std::string runtime_resource_path(const std::string &path) {
+    host_path runtime_resource_path(const host_path &path) {
         if (runtime_resource_root.empty() || path.empty()) {
             return path;
         }
@@ -441,7 +441,7 @@ namespace eka2l1 {
 
         // Some of these paths are written as "./<name>" for the working
         // directory case; drop the dot so the joined path stays readable.
-        std::string relative = path;
+        host_path relative = path;
         while ((relative.length() >= 2) && (relative[0] == '.') && is_separator(relative[1])) {
             relative.erase(0, relative.find_first_not_of("/\\", 1));
         }

@@ -225,8 +225,8 @@ namespace eka2l1 {
 
             root_dir_list root;
 
-            loader::rom_dir *burn_tree_find_dir(const std::string &vir_path);
-            std::optional<loader::rom_entry> burn_tree_find_entry(const std::string &vir_path);
+            loader::rom_dir *burn_tree_find_dir(const guest_path &vir_path);
+            std::optional<loader::rom_entry> burn_tree_find_entry(const guest_path &vir_path);
         };
 
         enum rom_defrag_error {
@@ -248,7 +248,7 @@ namespace eka2l1 {
          * @returns 0 on nothing happens, > 0 on success, < 0 on error.
          */
         int defrag_rom(common::ro_stream *stream, common::wo_stream *dest_stream);
-        bool dump_rom_files(common::ro_stream *stream, const std::string &dest_base, progress_changed_callback progress_cb = nullptr,
+        bool dump_rom_files(common::ro_stream *stream, const host_path &dest_base, progress_changed_callback progress_cb = nullptr,
             cancel_requested_callback cancel_cb = nullptr);
     }
 }

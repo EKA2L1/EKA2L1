@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <system/devices.h>
 #include <system/installation/rpkg.h>
 #include <system/software.h>
@@ -41,7 +42,7 @@
 #include <vector>
 
 namespace eka2l1::loader {
-    bool should_install_requires_additional_rpkg(const std::string &path) {
+    bool should_install_requires_additional_rpkg(const host_path &path) {
         common::ro_std_file_stream rom_file_stream(path, true);
 
         if (!rom_file_stream.valid()) {
@@ -59,7 +60,7 @@ namespace eka2l1::loader {
 
         // A core-only EKA1 dump leaves the device naming files in ROFS.
         for (const std::string &naming_file : device_naming_files()) {
-            if (rom_parse->burn_tree_find_entry("z:\\" + naming_file).has_value()) {
+            if (rom_parse->burn_tree_find_entry(guest_path::from_utf8("z:\\" + naming_file)).has_value()) {
                 return false;
             }
         }
@@ -67,14 +68,13 @@ namespace eka2l1::loader {
         return true;
     }
 
-    static bool extract_file(const std::string &devices_rom_path, FILE *parent, rpkg_entry &ent, const std::size_t total,
-        std::unordered_set<std::string> &created_directories, progress_changed_callback progress_cb,
+    static bool extract_file(const host_path &devices_rom_path, FILE *parent, rpkg_entry &ent, const std::size_t total,
+        std::unordered_set<host_path> &created_directories, progress_changed_callback progress_cb,
         cancel_requested_callback cancel_cb) {
         const std::string file_full_relative = common::ucs2_to_utf8(ent.path.substr(3));
-        const std::string real_path = common::resolve_case_insensitive_path(
-            add_path(devices_rom_path, "/temp/"), file_full_relative);
+        const host_path real_path = eka2l1::host_path{add_path(devices_rom_path, "/temp/")}.resolve_guest(eka2l1::guest_path::from_utf8(file_full_relative));
 
-        std::string dir = eka2l1::file_directory(real_path);
+        host_path dir = real_path.parent();
         const bool directory_is_cached = created_directories.find(dir) != created_directories.end();
         if (!directory_is_cached) {
             common::create_directories(dir);
@@ -127,8 +127,8 @@ namespace eka2l1::loader {
         return !failed;
     }
 
-    device_installation_error install_rom(device_manager *dvcmngr, const std::string &path, const std::string &rom_resident_path, const std::string &drives_z_resident_path, const bool isolate_drives, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
-        const std::string temp_z_path = eka2l1::add_path(drives_z_resident_path, "temp\\");
+    device_installation_error install_rom(device_manager *dvcmngr, const host_path &path, const host_path &rom_resident_path, const host_path &drives_z_resident_path, const bool isolate_drives, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
+        const host_path temp_z_path(eka2l1::add_path(drives_z_resident_path, "temp\\"));
         common::ro_std_file_stream rom_file_stream(path, true);
         progress_changed_callback wrapped_cb_1 = nullptr;
 
@@ -176,13 +176,13 @@ namespace eka2l1::loader {
         auto firmcode_low = common::lowercase_string(firmcode);
 
         // Rename temp folder to its product code
-        eka2l1::common::move_file(temp_z_path, add_path(drives_z_resident_path, firmcode_low + "\\"));
+        eka2l1::common::move_file(temp_z_path, eka2l1::host_path{add_path(drives_z_resident_path, firmcode_low + "\\")});
         const add_device_error err_adddvc = dvcmngr->add_new_device(firmcode, model, manufacturer, ver,
             machine_uid, isolate_drives);
 
         if (err_adddvc != add_device_none) {
             LOG_ERROR(SYSTEM, "This device ({}) failed to be install, revert all changes", firmcode);
-            common::delete_folder(add_path(drives_z_resident_path, firmcode_low + "\\"));
+            common::delete_folder(eka2l1::host_path{add_path(drives_z_resident_path, firmcode_low + "\\")});
 
             return device_installation_general_failure;
         }
@@ -191,10 +191,10 @@ namespace eka2l1::loader {
             progress_cb(2, 3);
         }
 
-        const std::string rom_path = add_path(rom_resident_path, firmcode_low + "\\");
+        const host_path rom_path(add_path(rom_resident_path, firmcode_low + "\\"));
         common::create_directories(rom_path);
 
-        eka2l1::common::copy_file(path, eka2l1::add_path(rom_path, "SYM.ROM"), true);
+        eka2l1::common::copy_file(path, eka2l1::host_path{eka2l1::add_path(rom_path, "SYM.ROM")}, true);
 
         if (progress_cb) {
             progress_cb(3, 3);
@@ -203,8 +203,8 @@ namespace eka2l1::loader {
         return device_installation_none;
     }
 
-    device_installation_error install_rom_with_optional_rpkg(device_manager *dvcmngr, const std::string &rom_path,
-        const std::string &rpkg_path, const std::string &rom_resident_path, const std::string &drives_z_resident_path,
+    device_installation_error install_rom_with_optional_rpkg(device_manager *dvcmngr, const host_path &rom_path,
+        const host_path &rpkg_path, const host_path &rom_resident_path, const host_path &drives_z_resident_path,
         const bool isolate_drives, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         if (!common::exists(rom_path)) {
             return device_installation_not_exist;
@@ -238,10 +238,10 @@ namespace eka2l1::loader {
 
         // Past the point of no return: the device is in devices.yml and its drive Z is populated, so a
         // cancel arriving now is ignored rather than left half-installed.
-        const std::string rom_directory = add_path(rom_resident_path, common::lowercase_string(firmware_code) + "\\");
+        const host_path rom_directory(add_path(rom_resident_path, common::lowercase_string(firmware_code) + "\\"));
         common::create_directories(rom_directory);
 
-        if (!common::copy_file(rom_path, add_path(rom_directory, "SYM.ROM"), true)) {
+        if (!common::copy_file(rom_path, eka2l1::host_path{add_path(rom_directory, "SYM.ROM")}, true)) {
             return device_installation_rom_fail_to_copy;
         }
 
@@ -252,9 +252,9 @@ namespace eka2l1::loader {
         return device_installation_none;
     }
 
-    device_installation_error install_rpkg(device_manager *dvcmngr, const std::string &path, const std::string &devices_rom_path,
+    device_installation_error install_rpkg(device_manager *dvcmngr, const host_path &path, const host_path &devices_rom_path,
         std::string &firmware_code_ret, const bool isolate_drives, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
-        FILE *f = common::open_c_file(path.data(), "rb");
+        FILE *f = common::open_c_file(path, "rb");
 
         if (!f) {
             return device_installation_not_exist;
@@ -317,7 +317,7 @@ namespace eka2l1::loader {
         // An RPKG usually contains many files in the same directory. Keep this
         // cache local to one extraction so repeated entries do not stat the same
         // directory hierarchy again, without retaining stale filesystem state.
-        std::unordered_set<std::string> created_directories;
+        std::unordered_set<host_path> created_directories;
         std::uint32_t extracted_entries = 0;
         bool extraction_failed = false;
 
@@ -362,7 +362,7 @@ namespace eka2l1::loader {
 
         fclose(f);
 
-        const std::string folder_extracted = add_path(devices_rom_path, "temp\\");
+        const host_path folder_extracted(add_path(devices_rom_path, "temp\\"));
 
         if (cancel_cb && cancel_cb()) {
             common::delete_folder(folder_extracted);
@@ -403,12 +403,12 @@ namespace eka2l1::loader {
         firmware_code_ret = firmcode_low;
 
         // Rename temp folder to its product code
-        eka2l1::common::move_file(folder_extracted, add_path(devices_rom_path, firmcode_low + "\\"));
+        eka2l1::common::move_file(folder_extracted, eka2l1::host_path{add_path(devices_rom_path, firmcode_low + "\\")});
         const add_device_error err_adddvc = dvcmngr->add_new_device(firmcode, model, manufacturer, ver, header.machine_uid, isolate_drives);
 
         if (err_adddvc != add_device_none) {
             LOG_ERROR(SYSTEM, "This device ({}) failed to be install, revert all changes", firmcode);
-            common::delete_folder(add_path(devices_rom_path, firmcode_low + "\\"));
+            common::delete_folder(eka2l1::host_path{add_path(devices_rom_path, firmcode_low + "\\")});
 
             return device_installation_general_failure;
         }

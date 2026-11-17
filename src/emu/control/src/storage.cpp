@@ -26,10 +26,10 @@ namespace eka2l1::control {
         require(bool(file), "not_found", "cannot read " + path.string(), 404);
         return { std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>() };
     }
-    response host_files(const request &req, const std::string &resolved) {
+    response host_files(const request &req, const host_path &resolved) {
         const auto raw = req.param("path");
         require(!raw.empty(), "bad_request", "path query parameter required", 400);
-        auto path = fs::u8path(resolved);
+        auto path = fs::u8path(resolved.utf8());
         if (req.method == "GET") {
             require(fs::exists(path), "not_found", "file does not exist", 404);
             if (fs::is_directory(path)) {
@@ -91,8 +91,8 @@ namespace eka2l1::control {
         }
         throw api_error(404, "not_found", "unknown files operation");
     }
-    response host_log(const request &req, const std::string &path) {
-        std::ifstream file(fs::u8path(path), std::ios::binary);
+    response host_log(const request &req, const host_path &path) {
+        std::ifstream file(fs::u8path(path.utf8()), std::ios::binary);
         std::uint64_t end = 0;
         if (file) {
             file.seekg(0, std::ios::end);

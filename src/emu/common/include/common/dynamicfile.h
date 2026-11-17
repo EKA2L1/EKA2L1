@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <fstream>
 #include <string>
 
@@ -38,7 +39,7 @@ namespace eka2l1::common {
         int ucs2_;
 
     public:
-        explicit dynamic_ifile(const std::string &name);
+        explicit dynamic_ifile(const host_path &name);
 
         /**
          * \brief Read a line to an 8-bit string

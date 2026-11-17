@@ -28,7 +28,7 @@
 
 namespace eka2l1::kernel {
     guomen_process::guomen_process(kernel_system *kern, memory_system *mem, const std::u16string &cmd_args)
-        : process(kern, mem, "Door crossing process", kernel::BRIDAGED_EXECUTABLE_NAME, cmd_args, true) {
+        : process(kern, mem, "Door crossing process", guest_path(kernel::BRIDAGED_EXECUTABLE_NAME), cmd_args, true) {
         // Create a stub thread with minimal stack and heap size
         primary_thread
             = kern->create<kernel::thread>(

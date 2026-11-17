@@ -47,7 +47,7 @@ namespace {
     }
 
     std::shared_ptr<spdlog::logger> make_logger(const std::string &path, const std::size_t max_lines) {
-        auto logger = std::make_shared<spdlog::logger>(path, log::make_capped_file_sink(path, max_lines));
+        auto logger = std::make_shared<spdlog::logger>(path, log::make_capped_file_sink(eka2l1::host_path(path), max_lines));
         logger->set_pattern("%v");
         logger->set_level(spdlog::level::trace);
         logger->flush_on(spdlog::level::trace);

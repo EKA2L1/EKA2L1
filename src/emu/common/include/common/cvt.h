@@ -48,3 +48,11 @@ namespace eka2l1 {
         }
     }
 }
+
+#include <common/path_types.h>
+namespace eka2l1::common {
+    inline std::string ucs2_to_utf8(const guest_path &value) { return value.utf8(); }
+    inline std::string ucs2_to_utf8(const host_path &value) { return value.utf8(); }
+    inline std::u16string utf8_to_ucs2(const host_path &value) { return value.utf16(); }
+    inline std::u16string utf8_to_ucs2(const guest_path &value) { return value.utf16(); }
+}

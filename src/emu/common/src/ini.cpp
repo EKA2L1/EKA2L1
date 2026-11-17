@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <common/algorithm.h>
 #include <common/cvt.h>
 #include <common/dynamicfile.h>
@@ -366,7 +367,7 @@ namespace eka2l1::common {
         }
     };
 
-    int ini_file::load(const char *path, bool ignore_spaces) {
+    int ini_file::load(const host_path &path, bool ignore_spaces) {
         common::dynamic_ifile ifile(path);
 
         if (ifile.fail()) {

@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <common/configure.h>
 #include <common/types.h>
 #include <common/watcher.h>
@@ -219,8 +220,8 @@ namespace eka2l1::manager {
         ~scripts();
 
 #ifdef ENABLE_SCRIPTING_LUA
-        bool import_module(const std::string &path);
-        void unload_module(const std::string &path);
+        bool import_module(const host_path &path);
+        void unload_module(const host_path &path);
 #endif
         void import_all_modules();
 

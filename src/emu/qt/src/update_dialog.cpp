@@ -445,7 +445,7 @@ void update_dialog::on_new_update_download_finished(QNetworkReply *reply) {
 #if EKA2L1_PLATFORM(WIN32)
         std::vector<eka2l1::common::archive_entry_info> entries;
 
-        if (!eka2l1::common::list_archive(UPDATE_FILE_STORE_PATH, entries)) {
+        if (!eka2l1::common::list_archive(eka2l1::host_path{UPDATE_FILE_STORE_PATH}, entries)) {
             update_encounter_error(tr("Downloaded update is not in zip format!"));
             return;
         }

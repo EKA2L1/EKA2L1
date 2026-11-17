@@ -19,6 +19,7 @@
  */
 
 #pragma once
+#include <common/path_types.h>
 
 #include <cstdint>
 #include <string>
@@ -144,6 +145,18 @@ namespace eka2l1::common {
 
         void absorb(std::string &dat);
         void absorb(std::u16string &dat);
+
+        void absorb(host_path &path) {
+            auto text = path.utf8();
+            absorb(text);
+            if (get_seri_mode() == SERI_MODE_READ) path = host_path(std::move(text));
+        }
+
+        void absorb(guest_path &path) {
+            auto text = path.utf16();
+            absorb(text);
+            if (get_seri_mode() == SERI_MODE_READ) path = guest_path(std::move(text));
+        }
 
         template <typename T>
         void absorb_container(std::vector<T> &c) {

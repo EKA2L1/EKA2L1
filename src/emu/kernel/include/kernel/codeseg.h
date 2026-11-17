@@ -19,6 +19,7 @@
  */
 
 #pragma once
+#include <common/path_types.h>
 
 #include <common/linked.h>
 #include <kernel/kernel_obj.h>
@@ -55,7 +56,7 @@ namespace eka2l1::kernel {
     }
 
     struct codeseg_create_info {
-        std::u16string full_path;
+        guest_path full_path;
 
         std::uint32_t uids[3];
         std::uint32_t code_base = 0;
@@ -145,7 +146,7 @@ namespace eka2l1::kernel {
         std::uint32_t exception_descriptor;
 
         // Full path (if there is)
-        std::u16string full_path;
+        guest_path full_path;
 
         std::vector<std::uint32_t> export_table;
         std::vector<codeseg_dependency_info> dependencies;
@@ -237,11 +238,11 @@ namespace eka2l1::kernel {
 
         bool eligible_for_codeseg_reuse();
 
-        void set_full_path(const std::u16string &seg_full_path) {
+        void set_full_path(const guest_path &seg_full_path) {
             full_path = seg_full_path;
         }
 
-        std::u16string get_full_path() {
+        guest_path get_full_path() {
             return full_path;
         }
 

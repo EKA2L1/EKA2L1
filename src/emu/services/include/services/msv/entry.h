@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <services/msv/common.h>
 #include <services/msv/cache.h>
 
@@ -39,14 +40,14 @@ namespace eka2l1::epoc::msv {
         MSV_FOLDER_TYPE_SERVICE = 1 << 1
     };
 
-    std::u16string get_folder_name(const std::uint32_t id, const msv_folder_type type);
+    guest_path get_folder_name(const std::uint32_t id, const msv_folder_type type);
 
     struct entry_indexer {
     protected:
         io_system *io_;
         drive_number rom_drv_;
         language preferred_lang_;
-        std::u16string msg_dir_;
+        guest_path msg_dir_;
 
         common::roundabout folders_;
         entry root_entry_;
@@ -58,7 +59,7 @@ namespace eka2l1::epoc::msv {
             std::vector<std::uint32_t> &children_ids);
 
     public:
-        explicit entry_indexer(io_system *io, const std::u16string &msg_folder, const language preferred_lang);
+        explicit entry_indexer(io_system *io, const guest_path &msg_folder, const language preferred_lang);
         virtual ~entry_indexer();
 
         virtual entry *add_entry(entry &ent);
@@ -69,10 +70,10 @@ namespace eka2l1::epoc::msv {
 
         virtual std::vector<entry *> get_entries_by_parent(const std::uint32_t parent_id) = 0;
 
-        std::optional<std::u16string> get_entry_data_directory(const std::uint32_t id, const std::uint32_t type,
+        std::optional<guest_path> get_entry_data_directory(const std::uint32_t id, const std::uint32_t type,
             const std::uint32_t owning_service);
 
-        std::optional<std::u16string> get_entry_data_file(entry *ent);
+        std::optional<guest_path> get_entry_data_file(entry *ent);
     };
 
     struct sql_entry_indexer: public entry_indexer {
@@ -104,7 +105,7 @@ namespace eka2l1::epoc::msv {
         void change_all_children_to_new_folder(const std::uint32_t visible_folder, const std::uint32_t parent_id, const std::uint32_t new_folder);
 
     public:
-        explicit sql_entry_indexer(io_system *io, const std::u16string &msg_folder, const language preferred_lang);
+        explicit sql_entry_indexer(io_system *io, const guest_path &msg_folder, const language preferred_lang);
         ~sql_entry_indexer() override;
         
         entry *add_entry(entry &ent) override;

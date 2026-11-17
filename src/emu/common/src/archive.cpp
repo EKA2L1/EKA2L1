@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <common/algorithm.h>
 #include <common/archive.h>
 #include <common/buffer.h>
@@ -43,7 +44,7 @@ namespace eka2l1::common {
 
     using archive_ptr = std::unique_ptr<struct archive, archive_closer>;
 
-    static archive_ptr open_archive(const std::string &path) {
+    static archive_ptr open_archive(const host_path &path) {
         archive_ptr reader(archive_read_new());
 
         if (!reader) {
@@ -93,7 +94,7 @@ namespace eka2l1::common {
         return info;
     }
 
-    bool list_archive(const std::string &path, std::vector<archive_entry_info> &entries_out) {
+    bool list_archive(const host_path &path, std::vector<archive_entry_info> &entries_out) {
         archive_ptr reader = open_archive(path);
 
         if (!reader) {
@@ -116,8 +117,8 @@ namespace eka2l1::common {
         return true;
     }
 
-    static bool write_entry_to_file(struct archive *reader, const std::string &dest_path) {
-        const std::string dir = eka2l1::file_directory(dest_path);
+    static bool write_entry_to_file(struct archive *reader, const host_path &dest_path) {
+        const host_path dir = dest_path.parent();
 
         if (!dir.empty()) {
             common::create_directories(dir);
@@ -156,7 +157,7 @@ namespace eka2l1::common {
         }
     }
 
-    bool read_archive_entry(const std::string &path, const std::string &entry_path,
+    bool read_archive_entry(const host_path &path, const std::string &entry_path,
         std::vector<char> &content_out, const std::uint64_t max_size) {
         archive_ptr reader = open_archive(path);
 
@@ -210,8 +211,8 @@ namespace eka2l1::common {
         return false;
     }
 
-    bool extract_archive(const std::string &path,
-        const std::function<std::string(const archive_entry_info &)> &choose_destination,
+    bool extract_archive(const host_path &path,
+        const std::function<host_path(const archive_entry_info &)> &choose_destination,
         progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         archive_ptr reader = open_archive(path);
 
@@ -243,7 +244,7 @@ namespace eka2l1::common {
             }
 
             const archive_entry_info info = describe_entry(entry);
-            const std::string dest = choose_destination(info);
+            const host_path dest = choose_destination(info);
 
             if (info.is_directory) {
                 if (!dest.empty()) {

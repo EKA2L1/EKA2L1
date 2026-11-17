@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <common/vecx.h>
 #include <common/container.h>
 #include <dispatch/def.h>
@@ -93,7 +94,7 @@ namespace eka2l1::dispatch {
         std::uint32_t current_volume() const;
         bool set_volume(const std::uint32_t vol);
 
-        bool open_file(const std::u16string &real_path);
+        bool open_file(const host_path &real_path);
         bool open_with_custom_stream(std::unique_ptr<common::ro_stream> &stream);
 
         void set_rotation(const int rotation);

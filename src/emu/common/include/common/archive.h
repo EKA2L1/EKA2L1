@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <common/types.h>
 
 #include <cstdint>
@@ -42,7 +43,7 @@ namespace eka2l1::common {
      *
      * @returns False if the file could not be opened or is not an archive we can read.
      */
-    bool list_archive(const std::string &path, std::vector<archive_entry_info> &entries_out);
+    bool list_archive(const host_path &path, std::vector<archive_entry_info> &entries_out);
 
     /**
      * @brief Unpack an archive, one entry at a time, letting the caller pick what lands where.
@@ -62,8 +63,8 @@ namespace eka2l1::common {
      *
      * @returns False on a read/decode error, a failed write, or a cancel.
      */
-    bool extract_archive(const std::string &path,
-        const std::function<std::string(const archive_entry_info &)> &choose_destination,
+    bool extract_archive(const host_path &path,
+        const std::function<host_path(const archive_entry_info &)> &choose_destination,
         progress_changed_callback progress_cb, cancel_requested_callback cancel_cb);
 
     /**
@@ -76,6 +77,6 @@ namespace eka2l1::common {
      *
      * @returns False if the archive could not be read, holds no such entry, or the entry is too big.
      */
-    bool read_archive_entry(const std::string &path, const std::string &entry_path,
+    bool read_archive_entry(const host_path &path, const std::string &entry_path,
         std::vector<char> &content_out, const std::uint64_t max_size = 0);
 }

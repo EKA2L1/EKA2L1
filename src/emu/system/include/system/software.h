@@ -19,16 +19,17 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <common/types.h>
 #include <string>
 #include <vector>
 
 namespace eka2l1::loader {
-    epocver determine_rpkg_symbian_version(const std::string &extracted_path);
-    bool determine_rpkg_product_info(const std::string &extracted_path, std::string &manufacturer, std::string &firmcode, std::string &model);
+    epocver determine_rpkg_symbian_version(const host_path &extracted_path);
+    bool determine_rpkg_product_info(const host_path &extracted_path, std::string &manufacturer, std::string &firmcode, std::string &model);
 
     // HALData::EMachineUid from the dump's hal.dll, or 0 if it has none.
-    std::uint32_t determine_rpkg_machine_uid(const std::string &extracted_path);
+    std::uint32_t determine_rpkg_machine_uid(const host_path &extracted_path);
 
     // Drive-Z-relative files that name the device; a dump with none of them cannot be installed.
     const std::vector<std::string> &device_naming_files();

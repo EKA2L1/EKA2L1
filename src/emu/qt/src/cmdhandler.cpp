@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <common/arghandler.h>
 #include <common/cvt.h>
 #include <common/path.h>
@@ -137,7 +138,7 @@ bool app_install_option_handler(eka2l1::common::arg_parser *parser, void *userda
     // and it's better to install in C since there is many apps required
     // to be in it and hardcoded the drive, just hardcode drive E here.
     // An installation_result, where success is 0
-    const int result = emu->symsys->install_package(common::utf8_to_ucs2(path), emu->symsys->get_default_install_drive());
+    const int result = emu->symsys->install_package(eka2l1::host_path{path}, emu->symsys->get_default_install_drive());
 
     if (result != package::installation_result_success) {
         *err = "Installation of SIS failed";
@@ -241,7 +242,7 @@ bool app_specifier_option_handler(eka2l1::common::arg_parser *parser, void *user
         *err += " doesn't exist";
     } else {
         if (eka2l1::has_root_dir(tokstr)) {
-            process_ptr pr = kern->spawn_new_process(common::utf8_to_ucs2(tokstr), common::utf8_to_ucs2(cmdlinestr));
+            process_ptr pr = kern->spawn_new_process(guest_path::from_utf8(tokstr), common::utf8_to_ucs2(cmdlinestr));
 
             if (!pr) {
                 LOG_ERROR(FRONTEND_CMDLINE, "Unable to launch process: {}", tokstr);
@@ -407,12 +408,12 @@ bool mount_card_option_handler(eka2l1::common::arg_parser *parser, void *userdat
 
     io->unmount(drive_e);
 
-    if (eka2l1::common::is_dir(path)) {
-        io->mount_physical_path(drive_e, drive_media::physical, io_attrib_removeable | (writable_sd ? 0 : io_attrib_write_protected), common::utf8_to_ucs2(path));
+    if (eka2l1::common::is_dir(eka2l1::host_path{path})) {
+        io->mount_physical_path(drive_e, drive_media::physical, io_attrib_removeable | (writable_sd ? 0 : io_attrib_write_protected), eka2l1::host_path{path});
     } else {
         std::cout << "Mounting in progress. Please wait..." << std::endl;
 
-        eka2l1::zip_mount_error error = emu->symsys->mount_game_zip(drive_e, drive_media::physical, path, (writable_sd ? 0 : io_attrib_write_protected));
+        eka2l1::zip_mount_error error = emu->symsys->mount_game_zip(drive_e, drive_media::physical, eka2l1::host_path{path}, (writable_sd ? 0 : io_attrib_write_protected));
         if (error != eka2l1::zip_mount_error_none) {
             switch (error) {
             case eka2l1::zip_mount_error_corrupt:
@@ -436,7 +437,7 @@ bool mount_card_option_handler(eka2l1::common::arg_parser *parser, void *userdat
         }
     }
 
-    std::optional<std::string> mmc_id_found = get_mmc_id_from_path(path);
+    std::optional<std::string> mmc_id_found = get_mmc_id_from_path(eka2l1::host_path(path));
     if (mmc_id_found.has_value()) {
         emu->conf.current_mmc_id = mmc_id_found.value();
     }
@@ -481,7 +482,7 @@ bool keybind_profile_option_handler(eka2l1::common::arg_parser *parser, void *us
     }
 
     // Check if profile exists
-    const std::string profile_path = fmt::format("bindings//{}.yml", profile);
+    const eka2l1::host_path profile_path(fmt::format("bindings//{}.yml", profile));
     if (!eka2l1::common::exists(profile_path)) {
         *err = "No profile with name {} exists";
         return true;
@@ -553,7 +554,7 @@ bool run_jar_option_handler(eka2l1::common::arg_parser *parser, void *userdata, 
 
     // Installing again an installed JAR only refreshes its copy, so it keeps its id
     j2me::app_entry entry;
-    const j2me::install_error result = j2me::install(emu->symsys.get(), path, entry);
+    const j2me::install_error result = j2me::install(emu->symsys.get(), eka2l1::host_path(path), entry);
 
     if (result != j2me::INSTALL_ERROR_JAR_SUCCESS) {
         switch (result) {

@@ -26,7 +26,7 @@ void launch_process_dialog::on_launch_button_clicked() {
     QString arg = ui_->arguments_line_edit->text();
 
     kern_->lock();
-    eka2l1::kernel::process *process_ptr = kern_->spawn_new_process(launch_path.toStdU16String(), arg.toStdU16String());
+    eka2l1::kernel::process *process_ptr = kern_->spawn_new_process(eka2l1::guest_path(launch_path.toStdU16String()), arg.toStdU16String());
 
     if (!process_ptr) {
         kern_->unlock();

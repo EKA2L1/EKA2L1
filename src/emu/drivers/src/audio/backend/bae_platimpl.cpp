@@ -183,7 +183,7 @@ void BAE_CopyFileNameNative(void *fileNameSource, void *fileNameDest) {
 }
 
 long BAE_FileCreate(void *fileName) {
-    FILE *f = eka2l1::common::open_c_file(reinterpret_cast<const char*>(fileName), "wb");
+    FILE *f = eka2l1::common::open_c_file(eka2l1::host_path{reinterpret_cast<const char*>(fileName)}, "wb");
     if (!f) {
         return -1;
     }
@@ -193,7 +193,7 @@ long BAE_FileCreate(void *fileName) {
 }
 
 long BAE_FileDelete(void *fileName) {
-    return (eka2l1::common::remove(reinterpret_cast<const char*>(fileName)) ? 0 : -1);
+    return (eka2l1::common::remove(eka2l1::host_path{reinterpret_cast<const char*>(fileName)}) ? 0 : -1);
 }
 
 long BAE_FileOpenForRead(void *fileName) {

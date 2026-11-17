@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <common/cvt.h>
 #include <common/platform.h>
 #include <common/dynamicfile.h>
@@ -27,15 +28,15 @@
 #endif
 
 namespace eka2l1::common {
-    dynamic_ifile::dynamic_ifile(const std::string &name)
+    dynamic_ifile::dynamic_ifile(const host_path &name)
 #if EKA2L1_PLATFORM(WIN32)
 #if defined(_MSC_VER)
-        : stream_(common::utf8_to_wstr(name), std::ios::binary) {
+        : stream_(common::utf8_to_wstr(name.utf8()), std::ios::binary) {
 #else
-        : stream_(std::filesystem::path(common::utf8_to_wstr(name)), std::ios::binary) {
+        : stream_(std::filesystem::path(common::utf8_to_wstr(name.utf8())), std::ios::binary) {
 #endif
 #else
-        : stream_(name, std::ios::binary) {
+        : stream_(name.utf8(), std::ios::binary) {
 #endif
         // Read the POM
         std::uint16_t pom = 0;

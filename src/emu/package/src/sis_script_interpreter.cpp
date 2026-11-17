@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <common/algorithm.h>
 #include <common/buffer.h>
 #include <common/cvt.h>
@@ -44,14 +45,14 @@
 
 namespace eka2l1 {
     namespace loader {
-        std::string get_install_path(const std::u16string &pseudo_path, drive_number drv) {
-            std::u16string raw_path = pseudo_path;
+        guest_path get_install_path(const guest_path &pseudo_path, drive_number drv) {
+            guest_path raw_path(pseudo_path);
 
             if (raw_path.substr(0, 2) == u"!:") {
-                raw_path[0] = drive_to_char16(drv);
+                raw_path.replace(0, 1, std::u16string(1, drive_to_char16(drv)));
             }
 
-            return common::ucs2_to_utf8(raw_path);
+            return raw_path;
         }
 
         bool ss_interpreter::appprop(sis_uid uid, sis_property prop) {
@@ -120,8 +121,8 @@ namespace eka2l1 {
 
         // Assuming this file is small since it's stored in std::vector
         // Directly write this
-        void extract_file_with_buf(const std::string &path, std::vector<uint8_t> &data) {
-            std::string rp = eka2l1::file_directory(path);
+        void extract_file_with_buf(const host_path &path, std::vector<uint8_t> &data) {
+            host_path rp = path.parent();
             common::create_directories(rp);
 
             LOG_INFO(PACKAGE, "Write to: {}", path);
@@ -130,8 +131,8 @@ namespace eka2l1 {
             stream.write(data.data(), data.size());
         }
 
-        bool ss_interpreter::extract_file(const std::string &path, const uint32_t idx, uint16_t crr_blck_idx) {
-            std::string rp = eka2l1::file_directory(path);
+        bool ss_interpreter::extract_file(const host_path &path, const uint32_t idx, uint16_t crr_blck_idx) {
+            host_path rp = path.parent();
             common::create_directories(rp);
 
             // Delete the file, starts over
@@ -380,7 +381,7 @@ namespace eka2l1 {
             }
 
             case ss_expr_op::EFuncExists: {
-                pass = io->exist(expr->val.unicode_string);
+                pass = io->exist(eka2l1::guest_path{expr->val.unicode_string});
                 break;
             }
 
@@ -396,11 +397,11 @@ namespace eka2l1 {
 
         // Point a file description's target at the drive the package installs on.
         // A leading '!' stands for the drive the user picked.
-        static std::u16string resolve_file_target(const std::u16string &target, const drive_number drive) {
-            std::u16string file_path = target;
+        static guest_path resolve_file_target(const std::u16string &target, const drive_number drive) {
+            guest_path file_path(target);
 
             if (!file_path.empty() && (file_path[0] == '!')) {
-                file_path[0] = drive_to_char16(drive);
+                file_path.replace(0, 1, std::u16string(1, drive_to_char16(drive)));
             }
 
             return file_path;
@@ -409,8 +410,8 @@ namespace eka2l1 {
         // Secure ID of an installed executable, 0 when the file is not one, or is
         // not on the drive yet. For an app this is its UID3, which is what lets a
         // package be traced back to the app it installs.
-        static epoc::uid read_executable_sid(io_system *io, const std::u16string &target) {
-            symfile exe_file = io->open_file(target, READ_MODE | BIN_MODE);
+        static epoc::uid read_executable_sid(io_system *io, const guest_path &target) {
+            symfile exe_file = io->open_file(eka2l1::guest_path{target}, READ_MODE | BIN_MODE);
             if (!exe_file) {
                 return 0;
             }
@@ -435,7 +436,7 @@ namespace eka2l1 {
 
         // Record a file the package owns, so that uninstalling the package deletes
         // it again. Folds the file's drive into the package's drive mask too.
-        static void register_file_description(io_system *io, const loader::sis_file_des *file_des, const std::u16string &file_path,
+        static void register_file_description(io_system *io, const loader::sis_file_des *file_des, const guest_path &file_path,
             package::object &parent) {
             if (!file_path.empty() && (file_path[0] != '!')) {
                 // Not every target starts with a drive letter -- FILENULL and
@@ -580,13 +581,13 @@ namespace eka2l1 {
             // Process file
             for (auto &wrap_file : install_block.files.fields) {
                 sis_file_des *file = reinterpret_cast<sis_file_des *>(wrap_file.get());
-                const std::u16string file_target = resolve_file_target(file->target.unicode_string, install_drive);
+                const guest_path file_target = resolve_file_target(file->target.unicode_string, install_drive);
 
                 if (file->target.unicode_string.length() > 0) {
                     // A package does not get to install to a path it has no business
                     // naming. See is_valid_target_path for what that means, and why
                     // the entry is skipped rather than the install failed.
-                    if (!package::is_valid_target_path(file_target)) {
+                    if (!package::is_valid_target_path(file_target.utf16())) {
                         LOG_ERROR(PACKAGE, "SIS names an invalid install target, skipping it: {}",
                             common::ucs2_to_utf8(file->target.unicode_string));
                         continue;
@@ -658,7 +659,7 @@ namespace eka2l1 {
                         if (!install_data->data_units.fields.empty()) {
                             extract_target_info info;
                             if (!file_target.empty()) {
-                                info.install_path_ = get_install_path(file->target.unicode_string, install_drive);
+                                info.install_path_ = get_install_path(guest_path(file->target.unicode_string), install_drive);
                             }
 
                             info.data_unit_block_index_ = file->idx;
@@ -726,7 +727,7 @@ namespace eka2l1 {
                     continue;
                 }
 
-                const std::u16string extension = common::lowercase_ucs2_string(eka2l1::path_extension(desc.target));
+                const guest_path extension = desc.target.extension();
                 if ((extension != u".exe") && (extension != u".dll")) {
                     continue;
                 }
@@ -785,8 +786,8 @@ namespace eka2l1 {
                     extract_target_info &target = extract_targets[n];
 
                     if (!target.install_path_.empty()) {
-                        const std::optional<std::u16string> raw_path_opt = io->get_raw_path(
-                            common::utf8_to_ucs2(target.install_path_));
+                        const std::optional<host_path> raw_path_opt = io->get_raw_path(
+                            eka2l1::guest_path{target.install_path_});
 
                         if (!raw_path_opt) {
                             LOG_ERROR(PACKAGE, "Unable to resolve SIS install target: {}", target.install_path_);
@@ -794,7 +795,7 @@ namespace eka2l1 {
                             break;
                         }
 
-                        target.file_path_ = common::ucs2_to_utf8(*raw_path_opt);
+                        target.file_path_ = *raw_path_opt;
                     }
 
                     if (!extract_file(target.file_path_, target.data_unit_block_index_, target.data_unit_index_)) {
@@ -802,17 +803,17 @@ namespace eka2l1 {
                         break;
                     }
 
-                    const std::string raw_path_lower = common::lowercase_string(target.file_path_);
+                    const std::string raw_path_lower = common::lowercase_string(target.file_path_.utf8());
                     if ((FOUND_STR(raw_path_lower.find(".sis")) || FOUND_STR(raw_path_lower.find(".sisx")))
-                        && loader::identify_sis_type(target.file_path_).has_value()) {
+                        && loader::identify_sis_type(eka2l1::host_path{target.file_path_}).has_value()) {
                         LOG_INFO(PACKAGE, "Detected an SmartInstaller SIS, path at: {}", target.file_path_);
-                        gathered_sis_paths.push_back(common::utf8_to_ucs2(target.file_path_));
+                        gathered_sis_paths.push_back(target.file_path_);
                     }
                 }
 
                 if (cancel_requested) {
                     for (std::size_t i = 0; i < n; i++) {
-                        common::remove(extract_targets[i].file_path_);
+                        common::remove(eka2l1::host_path{extract_targets[i].file_path_});
                     }
 
                     return nullptr;

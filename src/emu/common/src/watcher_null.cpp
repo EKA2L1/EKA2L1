@@ -26,7 +26,7 @@ namespace eka2l1::common {
     directory_watcher_impl::~directory_watcher_impl() {
     }
 
-    std::int32_t directory_watcher_impl::watch(const std::string &folder, directory_watcher_callback callback,
+    std::int32_t directory_watcher_impl::watch(const host_path &folder, directory_watcher_callback callback,
         void *callback_userdata, const std::uint32_t mask) {
         return 1;
     }

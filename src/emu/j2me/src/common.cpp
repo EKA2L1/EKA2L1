@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <j2me/common.h>
 #include <j2me/applist.h>
 
@@ -34,7 +35,7 @@
 #include <sstream>
 
 namespace eka2l1::j2me {
-    install_error create_jad_fake_link_from_jar(const std::string &jar_path, std::string &jad_content) {
+    install_error create_jad_fake_link_from_jar(const host_path &jar_path, std::string &jad_content) {
         static const char *MANIFEST_FILE_PATH = "META-INF/MANIFEST.MF";
 
         std::vector<char> manifest;
@@ -51,28 +52,28 @@ namespace eka2l1::j2me {
         return INSTALL_ERROR_JAR_SUCCESS;
     }
 
-    install_error extract_icon_to_store(const std::string &jar_path, const config::state &conf, const app_entry &entry, std::string &final_real_path) {
-        const std::string fname = eka2l1::filename(entry.icon_path_);
-        const std::string relative_path = fmt::format("j2me\\{}_{}_{}", common::lowercase_string(entry.name_),
-            common::lowercase_string(entry.version_), fname);
-        const std::string storing_file = eka2l1::add_path(conf.storage, relative_path);
+    install_error extract_icon_to_store(const host_path &jar_path, const config::state &conf, const app_entry &entry, const std::string &icon_entry, host_path &final_real_path) {
+        const std::string fname = eka2l1::filename(icon_entry);
+        const host_path relative_path(fmt::format("j2me\\{}_{}_{}", common::lowercase_string(entry.name_),
+            common::lowercase_string(entry.version_), fname));
+        const host_path storing_file(eka2l1::add_path(conf.storage, relative_path));
 
         std::vector<char> icon;
 
-        if (!common::read_archive_entry(jar_path, entry.icon_path_, icon)) {
-            LOG_WARN(J2ME, "Can't extract icon file with path {} for storing. Ignoring...", entry.icon_path_);
+        if (!common::read_archive_entry(jar_path, icon_entry, icon)) {
+            LOG_WARN(J2ME, "Can't extract icon file with path {} for storing. Ignoring...", icon_entry);
 
-            final_real_path = "";
+            final_real_path.clear();
             return INSTALL_ERROR_JAR_SUCCESS;
         }
 
-        common::create_directories(eka2l1::file_directory(storing_file));
+        common::create_directories(eka2l1::host_path{eka2l1::file_directory(storing_file)});
         common::wo_std_file_stream out_file(storing_file, true);
 
         if (!out_file.valid() || (out_file.write(icon.data(), icon.size()) != icon.size())) {
             LOG_WARN(J2ME, "Can't open storing icon file!");
 
-            final_real_path = "";
+            final_real_path.clear();
             return INSTALL_ERROR_JAR_SUCCESS;
         }
 
@@ -80,7 +81,7 @@ namespace eka2l1::j2me {
         return INSTALL_ERROR_JAR_SUCCESS;
     }
     
-    install_error get_app_entry(const std::string &jar_path, app_entry &entry, std::string &jad_content, int &midp_ver) {
+    install_error get_app_entry(const host_path &jar_path, app_entry &entry, std::string &jad_content, int &midp_ver, std::string &icon_entry) {
         install_error return_err = create_jad_fake_link_from_jar(jar_path, jad_content);
 
         if (return_err != INSTALL_ERROR_JAR_SUCCESS) {
@@ -113,7 +114,7 @@ namespace eka2l1::j2me {
                     entry.title_ = comps[0].strip().std_str();
                 }
                 if (comps.size() >= 2) {
-                    entry.icon_path_ = comps[1].strip().std_str();
+                    icon_entry = comps[1].strip().std_str();
                 }
             } else if (key == "MicroEdition-Profile") {
                 if (val == "MIDP-1.0") {
@@ -122,8 +123,8 @@ namespace eka2l1::j2me {
             }
         }
 
-        if (!entry.icon_path_.empty() && eka2l1::is_separator(entry.icon_path_[0])) {
-            entry.icon_path_.erase(entry.icon_path_.begin());
+        if (!icon_entry.empty() && eka2l1::is_separator(icon_entry[0])) {
+            icon_entry.erase(icon_entry.begin());
         }
 
         entry.original_title_ = entry.title_;

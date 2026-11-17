@@ -532,7 +532,7 @@ bool applist_widget::launch_from_widget_item(applist_widget_item *item, std::fun
 
 void applist_widget::add_registeration_item_j2me(const eka2l1::j2me::app_entry &entry) {
     QIcon display_icon;
-    QString icon_path_relocalized = QString::fromStdString(eka2l1::add_path(conf_.storage, entry.icon_path_));
+    QString icon_path_relocalized = QString::fromStdString(conf_.storage.join(entry.icon_path_).utf8());
 
     if (entry.icon_path_.empty() || !QDir().exists(icon_path_relocalized)) {
         display_icon = QIcon(":/assets/duck_tank.png");

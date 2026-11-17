@@ -27,7 +27,7 @@
 
 TEST_CASE("normal_spi_file_read", "spi_file") {
     const char *spi_name = "loaderassets//ecom-1-0.spi";
-    eka2l1::symfile f = eka2l1::physical_file_proxy(spi_name, READ_MODE | BIN_MODE);
+    eka2l1::symfile f = eka2l1::physical_file_proxy(eka2l1::host_path{spi_name}, READ_MODE | BIN_MODE);
 
     REQUIRE(f);
 

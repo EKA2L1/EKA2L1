@@ -20,7 +20,9 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <cstdint>
+#include <type_traits>
 #include <functional>
 #include <stdexcept>
 #include <string>
@@ -266,12 +268,29 @@ namespace eka2l1 {
      * changes for the frontends that do not set it. Set it before the graphics
      * and audio drivers are created; it is not meant to change afterwards.
      */
-    void set_runtime_resource_root(const std::string &root);
+    void set_runtime_resource_root(const host_path &root);
 
     /*! \brief Resolve a shipped-resource path against the runtime resource root.
      *
      * Returns the path unchanged when no root is set or when it is already
      * absolute (a user-picked MIDI bank, for instance).
      */
-    std::string runtime_resource_path(const std::string &path);
+    host_path runtime_resource_path(const host_path &path);
+
+    template <typename T> inline constexpr bool is_typed_path_v = std::is_same_v<T, host_path> || std::is_same_v<T, guest_path>;
+    template <typename P, std::enable_if_t<is_typed_path_v<P>, int> = 0> P filename(const P &value, bool = false) { return value.filename(); }
+    template <typename P, std::enable_if_t<is_typed_path_v<P>, int> = 0> P file_directory(const P &value, bool = false) { return value.parent(); }
+    template <typename P, std::enable_if_t<is_typed_path_v<P>, int> = 0> P path_extension(const P &value, bool = false) { return value.extension(); }
+    template <typename P, std::enable_if_t<is_typed_path_v<P>, int> = 0> P root_name(const P &value, bool = false) { return value.root_name(); }
+    template <typename P, std::enable_if_t<is_typed_path_v<P>, int> = 0> P root_dir(const P &value, bool = false) { return value.root_directory(); }
+    template <typename P, std::enable_if_t<is_typed_path_v<P>, int> = 0> P root_path(const P &value, bool = false) { return value.root_path(); }
+    template <typename P, std::enable_if_t<is_typed_path_v<P>, int> = 0> P relative_path(const P &value, bool = false) { return value.relative(); }
+    template <typename P, typename Text, std::enable_if_t<is_typed_path_v<P>, int> = 0> P add_path(const P &base, const Text &relative, bool = false) { return base.join(P(relative)); }
+    template <typename P, typename Text, std::enable_if_t<is_typed_path_v<P>, int> = 0> P absolute_path(const P &value, const Text &base, bool = false) { return value.absolute(P(base)); }
+    template <typename P, typename Text, std::enable_if_t<is_typed_path_v<P>, int> = 0> P replace_extension(const P &value, const Text &extension) { return value.with_extension(extension); }
+    template <typename P, std::enable_if_t<is_typed_path_v<P>, int> = 0> bool has_root_dir(const P &value, bool = false) { return !value.root_directory().empty(); }
+    template <typename P, std::enable_if_t<is_typed_path_v<P>, int> = 0> bool has_root_path(const P &value, bool = false) { return !value.root_path().empty(); }
+    template <typename P, std::enable_if_t<is_typed_path_v<P>, int> = 0> bool has_filename(const P &value, bool = false) { return !value.filename().empty(); }
+    template <typename P, std::enable_if_t<is_typed_path_v<P>, int> = 0> bool is_absolute(const P &value, const P &base, bool = false) { return value == value.absolute(base); }
+    template <typename P, std::enable_if_t<is_typed_path_v<P>, int> = 0> bool has_root_name(const P &value, bool = false) { return !value.root_name().empty(); }
 }

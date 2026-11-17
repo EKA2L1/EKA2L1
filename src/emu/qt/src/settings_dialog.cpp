@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include "ui_settings_dialog.h"
 #include <qt/settings_dialog.h>
 #include <qt/host_overrides.h>
@@ -237,10 +238,10 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     ui_->setupUi(this);
     ui_->settings_tab->addTab(new host_overrides_widget(configuration_, system_, this), tr("Hosts"));
 
-    std::string current_dir;
+    eka2l1::host_path current_dir;
     eka2l1::common::get_current_directory(current_dir);
 
-    const std::string storage_abs = eka2l1::absolute_path(configuration_.storage, current_dir);
+    const eka2l1::host_path storage_abs(eka2l1::absolute_path(configuration_.storage, current_dir));
 
     // Setup existing attributes in the configuration
     ui_->data_storage_path_edit->setText(QString::fromUtf8(storage_abs.c_str()));
@@ -268,8 +269,8 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     ui_->system_screen_buffer_sync_combo->setCurrentIndex(static_cast<int>(configuration_.screen_buffer_sync));
     ui_->system_friendly_phone_name_edit->setText(QString::fromStdString(configuration_.device_display_name));
     ui_->system_audio_midi_backend_combo->setCurrentIndex(static_cast<int>(configuration.midi_backend));
-    ui_->system_audio_midi_hsb_bank_edit->setText(QString::fromStdString(eka2l1::absolute_path(configuration.hsb_bank_path, current_dir)));
-    ui_->system_audio_midi_sf2_bank_edit->setText(QString::fromStdString(eka2l1::absolute_path(configuration.sf2_bank_path, current_dir)));
+    ui_->system_audio_midi_hsb_bank_edit->setText(QString::fromStdString(configuration.hsb_bank_path.absolute(current_dir).utf8()));
+    ui_->system_audio_midi_sf2_bank_edit->setText(QString::fromStdString(configuration.sf2_bank_path.absolute(current_dir).utf8()));
     ui_->system_enable_hw_gles1_checkbox->setChecked(configuration.enable_hw_gles1);
     ui_->app_config_hide_system_apps_checkbox->setChecked(configuration.hide_system_apps);
     ui_->log_filter_edit->setText(QString::fromStdString(configuration.log_filter));
@@ -277,7 +278,7 @@ settings_dialog::settings_dialog(QWidget *parent, eka2l1::system *sys, eka2l1::d
     int clamped_opacity = eka2l1::common::clamp<int>(0, 255, configuration_.background_image_opacity);
     ui_->emulator_display_bg_opacity_val_slider->setValue(clamped_opacity);
     ui_->emulator_display_bg_opacity_val_label->setText(QString("%1").arg(clamped_opacity));
-    ui_->emulator_display_bg_image_path_line_edit->setText(QString::fromStdString(configuration_.background_image));
+    ui_->emulator_display_bg_image_path_line_edit->setText(QString::fromStdString(configuration_.background_image.utf8()));
 
     QSettings settings;
     ui_->interface_status_bar_checkbox->setChecked(settings.value(STATUS_BAR_HIDDEN_SETTING_NAME, false).toBool());
@@ -459,11 +460,11 @@ void settings_dialog::on_status_bar_visibility_change(bool toggled) {
 }
 
 void settings_dialog::on_data_path_browse_clicked() {
-    QString path = QFileDialog::getExistingDirectory(this, tr("Choose the data folder"), QString::fromStdString(configuration_.storage));
+    QString path = QFileDialog::getExistingDirectory(this, tr("Choose the data folder"), QString::fromStdString(configuration_.storage.utf8()));
     if (!path.isEmpty()) {
         if (QMessageBox::question(this, tr("Relaunch needed"), tr("This change requires relaunching the emulator.<br>Do you want to continue?")) == QMessageBox::Yes) {
             ui_->data_storage_path_edit->setText(path);
-            configuration_.storage = path.toStdString();
+            configuration_.storage = eka2l1::host_path(path.toStdString());
             configuration_.serialize();
 
             emit relaunch();
@@ -724,7 +725,7 @@ void settings_dialog::refresh_keybind_buttons() {
 void settings_dialog::refresh_keybind_profiles() {
     ui_->control_profile_combobox->clear();
 
-    auto ite = eka2l1::common::make_directory_iterator("bindings\\", "");
+    auto ite = eka2l1::common::make_directory_iterator(eka2l1::host_path{"bindings\\"}, "");
     if (!ite) {
         return;
     }
@@ -733,7 +734,7 @@ void settings_dialog::refresh_keybind_profiles() {
 
     while (ite->next_entry(entry) >= 0) {
         if (eka2l1::path_extension(entry.name) == ".yml") {
-            const std::string final_name = eka2l1::replace_extension(entry.name, "");
+            const std::string final_name = entry.name.with_extension("").utf8();
             ui_->control_profile_combobox->addItem(QString::fromUtf8(final_name.c_str()));
 
             if (final_name == configuration_.current_keybind_profile) {
@@ -884,7 +885,7 @@ void settings_dialog::on_control_profile_add_clicked() {
         return;
     }
 
-    std::string path_to_file = eka2l1::add_path("bindings\\", fmt::format("{}.yml", result.toStdString()));
+    eka2l1::host_path path_to_file(eka2l1::add_path("bindings\\", fmt::format("{}.yml", result.toStdString())));
     if (eka2l1::common::exists(path_to_file)) {
         QMessageBox::critical(this, tr("Profile creation failed"), tr("A profile with that name already exists!"));
     } else {
@@ -908,11 +909,11 @@ void settings_dialog::on_control_profile_rename_clicked() {
         return;
     }
 
-    std::string path_to_file = eka2l1::add_path("bindings\\", fmt::format("{}.yml", result.toStdString()));
+    eka2l1::host_path path_to_file(eka2l1::add_path("bindings\\", fmt::format("{}.yml", result.toStdString())));
     if (eka2l1::common::exists(path_to_file)) {
         QMessageBox::critical(this, tr("Profile rename failed"), tr("A profile with that name already exists!"));
     } else {
-        eka2l1::common::move_file(eka2l1::add_path("bindings\\", fmt::format("{}.yml", configuration_.current_keybind_profile)), path_to_file);
+        eka2l1::common::move_file(eka2l1::host_path{eka2l1::add_path("bindings\\", fmt::format("{}.yml", configuration_.current_keybind_profile))}, path_to_file);
 
         configuration_.current_keybind_profile = result.toStdString();
         configuration_.serialize();
@@ -927,7 +928,7 @@ void settings_dialog::on_control_profile_delete_clicked() {
     if (ui_->control_profile_combobox->count() <= 1) {
         QMessageBox::critical(this, tr("Profile deletion failed"), tr("This is the only profile left!"));
     } else {
-        std::string path_to_file = eka2l1::add_path("bindings\\", fmt::format("{}.yml", configuration_.current_keybind_profile));
+        eka2l1::host_path path_to_file(eka2l1::add_path("bindings\\", fmt::format("{}.yml", configuration_.current_keybind_profile)));
         eka2l1::common::remove(path_to_file);
 
         ui_->control_profile_combobox->removeItem(ui_->control_profile_combobox->currentIndex());
@@ -1015,9 +1016,9 @@ void settings_dialog::refresh_configuration_for_who(const bool clear) {
 
             if (setting) {
                 ui_->app_config_list_shaders_upscale->setCurrentIndex(0);
-                if (!setting->filter_shader_path.empty()) {
+                if (!setting->filter_shader_name.empty()) {
                     for (int i = 1; i < ui_->app_config_list_shaders_upscale->count(); i++) {
-                        if (ui_->app_config_list_shaders_upscale->itemText(i) == QString::fromStdString(setting->filter_shader_path)) {
+                        if (ui_->app_config_list_shaders_upscale->itemText(i) == QString::fromStdString(setting->filter_shader_name)) {
                             ui_->app_config_list_shaders_upscale->setCurrentIndex(i);
                         }
                     }
@@ -1314,9 +1315,9 @@ void settings_dialog::on_audio_hsb_browse_clicked() {
     }
 
     eka2l1::drivers::audio_driver *drv = system_->get_audio_driver();
-    configuration_.hsb_bank_path = hsb_path.toStdString();
+    configuration_.hsb_bank_path = eka2l1::host_path(hsb_path.toStdString());
 
-    drv->set_bank_path(eka2l1::drivers::MIDI_BANK_TYPE_HSB, configuration_.hsb_bank_path);
+    drv->set_bank_path(eka2l1::drivers::MIDI_BANK_TYPE_HSB, eka2l1::host_path{configuration_.hsb_bank_path});
     configuration_.serialize();
 
     ui_->system_audio_midi_hsb_bank_edit->setText(hsb_path);
@@ -1337,9 +1338,9 @@ void settings_dialog::on_audio_sf2_browse_clicked() {
     }
 
     eka2l1::drivers::audio_driver *drv = system_->get_audio_driver();
-    configuration_.sf2_bank_path = sf2_path.toStdString();
+    configuration_.sf2_bank_path = eka2l1::host_path(sf2_path.toStdString());
 
-    drv->set_bank_path(eka2l1::drivers::MIDI_BANK_TYPE_SF2, configuration_.sf2_bank_path);
+    drv->set_bank_path(eka2l1::drivers::MIDI_BANK_TYPE_SF2, eka2l1::host_path{configuration_.sf2_bank_path});
     configuration_.serialize();
 
     ui_->system_audio_midi_sf2_bank_edit->setText(sf2_path);
@@ -1347,22 +1348,22 @@ void settings_dialog::on_audio_sf2_browse_clicked() {
 
 void settings_dialog::on_audio_hsb_reset_clicked() {
     eka2l1::drivers::audio_driver *drv = system_->get_audio_driver();
-    configuration_.hsb_bank_path = "resources/defaultbank.hsb";
+    configuration_.hsb_bank_path = eka2l1::host_path("resources/defaultbank.hsb");
 
-    drv->set_bank_path(eka2l1::drivers::MIDI_BANK_TYPE_HSB, configuration_.hsb_bank_path);
+    drv->set_bank_path(eka2l1::drivers::MIDI_BANK_TYPE_HSB, eka2l1::host_path{configuration_.hsb_bank_path});
     configuration_.serialize();
 
-    ui_->system_audio_midi_hsb_bank_edit->setText(QString::fromStdString(configuration_.hsb_bank_path));
+    ui_->system_audio_midi_hsb_bank_edit->setText(QString::fromStdString(configuration_.hsb_bank_path.utf8()));
 }
 
 void settings_dialog::on_audio_sf2_reset_clicked() {
     eka2l1::drivers::audio_driver *drv = system_->get_audio_driver();
-    configuration_.sf2_bank_path = "resources/defaultbank.sf2";
+    configuration_.sf2_bank_path = eka2l1::host_path("resources/defaultbank.sf2");
 
-    drv->set_bank_path(eka2l1::drivers::MIDI_BANK_TYPE_SF2, configuration_.sf2_bank_path);
+    drv->set_bank_path(eka2l1::drivers::MIDI_BANK_TYPE_SF2, eka2l1::host_path{configuration_.sf2_bank_path});
     configuration_.serialize();
 
-    ui_->system_audio_midi_sf2_bank_edit->setText(QString::fromStdString(configuration_.sf2_bank_path));
+    ui_->system_audio_midi_sf2_bank_edit->setText(QString::fromStdString(configuration_.sf2_bank_path.utf8()));
 }
 
 void settings_dialog::on_enable_hw_gles1_toggled(bool val) {
@@ -1480,10 +1481,10 @@ void settings_dialog::on_background_image_browse_button_clicked() {
         return;
     }
 
-    configuration_.background_image = img_path.toStdString();
+    configuration_.background_image = eka2l1::host_path(img_path.toStdString());
     configuration_.serialize();
 
-    ui_->emulator_display_bg_image_path_line_edit->setText(QString::fromStdString(configuration_.background_image));
+    ui_->emulator_display_bg_image_path_line_edit->setText(QString::fromStdString(configuration_.background_image.utf8()));
 }
 
 void settings_dialog::on_background_opacity_changed(int value) {

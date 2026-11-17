@@ -32,27 +32,27 @@
 
 using namespace eka2l1;
 
-static bool lists_path(const std::vector<std::string> &paths, const std::string &wanted) {
+static bool lists_path(const std::vector<host_path> &paths, const host_path &wanted) {
     return std::find(paths.begin(), paths.end(), wanted) != paths.end();
 }
 
 TEST_CASE("per_device_paths_cover_rom_and_shared_drive_state", "devices") {
-    const std::vector<std::string> paths = per_device_storage_paths("rm-320");
+    const std::vector<host_path> paths = per_device_storage_paths("rm-320");
 
     // The device's own drive Z, ROM image and isolated drives.
-    REQUIRE(lists_path(paths, "drives/z/rm-320/"));
-    REQUIRE(lists_path(paths, "drives/rm-320/"));
-    REQUIRE(lists_path(paths, "roms/rm-320/"));
+    REQUIRE(lists_path(paths, eka2l1::host_path{"drives/z/rm-320/"}));
+    REQUIRE(lists_path(paths, eka2l1::host_path{"drives/rm-320/"}));
+    REQUIRE(lists_path(paths, eka2l1::host_path{"roms/rm-320/"}));
 
     // What the servers leave on the drives every device shares. Drive C is where
     // these actually land today, but a repository resides on whichever writable
     // drive it was loaded from, so D and E have to be covered too.
-    REQUIRE(lists_path(paths, "drives/c/private/10202be9/persists/rm-320/"));
-    REQUIRE(lists_path(paths, "drives/d/private/10202be9/persists/rm-320/"));
-    REQUIRE(lists_path(paths, "drives/e/private/10202be9/persists/rm-320/"));
-    REQUIRE(lists_path(paths, "drives/c/private/1000484b/mail2/rm-320/"));
-    REQUIRE(lists_path(paths, "drives/c/system/mail/rm-320/"));
-    REQUIRE(lists_path(paths, "drives/c/system/mtm/rm-320/"));
+    REQUIRE(lists_path(paths, eka2l1::host_path{"drives/c/private/10202be9/persists/rm-320/"}));
+    REQUIRE(lists_path(paths, eka2l1::host_path{"drives/d/private/10202be9/persists/rm-320/"}));
+    REQUIRE(lists_path(paths, eka2l1::host_path{"drives/e/private/10202be9/persists/rm-320/"}));
+    REQUIRE(lists_path(paths, eka2l1::host_path{"drives/c/private/1000484b/mail2/rm-320/"}));
+    REQUIRE(lists_path(paths, eka2l1::host_path{"drives/c/system/mail/rm-320/"}));
+    REQUIRE(lists_path(paths, eka2l1::host_path{"drives/c/system/mtm/rm-320/"}));
 }
 
 TEST_CASE("device_drive_folder_follows_isolation", "devices") {
@@ -66,12 +66,12 @@ TEST_CASE("device_drive_folder_follows_isolation", "devices") {
 TEST_CASE("per_device_paths_lowercase_the_firmware_code", "devices") {
     // devices.yml stores the code as the ROM spells it ("RM-320"), while everything
     // written to disk goes through common::lowercase_string.
-    const std::vector<std::string> paths = per_device_storage_paths("RM-320");
+    const std::vector<host_path> paths = per_device_storage_paths("RM-320");
 
-    REQUIRE(lists_path(paths, "drives/z/rm-320/"));
-    REQUIRE(lists_path(paths, "drives/c/private/10202be9/persists/rm-320/"));
+    REQUIRE(lists_path(paths, eka2l1::host_path{"drives/z/rm-320/"}));
+    REQUIRE(lists_path(paths, eka2l1::host_path{"drives/c/private/10202be9/persists/rm-320/"}));
 
-    for (const std::string &path : paths) {
+    for (const host_path &path : paths) {
         REQUIRE(path.find("RM-320") == std::string::npos);
         REQUIRE(path.back() == '/');
     }
@@ -80,7 +80,7 @@ TEST_CASE("per_device_paths_lowercase_the_firmware_code", "devices") {
 namespace {
     // A throwaway data root holding state for two devices, plus state shared by both.
     struct storage_test_env {
-        std::string root;
+        host_path root;
 
         explicit storage_test_env(const std::string &name)
             : root(add_path("devicestestenv", name + eka2l1::get_separator())) {
@@ -92,17 +92,17 @@ namespace {
             common::delete_folder(root);
         }
 
-        void write_file(const std::string &relative) {
-            const std::string full = add_path(root, relative);
-            common::create_directories(eka2l1::file_directory(full));
+        void write_file(const host_path &relative) {
+            const host_path full = add_path(root, relative);
+            common::create_directories(eka2l1::host_path{eka2l1::file_directory(full)});
 
-            std::ofstream stream(full, std::ios::binary);
+            std::ofstream stream(full.c_str(), std::ios::binary);
             REQUIRE(stream.good());
             stream << "data";
         }
 
-        bool has(const std::string &relative) const {
-            return common::exists(add_path(root, relative));
+        bool has(const host_path &relative) const {
+            return common::exists(eka2l1::host_path{add_path(root, relative)});
         }
 
         void delete_device_state(const std::string &firmcode) {
@@ -114,80 +114,80 @@ namespace {
 TEST_CASE("deleting_a_device_leaves_no_state_behind", "devices") {
     storage_test_env env("delete_one_device");
 
-    env.write_file("drives/z/rm-320/sys/bin/euser.dll");
-    env.write_file("roms/rm-320/SYM.ROM");
-    env.write_file("drives/c/private/10202be9/persists/rm-320/101f876f.cre");
-    env.write_file("drives/c/private/1000484b/mail2/rm-320/messaging.db");
-    env.write_file("drives/e/private/10202be9/persists/rm-320/101f876f.cre");
+    env.write_file(eka2l1::host_path{"drives/z/rm-320/sys/bin/euser.dll"});
+    env.write_file(eka2l1::host_path{"roms/rm-320/SYM.ROM"});
+    env.write_file(eka2l1::host_path{"drives/c/private/10202be9/persists/rm-320/101f876f.cre"});
+    env.write_file(eka2l1::host_path{"drives/c/private/1000484b/mail2/rm-320/messaging.db"});
+    env.write_file(eka2l1::host_path{"drives/e/private/10202be9/persists/rm-320/101f876f.cre"});
 
     // A second device, and state that belongs to no device in particular. The
     // deletion has no business touching either.
-    env.write_file("drives/z/rm-409/sys/bin/euser.dll");
-    env.write_file("roms/rm-409/SYM.ROM");
-    env.write_file("drives/c/private/10202be9/persists/rm-409/101f876f.cre");
-    env.write_file("drives/c/private/10202be9/20008bb7.txt");
-    env.write_file("drives/c/private/1000484b/mtm registry v2");
-    env.write_file("drives/e/system/apps/mygame/mygame.exe");
+    env.write_file(eka2l1::host_path{"drives/z/rm-409/sys/bin/euser.dll"});
+    env.write_file(eka2l1::host_path{"roms/rm-409/SYM.ROM"});
+    env.write_file(eka2l1::host_path{"drives/c/private/10202be9/persists/rm-409/101f876f.cre"});
+    env.write_file(eka2l1::host_path{"drives/c/private/10202be9/20008bb7.txt"});
+    env.write_file(eka2l1::host_path{"drives/c/private/1000484b/mtm registry v2"});
+    env.write_file(eka2l1::host_path{"drives/e/system/apps/mygame/mygame.exe"});
 
     env.delete_device_state("rm-320");
 
-    REQUIRE_FALSE(env.has("drives/z/rm-320/sys/bin/euser.dll"));
-    REQUIRE_FALSE(env.has("roms/rm-320/SYM.ROM"));
-    REQUIRE_FALSE(env.has("drives/c/private/10202be9/persists/rm-320/101f876f.cre"));
-    REQUIRE_FALSE(env.has("drives/c/private/1000484b/mail2/rm-320/messaging.db"));
-    REQUIRE_FALSE(env.has("drives/e/private/10202be9/persists/rm-320/101f876f.cre"));
+    REQUIRE_FALSE(env.has(eka2l1::host_path{"drives/z/rm-320/sys/bin/euser.dll"}));
+    REQUIRE_FALSE(env.has(eka2l1::host_path{"roms/rm-320/SYM.ROM"}));
+    REQUIRE_FALSE(env.has(eka2l1::host_path{"drives/c/private/10202be9/persists/rm-320/101f876f.cre"}));
+    REQUIRE_FALSE(env.has(eka2l1::host_path{"drives/c/private/1000484b/mail2/rm-320/messaging.db"}));
+    REQUIRE_FALSE(env.has(eka2l1::host_path{"drives/e/private/10202be9/persists/rm-320/101f876f.cre"}));
 
-    REQUIRE(env.has("drives/z/rm-409/sys/bin/euser.dll"));
-    REQUIRE(env.has("roms/rm-409/SYM.ROM"));
-    REQUIRE(env.has("drives/c/private/10202be9/persists/rm-409/101f876f.cre"));
-    REQUIRE(env.has("drives/c/private/10202be9/20008bb7.txt"));
-    REQUIRE(env.has("drives/c/private/1000484b/mtm registry v2"));
-    REQUIRE(env.has("drives/e/system/apps/mygame/mygame.exe"));
+    REQUIRE(env.has(eka2l1::host_path{"drives/z/rm-409/sys/bin/euser.dll"}));
+    REQUIRE(env.has(eka2l1::host_path{"roms/rm-409/SYM.ROM"}));
+    REQUIRE(env.has(eka2l1::host_path{"drives/c/private/10202be9/persists/rm-409/101f876f.cre"}));
+    REQUIRE(env.has(eka2l1::host_path{"drives/c/private/10202be9/20008bb7.txt"}));
+    REQUIRE(env.has(eka2l1::host_path{"drives/c/private/1000484b/mtm registry v2"}));
+    REQUIRE(env.has(eka2l1::host_path{"drives/e/system/apps/mygame/mygame.exe"}));
 }
 
 TEST_CASE("deleting_a_device_that_wrote_nothing_is_fine", "devices") {
     storage_test_env env("delete_untouched_device");
 
-    env.write_file("drives/z/rm-320/sys/bin/euser.dll");
+    env.write_file(eka2l1::host_path{"drives/z/rm-320/sys/bin/euser.dll"});
 
     // Only drive Z exists: a device installed but never booted has no repository
     // persists or message store yet, and the missing folders must not upset it.
     env.delete_device_state("rm-320");
 
-    REQUIRE_FALSE(env.has("drives/z/rm-320/sys/bin/euser.dll"));
+    REQUIRE_FALSE(env.has(eka2l1::host_path{"drives/z/rm-320/sys/bin/euser.dll"}));
 }
 
 TEST_CASE("Series 90 markers select the OS 7.0s contracts", "devices") {
     for (const std::string marker : { "series90v10.sis", "series90v11.sis" }) {
         storage_test_env env(marker);
-        env.write_file("system/install/" + marker);
-        REQUIRE(loader::determine_rpkg_symbian_version(env.root) == epocver::epoc7);
+        env.write_file(eka2l1::host_path{"system/install/" + marker});
+        REQUIRE(loader::determine_rpkg_symbian_version(eka2l1::host_path{env.root}) == epocver::epoc7);
     }
 }
 
 TEST_CASE("deleting_an_isolated_device_takes_its_drives", "devices") {
     storage_test_env env("delete_isolated_device");
 
-    env.write_file("drives/z/rm-707/sys/bin/euser.dll");
-    env.write_file("drives/rm-707/c/private/10202be9/persists/101f876f.cre");
-    env.write_file("drives/rm-707/e/system/apps/mygame/mygame.exe");
-    env.write_file("drives/rm-409/e/system/apps/othergame/othergame.exe");
-    env.write_file("drives/e/system/apps/sharedgame/sharedgame.exe");
+    env.write_file(eka2l1::host_path{"drives/z/rm-707/sys/bin/euser.dll"});
+    env.write_file(eka2l1::host_path{"drives/rm-707/c/private/10202be9/persists/101f876f.cre"});
+    env.write_file(eka2l1::host_path{"drives/rm-707/e/system/apps/mygame/mygame.exe"});
+    env.write_file(eka2l1::host_path{"drives/rm-409/e/system/apps/othergame/othergame.exe"});
+    env.write_file(eka2l1::host_path{"drives/e/system/apps/sharedgame/sharedgame.exe"});
 
     env.delete_device_state("rm-707");
 
-    REQUIRE_FALSE(env.has("drives/rm-707/c/private/10202be9/persists/101f876f.cre"));
-    REQUIRE_FALSE(env.has("drives/rm-707/e/system/apps/mygame/mygame.exe"));
+    REQUIRE_FALSE(env.has(eka2l1::host_path{"drives/rm-707/c/private/10202be9/persists/101f876f.cre"}));
+    REQUIRE_FALSE(env.has(eka2l1::host_path{"drives/rm-707/e/system/apps/mygame/mygame.exe"}));
 
-    REQUIRE(env.has("drives/rm-409/e/system/apps/othergame/othergame.exe"));
-    REQUIRE(env.has("drives/e/system/apps/sharedgame/sharedgame.exe"));
+    REQUIRE(env.has(eka2l1::host_path{"drives/rm-409/e/system/apps/othergame/othergame.exe"}));
+    REQUIRE(env.has(eka2l1::host_path{"drives/e/system/apps/sharedgame/sharedgame.exe"}));
 }
 
 TEST_CASE("isolated_drives_persist_in_devices_yml", "devices") {
     storage_test_env env("isolated_drives_yml");
 
     config::state conf;
-    conf.storage = env.root;
+    conf.storage = eka2l1::host_path{env.root};
 
     {
         device_manager manager(&conf);
@@ -197,8 +197,8 @@ TEST_CASE("isolated_drives_persist_in_devices_yml", "devices") {
     }
 
     // The folder is how a rescan tells the device apart, so it exists from the start.
-    REQUIRE(common::is_dir(add_path(env.root, "drives/rm-707/")));
-    REQUIRE_FALSE(common::exists(add_path(env.root, "drives/rm-409/")));
+    REQUIRE(common::is_dir(eka2l1::host_path{add_path(env.root, "drives/rm-707/")}));
+    REQUIRE_FALSE(common::exists(eka2l1::host_path{add_path(env.root, "drives/rm-409/")}));
 
     device_manager reloaded(&conf);
     REQUIRE(reloaded.total() == 2);
@@ -210,12 +210,12 @@ TEST_CASE("devices_yml_without_isolation_key_is_shared", "devices") {
     storage_test_env env("legacy_devices_yml");
 
     {
-        std::ofstream stream(add_path(env.root, "devices.yml"), std::ios::binary | std::ios::trunc);
+        std::ofstream stream(add_path(env.root, "devices.yml").c_str(), std::ios::binary | std::ios::trunc);
         stream << "RM-409:\n  platver: epoc94\n  manufacturer: Nokia\n  firmcode: RM-409\n  model: \"5320\"\n  machine-uid: 536926810\n";
     }
 
     config::state conf;
-    conf.storage = env.root;
+    conf.storage = eka2l1::host_path{env.root};
 
     device_manager manager(&conf);
     REQUIRE(manager.total() == 1);
@@ -226,7 +226,7 @@ TEST_CASE("device_marked_for_deletion_goes_on_next_load", "devices") {
     storage_test_env env("marked_for_deletion");
 
     config::state conf;
-    conf.storage = env.root;
+    conf.storage = eka2l1::host_path{env.root};
 
     {
         device_manager manager(&conf);
@@ -234,26 +234,26 @@ TEST_CASE("device_marked_for_deletion_goes_on_next_load", "devices") {
         REQUIRE(manager.add_new_device("RM-409", "5320", "Nokia", epocver::epoc94, 0, false) == add_device_none);
         manager.save_devices();
 
-        env.write_file("drives/z/rm-707/sys/bin/euser.dll");
-        env.write_file("roms/rm-707/SYM.ROM");
-        env.write_file("drives/rm-707/e/sys/bin/game.exe");
-        env.write_file("drives/z/rm-409/sys/bin/euser.dll");
+        env.write_file(eka2l1::host_path{"drives/z/rm-707/sys/bin/euser.dll"});
+        env.write_file(eka2l1::host_path{"roms/rm-707/SYM.ROM"});
+        env.write_file(eka2l1::host_path{"drives/rm-707/e/sys/bin/game.exe"});
+        env.write_file(eka2l1::host_path{"drives/z/rm-409/sys/bin/euser.dll"});
 
         REQUIRE(manager.mark_for_deletion("RM-707"));
         REQUIRE_FALSE(manager.mark_for_deletion("RM-000"));
 
         // Nothing goes while the device may still be running.
-        REQUIRE(env.has("drives/rm-707/e/sys/bin/game.exe"));
+        REQUIRE(env.has(eka2l1::host_path{"drives/rm-707/e/sys/bin/game.exe"}));
     }
 
     device_manager reloaded(&conf);
     REQUIRE(reloaded.total() == 1);
     REQUIRE(reloaded.get("RM-409"));
 
-    REQUIRE_FALSE(env.has("drives/z/rm-707/sys/bin/euser.dll"));
-    REQUIRE_FALSE(env.has("roms/rm-707/SYM.ROM"));
-    REQUIRE_FALSE(env.has("drives/rm-707/"));
-    REQUIRE(env.has("drives/z/rm-409/sys/bin/euser.dll"));
+    REQUIRE_FALSE(env.has(eka2l1::host_path{"drives/z/rm-707/sys/bin/euser.dll"}));
+    REQUIRE_FALSE(env.has(eka2l1::host_path{"roms/rm-707/SYM.ROM"}));
+    REQUIRE_FALSE(env.has(eka2l1::host_path{"drives/rm-707/"}));
+    REQUIRE(env.has(eka2l1::host_path{"drives/z/rm-409/sys/bin/euser.dll"}));
 
     // The reload rewrote devices.yml without the device.
     device_manager again(&conf);
@@ -265,18 +265,18 @@ TEST_CASE("iOS device replacement retains writable drives and isolation", "[ios-
         storage_test_env env(isolated ? "replace_isolated" : "replace_shared");
         storage_test_env staging("replacement_staging");
         config::state conf;
-        conf.storage = env.root;
+        conf.storage = eka2l1::host_path{env.root};
         device_manager manager(&conf);
         REQUIRE(manager.add_new_device("RA-2", "Old", "Nokia", epocver::epoc7, 1, isolated) == add_device_none);
         REQUIRE(manager.add_new_device("Other", "Control", "Nokia", epocver::epoc7, 2, false) == add_device_none);
         manager.set_current("Other");
-        env.write_file("drives/z/ra-2/obsolete");
-        env.write_file("roms/ra-2/SYM.ROM");
+        env.write_file(eka2l1::host_path{"drives/z/ra-2/obsolete"});
+        env.write_file(eka2l1::host_path{"roms/ra-2/SYM.ROM"});
         for (const auto drive : {drive_c, drive_d, drive_e}) {
-            env.write_file(device_drive_folder("RA-2", isolated, drive) + "saved-data");
+            env.write_file(eka2l1::host_path{device_drive_folder("RA-2", isolated, drive) + "saved-data"});
         }
-        staging.write_file("drives/z/ra-2/replacement");
-        staging.write_file("roms/ra-2/SYM.ROM");
+        staging.write_file(eka2l1::host_path{"drives/z/ra-2/replacement"});
+        staging.write_file(eka2l1::host_path{"roms/ra-2/SYM.ROM"});
         device imported(epocver::epoc7, "ra-2", "Nokia", "Replacement");
         imported.machine_uid = 42;
         imported.isolated_drives = !isolated;
@@ -288,10 +288,10 @@ TEST_CASE("iOS device replacement retains writable drives and isolation", "[ios-
         REQUIRE(manager.get_current()->firmware_code == "RA-2");
         REQUIRE(manager.get_current()->isolated_drives == isolated);
         REQUIRE(manager.get_current()->machine_uid == 42);
-        REQUIRE_FALSE(env.has("drives/z/ra-2/obsolete"));
-        REQUIRE(env.has("drives/z/ra-2/replacement"));
+        REQUIRE_FALSE(env.has(eka2l1::host_path{"drives/z/ra-2/obsolete"}));
+        REQUIRE(env.has(eka2l1::host_path{"drives/z/ra-2/replacement"}));
         for (const auto drive : {drive_c, drive_d, drive_e}) {
-            REQUIRE(env.has(device_drive_folder("RA-2", isolated, drive) + "saved-data"));
+            REQUIRE(env.has(eka2l1::host_path{device_drive_folder("RA-2", isolated, drive) + "saved-data"}));
         }
         device_manager reloaded(&conf);
         REQUIRE(reloaded.total() == 2);
@@ -303,23 +303,23 @@ TEST_CASE("iOS device replacement rolls back if the ROM cannot be moved", "[ios-
     storage_test_env env("replace_rollback");
     storage_test_env staging("rollback_staging");
     config::state conf;
-    conf.storage = env.root;
+    conf.storage = eka2l1::host_path{env.root};
     device_manager manager(&conf);
     REQUIRE(manager.add_new_device("RA-2", "Old", "Nokia", epocver::epoc7, 1, true) == add_device_none);
-    env.write_file("drives/z/ra-2/original");
-    env.write_file("roms/ra-2/SYM.ROM");
-    env.write_file("drives/ra-2/c/saved-data");
-    staging.write_file("drives/z/ra-2/replacement");
-    staging.write_file("roms/ra-2/SYM.ROM");
-    staging.write_file("previous-rom/blocker");
+    env.write_file(eka2l1::host_path{"drives/z/ra-2/original"});
+    env.write_file(eka2l1::host_path{"roms/ra-2/SYM.ROM"});
+    env.write_file(eka2l1::host_path{"drives/ra-2/c/saved-data"});
+    staging.write_file(eka2l1::host_path{"drives/z/ra-2/replacement"});
+    staging.write_file(eka2l1::host_path{"roms/ra-2/SYM.ROM"});
+    staging.write_file(eka2l1::host_path{"previous-rom/blocker"});
     device imported(epocver::epoc7, "RA-2", "Nokia", "Replacement");
     bool discard = true;
     REQUIRE_FALSE(ios::commit_device_install(manager, imported, staging.root, env.root, discard));
     REQUIRE(discard);
-    REQUIRE(env.has("drives/z/ra-2/original"));
-    REQUIRE_FALSE(env.has("drives/z/ra-2/replacement"));
-    REQUIRE(env.has("roms/ra-2/SYM.ROM"));
-    REQUIRE(env.has("drives/ra-2/c/saved-data"));
+    REQUIRE(env.has(eka2l1::host_path{"drives/z/ra-2/original"}));
+    REQUIRE_FALSE(env.has(eka2l1::host_path{"drives/z/ra-2/replacement"}));
+    REQUIRE(env.has(eka2l1::host_path{"roms/ra-2/SYM.ROM"}));
+    REQUIRE(env.has(eka2l1::host_path{"drives/ra-2/c/saved-data"}));
     REQUIRE(manager.get("RA-2")->model == "Old");
     REQUIRE(manager.get("RA-2")->isolated_drives);
 }
@@ -328,15 +328,15 @@ TEST_CASE("iOS new isolated device retains its storage marker", "[ios-install]")
     storage_test_env env("import_new");
     storage_test_env staging("new_staging");
     config::state conf;
-    conf.storage = env.root;
+    conf.storage = eka2l1::host_path{env.root};
     device_manager manager(&conf);
-    staging.write_file("drives/z/ra-2/new");
-    staging.write_file("roms/ra-2/SYM.ROM");
+    staging.write_file(eka2l1::host_path{"drives/z/ra-2/new"});
+    staging.write_file(eka2l1::host_path{"roms/ra-2/SYM.ROM"});
     device imported(epocver::epoc7, "RA-2", "Nokia", "New");
     imported.isolated_drives = true;
     bool discard = true;
     REQUIRE(ios::commit_device_install(manager, imported, staging.root, env.root, discard));
-    REQUIRE(env.has("drives/ra-2/"));
+    REQUIRE(env.has(eka2l1::host_path{"drives/ra-2/"}));
     REQUIRE(manager.total() == 1);
     REQUIRE(manager.get_current()->firmware_code == "RA-2");
 }
@@ -344,9 +344,9 @@ TEST_CASE("iOS new isolated device retains its storage marker", "[ios-install]")
 TEST_CASE("Truncated RPKGs cannot register a partially extracted device", "[ios-install]") {
     for (const bool partial_entry : {false, true}) {
         storage_test_env env(partial_entry ? "rpkg_partial_entry" : "rpkg_missing_entry");
-        const std::string rpkg_path = add_path(env.root, "truncated.rpkg");
+        const host_path rpkg_path = add_path(env.root, "truncated.rpkg");
         {
-            std::ofstream rpkg(rpkg_path, std::ios::binary);
+            std::ofstream rpkg(rpkg_path.c_str(), std::ios::binary);
             const std::uint32_t header[] = {'R', 'P', 'K', '2', 0, 3, 32, 0x101F8DDB};
             rpkg.write(reinterpret_cast<const char *>(header), sizeof(header));
             for (const auto &path : {u"Z:\\system\\install\\Dev9300.sis",
@@ -368,22 +368,22 @@ TEST_CASE("Truncated RPKGs cannot register a partially extracted device", "[ios-
             }
         }
         config::state conf;
-        conf.storage = env.root;
+        conf.storage = eka2l1::host_path{env.root};
         device_manager manager(&conf);
         std::string code;
-        REQUIRE(loader::install_rpkg(&manager, rpkg_path, add_path(env.root, "drives/z/"),
+        REQUIRE(loader::install_rpkg(&manager, rpkg_path, eka2l1::host_path{add_path(env.root, "drives/z/")},
             code, true, nullptr, nullptr) == device_installation_rpkg_corrupt);
         REQUIRE(manager.total() == 0);
-        REQUIRE_FALSE(env.has("drives/z/temp/"));
-        REQUIRE_FALSE(env.has("drives/z/ra-2/"));
+        REQUIRE_FALSE(env.has(eka2l1::host_path{"drives/z/temp/"}));
+        REQUIRE_FALSE(env.has(eka2l1::host_path{"drives/z/ra-2/"}));
     }
 }
 
 TEST_CASE("Legacy RPKG imports do not require a valid entry count", "[ios-install]") {
     storage_test_env env("legacy_rpkg_count");
-    const std::string path = add_path(env.root, "legacy.rpkg");
+    const host_path path = add_path(env.root, "legacy.rpkg");
     {
-        std::ofstream rpkg(path, std::ios::binary);
+        std::ofstream rpkg(path.c_str(), std::ios::binary);
         const std::uint32_t header[] = {'R', 'P', 'K', 'G', 0, 0x801EEF37};
         rpkg.write(reinterpret_cast<const char *>(header), sizeof(header));
         const std::u16string name = u"Z:\\system\\install\\Dev9300.sis";
@@ -395,10 +395,10 @@ TEST_CASE("Legacy RPKG imports do not require a valid entry count", "[ios-instal
         rpkg.write("data", 4);
     }
     config::state conf;
-    conf.storage = env.root;
+    conf.storage = eka2l1::host_path{env.root};
     device_manager manager(&conf);
     std::string code;
-    REQUIRE(loader::install_rpkg(&manager, path, add_path(env.root, "drives/z/"),
+    REQUIRE(loader::install_rpkg(&manager, eka2l1::host_path{path}, eka2l1::host_path{add_path(env.root, "drives/z/")},
         code, false, nullptr, nullptr) == device_installation_none);
     REQUIRE(manager.total() == 1);
     REQUIRE(code == "rae-6");

@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <algorithm>
 #include <services/window/io.h>
 #include <services/window/op.h>
@@ -1519,7 +1520,7 @@ namespace eka2l1 {
             return;
         }
 
-        std::u16string wsini_path;
+        guest_path wsini_path;
         wsini_path += static_cast<char16_t>(static_cast<char>(rom_drive) + 'A');
         wsini_path += u":\\system\\data\\wsini.ini";
 
@@ -1531,7 +1532,7 @@ namespace eka2l1 {
         }
 
         std::string wsini_path_host_utf8 = common::ucs2_to_utf8(*wsini_path_host);
-        int err = ws_config.load(wsini_path_host_utf8.c_str());
+        int err = ws_config.load(host_path(wsini_path_host_utf8));
 
         if (err != 0) {
             LOG_ERROR(SERVICE_WINDOW, "Loading wsini file broke with code {}", err);
@@ -2425,7 +2426,7 @@ namespace eka2l1 {
         std::uint8_t *loop_begin = emitter.get_writeable_code_ptr();
 
         // Load euser to get WaitForRequest
-        codeseg_ptr seg = kern->get_lib_manager()->load(u"euser.dll");
+        codeseg_ptr seg = kern->get_lib_manager()->load(guest_path(u"euser.dll"));
         if (seg) {
             address wait_for_request_addr = seg->lookup(nullptr, kern->is_eka1() ? 1210 : 604);
 

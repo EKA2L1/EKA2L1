@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <loader/rsc.h>
 #include <services/msv/common.h>
 #include <services/msv/registry.h>
@@ -34,7 +35,7 @@ namespace eka2l1::epoc::msv {
 
     mtm_registry::mtm_registry(io_system *io)
         : io_(io) {
-        list_path_ = DEFAULT_MSG_REG_LIST_FILE;
+        list_path_ = guest_path(DEFAULT_MSG_REG_LIST_FILE);
     }
 
     mtm_registry::~mtm_registry() {
@@ -49,8 +50,8 @@ namespace eka2l1::epoc::msv {
         }
     }
 
-    bool mtm_registry::install_group_from_rsc(const std::u16string &path) {
-        symfile rsc_file = io_->open_file(path, READ_MODE | BIN_MODE);
+    bool mtm_registry::install_group_from_rsc(const guest_path &path) {
+        symfile rsc_file = io_->open_file(eka2l1::guest_path{path}, READ_MODE | BIN_MODE);
 
         if (!rsc_file) {
             return false;
@@ -91,7 +92,9 @@ namespace eka2l1::epoc::msv {
             info_reader.absorb(comp.build_);
 
             if (comp.specific_uid_ == MTM_DEFAULT_SPECIFIC_UID) {
-                loader::absorb_resource_string(info_reader, comp.filename_);
+                std::u16string filename;
+                loader::absorb_resource_string(info_reader, filename);
+                comp.filename_ = guest_path(std::move(filename));
             }
 
             const std::uint32_t comp_uid = comp.comp_uid_;
@@ -114,15 +117,15 @@ namespace eka2l1::epoc::msv {
         return true;
     }
 
-    bool mtm_registry::install_group(const std::u16string &path) {
-        const std::u16string path_lower = common::lowercase_ucs2_string(path);
+    bool mtm_registry::install_group(const guest_path &path) {
+        const guest_path &path_lower = path;
 
         // Try to find if this group is already loaded
         if (std::find(mtm_files_.begin(), mtm_files_.end(), path_lower) != mtm_files_.end()) {
             return false;
         }
 
-        const std::u16string ext = eka2l1::path_extension(path);
+        const guest_path ext(path.extension());
 
         if ((ext.length() >= 2) && ((ext[1] == u'r') || (ext[1] == u'R'))) {
             if (install_group_from_rsc(path)) {
@@ -176,7 +179,7 @@ namespace eka2l1::epoc::msv {
     }
 
     void mtm_registry::load_mtm_list() {
-        symfile list_file = io_->open_file(list_path_, READ_MODE | BIN_MODE);
+        symfile list_file = io_->open_file(eka2l1::guest_path{list_path_}, READ_MODE | BIN_MODE);
 
         if (!list_file) {
             LOG_TRACE(SERVICE_MSV, "MTM registry file not yet present");
@@ -189,17 +192,17 @@ namespace eka2l1::epoc::msv {
             std::string mtm_path;
             mtm_path = list_file_stream.read_string<char>();
 
-            install_group(common::utf8_to_ucs2(mtm_path));
+            install_group(guest_path::from_utf8(mtm_path));
         }
     }
 
     void mtm_registry::save_mtm_list() {
-        const std::u16string list_dir = eka2l1::file_directory(list_path_);
+        const guest_path list_dir(eka2l1::file_directory(list_path_));
         if (!io_->exist(list_dir)) {
             io_->create_directories(list_dir);
         }
 
-        symfile list_file = io_->open_file(list_path_, WRITE_MODE | BIN_MODE);
+        symfile list_file = io_->open_file(eka2l1::guest_path{list_path_}, WRITE_MODE | BIN_MODE);
 
         if (!list_file) {
             LOG_TRACE(SERVICE_MSV, "MTM registry file can not be open for write");
@@ -213,7 +216,7 @@ namespace eka2l1::epoc::msv {
         }
     }
 
-    void mtm_registry::add_entry_to_mtm_list(const std::u16string &path) {
+    void mtm_registry::add_entry_to_mtm_list(const guest_path &path) {
         mtm_files_.push_back(path);
         save_mtm_list();
     }

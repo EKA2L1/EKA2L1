@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <common/vecx.h>
 #include <drivers/input/common.h>
 
@@ -159,8 +160,8 @@ namespace eka2l1::qt::btnmap {
         bool execute(const std::uint64_t keycode, const bool is_press);
         bool execute(const std::uint64_t keycode, const float axisx, const float axisy);
 
-        void serialize(const std::string &conf_path);
-        void deserialize(const std::string &conf_path);
+        void serialize(const eka2l1::host_path &conf_path);
+        void deserialize(const eka2l1::host_path &conf_path);
 
         void reset();
         void add_behaviour(std::unique_ptr<behaviour> &behaviour);

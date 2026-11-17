@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <common/buffer.h>
 #include <cstdint>
 #include <utils/des.h>
@@ -45,7 +46,7 @@ namespace eka2l1 {
         std::int32_t screen_mode_;
         std::uint32_t icon_count_;
         std::u16string caption_;
-        std::u16string icon_path_;
+        guest_path icon_path_;
     };
 
     using file_ownership_list = std::vector<std::u16string>;

@@ -601,7 +601,7 @@ namespace eka2l1::drivers {
         SafeRelease(&writer_);
 
         // Recreate reader stream. todo
-        common::move_file(url_, url_new);
+        common::move_file(eka2l1::host_path{url_}, eka2l1::host_path{url_new});
         SafeRelease(&reader_);
 
         data_pointer_ = 0;

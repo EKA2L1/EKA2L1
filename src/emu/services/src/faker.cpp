@@ -48,7 +48,7 @@ namespace eka2l1::service {
 
     bool faker::initialise(kernel_system *kern, hle::lib_manager *mngr, const std::string &name, const std::uint32_t uid) {
         // Create the fake process first
-        process_ = kern->create<kernel::process>(kern->get_memory_system(), name, u"Nowhere", u"");
+        process_ = kern->create<kernel::process>(kern->get_memory_system(), name, guest_path(u"Nowhere"), u"");
 
         if (!process_) {
             return false;
@@ -69,7 +69,7 @@ namespace eka2l1::service {
         }
 
         // Try to load euser.
-        codeseg_ptr euser_lib = mngr->load(u"euser.dll");
+        codeseg_ptr euser_lib = mngr->load(guest_path(u"euser.dll"));
 
         if (!euser_lib) {
             return false;

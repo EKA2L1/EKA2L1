@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <common/types.h>
 
 #include <cstdint>
@@ -40,7 +41,7 @@ namespace eka2l1::common {
      * 
      * @returns String table. Empty on failure.
      */
-    string_table get_localised_string_table(const std::string &resource_folder, const std::string &table_file_name,
+    string_table get_localised_string_table(const host_path &resource_folder, const std::string &table_file_name,
         const language lang);
 
     std::string get_localised_string(string_table &table, const std::string &key);

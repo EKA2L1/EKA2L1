@@ -160,7 +160,7 @@ void package_manager_dialog::on_package_list_file_requested() {
             break;
         }
 
-        QString file_status_final = QString::fromStdU16String(pkg->file_descriptions[i].target);
+        QString file_status_final = QString::fromStdU16String(pkg->file_descriptions[i].target.utf16());
         if (!status.isEmpty()) {
             file_status_final += QString(" (%1)").arg(status);
         }

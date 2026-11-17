@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <mem/ptr.h>
 #include <services/framework.h>
 #include <services/ui/skin/chunk_maintainer.h>
@@ -92,7 +93,7 @@ namespace eka2l1 {
          * \param io Pointer to the IO system.
          */
         void merge_active_skin(eka2l1::io_system *io);
-        void import_skin(eka2l1::io_system *io, const epoc::pid skin_pid, const std::u16string &skin_path);
+        void import_skin(eka2l1::io_system *io, const epoc::pid skin_pid, const guest_path &skin_path);
 
     public:
         explicit akn_skin_server(eka2l1::system *sys);

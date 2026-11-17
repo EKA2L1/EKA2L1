@@ -4,6 +4,7 @@ add_library(control
     src/service.cpp
     src/storage.cpp)
 target_include_directories(control PUBLIC include)
+target_link_libraries(control PUBLIC common)
 target_include_directories(control SYSTEM PRIVATE
     "${PROJECT_SOURCE_DIR}/src/external/ext-boost"
     "${PROJECT_SOURCE_DIR}/src/external/rapidjson/include")

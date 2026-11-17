@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <common/chunkyseri.h>
 #include <common/log.h>
 #include <common/path.h>
@@ -37,7 +38,7 @@
 #include <fmt/xchar.h>
 
 namespace eka2l1::epoc::msv {
-    entry_indexer::entry_indexer(io_system *io, const std::u16string &msg_folder, const language preferred_lang)
+    entry_indexer::entry_indexer(io_system *io, const guest_path &msg_folder, const language preferred_lang)
         : io_(io)
         , rom_drv_(drive_z)
         , preferred_lang_(preferred_lang)
@@ -85,9 +86,9 @@ namespace eka2l1::epoc::msv {
         std::uint32_t flags_;
     };
 
-    std::u16string get_folder_name(const std::uint32_t id, const msv_folder_type type) {
+    guest_path get_folder_name(const std::uint32_t id, const msv_folder_type type) {
         if ((id == 0) && (type == MSV_FOLDER_TYPE_SERVICE)) {
-            return u"";
+            return {};
         }
 
         std::u16string in_hex = fmt::format(u"{:08X}", id);
@@ -106,17 +107,17 @@ namespace eka2l1::epoc::msv {
             break;
         }
 
-        return in_hex;
+        return guest_path(std::move(in_hex));
     }
 
-    std::optional<std::u16string> entry_indexer::get_entry_data_directory(const std::uint32_t id, const std::uint32_t type,
+    std::optional<guest_path> entry_indexer::get_entry_data_directory(const std::uint32_t id, const std::uint32_t type,
         const std::uint32_t owning_service) {
         if ((type == MSV_SERVICE_UID) || (type == MTM_SERVICE_UID_ROOT)) {
             return msg_dir_;
         }
 
-        const std::u16string file_path = eka2l1::add_path(msg_dir_, get_folder_name(owning_service, MSV_FOLDER_TYPE_SERVICE));
-        const std::u16string hiearchy_folder = eka2l1::add_path(file_path, fmt::format(u"\\{:X}\\", id & 0xF));
+        const guest_path file_path(eka2l1::add_path(msg_dir_, get_folder_name(owning_service, MSV_FOLDER_TYPE_SERVICE)));
+        const guest_path hiearchy_folder(eka2l1::add_path(file_path, fmt::format(u"\\{:X}\\", id & 0xF)));
         
         if (!io_->exist(hiearchy_folder)) {
             io_->create_directories(hiearchy_folder);
@@ -125,7 +126,7 @@ namespace eka2l1::epoc::msv {
         return hiearchy_folder;
     }
 
-    std::optional<std::u16string> entry_indexer::get_entry_data_file(entry *ent) {
+    std::optional<guest_path> entry_indexer::get_entry_data_file(entry *ent) {
         if (!ent) {
             return std::nullopt;
         }
@@ -133,7 +134,7 @@ namespace eka2l1::epoc::msv {
         std::uint32_t oss = 0;
         owning_service(ent->id_, oss);
 
-        std::optional<std::u16string> base = get_entry_data_directory(ent->id_, ent->type_uid_, oss);
+        std::optional<guest_path> base = get_entry_data_directory(ent->id_, ent->type_uid_, oss);
         if (!base.has_value()) {
             return base;
         }
@@ -145,14 +146,14 @@ namespace eka2l1::epoc::msv {
         std::u16string DEFAULT_STANDARD_ENTRIES_FILE = u"!:\\resource\\messaging\\msgs.rsc";
         DEFAULT_STANDARD_ENTRIES_FILE[0] = drive_to_char16(rom_drv_);
 
-        std::u16string nearest_default_entries_file = utils::get_nearest_lang_file(io_,
-            DEFAULT_STANDARD_ENTRIES_FILE, preferred_lang_, rom_drv_);
+        guest_path nearest_default_entries_file = utils::get_nearest_lang_file(io_,
+            eka2l1::guest_path{DEFAULT_STANDARD_ENTRIES_FILE}, preferred_lang_, rom_drv_);
 
         if (nearest_default_entries_file.empty()) {
             DEFAULT_STANDARD_ENTRIES_FILE = u"!:\\system\\data\\msgs.rsc";
             DEFAULT_STANDARD_ENTRIES_FILE[0] = drive_to_char16(rom_drv_);
 
-            nearest_default_entries_file = utils::get_nearest_lang_file(io_, DEFAULT_STANDARD_ENTRIES_FILE, preferred_lang_, rom_drv_);
+            nearest_default_entries_file = utils::get_nearest_lang_file(io_, eka2l1::guest_path{DEFAULT_STANDARD_ENTRIES_FILE}, preferred_lang_, rom_drv_);
         }
 
         if (nearest_default_entries_file.empty()) {
@@ -540,7 +541,7 @@ namespace eka2l1::epoc::msv {
         return true;
     }
 
-    sql_entry_indexer::sql_entry_indexer(io_system *io, const std::u16string &msg_folder, const language preferred_lang)
+    sql_entry_indexer::sql_entry_indexer(io_system *io, const guest_path &msg_folder, const language preferred_lang)
         : entry_indexer(io, msg_folder, preferred_lang)
         , database_(nullptr)
         , create_entry_stmt_(nullptr)
@@ -600,8 +601,8 @@ namespace eka2l1::epoc::msv {
     bool sql_entry_indexer::load_or_create_databases(bool &newly_created) {
         newly_created = false;
 
-        std::u16string vert_path = eka2l1::add_path(msg_dir_, u"messaging.db");
-        std::optional<std::u16string> database_real_path = io_->get_raw_path(vert_path);
+        guest_path vert_path(eka2l1::add_path(msg_dir_, u"messaging.db"));
+        std::optional<host_path> database_real_path = io_->get_raw_path(vert_path);
 
         if (!database_real_path) {
             LOG_ERROR(SERVICE_MSV, "Can't retrieve messaging database path!");
@@ -612,7 +613,7 @@ namespace eka2l1::epoc::msv {
             newly_created = true;
         }
 
-        if (sqlite3_open16(database_real_path.value().c_str(), &database_) != SQLITE_OK) {
+        if (sqlite3_open16(database_real_path->utf16().c_str(), &database_) != SQLITE_OK) {
             LOG_ERROR(SERVICE_MSV, "Fail to establish messaging database!");
             return false;
         }

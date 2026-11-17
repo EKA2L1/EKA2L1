@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <common/buffer.h>
 #include <common/fileutils.h>
 #include <common/log.h>
@@ -118,15 +119,10 @@ namespace eka2l1::loader {
         return true;
     }
 
-    static bool extract_file(common::ro_stream &stream, rofs_entry &entry, const std::string &base,
+    static bool extract_file(common::ro_stream &stream, rofs_entry &entry, const host_path &base,
         const int file_offset, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb, std::size_t &max_pos) {
-        std::string fname = common::ucs2_to_utf8(entry.filename_);
-        if (common::is_platform_case_sensitive()) {
-            fname = common::lowercase_string(fname);
-        }
-
-        fname = add_path(base, fname);
-        std::ofstream extract_stream(fname, std::ios_base::binary);
+        const host_path fname = base.resolve_guest(guest_path(entry.filename_));
+        std::ofstream extract_stream(fname.utf8(), std::ios_base::binary);
 
         const std::uint64_t org_pos = stream.tell();
         stream.seek(entry.file_addr_ - file_offset, common::seek_where::beg);
@@ -163,7 +159,7 @@ namespace eka2l1::loader {
         return true;
     }
 
-    static bool extract_directory(common::ro_stream &stream, const std::string &base,
+    static bool extract_directory(common::ro_stream &stream, const host_path &base,
         const int version, const int file_offset, const std::uint32_t offset,
         progress_changed_callback progress_cb, cancel_requested_callback cancel_cb, std::size_t &max_pos) {
         common::create_directories(base);
@@ -195,12 +191,7 @@ namespace eka2l1::loader {
         }
 
         for (auto &subdir_ent : dir_var.subdirs_) {
-            std::string subdir_name = common::ucs2_to_utf8(subdir_ent.filename_);
-            if (common::is_platform_case_sensitive()) {
-                subdir_name = common::lowercase_string(subdir_name);
-            }
-
-            if (!extract_directory(stream, eka2l1::add_path(base, subdir_name + eka2l1::get_separator()),
+            if (!extract_directory(stream, base.resolve_guest(guest_path(subdir_ent.filename_)),
                     version, file_offset, subdir_ent.file_addr_, progress_cb, cancel_cb, max_pos)) {
                 return false;
             }
@@ -219,7 +210,7 @@ namespace eka2l1::loader {
         return false;
     }
 
-    bool dump_rofs_system(common::ro_stream &stream, const std::string &path, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
+    bool dump_rofs_system(common::ro_stream &stream, const host_path &path, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         rofs_header rheader;
         if (stream.read(&rheader, sizeof(rofs_header)) != sizeof(rofs_header)) {
             return false;

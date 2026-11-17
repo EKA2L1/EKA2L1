@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <cstdint>
 #include <string>
 
@@ -48,7 +49,7 @@ namespace eka2l1::epoc::apa {
         std::uint32_t app_startup_instrumentation_event_id_base_;
         std::int32_t parent_process_id_;
 
-        std::u16string executable_path_; ///< Path of app (like Python file, MIDLET, C++ host app, etc...)
+        guest_path executable_path_; ///< Path of app (like Python file, MIDLET, C++ host app, etc...)
         std::u16string document_name_;
         std::string opaque_data_;
         std::string tail_end_;

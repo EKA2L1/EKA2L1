@@ -300,7 +300,7 @@ TEST_CASE("Native control status is available with no installed devices", "[cont
         ~cleanup() { fs::remove_all(path); }
     } remove{ root };
     eka2l1::config::state conf;
-    conf.storage = root.string() + "/";
+    conf.storage = eka2l1::host_path{root.string() + "/"};
     eka2l1::config::app_settings settings(&conf);
     eka2l1::system_create_components components;
     components.conf_ = &conf;

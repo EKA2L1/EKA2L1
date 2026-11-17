@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <common/uid.h>
 #include <utils/consts.h>
 
@@ -36,7 +37,7 @@ namespace eka2l1::epoc::msv {
         std::uint32_t group_idx_;
 
         std::u16string name_;
-        std::u16string filename_;
+        guest_path filename_;
         std::uint32_t comp_uid_;
         std::uint32_t specific_uid_;
         std::uint16_t entry_point_;
@@ -65,12 +66,12 @@ namespace eka2l1::epoc::msv {
         std::map<std::uint32_t, std::vector<mtm_component *>> comps_;
         io_system *io_;
 
-        std::u16string list_path_;
-        std::vector<std::u16string> mtm_files_;
+        guest_path list_path_;
+        std::vector<guest_path> mtm_files_;
 
     protected:
-        void add_entry_to_mtm_list(const std::u16string &path);
-        bool install_group_from_rsc(const std::u16string &path);
+        void add_entry_to_mtm_list(const guest_path &path);
+        bool install_group_from_rsc(const guest_path &path);
 
     public:
         explicit mtm_registry(io_system *io);
@@ -79,7 +80,7 @@ namespace eka2l1::epoc::msv {
         void load_mtm_list();
         void save_mtm_list();
 
-        bool install_group(const std::u16string &path);
+        bool install_group(const guest_path &path);
 
         mtm_group *query_mtm_group(const epoc::uid the_uid);
         mtm_component *query_mtm_component(const epoc::uid_type &type);
@@ -94,7 +95,7 @@ namespace eka2l1::epoc::msv {
             return &groups_[idx];
         }
 
-        void set_list_path(const std::u16string &list) {
+        void set_list_path(const guest_path &list) {
             list_path_ = list;
         }
     };

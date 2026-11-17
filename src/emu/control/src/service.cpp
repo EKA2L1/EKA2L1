@@ -114,7 +114,7 @@ namespace eka2l1::control {
         }
         response storage(const request &req) {
             auto resolved = checked({ "RESOLVE", req.path, req.query, {}, {} });
-            const auto path = required_string(json::parse(resolved.body), "hostPath");
+            const host_path path(required_string(json::parse(resolved.body), "hostPath"));
             return req.path.back() == "files" ? host_files(req, path) : host_log(req, path);
         }
         response atomic_input(const std::string &kind, const json &data, const std::string &method = "POST") {

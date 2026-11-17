@@ -32,6 +32,7 @@
  * copies or substantial portions of the Software.
  */
 
+#include <common/path_types.h>
 #include <drivers/audio/backend/tinysoundfont/player_tsf.h>
 #include <drivers/audio/audio.h>
 
@@ -63,8 +64,8 @@ namespace eka2l1::drivers {
             return this->data_callback(data, fc);
         });
 
-        std::string bank_path = "resources/defaultbank.sf2";
-        std::optional<std::string> bank_path_stored = driver->get_bank_path(drivers::MIDI_BANK_TYPE_SF2);
+        host_path bank_path("resources/defaultbank.sf2");
+        std::optional<host_path> bank_path_stored = driver->get_bank_path(drivers::MIDI_BANK_TYPE_SF2);
 
         if (bank_path_stored.has_value()) {
             bank_path = bank_path_stored.value();
@@ -79,7 +80,7 @@ namespace eka2l1::drivers {
         tsf_channel_set_bank_preset(synth_, 9, 128, 0);
         tsf_set_output(synth_, (TSF_CHANNEL_COUNT == 1) ? TSF_MONO : TSF_STEREO_INTERLEAVED, TSF_SAMPLE_RATE, 0.0f);
 
-        bank_change_callback_ = driver->add_bank_change_callback([&](const midi_bank_type type, const std::string &new_path) {
+        bank_change_callback_ = driver->add_bank_change_callback([&](const midi_bank_type type, const host_path &new_path) {
             return call_bank_change(type, new_path);
         });
     }
@@ -189,7 +190,7 @@ namespace eka2l1::drivers {
             callback_(userdata_.data());
     }
 
-    tsf *player_tsf::load_bank_from_file(const std::string &path) {
+    tsf *player_tsf::load_bank_from_file(const host_path &path) {
         common::ro_std_file_stream stream(path, true);
         if (!stream.valid()) {
             return nullptr;
@@ -211,7 +212,7 @@ namespace eka2l1::drivers {
         return tsf_load(&tstream);
     }
 
-    void player_tsf::call_bank_change(const midi_bank_type type, const std::string &new_path) {
+    void player_tsf::call_bank_change(const midi_bank_type type, const host_path &new_path) {
         if (type == MIDI_BANK_TYPE_SF2) {
             const std::lock_guard<std::mutex> guard(lock_);
             
@@ -289,7 +290,7 @@ namespace eka2l1::drivers {
         }
 
         // Roundabout cause fopen can't read UTF8 url (which is what TML uses)
-        common::ro_std_file_stream stream(url, true);
+        common::ro_std_file_stream stream(eka2l1::host_path{url}, true);
         if (!stream.valid()) {
             return false;
         }

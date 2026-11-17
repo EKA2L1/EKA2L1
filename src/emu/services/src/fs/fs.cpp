@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <services/fs/fs.h>
 #include <services/fs/op.h>
 #include <services/fs/parser.h>
@@ -47,13 +48,12 @@
 #include <services/fs/sec.h>
 
 namespace eka2l1 {
-    bool check_path_capabilities_pass(const std::u16string &path, kernel::process *pr, epoc::security_policy &private_policy, epoc::security_policy &sys_policy, epoc::security_policy &resource_policy) {
+    bool check_path_capabilities_pass(const guest_path &path, kernel::process *pr, epoc::security_policy &private_policy, epoc::security_policy &sys_policy, epoc::security_policy &resource_policy) {
         if (!pr->get_kernel_object_owner()->support_capabilities()) {
             return true;
         }
 
-        const std::u16string path_lowered = common::lowercase_ucs2_string(path);
-        eka2l1::path_iterator_16 iterator(path_lowered);
+        eka2l1::path_iterator_16 iterator(path.lookup_key());
 
         std::int8_t policy_checK_type = -1;
 
@@ -105,22 +105,22 @@ namespace eka2l1 {
         return true;
     }
 
-    static std::u16string get_private_path_trim_uid(kernel::process *pr) {
+    static guest_path get_private_path_trim_uid(kernel::process *pr) {
         const std::uint32_t uid = pr->get_kernel_object_owner()->support_capabilities()
             ? pr->get_sec_info().secure_id : std::get<2>(pr->get_uid_type());
         const std::string hex_id = fmt::format("{:08X}", uid);
 
-        return u"\\Private\\" + common::utf8_to_ucs2(hex_id) + u"\\";
+        return guest_path(u"\\Private\\" + common::utf8_to_ucs2(hex_id) + u"\\");
     }
 
-    static std::u16string get_private_path(kernel::process *pr, const drive_number drive) {
+    static guest_path get_private_path(kernel::process *pr, const drive_number drive) {
         const char16_t drive_dos_char = drive_to_char16(drive);
         const std::u16string drive_u16 = std::u16string(&drive_dos_char, 1) + u":";
 
         return drive_u16 + get_private_path_trim_uid(pr);
     }
 
-    std::u16string get_full_symbian_path(const std::u16string &session_path, const std::u16string &target_path) {
+    guest_path get_full_symbian_path(const guest_path &session_path, const guest_path &target_path) {
         if (target_path.empty()) {
             return session_path;
         }
@@ -130,24 +130,15 @@ namespace eka2l1 {
         // but not the case for other OSes
         if (is_separator(target_path[0])) {
             // Only append the root directory to the beginning
-            return common::trim_spaces(eka2l1::absolute_path(target_path, eka2l1::root_name(session_path, true), true));
+            return guest_path(common::trim_spaces(target_path.absolute(session_path.root_name()).utf16()));
         }
 
         // Check if the path has a root directory
         if (!eka2l1::has_root_dir(target_path)) {
-            return common::trim_spaces(eka2l1::absolute_path(target_path, session_path, true));
+            return guest_path(common::trim_spaces(target_path.absolute(session_path).utf16()));
         }
 
-        return common::trim_spaces(target_path);
-    }
-
-    size_t fs_path_case_insensitive_hasher::operator()(const utf16_str &key) const {
-        utf16_str copy = common::lowercase_ucs2_string(key);
-        return std::hash<utf16_str>()(copy);
-    }
-
-    bool fs_path_case_insensitive_comparer::operator()(const utf16_str &x, const utf16_str &y) const {
-        return (common::compare_ignore_case(x, y) == -1);
+        return guest_path(common::trim_spaces(target_path.utf16()));
     }
 
     fs_server_client::fs_server_client(service::typical_server *srv, kernel::uid suid, epoc::version client_version, kernel::thread *own_thr)
@@ -168,7 +159,7 @@ namespace eka2l1 {
         , flags(0) {
         // Create property references to system drive
         // TODO (pent0): Not hardcode the drive. Maybe dangerous, who knows.
-        default_sys_path = u"C:\\";
+        default_sys_path = guest_path(u"C:\\");
         system_drive_prop = &(*sys->get_kernel_system()->create<service::property>());
         system_drive_prop->define(service::property_type::int_data, 0);
         system_drive_prop->set_int(drive_c);
@@ -179,8 +170,8 @@ namespace eka2l1 {
 
     fs_server::~fs_server() {
         io_system *io = sys->get_io_system();
-        for (const std::u16string &path: temporary_file_cleanset_) {
-            io->delete_entry(path);
+        for (const guest_path &path: temporary_file_cleanset_) {
+            io->delete_entry(eka2l1::guest_path{path});
         }
     }
 
@@ -359,22 +350,22 @@ namespace eka2l1 {
     }
 
     void fs_server_client::replace(service::ipc_context *ctx) {
-        auto given_path_target = ctx->get_argument_value<std::u16string>(0);
-        auto given_path_dest = ctx->get_argument_value<std::u16string>(1);
+        auto given_path_target = ctx->get_path_argument(0);
+        auto given_path_dest = ctx->get_path_argument(1);
 
         if (!given_path_target || !given_path_dest) {
             ctx->complete(epoc::error_argument);
             return;
         }
 
-        auto target = get_full_symbian_path(ss_path, given_path_target.value());
-        auto dest = get_full_symbian_path(ss_path, given_path_dest.value());
+        auto target = get_full_symbian_path(eka2l1::guest_path{ss_path}, eka2l1::guest_path{given_path_target.value()});
+        auto dest = get_full_symbian_path(eka2l1::guest_path{ss_path}, eka2l1::guest_path{given_path_dest.value()});
 
         io_system *io = ctx->sys->get_io_system();
 
         // If exists, delete it so the new file can be replaced
-        if (io->exist(dest)) {
-            io->delete_entry(dest);
+        if (io->exist(eka2l1::guest_path{dest})) {
+            io->delete_entry(eka2l1::guest_path{dest});
         }
 
         bool res = io->rename(target, dest);
@@ -389,20 +380,20 @@ namespace eka2l1 {
     }
 
     void fs_server_client::rename(service::ipc_context *ctx) {
-        auto given_path_target = ctx->get_argument_value<std::u16string>(0);
-        auto given_path_dest = ctx->get_argument_value<std::u16string>(1);
+        auto given_path_target = ctx->get_path_argument(0);
+        auto given_path_dest = ctx->get_path_argument(1);
 
         if (!given_path_target || !given_path_dest) {
             ctx->complete(epoc::error_argument);
             return;
         }
 
-        std::u16string target = get_full_symbian_path(ss_path, given_path_target.value());
-        std::u16string dest = get_full_symbian_path(ss_path, given_path_dest.value());
+        guest_path target = get_full_symbian_path(eka2l1::guest_path{ss_path}, eka2l1::guest_path{given_path_target.value()});
+        guest_path dest = get_full_symbian_path(eka2l1::guest_path{ss_path}, eka2l1::guest_path{given_path_dest.value()});
 
         io_system *io = ctx->sys->get_io_system();
 
-        if (!io->exist(target)) {
+        if (!io->exist(eka2l1::guest_path{target})) {
             if (eka2l1::is_separator(target.back())) {
                 // Want to rename a directory. It's path not found in this case
                 ctx->complete(epoc::error_path_not_found);
@@ -413,7 +404,7 @@ namespace eka2l1 {
             return;
         }
 
-        if (io->exist(dest)) {
+        if (io->exist(eka2l1::guest_path{dest})) {
             ctx->complete(epoc::error_already_exists);
             return;
         }
@@ -430,14 +421,14 @@ namespace eka2l1 {
     }
 
     void fs_server_client::delete_entry(service::ipc_context *ctx) {
-        auto given_path = ctx->get_argument_value<std::u16string>(0);
+        auto given_path = ctx->get_path_argument(0);
 
         if (!given_path) {
             ctx->complete(epoc::error_argument);
             return;
         }
 
-        auto path = get_full_symbian_path(ss_path, given_path.value());
+        auto path = get_full_symbian_path(eka2l1::guest_path{ss_path}, eka2l1::guest_path{given_path.value()});
         if (!check_path_capabilities_pass(path, ctx->msg->own_thr->owning_process(), epoc::fs::private_comp_access_policy, epoc::fs::sys_resource_modify_access_policy, epoc::fs::sys_resource_modify_access_policy)) {
             ctx->complete(epoc::error_permission_denied);
             return;
@@ -445,7 +436,7 @@ namespace eka2l1 {
 
         io_system *io = ctx->sys->get_io_system();
 
-        bool success = io->delete_entry(path);
+        bool success = io->delete_entry(eka2l1::guest_path{path});
 
         if (!success) {
             ctx->complete(epoc::error_not_found);
@@ -460,7 +451,7 @@ namespace eka2l1 {
     }
 
     void fs_server::set_default_system_path(service::ipc_context *ctx) {
-        auto new_path = ctx->get_argument_value<std::u16string>(0);
+        auto new_path = ctx->get_path_argument(0);
 
         if (!new_path) {
             ctx->complete(epoc::error_argument);
@@ -472,13 +463,13 @@ namespace eka2l1 {
     }
 
     void fs_server::get_default_system_path(service::ipc_context *ctx) {
-        ctx->write_arg(0, default_sys_path);
+        ctx->write_arg(0, default_sys_path.utf16());
         ctx->complete(epoc::error_none);
     }
 
-    bool fs_server::is_file_opened(const std::u16string &path) {
+    bool fs_server::is_file_opened(const guest_path &path) {
         for (auto &[path_attrib, attrib] : attribs) {
-            if (common::compare_ignore_case(path_attrib, path) == 0) {
+            if (path_attrib == path) {
                 return true;
             }
         }
@@ -506,18 +497,18 @@ namespace eka2l1 {
                     system_apps_dir[0] = drive_to_char16(drv);
                     shared_data_dir[0] = drive_to_char16(drv);
 
-                    io->create_directories(system_apps_dir);
-                    io->create_directories(shared_data_dir);
+                    io->create_directories(eka2l1::guest_path{system_apps_dir});
+                    io->create_directories(eka2l1::guest_path{shared_data_dir});
                 }
             }
 
             // Composer saves new tones here (PathInfo::SimpleSoundsPath); retail ROMs leave it to the factory C: image.
             if (io->get_drive_entry(drive_c)) {
-                io->create_directories(u"C:\\Nokia\\Sounds\\Simple\\");
+                io->create_directories(eka2l1::guest_path{u"C:\\Nokia\\Sounds\\Simple\\"});
             }
         } else if (io_system *io = sys->get_io_system(); io->get_drive_entry(drive_c)) {
             // PathInfo::OthersPath() normally exists in the factory C: image.
-            io->create_directories(u"C:\\Data\\Others\\");
+            io->create_directories(eka2l1::guest_path{u"C:\\Data\\Others\\"});
         }
 
         std::u16string temp_data_dir = u"?:\\System\\Temp\\";
@@ -531,14 +522,14 @@ namespace eka2l1 {
             if (io->get_drive_entry(drv)) {
                 temp_data_dir[0] = drive_to_char16(drv);
 
-                if (auto dir = io->open_dir(temp_data_dir)) {
+                if (auto dir = io->open_dir(eka2l1::guest_path{temp_data_dir})) {
                     while (auto dir_entry = dir->get_next_entry()) {
                         if (dir_entry->type == io_component_type::file) {
-                            io->delete_entry(common::utf8_to_ucs2(dir_entry->full_path));
+                            io->delete_entry(eka2l1::guest_path{common::utf8_to_ucs2(dir_entry->full_path)});
                         }
                     }
                 } else {
-                    io->create_directories(temp_data_dir);
+                    io->create_directories(eka2l1::guest_path{temp_data_dir});
                 }
             }
         }
@@ -573,12 +564,12 @@ namespace eka2l1 {
     }
 
     void fs_server_client::session_path(service::ipc_context *ctx) {
-        ctx->write_arg(0, ss_path);
+        ctx->write_arg(0, ss_path.utf16());
         ctx->complete(epoc::error_none);
     }
 
     void fs_server_client::set_session_path(service::ipc_context *ctx) {
-        auto new_path = ctx->get_argument_value<std::u16string>(0);
+        auto new_path = ctx->get_path_argument(0);
 
         if (!new_path) {
             ctx->complete(epoc::error_argument);
@@ -602,7 +593,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::create_private_path(service::ipc_context *ctx) {
-        const std::u16string private_path = get_private_path(ctx->msg->own_thr->owning_process(),
+        const guest_path private_path = get_private_path(ctx->msg->own_thr->owning_process(),
             static_cast<drive_number>(ctx->get_argument_value<std::int32_t>(0).value()));
 
         eka2l1::io_system *io = ctx->sys->get_io_system();
@@ -623,15 +614,15 @@ namespace eka2l1 {
     }
 
     void fs_server_client::is_file_in_rom(service::ipc_context *ctx) {
-        std::optional<utf16_str> path = ctx->get_argument_value<utf16_str>(0);
+        std::optional<guest_path> path = ctx->get_path_argument(0);
 
         if (!path) {
             ctx->complete(epoc::error_argument);
             return;
         }
 
-        auto final_path = get_full_symbian_path(ss_path, path.value());
-        symfile f = ctx->sys->get_io_system()->open_file(final_path, READ_MODE);
+        auto final_path = get_full_symbian_path(eka2l1::guest_path{ss_path}, eka2l1::guest_path{path.value()});
+        symfile f = ctx->sys->get_io_system()->open_file(eka2l1::guest_path{final_path}, READ_MODE);
 
         // The address must be written back even when the file does not exist at all: clients read it
         // unconditionally on KErrNone, so leaving it untouched hands them uninitialised stack as a ROM address.
@@ -646,7 +637,7 @@ namespace eka2l1 {
         ctx->complete(epoc::error_none);
     }
 
-    std::int32_t validate_file_name(const std::u16string &name, const std::u16string &session_path,
+    std::int32_t validate_file_name(const std::u16string &name, const guest_path &session_path,
         char16_t &bad_character, file_name_validation_params *params) {
         const auto invalid = [&](const char16_t character, const file_name_error error = file_name_error::bad_character) {
             bad_character = character;
@@ -701,13 +692,13 @@ namespace eka2l1 {
             }
         }
 
-        std::u16string path = name;
+        std::u16string path(name);
         if (use_session_path) {
             const std::size_t first_separator = session_path.find(u'\\');
             const std::size_t last_separator = session_path.rfind(u'\\');
-            path = drive_end ? name.substr(0, 2) : eka2l1::root_name(session_path, true);
+            path = drive_end ? name.substr(0, 2) : session_path.root_name().utf16();
             if ((remainder.empty() || remainder.front() != u'\\') && first_separator != std::u16string::npos) {
-                path += session_path.substr(first_separator, last_separator - first_separator + 1);
+                path += session_path.utf16().substr(first_separator, last_separator - first_separator + 1);
             }
             path += remainder;
         }
@@ -876,14 +867,14 @@ namespace eka2l1 {
     }
 
     void fs_server_client::mkdir(service::ipc_context *ctx) {
-        std::optional<std::u16string> dir = ctx->get_argument_value<std::u16string>(0);
+        std::optional<guest_path> dir = ctx->get_path_argument(0);
 
         if (!dir) {
             ctx->complete(epoc::error_argument);
             return;
         }
 
-        dir.value() = get_full_symbian_path(ss_path, dir.value());
+        dir.value() = get_full_symbian_path(eka2l1::guest_path{ss_path}, eka2l1::guest_path{dir.value()});
 
         if (!check_path_capabilities_pass(dir.value(), ctx->msg->own_thr->owning_process(), epoc::fs::private_comp_access_policy, epoc::fs::sys_resource_modify_access_policy, epoc::fs::sys_resource_modify_access_policy)) {
             ctx->complete(epoc::error_permission_denied);
@@ -894,11 +885,11 @@ namespace eka2l1 {
 
         bool res = false;
 
-        if (!io->exist(dir.value())) {
+        if (!io->exist(eka2l1::guest_path{dir.value()})) {
             if (*ctx->get_argument_value<std::int32_t>(1)) {
-                res = io->create_directories(eka2l1::file_directory(*dir));
+                res = io->create_directories(eka2l1::guest_path{eka2l1::file_directory(*dir)});
             } else {
-                res = io->create_directory(eka2l1::file_directory(*dir));
+                res = io->create_directory(eka2l1::guest_path{eka2l1::file_directory(*dir)});
             }
         }
 
@@ -913,7 +904,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::rmdir(service::ipc_context *ctx) {
-        std::optional<std::u16string> dir = ctx->get_argument_value<std::u16string>(0);
+        std::optional<guest_path> dir = ctx->get_path_argument(0);
 
         if (!dir) {
             ctx->complete(epoc::error_argument);
@@ -921,7 +912,7 @@ namespace eka2l1 {
         }
 
         io_system *io = ctx->sys->get_io_system();
-        io->delete_entry(dir.value());
+        io->delete_entry(eka2l1::guest_path{dir.value()});
 
         ctx->complete(epoc::error_none);
     }
@@ -937,22 +928,22 @@ namespace eka2l1 {
         }
 
         file_parser parser(name.value(), related.value_or(u""), parse.value());
-        parser.parse(server<fs_server>()->default_sys_path);
+        parser.parse(server<fs_server>()->default_sys_path.utf16());
 
         ctx->write_data_to_descriptor_argument(2, parser.get_result());
         ctx->complete(epoc::error_none);
     }
 
     void fs_server_client::entry(service::ipc_context *ctx) {
-        std::optional<std::u16string> fname_op = ctx->get_argument_value<std::u16string>(0);
+        std::optional<guest_path> fname_op = ctx->get_path_argument(0);
 
         if (!fname_op) {
             ctx->complete(epoc::error_argument);
             return;
         }
 
-        std::u16string fname = std::move(*fname_op);
-        fname = get_full_symbian_path(ss_path, fname);
+        guest_path fname = std::move(*fname_op);
+        fname = get_full_symbian_path(eka2l1::guest_path{ss_path}, fname);
 
         if (!check_path_capabilities_pass(fname, ctx->msg->own_thr->owning_process(), epoc::fs::private_comp_access_policy, epoc::fs::sys_read_only_access_policy, epoc::fs::resource_read_only_access_policy)) {
             ctx->complete(epoc::error_permission_denied);
@@ -980,7 +971,7 @@ namespace eka2l1 {
     }
 
     void fs_server_client::set_entry(service::ipc_context *ctx) {
-        std::optional<std::u16string> fname_op = ctx->get_argument_value<std::u16string>(0);
+        std::optional<guest_path> fname_op = ctx->get_path_argument(0);
         std::optional<epoc::time> time = ctx->get_argument_data_from_descriptor<epoc::time>(1);
         std::uint32_t set_att_mask = *ctx->get_argument_value<std::uint32_t>(2);
         std::uint32_t clear_att_mask = *ctx->get_argument_value<std::uint32_t>(3);
@@ -990,7 +981,7 @@ namespace eka2l1 {
             return;
         }
 
-        const std::u16string fname = get_full_symbian_path(ss_path, fname_op.value());
+        const guest_path fname = get_full_symbian_path(eka2l1::guest_path{ss_path}, eka2l1::guest_path{fname_op.value()});
         LOG_INFO(SERVICE_EFSRV, "Set entry of: {}", common::ucs2_to_utf8(fname));
 
         io_system *io = ctx->sys->get_io_system();
@@ -1006,9 +997,9 @@ namespace eka2l1 {
     }
 
     void fs_server::private_path(service::ipc_context *ctx) {
-        std::u16string path = get_private_path_trim_uid(ctx->msg->own_thr->owning_process());
+        guest_path path(get_private_path_trim_uid(ctx->msg->own_thr->owning_process()));
 
-        ctx->write_arg(0, path);
+        ctx->write_arg(0, path.utf16());
         ctx->complete(epoc::error_none);
     }
 
@@ -1044,14 +1035,14 @@ namespace eka2l1 {
     }
 
     void fs_server_client::is_file_opened(service::ipc_context *ctx) {
-        std::optional<utf16_str> path = ctx->get_argument_value<utf16_str>(0);
+        std::optional<guest_path> path = ctx->get_path_argument(0);
 
         if (!path) {
             ctx->complete(epoc::error_argument);
             return;
         }
 
-        std::u16string final_path = get_full_symbian_path(ss_path, path.value());
+        guest_path final_path(get_full_symbian_path(eka2l1::guest_path{ss_path}, eka2l1::guest_path{path.value()}));
         const std::int32_t result = server<fs_server>()->is_file_opened(final_path);
 
         ctx->write_data_to_descriptor_argument<std::int32_t>(1, result);

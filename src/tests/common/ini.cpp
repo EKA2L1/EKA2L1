@@ -25,7 +25,7 @@ using namespace eka2l1;
 
 TEST_CASE("two_prop_in_a_section", "ini_test") {
     common::ini_file ini;
-    ini.load("commonassets/test.ini");
+    ini.load(eka2l1::host_path{"commonassets/test.ini"});
 
     auto sec1_ptr = ini.find("section1");
 
@@ -48,7 +48,7 @@ TEST_CASE("two_prop_in_a_section", "ini_test") {
 
 TEST_CASE("quoted_value_keeps_separators", "ini_test") {
     common::ini_file ini;
-    ini.load("commonassets/test3.ini");
+    ini.load(eka2l1::host_path{"commonassets/test3.ini"});
 
     auto sec_ptr = ini.find("quoted");
     REQUIRE(sec_ptr);
@@ -79,7 +79,7 @@ TEST_CASE("quoted_value_keeps_separators", "ini_test") {
 
 TEST_CASE("recursive_prop_with_comma", "ini_test") {
     common::ini_file ini;
-    ini.load("commonassets/test2.ini");
+    ini.load(eka2l1::host_path{"commonassets/test2.ini"});
 
     auto sec1_ptr = ini.find("test");
 

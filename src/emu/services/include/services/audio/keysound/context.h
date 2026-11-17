@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -50,7 +51,7 @@ namespace eka2l1::epoc::keysound {
 
         sound_type type_;
 
-        std::u16string filename_;
+        guest_path filename_;
         std::vector<std::uint8_t> sequences_;
 
         std::uint16_t freq_;

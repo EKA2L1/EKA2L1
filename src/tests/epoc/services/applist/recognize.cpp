@@ -30,7 +30,7 @@ using namespace eka2l1;
 namespace {
     data_recog_result recognize(std::vector<std::uint8_t> data, const std::u16string &name) {
         common::ro_buf_stream stream(data.empty() ? nullptr : data.data(), data.size());
-        return applist_server::recognize_data_impl(stream, name);
+        return applist_server::recognize_data_impl(stream, eka2l1::guest_path{name});
     }
 
     std::string type_of(data_recog_result result) {

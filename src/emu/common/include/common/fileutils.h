@@ -19,6 +19,7 @@
  */
 
 #pragma once
+#include <common/path_types.h>
 
 #include <common/types.h>
 
@@ -47,12 +48,12 @@ namespace eka2l1::common {
         FOLDER_COPY_FLAG_FILE_NO_OVERWRITE_IF_EXIST = 1 << 1
     };
 
-    std::int64_t file_size(const std::string &path);
-    file_type get_file_type(const std::string &path);
+    std::int64_t file_size(const host_path &path);
+    file_type get_file_type(const host_path &path);
 
-    std::uint64_t get_last_modifiy_since_ad(const std::u16string &path);
+    std::uint64_t get_last_modifiy_since_ad(const host_path &path);
 
-    bool is_file(const std::string &path, const file_type expected,
+    bool is_file(const host_path &path, const file_type expected,
         file_type *result = nullptr);
 
     /**
@@ -61,13 +62,13 @@ namespace eka2l1::common {
      *          -1 if file not found
      *          -2 if file resize failed (file is being readed, etc...)
      */
-    int resize(const std::string &path, const std::uint64_t size);
+    int resize(const host_path &path, const std::uint64_t size);
 
     /* !\brief Remove a file.
     */
-    bool remove(const std::string &path);
+    bool remove(const host_path &path);
 
-    bool move_file(const std::string &path, const std::string &new_path);
+    bool move_file(const host_path &path, const host_path &new_path);
 
     /**
      * \brief Copy a file to target destination.
@@ -79,7 +80,7 @@ namespace eka2l1::common {
      * 
      * \returns True on success.
      */
-    bool copy_file(const std::string &target_file, const std::string &dest, const bool overwrite_if_dest_exists);
+    bool copy_file(const host_path &target_file, const host_path &dest, const bool overwrite_if_dest_exists);
 
     /**
      * @brief   Copy target folder contents to another specified folder.
@@ -93,10 +94,14 @@ namespace eka2l1::common {
      * 
      * @returns True on success.
      */
-    bool copy_folder(const std::string &target_folder, const std::string &dest_folder_to_reside, const std::uint32_t flags, progress_changed_callback progress_callback = nullptr,
+    bool copy_folder(const host_path &target_folder, const host_path &dest_folder_to_reside, const std::uint32_t flags, progress_changed_callback progress_callback = nullptr,
                      cancel_requested_callback cancel_cb = nullptr);
 
-    bool delete_folder(const std::string &target_folder);
+    // Copies names into a Symbian namespace, merging aliases through the guest path key.
+    bool copy_guest_tree(const host_path &source, const host_path &destination, const std::uint32_t flags,
+        progress_changed_callback progress_callback = nullptr, cancel_requested_callback cancel_cb = nullptr);
+
+    bool delete_folder(const host_path &target_folder);
 
     /**
      * @brief Whether the filesystem holding @p path matches names without regard to case.
@@ -106,7 +111,7 @@ namespace eka2l1::common {
      * Linux user can mount either. @p path need not exist -- its nearest existing
      * ancestor is what gets probed. Answers are cached per probed directory.
      */
-    bool is_path_case_insensitive(const std::string &path);
+    bool is_path_case_insensitive(const host_path &path);
 
     /**
      * @brief Resolve @p relative against @p base, matching each component without regard
@@ -121,7 +126,7 @@ namespace eka2l1::common {
      * @param base      Host directory to resolve from. Returned unchanged if missing.
      * @param relative  Path relative to @p base, separated by either separator.
      */
-    std::string resolve_case_insensitive_path(const std::string &base, const std::string &relative);
+    host_path resolve_case_insensitive_path(const host_path &base, const guest_path &relative);
 
     /**
      * @brief Drop the cached folded listings used by resolve_case_insensitive_path().
@@ -132,19 +137,19 @@ namespace eka2l1::common {
     void invalidate_folded_directory_indexes();
 
     /*! \brief Create a directory. */
-    void create_directory(std::string path);
+    void create_directory(const host_path &path);
 
     /*! \brief Check if a file or directory exists. */
-    bool exists(std::string path);
+    bool exists(const host_path &path);
 
     /*! \brief Check if the path points to a directory. */
-    bool is_dir(std::string path);
+    bool is_dir(const host_path &path);
 
     /*! \brief Create directories. */
-    void create_directories(std::string path);
+    void create_directories(const host_path &path);
 
-    bool set_current_directory(const std::string &path);
-    bool get_current_directory(std::string &path);
+    bool set_current_directory(const host_path &path);
+    bool get_current_directory(host_path &path);
 
     /**
      * @brief Open a C API file, handling through platform-specific API.
@@ -154,13 +159,13 @@ namespace eka2l1::common {
      * 
      * @returns Handle to the C file on success, else null.
      */
-    FILE *open_c_file(const std::string &target_file, const char *mode);
+    FILE *open_c_file(const host_path &target_file, const char *mode);
 
     struct dir_entry {
         file_type type;
         std::size_t size;
 
-        std::string name;
+        host_path name;
     };
 
     /**
@@ -170,10 +175,10 @@ namespace eka2l1::common {
      */
     struct dir_iterator {
     public:
-        std::string dir_name;
+        host_path dir_name;
         bool detail;
 
-        explicit dir_iterator(const std::string &dir)
+        explicit dir_iterator(const host_path &dir)
             : dir_name(dir) {
         }
 
@@ -200,7 +205,7 @@ namespace eka2l1::common {
      * @param path The path to the folder we want to open the directory iterator.
      * @return Instance of the suitable directory iterator on success.
      */
-    std::unique_ptr<dir_iterator> make_directory_iterator(const std::string &path, const std::string &filter);
+    std::unique_ptr<dir_iterator> make_directory_iterator(const host_path &path, const std::string &filter);
 
     /**
      * @brief Given a filename, find the file/folder that matches this name by case-insensitive comparasion.
@@ -211,6 +216,6 @@ namespace eka2l1::common {
      * 
      * @return std::string      Sensitive filename/folder name. Empty on not found.
      */
-    std::string find_case_sensitive_file_name(const std::string &folder_path, const std::string &insensitive_name,
+    host_path find_case_sensitive_file_name(const host_path &folder_path, const guest_path &insensitive_name,
         const file_type type);
 }

@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <common/configure.h>
 
 #include <common/algorithm.h>
@@ -108,12 +109,12 @@ namespace eka2l1 {
 
     // A game card can hold two builds of one title, `<code>` and `<code>_1`, sharing an app UID.
     struct ngage_game_card_layout {
-        std::string app_folder_to_run;
+        host_path app_folder_to_run;
 
         // Empty when the card holds a single folder.
-        std::string app_folder_to_unregister;
+        host_path app_folder_to_unregister;
 
-        std::string app_folder_for_libs;
+        host_path app_folder_for_libs;
     };
 
     class system_impl {
@@ -142,8 +143,8 @@ namespace eka2l1 {
         // What mount_device_drive() put under C, D and E. The real path tells them apart
         // from drives the frontend has mounted over them since.
         struct device_drive_mount {
-            std::string folder;
-            std::string real_path;
+            host_path folder;
+            host_path real_path;
         };
 
         std::array<device_drive_mount, 3> device_drive_mounts_;
@@ -158,7 +159,7 @@ namespace eka2l1 {
 
         config::state *conf_;
         config::app_settings *app_settings_;
-        std::string cache_root_;
+        host_path cache_root_;
 
         std::atomic<bool> exit = false;
         std::atomic<bool> paused = false;
@@ -407,11 +408,11 @@ namespace eka2l1 {
                 std::string rom_drive_name = common::lowercase_string(
                     std::string(1, static_cast<char>(drive_to_char16(romdrv))));
 
-                std::string storage_path;
+                host_path storage_path;
                 common::get_current_directory(storage_path);
                 storage_path = eka2l1::absolute_path(conf_->storage, storage_path);
 
-                std::string root_z_path = add_path(storage_path, "drives/" + rom_drive_name + "/");
+                host_path root_z_path(add_path(storage_path, "drives/" + rom_drive_name + "/"));
                 auto ite = common::make_directory_iterator(root_z_path, "");
                 if (!ite) {
                     return false;
@@ -424,7 +425,7 @@ namespace eka2l1 {
                 while (ite->next_entry(firm_entry) == 0) {
                     if ((firm_entry.type == common::file_type::FILE_DIRECTORY) && (firm_entry.name != ".")
                         && (firm_entry.name != "..")) {
-                        const std::string full_entry_path = eka2l1::add_path(root_z_path,
+                        const host_path full_entry_path = eka2l1::add_path(root_z_path,
                             firm_entry.name);
 
                         const epocver ver = loader::determine_rpkg_symbian_version(full_entry_path);
@@ -435,8 +436,8 @@ namespace eka2l1 {
                         // install_rom/install_rpkg save the ROM under roms/<lowercase
                         // firmcode>/, so match that or a case-sensitive filesystem sees
                         // no SYM.ROM and deletes an otherwise valid dump below.
-                        const std::string rom_directory = eka2l1::add_path(storage_path, eka2l1::add_path("roms", common::lowercase_string(firm_name) + "\\"));
-                        const std::string rom_file = eka2l1::add_path(rom_directory, "SYM.ROM");
+                        const host_path rom_directory(eka2l1::add_path(storage_path, eka2l1::add_path("roms", common::lowercase_string(firm_name) + "\\")));
+                        const host_path rom_file(eka2l1::add_path(rom_directory, "SYM.ROM"));
                         if (!common::exists(rom_file)) {
                             LOG_ERROR(SYSTEM, "Removing broken device: {} ({})", model, firm_name);
                             eka2l1::common::delete_folder(rom_directory);
@@ -447,8 +448,8 @@ namespace eka2l1 {
                         LOG_INFO(SYSTEM, "Found a device: {} ({})", model, firm_name);
 
                         // devices.yml is rebuilt from scratch, so the folder is the only record left.
-                        const bool isolated_drives = common::is_dir(eka2l1::add_path(storage_path,
-                            device_isolated_drives_folder(firm_name)));
+                        const bool isolated_drives = common::is_dir(eka2l1::host_path{eka2l1::add_path(storage_path,
+                            device_isolated_drives_folder(firm_name))});
 
                         if (dvcmngr_->add_new_device(firm_name, model, manu, ver, 0, isolated_drives) != add_device_none) {
                             LOG_ERROR(SYSTEM, "Unable to add this device, silently ignore!");
@@ -543,7 +544,7 @@ namespace eka2l1 {
         }
 
         void startup();
-        bool load(const std::u16string &path, const std::u16string &cmd_arg);
+        bool load(const guest_path &path, const std::u16string &cmd_arg);
         int loop();
 
         bool pause();
@@ -601,22 +602,22 @@ namespace eka2l1 {
             return j2me_applist_.get();
         }
 
-        void mount(drive_number drv, const drive_media media, std::string path, const std::uint32_t attrib = io_attrib_none);
+        void mount(drive_number drv, const drive_media media, host_path path, const std::uint32_t attrib = io_attrib_none);
         void mount_device_drives();
         bool mount_device_drive(const drive_number drv);
-        std::string get_device_drive_path(const drive_number drv);
+        host_path get_device_drive_path(const drive_number drv);
         bool remount_device_drives();
-        zip_mount_error mount_game_zip(drive_number drv, const drive_media media, const std::string &zip_path, const std::uint32_t attrib = io_attrib_none, progress_changed_callback progress_cb = nullptr, cancel_requested_callback cancel_cb = nullptr);
-        ngage_game_card_install_error install_ngage_game_card(const std::string &card_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb = nullptr);
-        ngage_game_card_install_error install_ngage_game_card_archive(const std::string &archive_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb);
-        ngage_game_card_install_error find_singular_ngage_game(const std::string &system_apps_folder_path, apa_app_registry &result, ngage_game_card_layout *layout_out = nullptr);
+        zip_mount_error mount_game_zip(drive_number drv, const drive_media media, const host_path &zip_path, const std::uint32_t attrib = io_attrib_none, progress_changed_callback progress_cb = nullptr, cancel_requested_callback cancel_cb = nullptr);
+        ngage_game_card_install_error install_ngage_game_card(const host_path &card_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb = nullptr);
+        ngage_game_card_install_error install_ngage_game_card_archive(const host_path &archive_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb);
+        ngage_game_card_install_error find_singular_ngage_game(const host_path &system_apps_folder_path, apa_app_registry &result, ngage_game_card_layout *layout_out = nullptr);
         bool get_ngage_game_info_mounted(apa_app_registry &result);
 
         bool reset(const bool lock_sys, const std::int32_t new_index = -1);
         void do_state(common::chunkyseri &seri);
 
-        package::installation_result install_package(std::u16string path, drive_number drv);
-        bool load_rom(const std::string &path);
+        package::installation_result install_package(host_path path, drive_number drv);
+        bool load_rom(const host_path &path);
 
         void request_exit();
         bool should_exit() const {
@@ -710,7 +711,7 @@ namespace eka2l1 {
         ssdriver = sensor_driver;
     }
 
-    bool system_impl::load(const std::u16string &path, const std::u16string &cmd_arg) {
+    bool system_impl::load(const guest_path &path, const std::u16string &cmd_arg) {
         process_ptr pr = kern_->spawn_new_process(path, cmd_arg);
 
         if (!pr) {
@@ -817,11 +818,11 @@ namespace eka2l1 {
         return 1;
     }
 
-    package::installation_result system_impl::install_package(std::u16string path, drive_number drv) {
-        return packages_->install_package(path, drv);
+    package::installation_result system_impl::install_package(host_path path, drive_number drv) {
+        return packages_->install_package(eka2l1::host_path{path}, drv);
     }
 
-    bool system_impl::load_rom(const std::string &path) {
+    bool system_impl::load_rom(const host_path &path) {
         symfile f = eka2l1::physical_file_proxy(path, READ_MODE | BIN_MODE);
 
         if (!f || !f->valid()) {
@@ -863,9 +864,9 @@ namespace eka2l1 {
         return true;
     }
 
-    void system_impl::mount(drive_number drv, const drive_media media, std::string path,
+    void system_impl::mount(drive_number drv, const drive_media media, host_path path,
         const std::uint32_t attrib) {
-        io_->mount_physical_path(drv, media, attrib, common::utf8_to_ucs2(path));
+        io_->mount_physical_path(drv, media, attrib, eka2l1::host_path{path});
     }
 
     static constexpr drive_number DEVICE_DRIVES[] = { drive_c, drive_d, drive_e };
@@ -874,7 +875,7 @@ namespace eka2l1 {
         return static_cast<std::size_t>(drv - drive_c);
     }
 
-    std::string system_impl::get_device_drive_path(const drive_number drv) {
+    host_path system_impl::get_device_drive_path(const drive_number drv) {
         device *dvc = dvcmngr_->get_current();
         if (!dvc || (drv < drive_c) || (drv > drive_e)) {
             return {};
@@ -884,12 +885,12 @@ namespace eka2l1 {
     }
 
     bool system_impl::mount_device_drive(const drive_number drv) {
-        const std::string path = get_device_drive_path(drv);
+        const host_path path(get_device_drive_path(drv));
         if (path.empty()) {
             return false;
         }
 
-        common::create_directories(path);
+        common::create_directories(eka2l1::host_path{path});
 
         device_drive_mount &mounted = device_drive_mounts_[device_drive_slot(drv)];
         mounted = {};
@@ -897,7 +898,7 @@ namespace eka2l1 {
         io_->unmount(drv);
 
         const std::uint32_t attrib = (drv == drive_e) ? io_attrib_removeable : io_attrib_internal;
-        if (!io_->mount_physical_path(drv, drive_media::physical, attrib, common::utf8_to_ucs2(path))) {
+        if (!io_->mount_physical_path(drv, drive_media::physical, attrib, eka2l1::host_path{path})) {
             return false;
         }
 
@@ -931,7 +932,7 @@ namespace eka2l1 {
                 continue;
             }
 
-            const std::string wanted_path = get_device_drive_path(drv);
+            const host_path wanted_path(get_device_drive_path(drv));
             if (wanted_path.empty() || (wanted_path == mounted.folder)) {
                 continue;
             }
@@ -967,7 +968,7 @@ namespace eka2l1 {
         return found;
     }
 
-    zip_mount_error system_impl::mount_game_zip(drive_number drv, const drive_media media, const std::string &zip_path, const std::uint32_t base_attrib, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
+    zip_mount_error system_impl::mount_game_zip(drive_number drv, const drive_media media, const host_path &zip_path, const std::uint32_t base_attrib, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         std::vector<common::archive_entry_info> entries;
 
         if (!common::list_archive(zip_path, entries)) {
@@ -980,24 +981,24 @@ namespace eka2l1 {
             return zip_mount_error_no_system_folder;
         }
 
-        std::string current_dir;
+        host_path current_dir;
         common::get_current_directory(current_dir);
 
-        const std::string cache_root = cache_root_.empty()
-            ? eka2l1::absolute_path("cache/", current_dir)
+        const host_path cache_root = cache_root_.empty()
+            ? current_dir.join("cache/")
             : cache_root_;
-        const std::string temp_folder = eka2l1::add_path(cache_root, "temp/");
+        const host_path temp_folder(eka2l1::add_path(cache_root, "temp/"));
 
         common::delete_folder(temp_folder);
         common::create_directories(temp_folder);
 
         const bool unpacked = common::extract_archive(zip_path,
-            [&](const common::archive_entry_info &entry) -> std::string {
+            [&](const common::archive_entry_info &entry) -> host_path {
                 if (entry.path.compare(0, card_prefix.size(), card_prefix) != 0) {
                     return {};
                 }
                 const std::string relative = entry.path.substr(card_prefix.size());
-                return relative.empty() ? std::string() : eka2l1::add_path(temp_folder, relative);
+                return relative.empty() ? host_path() : eka2l1::add_path(temp_folder, relative);
             },
             progress_cb, cancel_cb);
 
@@ -1013,16 +1014,16 @@ namespace eka2l1 {
 
     // Some card dumps carry a stub in the `_1` folder rather than a build, so which one runs is decided
     // on whether its image parses at all.
-    static bool ngage_app_image_loadable(const std::string &system_apps_folder_path,
-        const std::string &app_folder_name) {
-        const std::string app_folder = eka2l1::add_path(system_apps_folder_path,
+    static bool ngage_app_image_loadable(const host_path &system_apps_folder_path,
+        const host_path &app_folder_name) {
+        const host_path app_folder = eka2l1::add_path(system_apps_folder_path,
             app_folder_name + eka2l1::get_separator());
 
-        std::string app_file = eka2l1::add_path(app_folder, app_folder_name + ".app");
+        host_path app_file = eka2l1::add_path(app_folder, app_folder_name + ".app");
 
         if (!common::exists(app_file)) {
-            const std::string real_name = common::find_case_sensitive_file_name(app_folder,
-                app_folder_name + ".app", common::FILE_REGULAR);
+            const host_path real_name = common::find_case_sensitive_file_name(app_folder,
+                guest_path::from_utf8((app_folder_name + ".app").utf8()), common::FILE_REGULAR);
 
             if (real_name.empty()) {
                 return false;
@@ -1040,12 +1041,12 @@ namespace eka2l1 {
         return loader::parse_e32img(reinterpret_cast<common::ro_stream *>(&app_stream)).has_value();
     }
 
-    ngage_game_card_install_error system_impl::find_singular_ngage_game(const std::string &system_apps_folder_path, apa_app_registry &result, ngage_game_card_layout *layout_out) {
+    ngage_game_card_install_error system_impl::find_singular_ngage_game(const host_path &system_apps_folder_path, apa_app_registry &result, ngage_game_card_layout *layout_out) {
         std::unique_ptr<common::dir_iterator> apps_folder_ite = common::make_directory_iterator(system_apps_folder_path, "");
         apps_folder_ite->detail = true;
 
-        std::string specific_app;
-        std::string specific_app_2;
+        host_path specific_app;
+        host_path specific_app_2;
 
         if (apps_folder_ite->is_valid()) {
             common::dir_entry app_folder_entry;
@@ -1058,12 +1059,12 @@ namespace eka2l1 {
                     }
                     if (!specific_app.empty()) {
                         if (specific_app_2.empty()) {
-                            specific_app_2 = app_folder_entry.name;
+                            specific_app_2 = host_path(app_folder_entry.name);
                         } else {
                             return ngage_game_card_more_than_one_data_folder;
                         }
                     } else {
-                        specific_app = app_folder_entry.name;
+                        specific_app = host_path(app_folder_entry.name);
                     }
                 }
             }
@@ -1076,17 +1077,17 @@ namespace eka2l1 {
         }
 
         // Two folders are only ever the `<code>` and `<code>_1` builds of one title.
-        std::string base_app = specific_app;
+        host_path base_app = specific_app;
 
         if (!specific_app_2.empty()) {
-            const bool app1_ends_with1 = std_string_ends_with(specific_app, "_1");
-            const bool app2_ends_with1 = std_string_ends_with(specific_app_2, "_1");
+            const bool app1_ends_with1 = std_string_ends_with(specific_app.utf8(), "_1");
+            const bool app2_ends_with1 = std_string_ends_with(specific_app_2.utf8(), "_1");
 
             if (app1_ends_with1 == app2_ends_with1) {
                 return ngage_game_card_more_than_one_data_folder;
             }
 
-            const std::string alternate_app = app1_ends_with1 ? specific_app : specific_app_2;
+            const host_path alternate_app = app1_ends_with1 ? specific_app : specific_app_2;
             base_app = app1_ends_with1 ? specific_app_2 : specific_app;
 
             if (ngage_app_image_loadable(system_apps_folder_path, alternate_app)) {
@@ -1101,14 +1102,14 @@ namespace eka2l1 {
             }
         }
 
-        const std::string app_folder = eka2l1::add_path(system_apps_folder_path, specific_app + eka2l1::get_separator());
-        std::string aif_file = eka2l1::add_path(app_folder, specific_app + ".aif");
+        const host_path app_folder(eka2l1::add_path(system_apps_folder_path, specific_app + eka2l1::get_separator()));
+        host_path aif_file = eka2l1::add_path(app_folder, specific_app + ".aif");
         if (!common::exists(aif_file)) {
             // Game-card dumps vary the registration file's extension casing (Call of
             // Duty ships "6R48.AIF"), so on case-sensitive storage resolve the real
             // name before declaring the registration missing.
-            const std::string real_aif_name = common::find_case_sensitive_file_name(
-                app_folder, specific_app + ".aif", common::FILE_REGULAR);
+            const host_path real_aif_name = common::find_case_sensitive_file_name(
+                app_folder, guest_path::from_utf8((specific_app + ".aif").utf8()), common::FILE_REGULAR);
             if (real_aif_name.empty()) {
                 return ngage_game_card_no_game_registeration_info;
             }
@@ -1132,18 +1133,18 @@ namespace eka2l1 {
     }
 
     bool system_impl::get_ngage_game_info_mounted(apa_app_registry &result) {
-        std::optional<std::u16string> path_apps = io_->get_raw_path(u"E:\\system\\apps\\");
+        std::optional<host_path> path_apps = io_->get_raw_path(eka2l1::guest_path{u"E:\\system\\apps\\"});
         if (!path_apps.has_value()) {
             return false;
         }
 
         ngage_game_card_layout layout;
-        if (find_singular_ngage_game(common::ucs2_to_utf8(path_apps.value()), result, &layout)
+        if (find_singular_ngage_game(path_apps.value(), result, &layout)
             != ngage_game_card_install_success) {
             return false;
         }
 
-        const std::string &run_folder = layout.app_folder_to_run;
+        const host_path &run_folder = layout.app_folder_to_run;
 
         result.mandatory_info.app_path = eka2l1::add_path(u"E:\\system\\apps\\", common::utf8_to_ucs2(eka2l1::add_path(run_folder, run_folder + ".app", true)), true);
         return true;
@@ -1152,7 +1153,7 @@ namespace eka2l1 {
     // Unpacking is measured in bytes and installing in files, so progress needs a scale of its own.
     static constexpr std::size_t NGAGE_CARD_ARCHIVE_PROGRESS_TOTAL = 1000;
 
-    ngage_game_card_install_error system_impl::install_ngage_game_card_archive(const std::string &archive_path,
+    ngage_game_card_install_error system_impl::install_ngage_game_card_archive(const host_path &archive_path,
         std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb) {
         std::vector<common::archive_entry_info> entries;
 
@@ -1167,17 +1168,17 @@ namespace eka2l1 {
             return ngage_game_card_no_game_data_folder;
         }
 
-        std::string current_dir;
+        host_path current_dir;
         common::get_current_directory(current_dir);
 
-        const std::string cache_root = cache_root_.empty()
-            ? eka2l1::absolute_path("cache/", current_dir)
+        const host_path cache_root = cache_root_.empty()
+            ? current_dir.join("cache/")
             : cache_root_;
-        const std::string staging = eka2l1::add_path(cache_root, "ngagecard/");
+        const host_path staging(eka2l1::add_path(cache_root, "ngagecard/"));
 
         common::delete_folder(staging);
 
-        std::vector<std::string> destinations(entries.size());
+        std::vector<host_path> destinations(entries.size());
 
         for (std::size_t i = 0; i < entries.size(); i++) {
             if (entries[i].path.compare(0, card_prefix.size(), card_prefix) != 0) {
@@ -1215,9 +1216,9 @@ namespace eka2l1 {
         std::size_t next_index = 0;
 
         const bool extracted = common::extract_archive(archive_path,
-            [&](const common::archive_entry_info &) -> std::string {
+            [&](const common::archive_entry_info &) -> host_path {
                 const std::size_t index = next_index++;
-                return (index < destinations.size()) ? destinations[index] : std::string();
+                return (index < destinations.size()) ? destinations[index] : host_path();
             },
             extract_progress_cb, nullptr);
 
@@ -1236,16 +1237,16 @@ namespace eka2l1 {
         return result;
     }
 
-    ngage_game_card_install_error system_impl::install_ngage_game_card(const std::string &card_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb) {
+    ngage_game_card_install_error system_impl::install_ngage_game_card(const host_path &card_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb) {
         // An archive is unpacked first, so everything below only ever sees a real directory tree.
         if (!common::is_dir(card_path)) {
             return install_ngage_game_card_archive(card_path, game_name_found_cb, progress_cb);
         }
 
-        std::string system_folder_path = eka2l1::add_path(card_path, "\\system\\");
+        host_path system_folder_path(eka2l1::add_path(card_path, "\\system\\"));
         if (!common::exists(system_folder_path)) {
             if (common::is_platform_case_sensitive()) {
-                std::string system_real_name = common::find_case_sensitive_file_name(card_path + "\\", "system", common::FILE_DIRECTORY);
+                host_path system_real_name = common::find_case_sensitive_file_name(eka2l1::host_path{card_path + "\\"}, guest_path(u"system"), common::FILE_DIRECTORY);
                 if (system_real_name.empty()) {
                     return ngage_game_card_no_game_data_folder;
                 }
@@ -1254,10 +1255,10 @@ namespace eka2l1 {
                 return ngage_game_card_no_game_data_folder;
             }
         }
-        std::string system_apps_folder_path = eka2l1::add_path(system_folder_path, "\\apps\\");
+        host_path system_apps_folder_path(eka2l1::add_path(system_folder_path, "\\apps\\"));
         if (!common::exists(system_apps_folder_path)) {
             if (common::is_platform_case_sensitive()) {
-                std::string apps_real_name = common::find_case_sensitive_file_name(system_folder_path + "\\", "apps", common::FILE_DIRECTORY);
+                host_path apps_real_name = common::find_case_sensitive_file_name(eka2l1::host_path{system_folder_path + "\\"}, guest_path(u"apps"), common::FILE_DIRECTORY);
                 if (apps_real_name.empty()) {
                     return ngage_game_card_no_game_data_folder;
                 }
@@ -1279,18 +1280,18 @@ namespace eka2l1 {
             game_name_found_cb(common::ucs2_to_utf8(app_reg_temp.mandatory_info.long_caption.to_std_string(nullptr)));
         }
 
-        std::string drive_e_path;
+        host_path drive_e_path;
         if (auto drive_entry = io_->get_drive_entry(drive_e)) {
             drive_e_path = drive_entry->real_path;
         } else {
             return ngage_game_card_general_error;
         }
 
-        std::string current_dir;
+        host_path current_dir;
         common::get_current_directory(current_dir);
 
-        std::string drive_e_path_root = eka2l1::absolute_path(drive_e_path, current_dir);
-        drive_e_path = common::resolve_case_insensitive_path(drive_e_path_root, "system")
+        host_path drive_e_path_root(eka2l1::absolute_path(drive_e_path, current_dir));
+        drive_e_path = drive_e_path_root.resolve_guest(eka2l1::guest_path::from_utf8("system"))
             + eka2l1::get_separator();
 
         if (!common::exists(drive_e_path)) {
@@ -1303,8 +1304,8 @@ namespace eka2l1 {
 
         common::dir_entry system_subitem_entry;
 
-        std::string explicit_lib_copy;
-        std::string explicit_program_copy;
+        host_path explicit_lib_copy;
+        host_path explicit_program_copy;
 
         std::uint32_t total_percentage = 100;
 
@@ -1329,7 +1330,7 @@ namespace eka2l1 {
 
         std::uint32_t copied_count = 0;
 
-        const bool copied = common::copy_folder(
+        const bool copied = common::copy_guest_tree(
             card_path, drive_e_path_root,
             0,
             [&](const std::size_t copied, const std::size_t total) {
@@ -1343,9 +1344,8 @@ namespace eka2l1 {
 
         // Both builds carry the same app UID, so only one of them may stay registered.
         if (!layout.app_folder_to_unregister.empty()) {
-            const std::string &drop = layout.app_folder_to_unregister;
-            const std::string real_aif_remove = common::resolve_case_insensitive_path(drive_e_path,
-                eka2l1::add_path("\\apps\\", eka2l1::add_path(drop, drop + ".aif")));
+            const host_path &drop = layout.app_folder_to_unregister;
+            const host_path real_aif_remove = drive_e_path.resolve_guest(eka2l1::guest_path::from_utf8(host_path("\\apps\\").join(drop.join(drop + ".aif")).utf8()));
             common::remove(real_aif_remove);
         }
 
@@ -1356,11 +1356,10 @@ namespace eka2l1 {
             std::uint32_t percentage_per_explicit_copy = (!explicit_lib_copy.empty() && !explicit_program_copy.empty()) ? 50 : 100;
             std::uint32_t current_perct = 100;
 
-            const std::string app_folder_dest = common::resolve_case_insensitive_path(drive_e_path,
-                eka2l1::add_path("apps\\", layout.app_folder_for_libs)) + eka2l1::get_separator();
+            const host_path app_folder_dest = drive_e_path.resolve_guest(eka2l1::guest_path::from_utf8(host_path("apps\\").join(layout.app_folder_for_libs).utf8())) + eka2l1::get_separator();
 
             if (!explicit_lib_copy.empty()) {
-                common::copy_folder(eka2l1::add_path(system_folder_path, explicit_lib_copy + "\\"), app_folder_dest,
+                common::copy_guest_tree(eka2l1::host_path{eka2l1::add_path(system_folder_path, explicit_lib_copy + "\\")}, app_folder_dest,
                                     0, [&](const std::size_t copied, const std::size_t total) {
                     if (progress_cb)
                         progress_cb(current_perct + (copied * percentage_per_explicit_copy / total), total_percentage);
@@ -1370,7 +1369,7 @@ namespace eka2l1 {
             }
 
             if (!explicit_program_copy.empty()) {
-                common::copy_folder(eka2l1::add_path(system_folder_path, explicit_program_copy + "\\"), app_folder_dest,
+                common::copy_guest_tree(eka2l1::host_path{eka2l1::add_path(system_folder_path, explicit_program_copy + "\\")}, app_folder_dest,
                                     0, [&](const std::size_t copied, const std::size_t total) {
                     if (progress_cb)
                         progress_cb(current_perct + (copied * percentage_per_explicit_copy / total), total_percentage);
@@ -1397,7 +1396,7 @@ namespace eka2l1 {
             return;
         }
 
-        get_lib_manager()->load_patch_libraries(runtime_resource_path(PATCH_FOLDER_PATH));
+        get_lib_manager()->load_patch_libraries(eka2l1::host_path{runtime_resource_path(eka2l1::host_path{PATCH_FOLDER_PATH})});
         dispatch::libraries::register_functions(kern_.get(), dispatcher_.get());
 
         service::init_services_post_bootup(parent_);
@@ -1484,7 +1483,7 @@ namespace eka2l1 {
         cpu->clear_instruction_cache();
 
         // Load ROM
-        const std::string rom_path = add_path(conf_->storage, add_path(preset::ROM_FOLDER_PATH, add_path(common::lowercase_string(dvc->firmware_code), preset::ROM_FILENAME)));
+        const host_path rom_path(add_path(conf_->storage, add_path(preset::ROM_FOLDER_PATH, add_path(common::lowercase_string(dvc->firmware_code), preset::ROM_FILENAME))));
 
         if (!load_rom(rom_path)) {
             if (lock_sys) {
@@ -1606,7 +1605,7 @@ namespace eka2l1 {
         return impl->startup();
     }
 
-    bool system::load(const std::u16string &path, const std::u16string &cmd_arg) {
+    bool system::load(const guest_path &path, const std::u16string &cmd_arg) {
         return impl->load(path, cmd_arg);
     }
 
@@ -1674,7 +1673,7 @@ namespace eka2l1 {
         return impl->get_j2me_applist();
     }
 
-    void system::mount(drive_number drv, const drive_media media, std::string path,
+    void system::mount(drive_number drv, const drive_media media, host_path path,
         const std::uint32_t attrib) {
         return impl->mount(drv, media, path, attrib);
     }
@@ -1687,15 +1686,15 @@ namespace eka2l1 {
         return impl->mount_device_drive(drv);
     }
 
-    std::string system::get_device_drive_path(const drive_number drv) {
+    host_path system::get_device_drive_path(const drive_number drv) {
         return impl->get_device_drive_path(drv);
     }
 
-    zip_mount_error system::mount_game_zip(drive_number drv, const drive_media media, const std::string &zip_path, const std::uint32_t base_attrib, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
+    zip_mount_error system::mount_game_zip(drive_number drv, const drive_media media, const host_path &zip_path, const std::uint32_t base_attrib, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         return impl->mount_game_zip(drv, media, zip_path, base_attrib, progress_cb, cancel_cb);
     }
 
-    ngage_game_card_install_error system::install_ngage_game_card(const std::string &card_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb) {
+    ngage_game_card_install_error system::install_ngage_game_card(const host_path &card_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb) {
         return impl->install_ngage_game_card(card_path, game_name_found_cb, progress_cb);
     }
 
@@ -1703,8 +1702,8 @@ namespace eka2l1 {
         return impl->reset(true);
     }
 
-    int system::install_package(std::u16string path, drive_number drv) {
-        return static_cast<int>(impl->install_package(path, drv));
+    int system::install_package(host_path path, drive_number drv) {
+        return static_cast<int>(impl->install_package(eka2l1::host_path{path}, drv));
     }
 
     void system::request_exit() {
@@ -1765,12 +1764,12 @@ namespace eka2l1 {
 
     bool system::is_uiq_2_device_active() {
         return (impl->get_symbian_version_use() == epocver::epoc70)
-            && impl->get_io_system()->exist(u"Z:\\System\\Libs\\qikctl.dll");
+            && impl->get_io_system()->exist(eka2l1::guest_path{u"Z:\\System\\Libs\\qikctl.dll"});
     }
 
     bool system::is_uiq_3_device_active() {
         return (impl->get_symbian_version_use() == epocver::epoc91)
-            && impl->get_io_system()->exist(u"Z:\\sys\\bin\\qikctl.dll");
+            && impl->get_io_system()->exist(eka2l1::guest_path{u"Z:\\sys\\bin\\qikctl.dll"});
     }
 
     drive_number system::get_default_install_drive() {

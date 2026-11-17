@@ -23,7 +23,7 @@
 using namespace eka2l1;
 
 TEST_CASE("ro_std_file_stream_over_missing_file", "buffer") {
-    common::ro_std_file_stream stream("this-file-does-not-exist", true);
+    common::ro_std_file_stream stream(eka2l1::host_path{"this-file-does-not-exist"}, true);
     char scratch[8] = {};
 
     REQUIRE_FALSE(stream.valid());

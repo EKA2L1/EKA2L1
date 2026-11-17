@@ -23,9 +23,9 @@
 TEST_CASE("Library search paths preserve directory order and accept omitted separators", "[loader]") {
     // RLibrary::Load's semicolon list contains directories; trailing separators are optional.
     auto paths = eka2l1::get_library_search_paths(u"E:\\System\\Apps\\Example;C:\\System\\Libs\\");
-    REQUIRE(paths == std::vector<std::u16string>{ u"E:\\System\\Apps\\Example\\", u"C:\\System\\Libs\\" });
+    REQUIRE(paths == std::vector<eka2l1::guest_path>{ eka2l1::guest_path(u"E:\\System\\Apps\\Example\\"), eka2l1::guest_path(u"C:\\System\\Libs\\") });
     REQUIRE(paths.front() + u"library.dll" == u"E:\\System\\Apps\\Example\\library.dll");
-    REQUIRE(eka2l1::get_library_search_paths(u";\\System\\Libs;;") == std::vector<std::u16string>{ u"\\System\\Libs\\" });
+    REQUIRE(eka2l1::get_library_search_paths(u";\\System\\Libs;;") == std::vector<eka2l1::guest_path>{ eka2l1::guest_path(u"\\System\\Libs\\") });
     REQUIRE(eka2l1::get_library_search_paths(u";;").empty());
     REQUIRE(eka2l1::get_library_search_paths(u"").empty());
 }

@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <services/fbs/adapter/font_adapter.h>
 #include <services/fbs/font.h>
 
@@ -68,7 +69,7 @@ namespace eka2l1::epoc {
         std::size_t linked_font_count_ = 0;
 
     protected:
-        void folder_change_callback(const std::u16string &path, int action);
+        void folder_change_callback(const guest_path &path, int action);
 
     public:
         explicit font_store(eka2l1::io_system *io)

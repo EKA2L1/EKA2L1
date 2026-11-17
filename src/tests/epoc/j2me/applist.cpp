@@ -13,12 +13,12 @@ namespace {
         eka2l1::config::state conf;
 
         app_list_fixture() {
-            conf.storage = "j2me_applist_test/";
-            eka2l1::common::delete_folder(conf.storage);
+            conf.storage = eka2l1::host_path{"j2me_applist_test/"};
+            eka2l1::common::delete_folder(eka2l1::host_path{conf.storage});
         }
 
         ~app_list_fixture() {
-            eka2l1::common::delete_folder(conf.storage);
+            eka2l1::common::delete_folder(eka2l1::host_path{conf.storage});
         }
     };
 }
@@ -26,13 +26,13 @@ namespace {
 TEST_CASE("J2ME reinstall updates the intended row without changing its id", "[j2me]") {
     app_list_fixture fixture;
     eka2l1::j2me::app_list apps(fixture.conf);
-    eka2l1::j2me::app_entry first{ 0, "Game A", "Vendor", "a.png", "1.0", "Game A", "Game A" };
-    eka2l1::j2me::app_entry second{ 0, "Game B", "Vendor", "b.png", "1.0", "Game B", "Game B" };
+    eka2l1::j2me::app_entry first{ 0, "Game A", "Vendor", eka2l1::host_path("a.png"), "1.0", "Game A", "Game A" };
+    eka2l1::j2me::app_entry second{ 0, "Game B", "Vendor", eka2l1::host_path("b.png"), "1.0", "Game B", "Game B" };
     first.id_ = apps.add_entry(first, true);
     second.id_ = apps.add_entry(second, true);
     REQUIRE(first.id_ != second.id_);
 
-    second.icon_path_ = "updated.png";
+    second.icon_path_ = eka2l1::host_path("updated.png");
     second.title_ = "Updated title";
     REQUIRE(apps.add_entry(second, true) == second.id_);
     const auto a = apps.get_entry(first.id_);

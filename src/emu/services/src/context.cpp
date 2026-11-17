@@ -114,6 +114,12 @@ namespace eka2l1 {
             return std::nullopt;
         }
 
+    std::optional<guest_path> ipc_context::get_path_argument(const int idx) {
+        auto text = get_argument_value<std::u16string>(idx);
+        if (!text || text->find(u'\0') != std::u16string::npos) return std::nullopt;
+        return guest_path(std::move(*text));
+    }
+
         template <>
         std::optional<std::string> ipc_context::get_argument_value(const int idx) {
             if (idx >= 4) {

@@ -40,12 +40,12 @@ namespace eka2l1 {
 
     void supply_plpvariant_machine_id(system *sys) {
         io_system *io = sys->get_io_system();
-        if (!io->exist(u"Z:\\System\\Libs\\ConSvr.exe")) {
+        if (!io->exist(eka2l1::guest_path{u"Z:\\System\\Libs\\ConSvr.exe"})) {
             return;
         }
 
         const std::string &imei = sys->get_config()->imei;
-        symfile machine_id = io->open_file(u"C:\\System\\plpvar.ini", WRITE_MODE | BIN_MODE);
+        symfile machine_id = io->open_file(eka2l1::guest_path{u"C:\\System\\plpvar.ini"}, WRITE_MODE | BIN_MODE);
         if (!machine_id) {
             LOG_ERROR(SERVICE_ETEL, "Unable to write the PlpVariant machine ID file");
             return;

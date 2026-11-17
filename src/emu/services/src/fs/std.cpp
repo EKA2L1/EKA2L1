@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <services/fs/std.h>
 #include <vfs/vfs.h>
 
@@ -72,7 +73,7 @@ namespace eka2l1::epoc::fs {
         sym_entry.size_high = static_cast<std::uint32_t>(info.size >> 32);
 
         const std::u16string name_ucs2 = common::utf8_to_ucs2(info.name);
-        const std::u16string fullpath_ucs2 = common::utf8_to_ucs2(info.full_path);
+        const guest_path fullpath_ucs2(common::utf8_to_ucs2(info.full_path));
 
         sym_entry.attrib = build_attribute_from_entry_info(info);
         sym_entry.name = name_ucs2;

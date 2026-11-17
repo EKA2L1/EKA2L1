@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <common/types.h>
 #include <system/installation/common.h>
 
@@ -47,8 +48,8 @@ namespace eka2l1 {
          * @param drives_z_resident_path  The emulator's `drives/z/` folder.
          * @param isolate_drives          Give the device drives C, D and E of its own.
          */
-        device_installation_error install_archive(device_manager *dvc, const std::string &path,
-            const std::string &rom_resident_path, const std::string &drives_z_resident_path,
+        device_installation_error install_archive(device_manager *dvc, const host_path &path,
+            const host_path &rom_resident_path, const host_path &drives_z_resident_path,
             const bool isolate_drives, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb);
     }
 }

@@ -82,10 +82,10 @@ namespace eka2l1::config {
     static const char *COMPAT_DIR_PATH = "compat\\";
 
     bool app_settings::load_all_settings() {
-        std::string current_dir;
+        host_path current_dir;
         common::get_current_directory(current_dir);
 
-        std::string compat_full = eka2l1::absolute_path(COMPAT_DIR_PATH, current_dir);
+        host_path compat_full = current_dir.join(COMPAT_DIR_PATH);
 
         if (!common::exists(compat_full)) {
             common::create_directories(compat_full);
@@ -103,7 +103,7 @@ namespace eka2l1::config {
 
         while (setting_folder->next_entry(setting_entry) == 0) {
             if (setting_entry.type == common::FILE_REGULAR) {
-                const common::pystr fname = eka2l1::replace_extension(eka2l1::filename(setting_entry.name), "");
+                const common::pystr fname(setting_entry.name.filename().with_extension("").utf8());
                 const epoc::uid uid = fname.as_int<std::uint32_t>(0, 16);
 
                 if (uid != 0) {
@@ -111,7 +111,7 @@ namespace eka2l1::config {
                     YAML::Node the_node;
 
                     try {
-                        common::ro_std_file_stream app_registry_stream(eka2l1::add_path(setting_folder->dir_name, setting_entry.name), true);
+                        common::ro_std_file_stream app_registry_stream(eka2l1::host_path{eka2l1::add_path(setting_folder->dir_name, setting_entry.name)}, true);
                         if (!app_registry_stream.valid()) {
                             LOG_ERROR(CONFIG, "Failed to open app settings entry {}", setting_entry.name);
                             continue;
@@ -163,7 +163,7 @@ namespace eka2l1::config {
     void app_settings::update_setting(const epoc::uid app_uid) {
         const std::string setting_file = eka2l1::add_path(COMPAT_DIR_PATH, fmt::format("{:X}.yml", app_uid));
 
-        if (!common::exists(setting_file)) {
+        if (!common::exists(eka2l1::host_path{setting_file})) {
             return;
         }
 
@@ -171,7 +171,7 @@ namespace eka2l1::config {
         YAML::Node the_node;
 
         try {
-            common::ro_std_file_stream app_registry_stream(setting_file, true);
+            common::ro_std_file_stream app_registry_stream(eka2l1::host_path{setting_file}, true);
             if (!app_registry_stream.valid()) {
                 return;
             }

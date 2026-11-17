@@ -25,6 +25,7 @@
 
 #include <cstdint>
 #include <string>
+#include <common/path_types.h>
 #include <vector>
 
 namespace eka2l1::common {
@@ -113,7 +114,7 @@ namespace eka2l1::package {
     bool is_valid_target_path(const std::u16string &target);
 
     struct file_description {
-        std::u16string target;
+        guest_path target;
         std::u16string mime_type;
         hash_container hash;
         std::uint32_t operation;

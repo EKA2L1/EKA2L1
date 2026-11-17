@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #pragma once
 #include <control/api.h>
+#include <common/path_types.h>
 #include <functional>
 #include <memory>
 
@@ -18,8 +19,8 @@ namespace eka2l1::control {
 
     struct native_frontend {
         std::string platform;
-        std::string documents;
-        std::string log;
+        host_path documents;
+        host_path log;
         std::function<system *()> get_system;
         std::function<std::uint64_t()> frames;
         std::function<bool()> can_capture = [] { return true; };

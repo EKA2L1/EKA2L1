@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <common/container.h>
 #include <vfs/vfs.h>
 
@@ -149,7 +150,7 @@ namespace eka2l1 {
         bool memory_break = false;
 
         kernel::thread *current_thread = nullptr;
-        std::string target_codeseg_path;
+        guest_path target_codeseg_path;
 
         common::identity_container<symfile> file_container;
 

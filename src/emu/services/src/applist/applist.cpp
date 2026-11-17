@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <services/applist/applist.h>
 #include <services/applist/op.h>
 #include <services/fs/fs.h>
@@ -125,7 +126,7 @@ namespace eka2l1 {
     // claimed by more than one registration file while we hold the lock.
     static bool commit_registry(std::vector<apa_app_registry> &regs, apa_app_registry &&reg) {
         auto same_path = std::find_if(regs.begin(), regs.end(), [&reg](const apa_app_registry &existing) {
-            return (common::compare_ignore_case(existing.rsc_path, reg.rsc_path) == 0);
+            return (existing.rsc_path == reg.rsc_path);
         });
 
         if (same_path != regs.end()) {
@@ -167,9 +168,9 @@ namespace eka2l1 {
         io->remove_drive_change_notify(drive_change_handle_);
     }
 
-    bool applist_server::load_registry_oldarch(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
+    bool applist_server::load_registry_oldarch(eka2l1::io_system *io, const guest_path &path, drive_number land_drive,
         const language ideal_lang) {
-        symfile f = io->open_file(path, READ_MODE | BIN_MODE);
+        symfile f = io->open_file(eka2l1::guest_path{path}, READ_MODE | BIN_MODE);
 
         if (!f) {
             return false;
@@ -181,7 +182,7 @@ namespace eka2l1 {
             const std::lock_guard<std::mutex> guard(list_access_mut_);
 
             auto existed = std::find_if(regs.begin(), regs.end(), [=](const apa_app_registry &reg) {
-                return (common::compare_ignore_case(reg.rsc_path, path) == 0);
+                return (reg.rsc_path == path);
             });
 
             last_mof = f->last_modify_since_0ad();
@@ -206,7 +207,7 @@ namespace eka2l1 {
         reg.land_drive = land_drive;
         reg.rsc_path = path;
         reg.last_rsc_modified = last_mof;
-        reg.mandatory_info.app_path = eka2l1::replace_extension(path, u".app"); // It seems so.
+        reg.mandatory_info.app_path = path.with_extension(u".app").utf16(); // It seems so.
 
         if (!read_registeration_info_aif(reinterpret_cast<common::ro_stream *>(&std_rsc_raw), reg, land_drive,
                 ideal_lang)) {
@@ -215,8 +216,7 @@ namespace eka2l1 {
 
         if (reg.mandatory_info.short_caption.get_length() == 0) {
             // Use the filename of the register file as the caption
-            const std::u16string caption_to_use = eka2l1::replace_extension(eka2l1::filename(path, true),
-                u"");
+            const std::u16string caption_to_use = path.filename().with_extension(u"").utf16();
 
             reg.mandatory_info.short_caption.assign(nullptr, caption_to_use);
             reg.mandatory_info.long_caption.assign(nullptr, caption_to_use);
@@ -241,7 +241,7 @@ namespace eka2l1 {
             }
         }
 
-        std::u16string caption_file_path = eka2l1::replace_extension(path, u"") + u"_caption.rsc";
+        guest_path caption_file_path(eka2l1::replace_extension(path, u"") + u"_caption.rsc");
         caption_file_path = utils::get_nearest_lang_file(io, caption_file_path, ideal_lang, land_drive);
 
         f = io->open_file(caption_file_path, READ_MODE | BIN_MODE);
@@ -265,10 +265,10 @@ namespace eka2l1 {
         return commit_registry(regs, std::move(reg));
     }
 
-    bool applist_server::load_registry(eka2l1::io_system *io, const std::u16string &path, drive_number land_drive,
+    bool applist_server::load_registry(eka2l1::io_system *io, const guest_path &path, drive_number land_drive,
         const language ideal_lang) {
         // common::benchmarker marker(__FUNCTION__);
-        const std::u16string nearest_path = utils::get_nearest_lang_file(io, path, ideal_lang, land_drive);
+        const guest_path nearest_path(utils::get_nearest_lang_file(io, eka2l1::guest_path{path}, ideal_lang, land_drive));
         symfile f = io->open_file(nearest_path, READ_MODE | BIN_MODE);
 
         if (!f) {
@@ -281,7 +281,7 @@ namespace eka2l1 {
             const std::lock_guard<std::mutex> guard(list_access_mut_);
 
             auto find_result = std::find_if(regs.begin(), regs.end(), [=](const apa_app_registry &reg) {
-                return (common::compare_ignore_case(reg.rsc_path, nearest_path) == 0);
+                return (reg.rsc_path == nearest_path);
             });
 
             last_modified = f->last_modify_since_0ad();
@@ -345,14 +345,14 @@ namespace eka2l1 {
         reg.localised_info_rsc_path = eka2l1::absolute_path(reg.localised_info_rsc_path,
             eka2l1::root_dir(path), true);
 
-        const auto localised_path = utils::get_nearest_lang_file(io, reg.localised_info_rsc_path,
+        const auto localised_path = utils::get_nearest_lang_file(io, eka2l1::guest_path{reg.localised_info_rsc_path},
             ideal_lang, land_drive);
 
         if (localised_path.empty()) {
             return true;
         }
 
-        f = io->open_file(localised_path, READ_MODE | BIN_MODE);
+        f = io->open_file(eka2l1::guest_path{localised_path}, READ_MODE | BIN_MODE);
 
         dat = read_rsc_from_file(f, reg.localised_info_rsc_id, true, nullptr);
 
@@ -369,21 +369,21 @@ namespace eka2l1 {
             common::ucs2_to_utf8(reg.mandatory_info.long_caption.to_std_string(nullptr)),
             reg.mandatory_info.uid);
 
-        if (!eka2l1::is_absolute(reg.icon_file_path, std::u16string(u"c:\\"), true)) {
+        if (!eka2l1::is_absolute(reg.icon_file_path, guest_path(u"c:\\"), true)) {
             // Try to absolute icon path
             // Search the registration file drive, and than the localizable registration file
-            std::u16string try_1 = eka2l1::absolute_path(reg.icon_file_path,
+            guest_path try_1 = eka2l1::absolute_path(reg.icon_file_path,
                 std::u16string(1, drive_to_char16(land_drive)) + u":\\", true);
 
             if (io->exist(try_1)) {
                 reg.icon_file_path = try_1;
             } else {
-                try_1[0] = localised_path[0];
+                try_1.replace(0, 1, std::u16string(1, localised_path[0]));
 
                 if (io->exist(try_1)) {
                     reg.icon_file_path = try_1;
                 } else {
-                    reg.icon_file_path = u"";
+                    reg.icon_file_path.clear();
                 }
             }
         }
@@ -392,11 +392,11 @@ namespace eka2l1 {
         return commit_registry(regs, std::move(reg));
     }
 
-    bool applist_server::delete_registry(const std::u16string &rsc_path) {
+    bool applist_server::delete_registry(const guest_path &rsc_path) {
         const std::lock_guard<std::mutex> guard(list_access_mut_);
 
         auto result = std::find_if(regs.begin(), regs.end(), [rsc_path](const apa_app_registry &reg) {
-            return common::compare_ignore_case(reg.rsc_path, rsc_path) == 0;
+            return reg.rsc_path == rsc_path;
         });
 
         if (result == regs.end()) {
@@ -430,7 +430,7 @@ namespace eka2l1 {
         switch (act) {
         case drive_action_mount: {
             avail_drives_ |= 1 << (drv - drive_a);
-            std::vector<std::u16string> register_file_paths;
+            std::vector<guest_path> register_file_paths;
 
             if (kern->is_eka1()) {
                 rescan_registries_on_drive_oldarch(io, drv, register_file_paths);
@@ -474,15 +474,14 @@ namespace eka2l1 {
     }
 
     void applist_server::rescan_registries_on_drive_oldarch(eka2l1::io_system *io, const drive_number drv,
-        std::vector<std::u16string> &register_file_paths) {
-        const std::u16string base_dir = std::u16string(1, drive_to_char16(drv)) + u":\\System\\Apps\\";
+        std::vector<guest_path> &register_file_paths) {
+        const guest_path base_dir(std::u16string(1, drive_to_char16(drv)) + u":\\System\\Apps\\");
         auto reg_dir = io->open_dir(base_dir, {}, io_attrib_include_dir);
 
         if (reg_dir) {
             while (auto ent = reg_dir->get_next_entry()) {
-                if ((ent->type == io_component_type::dir) && (ent->name != ".") && (ent->name != "..")) {
-                    const std::u16string aif_reg_file = common::utf8_to_ucs2(eka2l1::add_path(
-                        ent->full_path, ent->name + OLDARCH_REG_FILE_EXT, true));
+                if ((ent->type == io_component_type::dir) && (ent->name != u".") && (ent->name != u"..")) {
+                    const guest_path aif_reg_file = ent->full_path.join(ent->name + guest_path::from_utf8(OLDARCH_REG_FILE_EXT));
 
                     register_file_paths.push_back(aif_reg_file);
                 }
@@ -491,24 +490,24 @@ namespace eka2l1 {
     }
 
     void applist_server::rescan_registries_on_drive_newarch(eka2l1::io_system *io, const drive_number drv,
-        std::vector<std::u16string> &register_file_paths) {
-        const std::u16string import_rsc_path = std::u16string(1, drive_to_char16(drv)) + u":\\Private\\10003a3f\\import\\apps\\" + NEWARCH_REG_FILE_SEARCH_WILDCARD16;
-        const std::u16string rom_rscs_path = std::u16string(1, drive_to_char16(drv)) + u":\\Private\\10003a3f\\apps\\" + NEWARCH_REG_FILE_SEARCH_WILDCARD16;
+        std::vector<guest_path> &register_file_paths) {
+        const guest_path import_rsc_path(std::u16string(1, drive_to_char16(drv)) + u":\\Private\\10003a3f\\import\\apps\\" + NEWARCH_REG_FILE_SEARCH_WILDCARD16);
+        const guest_path rom_rscs_path(std::u16string(1, drive_to_char16(drv)) + u":\\Private\\10003a3f\\apps\\" + NEWARCH_REG_FILE_SEARCH_WILDCARD16);
 
         // Supposedly to only scan in ROM, but it's not really that strict on the emulator ;)
         rescan_registries_on_drive_newarch_with_path(io, drv, rom_rscs_path, register_file_paths);
         rescan_registries_on_drive_newarch_with_path(io, drv, import_rsc_path, register_file_paths);
     }
 
-    void applist_server::rescan_registries_on_drive_newarch_with_path(eka2l1::io_system *io, const drive_number drv, const std::u16string &path,
-        std::vector<std::u16string> &results) {
-        auto reg_dir = io->open_dir(path, {}, io_attrib_include_file);
+    void applist_server::rescan_registries_on_drive_newarch_with_path(eka2l1::io_system *io, const drive_number drv, const guest_path &path,
+        std::vector<guest_path> &results) {
+        auto reg_dir = io->open_dir(eka2l1::guest_path{path}, {}, io_attrib_include_file);
         bool modded = false;
 
         if (reg_dir) {
             while (auto ent = reg_dir->get_next_entry()) {
                 if (ent->type == io_component_type::file) {
-                    results.push_back(common::utf8_to_ucs2(ent->full_path));
+                    results.push_back(ent->full_path);
                 }
             }
         }
@@ -533,14 +532,14 @@ namespace eka2l1 {
         std::size_t prev = regs.size();
 
         common::erase_elements(regs, [io](const apa_app_registry &reg) {
-            return !io->exist(reg.rsc_path);
+            return !io->exist(eka2l1::guest_path{reg.rsc_path});
         });
 
         if (prev != regs.size()) {
             global_modified = true;
         }
 
-        std::vector<std::u16string> register_file_paths;
+        std::vector<guest_path> register_file_paths;
 
         for (std::uint8_t i = 0; i < drive_count; i++) {
             if (avail_drives_ & (1 << i)) {
@@ -744,7 +743,7 @@ namespace eka2l1 {
             return;
         }
 
-        epoc::filename fname_des(reg->icon_file_path);
+        epoc::filename fname_des(reg->icon_file_path.utf16());
 
         ctx.write_data_to_descriptor_argument<epoc::filename>(1, fname_des);
         ctx.complete(epoc::error_none);
@@ -927,11 +926,11 @@ namespace eka2l1 {
         }
 
         // Simply load only
-        codeseg_ptr seg = kern->get_lib_manager()->load(arguments[0].std_str());
-        std::u16string app_launch = APA_APP_RUNNER;
+        codeseg_ptr seg = kern->get_lib_manager()->load(guest_path(arguments[0].std_str()));
+        guest_path app_launch(APA_APP_RUNNER);
 
         if (std::get<0>(seg->get_uids()) == epoc::EXECUTABLE_UID) {
-            app_launch = arguments[0].std_str();
+            app_launch = guest_path(arguments[0].std_str());
         }
 
         kernel::uid thread_id = 0;
@@ -954,7 +953,7 @@ namespace eka2l1 {
     }
 
     void applist_server::is_program(service::ipc_context &ctx) {
-        std::optional<std::u16string> path = ctx.get_argument_value<std::u16string>(0);
+        std::optional<guest_path> path = ctx.get_path_argument(0);
 
         if (!path.has_value()) {
             ctx.complete(epoc::error_argument);
@@ -973,7 +972,7 @@ namespace eka2l1 {
     }
 
     void applist_server::get_native_executable_name_if_non_native(service::ipc_context &ctx) {
-        std::optional<std::u16string> path = ctx.get_argument_value<std::u16string>(1);
+        std::optional<guest_path> path = ctx.get_path_argument(1);
 
         if (!path.has_value()) {
             ctx.complete(epoc::error_argument);
@@ -1089,13 +1088,13 @@ namespace eka2l1 {
         ctx.complete(ctx.write_data_to_descriptor_argument(1, uid) ? epoc::error_none : epoc::error_argument);
     }
 
-    void applist_server::get_app_for_document_impl(service::ipc_context &ctx, const std::u16string &path) {
+    void applist_server::get_app_for_document_impl(service::ipc_context &ctx, const guest_path &path) {
         applist_app_for_document app;
         app.uid = 0;
         app.data_type.uid = 0;
 
         config::state *conf = kern->get_config();
-        symfile document = sys->get_io_system()->open_file(path, READ_MODE | BIN_MODE);
+        symfile document = sys->get_io_system()->open_file(eka2l1::guest_path{path}, READ_MODE | BIN_MODE);
         data_recog_result recognised{};
         std::string recognised_type;
 
@@ -1112,9 +1111,9 @@ namespace eka2l1 {
         } else if (conf && conf->mime_detection) {
             LOG_TRACE(SERVICE_APPLIST, "AppList::AppForDocument datatype stubbed with file extension");
 
-            const std::u16string ext = eka2l1::path_extension(path);
+            const guest_path ext = path.extension();
             if (!ext.empty()) {
-                if (common::compare_ignore_case(ext, u".swf") == 0) {
+                if (ext == u".swf") {
                     app.data_type.data_type.assign(nullptr, "application/x-shockwave-flash");
                 } else {
                     app.data_type.data_type.assign(nullptr, common::uppercase_string(common::ucs2_to_utf8(ext.substr(1))));
@@ -1155,7 +1154,7 @@ namespace eka2l1 {
     void applist_server::get_app_for_document(service::ipc_context &ctx) {
         // The 6.x-8.0 clients send the filename in slot 0; 7.0s/8.0 take the 272-byte result in slot 1.
         const int filename_slot = (legacy_level() <= APA_LEGACY_LEVEL_S60V2) ? 0 : 2;
-        std::optional<std::u16string> path = ctx.get_argument_value<std::u16string>(filename_slot);
+        std::optional<guest_path> path = ctx.get_path_argument(filename_slot);
         if (!path.has_value()) {
             ctx.complete(epoc::error_argument);
             return;
@@ -1164,23 +1163,23 @@ namespace eka2l1 {
         get_app_for_document_impl(ctx, path.value());
     }
 
-    data_recog_result applist_server::recognize_data_impl(common::ro_stream &stream, const std::u16string &name) {
+    data_recog_result applist_server::recognize_data_impl(common::ro_stream &stream, const guest_path &name) {
         data_recog_result result{};
-        const std::u16string extension = eka2l1::path_extension(name);
+        const guest_path extension = name.extension();
 
         // Match the S60 web recognizer. It identifies XHTML as text/html; it
         // does not advertise a separate application/xhtml+xml data type.
-        if ((common::compare_ignore_case(extension, u".html") == 0)
-            || (common::compare_ignore_case(extension, u".htm") == 0)
-            || (common::compare_ignore_case(extension, u".shtml") == 0)
-            || (common::compare_ignore_case(extension, u".shtm") == 0)
-            || (common::compare_ignore_case(extension, u".xhtml") == 0)) {
+        if ((extension == u".html")
+            || (extension == u".htm")
+            || (extension == u".shtml")
+            || (extension == u".shtm")
+            || (extension == u".xhtml")) {
             result.type_.type_name_.assign(nullptr, "text/html");
             result.confidence_rating_ = data_recognition_confidence_probable;
             return result;
         }
 
-        if (common::compare_ignore_case(extension, u".xml") == 0) {
+        if (extension == u".xml") {
             result.type_.type_name_.assign(nullptr, "text/xml");
             result.confidence_rating_ = data_recognition_confidence_probable;
             return result;
@@ -1191,7 +1190,7 @@ namespace eka2l1 {
         stream.seek(0, common::seek_where::beg);
         stream.read(magic4, 4);
 
-        if ((common::compare_ignore_case(extension, u".swf") == 0)
+        if ((extension == u".swf")
             || (((magic4[0] == 'F') || (magic4[0] == 'C') || (magic4[0] == 'Z'))
                 && (magic4[1] == 'W') && (magic4[2] == 'S'))) {
             result.type_.type_name_.assign(nullptr, "application/x-shockwave-flash");
@@ -1236,7 +1235,7 @@ namespace eka2l1 {
         }
 
         // Nokia smart messaging ringing tone: one to three command parts, the first ringing-tone programming.
-        if ((common::compare_ignore_case(extension, u".rng") == 0) && (magic4[0] >= 1) && (magic4[0] <= 3)
+        if ((extension == u".rng") && (magic4[0] >= 1) && (magic4[0] <= 3)
             && ((magic4[1] >> 1) == 0x25)) {
             result.type_.type_name_.assign(nullptr, "application/vnd.nokia.ringing-tone");
             result.confidence_rating_ = data_recognition_confidence_probable;
@@ -1268,7 +1267,7 @@ namespace eka2l1 {
 
         std::uint8_t empty_data = 0;
         common::ro_buf_stream stream(data ? data : &empty_data, data_size);
-        const data_recog_result result = recognize_data_impl(stream, name.value_or(std::u16string()));
+        const data_recog_result result = recognize_data_impl(stream, guest_path(name.value_or(std::u16string())));
 
         ctx.write_data_to_descriptor_argument<data_recog_result>(0, result);
         ctx.complete(epoc::error_none);
@@ -1366,7 +1365,7 @@ namespace eka2l1 {
 
         std::uint8_t empty = 0;
         common::ro_buf_stream stream(data ? data : &empty, size);
-        auto recognised = recognize_data_impl(stream, *name);
+        auto recognised = recognize_data_impl(stream, guest_path(*name));
         get_app_executable_name(ctx, find_data_type_handler(regs, recognised.type_.type_name_.to_std_string(nullptr), 0));
     }
 
@@ -1690,23 +1689,23 @@ namespace eka2l1 {
         return false;
     }
 
-    void apa_app_registry::get_launch_parameter(std::u16string &native_executable_path, epoc::apa::command_line &args) {
-        const std::u16string app_path = mandatory_info.app_path.to_std_string(nullptr);
+    void apa_app_registry::get_launch_parameter(guest_path &native_executable_path, epoc::apa::command_line &args) {
+        const guest_path app_path(mandatory_info.app_path.to_std_string(nullptr));
 
         if (caps.flags & apa_capability::built_as_dll) {
-            native_executable_path = APA_APP_RUNNER;
+            native_executable_path = guest_path(APA_APP_RUNNER);
         } else {
-            native_executable_path = mandatory_info.app_path.to_std_string(nullptr);
+            native_executable_path = guest_path(mandatory_info.app_path.to_std_string(nullptr));
         }
 
-        args.document_name_ = eka2l1::replace_extension(eka2l1::filename(app_path), u"");
+        args.document_name_ = app_path.filename().with_extension(u"").utf16();
         args.executable_path_ = app_path;
         args.default_screen_number_ = default_screen_number;
     }
 
     static constexpr std::uint8_t ENVIRONMENT_SLOT_MAIN = 1;
 
-    bool applist_server::launch_app(const std::u16string &exe_path, const std::u16string &cmd, kernel::uid *thread_id,
+    bool applist_server::launch_app(const guest_path &exe_path, const std::u16string &cmd, kernel::uid *thread_id,
                                     kernel::process *requester, const epoc::uid known_uid, std::function<void(kernel::process*)> app_exit_callback,
                                     const std::string *environment_main) {
         static constexpr std::size_t MINIMAL_LAUNCH_STACK_SIZE = 0x10000;
@@ -1738,10 +1737,10 @@ namespace eka2l1 {
         }
 
         if (app_exit_callback) {
-            std::u16string app_directory;
+            guest_path app_directory;
             if (legacy_level() < APA_LEGACY_LEVEL_MORDEN) {
                 if (auto *reg = get_registration(known_uid)) {
-                    app_directory = file_directory(reg->mandatory_info.app_path.to_std_string(nullptr), true);
+                    app_directory = guest_path(reg->mandatory_info.app_path.to_std_string(nullptr)).parent();
                 }
             }
             pr->logon([app_exit_callback, app_directory, this](kernel::process *pr) {
@@ -1757,7 +1756,7 @@ namespace eka2l1 {
 
                             // EKA1 application DLLs can hand off to an unregistered EXE in their own directory.
                             const bool bundled_executable = !app_directory.empty()
-                                && common::compare_ignore_case(app_directory, file_directory(child->get_exe_path(), true)) == 0;
+                                && app_directory == file_directory(child->get_exe_path(), true);
                             if (get_registration(pid) || bundled_executable) {
                                 child->logon([app_exit_callback](kernel::process *pr) {
                                     app_exit_callback(pr);
@@ -1791,7 +1790,7 @@ namespace eka2l1 {
                                     std::function<void(kernel::process*)> app_exit_callback) {
         // OPL game check
         io_system *io = sys->get_io_system();
-        symfile app_file = io->open_file(registry.mandatory_info.app_path.to_std_string(nullptr), READ_MODE | BIN_MODE);
+        symfile app_file = io->open_file(eka2l1::guest_path{registry.mandatory_info.app_path.to_std_string(nullptr)}, READ_MODE | BIN_MODE);
 
         if (app_file != nullptr) {
             static constexpr std::uint32_t OPL_APP_UID2 = 0x100055C1;
@@ -1800,7 +1799,7 @@ namespace eka2l1 {
             std::uint32_t uid = 0;
             if (app_file->read_file(4, &uid, 1, 4) == 4) {
                 if (uid == OPL_APP_UID2) {
-                    std::u16string processed_app_path = registry.mandatory_info.app_path.to_std_string(nullptr);
+                    std::u16string processed_app_path(registry.mandatory_info.app_path.to_std_string(nullptr));
                     if (processed_app_path.find_first_of(' ') != std::string::npos) {
                         processed_app_path.insert(processed_app_path.begin(), u'\"');
                         processed_app_path += u'\"';
@@ -1830,7 +1829,7 @@ namespace eka2l1 {
             }
         }
 
-        std::u16string executable_to_run;
+        guest_path executable_to_run;
         registry.get_launch_parameter(executable_to_run, parameter);
 
         const bool oldarch = (legacy_level() < APA_LEGACY_LEVEL_MORDEN);
@@ -1917,7 +1916,7 @@ namespace eka2l1 {
         // S60 AIFs distinguish list and context icons by size, not by pair order.
         static const eka2l1::vec2 LEGACY_LIST_ICON_SIZE(42, 29);
 
-        if (common::compare_ignore_case(eka2l1::path_extension(registry.rsc_path), u".aif") == 0) {
+        if (registry.rsc_path.has_extension(u".aif")) {
             std::optional<apa_app_masked_icon_bitmap> icon = get_icon_by_size(registry, LEGACY_LIST_ICON_SIZE);
 
             if (icon.has_value()) {

@@ -33,7 +33,9 @@ namespace eka2l1::epoc::apa {
 
     void command_line::do_it_newarch(common::chunkyseri &seri) {
         epoc::absorb_des_string(document_name_, seri, true);
-        epoc::absorb_des_string(executable_path_, seri, true);
+        auto executable = executable_path_.utf16();
+        epoc::absorb_des_string(executable, seri, true);
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) executable_path_ = guest_path(std::move(executable));
         epoc::absorb_des_string(opaque_data_, seri, false);
         epoc::absorb_des_string(tail_end_, seri, false);
 
@@ -97,7 +99,7 @@ namespace eka2l1::epoc::apa {
 
             // Add executable path
             result += '"';
-            result += executable_path_;
+            result += executable_path_.utf16();
             result += u"\" ";
 
             // Add command

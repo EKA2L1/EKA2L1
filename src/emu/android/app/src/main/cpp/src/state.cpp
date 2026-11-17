@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <android/input_dialog.h>
 #include <android/state.h>
 #include <common/algorithm.h>
@@ -196,8 +197,8 @@ namespace eka2l1::android {
                 player_be);
 
             if (audio_driver) {
-                audio_driver->set_bank_path(drivers::MIDI_BANK_TYPE_HSB, conf.hsb_bank_path);
-                audio_driver->set_bank_path(drivers::MIDI_BANK_TYPE_SF2, conf.sf2_bank_path);
+                audio_driver->set_bank_path(drivers::MIDI_BANK_TYPE_HSB, eka2l1::host_path{conf.hsb_bank_path});
+                audio_driver->set_bank_path(drivers::MIDI_BANK_TYPE_SF2, eka2l1::host_path{conf.sf2_bank_path});
             }
             symsys->set_audio_driver(audio_driver.get());
 
@@ -212,20 +213,20 @@ namespace eka2l1::android {
 
             io_system *io = symsys->get_io_system();
 
-            std::string current_dir;
+            eka2l1::host_path current_dir;
             common::get_current_directory(current_dir);
 
             if (!conf.svg_icon_cache_reset) {
-                common::delete_folder(eka2l1::absolute_path("cache", current_dir));
+                common::delete_folder(eka2l1::host_path{current_dir.join("cache")});
 
                 conf.svg_icon_cache_reset = true;
                 conf.serialize(false);
             }
 
             // Copy additional DLLs
-            std::vector<std::tuple<std::u16string, std::string, epocver>> dlls_need_to_copy = {
-                { u"Z:\\sys\\bin\\goommonitor.dll", eka2l1::add_path("patch", "goommonitor_general.dll"), epocver::epoc94 },
-                { u"Z:\\sys\\bin\\avkonfep.dll", eka2l1::add_path("patch", "avkonfep_general.dll"), epocver::epoc93fp1 }
+            std::vector<std::tuple<guest_path, host_path, epocver>> dlls_need_to_copy = {
+                { guest_path(u"Z:\\sys\\bin\\goommonitor.dll"), host_path("patch/goommonitor_general.dll"), epocver::epoc94 },
+                { guest_path(u"Z:\\sys\\bin\\avkonfep.dll"), host_path("patch/avkonfep_general.dll"), epocver::epoc93fp1 }
             };
 
             for (std::size_t i = 0; i < dlls_need_to_copy.size(); i++) {
@@ -234,16 +235,16 @@ namespace eka2l1::android {
                     continue;
                 }
 
-                std::u16string org_file_path = std::get<0>(dlls_need_to_copy[i]);
+                guest_path org_file_path = std::get<0>(dlls_need_to_copy[i]);
                 auto where_to_copy = io->get_raw_path(org_file_path);
 
-                const std::string source_copy = eka2l1::absolute_path(std::get<1>(dlls_need_to_copy[i]), current_dir);
+                const eka2l1::host_path source_copy(eka2l1::absolute_path(std::get<1>(dlls_need_to_copy[i]), current_dir));
 
                 if (where_to_copy.has_value() && common::exists(source_copy)) {
-                    std::string where_to_copy_u8 = common::ucs2_to_utf8(where_to_copy.value());
-                    std::string where_to_backup_u8 = where_to_copy_u8 + ".bak";
+                    eka2l1::host_path where_to_copy_u8(where_to_copy.value());
+                    eka2l1::host_path where_to_backup_u8(where_to_copy_u8 + ".bak");
                     if (common::exists(where_to_copy_u8) && !common::exists(where_to_backup_u8)) {
-                        common::move_file(where_to_copy_u8, where_to_copy_u8 + ".bak");
+                        common::move_file(where_to_copy_u8, eka2l1::host_path{where_to_copy_u8 + ".bak"});
                     }
                     common::copy_file(source_copy, where_to_copy_u8, true);
                 }

@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <system/devices.h>
 #include <system/installation/firmware.h>
 #include <system/software.h>
@@ -38,13 +39,9 @@
 #include <fat/fat.h>
 
 namespace eka2l1 {
-    static void extract_file(Fat::Image &img, Fat::Entry &entry, const std::string &path) {
+    static void extract_file(Fat::Image &img, Fat::Entry &entry, const host_path &path) {
         const std::u16string filename_16 = entry.get_filename();
-        std::string filename = eka2l1::add_path(path, common::ucs2_to_utf8(filename_16));
-
-        if (common::is_platform_case_sensitive()) {
-            filename = common::lowercase_string(filename);
-        }
+        host_path filename(path.resolve_guest(guest_path(filename_16)));
 
         common::wo_std_file_stream f(filename, true);
 
@@ -69,7 +66,7 @@ namespace eka2l1 {
         }
     }
 
-    static void extract_directory(Fat::Image &img, Fat::Entry mee, std::string dir_path) {
+    static void extract_directory(Fat::Image &img, Fat::Entry mee, host_path dir_path) {
         common::create_directories(dir_path);
 
         while (img.get_next_entry(mee)) {
@@ -83,11 +80,7 @@ namespace eka2l1 {
 
                     auto dir_name = mee.get_filename();
 
-                    if (common::is_platform_case_sensitive()) {
-                        dir_name = common::lowercase_ucs2_string(dir_name);
-                    }
-
-                    extract_directory(img, baby, dir_path + common::ucs2_to_utf8(dir_name) + "\\");
+                    extract_directory(img, baby, dir_path.resolve_guest(guest_path(dir_name)));
                 }
             }
 
@@ -97,8 +90,8 @@ namespace eka2l1 {
         }
     }
 
-    static device_installation_error dump_data_from_fpsx(loader::firmware::fpsx_header &header, common::ro_stream &stream, const std::string &drives_c_path,
-        const std::string &drives_z_path, const std::string &rom_resident_path,
+    static device_installation_error dump_data_from_fpsx(loader::firmware::fpsx_header &header, common::ro_stream &stream, const host_path &drives_c_path,
+        const host_path &drives_z_path, const host_path &rom_resident_path,
         progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         if (header.type_ == loader::firmware::FPSX_TYPE_INVALID) {
             if (progress_cb)
@@ -113,8 +106,8 @@ namespace eka2l1 {
         std::vector<char> buf;
 
         if (header.type_ == loader::firmware::FPSX_TYPE_CORE) {
-            const std::string rom_path = eka2l1::add_path(rom_resident_path, "SYM_TEMP.ROM");
-            const std::string rom_final_path = eka2l1::add_path(rom_resident_path, "SYM.ROM");
+            const host_path rom_path(eka2l1::add_path(rom_resident_path, "SYM_TEMP.ROM"));
+            const host_path rom_final_path(eka2l1::add_path(rom_resident_path, "SYM.ROM"));
 
             {
                 common::wo_std_file_stream rom_stream(rom_path, true);
@@ -198,7 +191,7 @@ namespace eka2l1 {
             }
         }
 
-        std::string image_path = eka2l1::add_path(rom_resident_path, "TEMP.IMG");
+        host_path image_path(eka2l1::add_path(rom_resident_path, "TEMP.IMG"));
 
         {
             common::wo_std_file_stream rom_stream(image_path, true);
@@ -263,7 +256,7 @@ namespace eka2l1 {
                     return static_cast<std::uint32_t>(stream->tell());
                 });
 
-            std::string fat_dump_base;
+            host_path fat_dump_base;
             fat_dump_base = drives_c_path;
 
             Fat::Entry bootstrap_entry;
@@ -287,18 +280,18 @@ namespace eka2l1 {
         return device_installation_none;
     }
 
-    device_installation_error install_firmware(device_manager *dvcmngr, const std::string &vpl_path,
-        const std::string &storage_path, const std::string &rom_resident_path, const bool isolate_drives,
+    device_installation_error install_firmware(device_manager *dvcmngr, const host_path &vpl_path,
+        const host_path &storage_path, const host_path &rom_resident_path, const bool isolate_drives,
         device_firmware_choose_variant_callback choose_callback, progress_changed_callback progress_callback,
         cancel_requested_callback cancel_callback) {
-        std::string cur_dir;
+        host_path cur_dir;
         if (!common::get_current_directory(cur_dir)) {
             LOG_ERROR(SYSTEM, "Can't get current directory!");
             return device_installation_general_failure;
         }
 
-        const std::string full_vpl = eka2l1::absolute_path(vpl_path, cur_dir);
-        const std::string full_folder = eka2l1::file_directory(full_vpl);
+        const host_path full_vpl(eka2l1::absolute_path(vpl_path, cur_dir));
+        const host_path full_folder(eka2l1::file_directory(full_vpl));
 
         common::ro_std_file_stream doc_stream(full_vpl, true);
 
@@ -375,7 +368,7 @@ namespace eka2l1 {
             return device_installation_vpl_file_invalid;
         }
 
-        std::vector<std::string> filenames;
+        std::vector<host_path> filenames;
         int average_progress_max = 0;
 
         auto file_nodes = file_list.children("File");
@@ -400,7 +393,7 @@ namespace eka2l1 {
                     continue;
                 }
 
-                const std::string full_fpsx_path = eka2l1::add_path(full_folder, fname.first_child().value());
+                const host_path full_fpsx_path(eka2l1::add_path(full_folder, fname.first_child().value()));
                 if (!common::exists(full_fpsx_path)) {
                     continue;
                 }
@@ -419,12 +412,12 @@ namespace eka2l1 {
             return device_installation_vpl_file_invalid;
         }
 
-        const std::string drives_z_path = eka2l1::add_path(storage_path, "drives\\z\\");
-        const std::string drives_z_temp_path = eka2l1::add_path(drives_z_path, "temp\\");
+        const host_path drives_z_path(eka2l1::add_path(storage_path, "drives\\z\\"));
+        const host_path drives_z_temp_path(eka2l1::add_path(drives_z_path, "temp\\"));
 
         // Which folder drive C ends up in depends on the firmware code, known only
         // once drive Z has been dumped.
-        const std::string drives_c_temp_path = eka2l1::add_path(storage_path, "drives\\temp_c\\");
+        const host_path drives_c_temp_path(eka2l1::add_path(storage_path, "drives\\temp_c\\"));
         std::size_t so_far = 0;
 
         auto revert_temp = [&]() {
@@ -436,7 +429,7 @@ namespace eka2l1 {
         common::delete_folder(drives_c_temp_path);
 
         for (auto &fpsx_filename : filenames) {
-            common::ro_std_file_stream fpsx_file_stream(fpsx_filename, true);
+            common::ro_std_file_stream fpsx_file_stream(eka2l1::host_path{fpsx_filename}, true);
             std::optional<loader::firmware::fpsx_header> fpsx_head = loader::firmware::read_fpsx_header(
                 fpsx_file_stream);
 
@@ -477,7 +470,7 @@ namespace eka2l1 {
             return device_installation_determine_product_failure;
         }
 
-        const std::string current_temp_rom = eka2l1::add_path(rom_resident_path, "SYM.ROM");
+        const host_path current_temp_rom = eka2l1::add_path(rom_resident_path, "SYM.ROM");
 
         if (dvcmngr->get(firmcode)) {
             LOG_ERROR(SYSTEM, "The device already exists, revert all changes");
@@ -490,12 +483,12 @@ namespace eka2l1 {
         auto firmcode_low = common::lowercase_string(firmcode);
 
         // Rename temp folder to its product code
-        common::move_file(drives_z_temp_path, add_path(drives_z_path, firmcode_low + "\\"));
+        common::move_file(drives_z_temp_path, eka2l1::host_path{add_path(drives_z_path, firmcode_low + "\\")});
         const add_device_error err_adddvc = dvcmngr->add_new_device(firmcode, model, manufacturer, ver, 0, isolate_drives);
 
         if (err_adddvc != add_device_none) {
             LOG_ERROR(SYSTEM, "This device ({}) failed to be install, revert all changes", firmcode);
-            eka2l1::common::delete_folder(add_path(drives_z_path, firmcode_low + "\\"));
+            eka2l1::common::delete_folder(eka2l1::host_path{add_path(drives_z_path, firmcode_low + "\\")});
             common::delete_folder(drives_c_temp_path);
             eka2l1::common::remove(current_temp_rom);
 
@@ -503,15 +496,15 @@ namespace eka2l1 {
         }
 
         if (common::exists(drives_c_temp_path)) {
-            const std::string drives_c_final_path = eka2l1::add_path(storage_path,
+            const host_path drives_c_final_path = eka2l1::add_path(storage_path,
                 device_drive_folder(firmcode, isolate_drives, drive_c));
 
             common::copy_folder(drives_c_temp_path, drives_c_final_path, 0);
             common::delete_folder(drives_c_temp_path);
         }
 
-        const std::string target_rom_path = eka2l1::add_path(rom_resident_path, firmcode_low + "\\SYM.ROM");
-        common::create_directories(eka2l1::file_directory(target_rom_path));
+        const host_path target_rom_path(eka2l1::add_path(rom_resident_path, firmcode_low + "\\SYM.ROM"));
+        common::create_directories(eka2l1::host_path{eka2l1::file_directory(target_rom_path)});
         common::move_file(current_temp_rom, target_rom_path);
 
         if (progress_callback) {

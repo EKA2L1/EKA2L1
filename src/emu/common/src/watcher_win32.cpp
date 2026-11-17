@@ -145,7 +145,7 @@ namespace eka2l1::common {
                             std::u16string filename(reinterpret_cast<char16_t *>(info->FileName), info->FileNameLength / 2);
                             directory_change change;
                             change.change_ = 0;
-                            change.filename_ = common::ucs2_to_utf8(filename);
+                            change.filename_ = host_path::from_utf16(filename);
 
                             switch (info->Action) {
                             case FILE_ACTION_ADDED:
@@ -247,10 +247,10 @@ namespace eka2l1::common {
         return result;
     }
 
-    std::int32_t directory_watcher_impl::watch(const std::string &folder, directory_watcher_callback callback,
+    std::int32_t directory_watcher_impl::watch(const host_path &folder, directory_watcher_callback callback,
         void *callback_userdata, const std::uint32_t masks) {
         const std::lock_guard<std::mutex> guard(lock_);
-        const std::wstring folder_w = common::utf8_to_wstr(folder);
+        const std::wstring folder_w = common::utf8_to_wstr(folder.utf8());
 
         HANDLE h = FindFirstChangeNotificationW(folder_w.c_str(), TRUE, FILE_NOTIFY_CHANGE_FILE_NAME | FILE_NOTIFY_CHANGE_LAST_WRITE);
 

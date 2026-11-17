@@ -65,7 +65,7 @@ namespace {
 TEST_CASE("WAV recordings keep the format of the clip they append to", "[audio][record]") {
     temp_clip clip("eka2l1_clip_writer_test.wav");
 
-    auto writer = eka2l1::drivers::new_clip_writer(clip.path.string());
+    auto writer = eka2l1::drivers::new_clip_writer(eka2l1::host_path{clip.path.string()});
     REQUIRE(writer);
     REQUIRE(writer->codec_four_cc() == eka2l1::drivers::AUDIO_PCM16_CODEC_4CC);
     REQUIRE(writer->set_sample_rate(16000));
@@ -81,7 +81,7 @@ TEST_CASE("WAV recordings keep the format of the clip they append to", "[audio][
     const std::vector<std::uint8_t> data = read_file(clip.path);
     REQUIRE(data.size() == 44 + 1600 * 4);
 
-    writer = eka2l1::drivers::new_clip_writer(clip.path.string());
+    writer = eka2l1::drivers::new_clip_writer(eka2l1::host_path{clip.path.string()});
     REQUIRE(writer);
     REQUIRE(writer->format().sample_rate == 16000);
     REQUIRE(writer->format().channels == 2);
@@ -103,7 +103,7 @@ TEST_CASE("A clip in another format is not recorded over", "[audio][record]") {
         stream << "RIFF not an AMR clip";
     }
 
-    REQUIRE_FALSE(eka2l1::drivers::new_clip_writer(clip.path.string()));
+    REQUIRE_FALSE(eka2l1::drivers::new_clip_writer(eka2l1::host_path{clip.path.string()}));
 }
 
 #ifdef EKA2L1_HAS_FFMPEG
@@ -132,7 +132,7 @@ namespace {
 TEST_CASE("AMR recordings are RFC 4867 storage files that later takes append to", "[audio][record]") {
     temp_clip clip("eka2l1_clip_writer_test.amr");
 
-    auto writer = eka2l1::drivers::new_clip_writer(clip.path.string());
+    auto writer = eka2l1::drivers::new_clip_writer(eka2l1::host_path{clip.path.string()});
     REQUIRE(writer);
     REQUIRE(writer->codec_four_cc() == eka2l1::drivers::AUDIO_AMR_CODEC_4CC);
     REQUIRE(writer->format().sample_rate == 8000);
@@ -157,7 +157,7 @@ TEST_CASE("AMR recordings are RFC 4867 storage files that later takes append to"
     REQUIRE(writer->total_frames() == 51 * 160);
 
     // A second take at another bit rate, through a writer that probes the existing clip.
-    writer = eka2l1::drivers::new_clip_writer(clip.path.string());
+    writer = eka2l1::drivers::new_clip_writer(eka2l1::host_path{clip.path.string()});
     REQUIRE(writer);
     REQUIRE(writer->total_frames() == 51 * 160);
     REQUIRE(writer->format().bit_rate == 12200);
@@ -179,7 +179,7 @@ TEST_CASE("AMR recordings are RFC 4867 storage files that later takes append to"
 TEST_CASE("AAC recordings are MP4 clips that later takes append to", "[audio][record]") {
     temp_clip clip("eka2l1_clip_writer_test.mp4");
 
-    auto writer = eka2l1::drivers::new_clip_writer(clip.path.string());
+    auto writer = eka2l1::drivers::new_clip_writer(eka2l1::host_path{clip.path.string()});
     REQUIRE(writer);
     REQUIRE(writer->codec_four_cc() == eka2l1::drivers::AUDIO_AAC_CODEC_4CC);
     REQUIRE(writer->set_sample_rate(16000));
@@ -193,7 +193,7 @@ TEST_CASE("AAC recordings are MP4 clips that later takes append to", "[audio][re
     REQUIRE(writer->write(tone.data() + 5000 * 2, 11000));
     REQUIRE(writer->end());
 
-    writer = eka2l1::drivers::new_clip_writer(clip.path.string());
+    writer = eka2l1::drivers::new_clip_writer(eka2l1::host_path{clip.path.string()});
     REQUIRE(writer);
     REQUIRE(writer->format().sample_rate == 16000);
     REQUIRE(writer->format().channels == 2);
@@ -226,7 +226,7 @@ TEST_CASE("AAC recordings play back from the first sample", "[audio][record]") {
     temp_clip clip("eka2l1_clip_writer_test_play.mp4");
 
     {
-        auto writer = eka2l1::drivers::new_clip_writer(clip.path.string());
+        auto writer = eka2l1::drivers::new_clip_writer(eka2l1::host_path{clip.path.string()});
         REQUIRE(writer);
 
         const std::vector<std::int16_t> tone = make_tone(48000, 1, 48000);
@@ -246,7 +246,7 @@ TEST_CASE("AMR recordings report their duration and play back in full", "[audio]
     temp_clip clip("eka2l1_clip_writer_test_play.amr");
 
     {
-        auto writer = eka2l1::drivers::new_clip_writer(clip.path.string());
+        auto writer = eka2l1::drivers::new_clip_writer(eka2l1::host_path{clip.path.string()});
         REQUIRE(writer);
 
         const std::vector<std::int16_t> tone = make_tone(8000, 1, 8000);
