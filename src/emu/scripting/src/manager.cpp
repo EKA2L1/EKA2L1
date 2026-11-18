@@ -23,7 +23,6 @@
 #include <common/log.h>
 #include <common/path.h>
 #include <common/platform.h>
-#include <common/path.h>
 
 #include <scripting/instance.h>
 #include <scripting/manager.h>
@@ -209,10 +208,7 @@ namespace eka2l1::manager {
         common::dir_entry scripts_entry;
 
         while (scripts_dir->next_entry(scripts_entry) == 0) {
-            const std::string ext = path_extension(scripts_entry.name);
-
-            auto module_name = filename(scripts_entry.name);
-            import_module("scripts/" + module_name);
+            import_module(host_path{"scripts"}.join(scripts_entry.name));
         }
 
         common::set_current_directory(cur_dir);
