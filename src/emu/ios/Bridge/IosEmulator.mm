@@ -2215,7 +2215,7 @@ namespace eka2l1::ios {
 
     eka2l1::host_path card_path(path.UTF8String);
     while (!card_path.empty() && eka2l1::is_separator(card_path.back())) {
-        card_path.pop_back();
+        card_path.erase(card_path.size() - 1);
     }
 
     const bool is_folder = eka2l1::common::is_dir(card_path);
@@ -2332,7 +2332,8 @@ namespace eka2l1::ios {
     if (!manager->package(uid, 0) && manager->augmentations(uid).empty()) {
         eka2l1::package::object *owner = manager->package_owning_executable(uid);
         if (!owner && reg) {
-            owner = manager->package_owning_file(reg->mandatory_info.app_path.to_std_string(nullptr));
+            const eka2l1::guest_path app_path(reg->mandatory_info.app_path.to_std_string(nullptr));
+            owner = manager->package_owning_file(app_path);
         }
         if (owner) {
             package_uid = owner->uid;

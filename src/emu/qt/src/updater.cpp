@@ -130,14 +130,14 @@ public:
         eka2l1::common::delete_folder(temp_folder);
         eka2l1::common::create_directories(temp_folder);
 
-        const bool unpacked = common::extract_archive(ZIP_STAGING_FILENAME,
-            [&](const common::archive_entry_info &entry) -> std::string {
+        const bool unpacked = common::extract_archive(eka2l1::host_path{ZIP_STAGING_FILENAME},
+            [&](const common::archive_entry_info &entry) -> eka2l1::host_path {
                 if (!wanted(entry)) {
-                    return std::string();
+                    return {};
                 }
 
                 emit_update_log(tr("Extracted: %1").arg(QString::fromStdString(entry.path)));
-                return eka2l1::add_path(temp_folder, entry.path);
+                return temp_folder.join(entry.path);
             },
             [this](const std::size_t done, const std::size_t total) {
                 if (total) {
