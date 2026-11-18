@@ -196,6 +196,7 @@ namespace eka2l1 {
     void view_session::on_view_activation(const ui::view::view_id &id) {
         if (outstanding_activation_notify_) {
             if ((next_activation_id_ == ui::view::EMPTY_VIEW_ID) || (next_activation_id_ == id)) {
+                outstanding_activation_notify_ = false;
                 queue_.queue_event({ ui::view::view_event::event_active_notification, id, ui::view::EMPTY_VIEW_ID, 0, 0 });
             }
         }
@@ -204,6 +205,7 @@ namespace eka2l1 {
     void view_session::on_view_deactivation(const ui::view::view_id &id) {
         if (outstanding_deactivation_notify_) {
             if ((next_deactivation_id_ == ui::view::EMPTY_VIEW_ID) || (next_deactivation_id_ == id)) {
+                outstanding_deactivation_notify_ = false;
                 queue_.queue_event({ ui::view::view_event::event_deactive_notification, id, ui::view::EMPTY_VIEW_ID, 0, 0 });
             }
         }
