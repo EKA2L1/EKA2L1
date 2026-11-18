@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <drivers/graphics/backend/ogl/shader_ogl.h>
 #include <common/platform.h>
 #if EKA2L1_PLATFORM(IOS)
@@ -181,7 +182,7 @@ namespace eka2l1::drivers {
         : shader(0) {
     }
 
-    ogl_shader_module::ogl_shader_module(const std::string &path, const shader_module_type type, const std::string &extra_header)
+    ogl_shader_module::ogl_shader_module(const host_path &path, const shader_module_type type, const std::string &extra_header)
         : shader(0) {
         common::ro_std_file_stream stream(path, std::ios_base::binary);
         if (!stream.valid()) {

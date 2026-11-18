@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <common/buffer.h>
 #include <config/config.h>
 #include <system/devices.h>
@@ -183,7 +184,7 @@ namespace eka2l1 {
         }
 
         try {
-            common::ro_std_file_stream devices_stream(add_path(conf->storage, "devices.yml"), true);
+            common::ro_std_file_stream devices_stream(eka2l1::host_path{add_path(conf->storage, "devices.yml")}, true);
             if (!devices_stream.valid()) {
                 LOG_ERROR(SYSTEM, "Devices file not found (or is invalid)!");
                 return;
@@ -257,7 +258,7 @@ namespace eka2l1 {
 
         emitter << YAML::EndMap;
 
-        common::wo_std_file_stream outdevicefile(add_path(conf->storage, "devices.yml"), true);
+        common::wo_std_file_stream outdevicefile(eka2l1::host_path{add_path(conf->storage, "devices.yml")}, true);
         outdevicefile.write(emitter.c_str(), emitter.size());
 
         return;
@@ -331,7 +332,7 @@ namespace eka2l1 {
         std::vector<int> languages;
         int default_language = -1;
         const auto lang_path = eka2l1::add_path(conf->storage, "/drives/z/" + common::lowercase_string(firmcode) + (ver < epocver::eka2 ? "/system/bootdata/languages.txt" : "/resource/bootdata/languages.txt"));
-        common::dynamic_ifile ifile(lang_path);
+        common::dynamic_ifile ifile(eka2l1::host_path{lang_path});
         if (ifile.fail()) {
             LOG_ERROR(SYSTEM, "Fail to load languages.txt file! (Searched path: {}).", lang_path);
         } else {
@@ -367,7 +368,7 @@ namespace eka2l1 {
 
         // rescan_devices() recognises isolated drives by this folder, so it must exist before the first boot.
         if (isolated_drives) {
-            common::create_directories(eka2l1::add_path(conf->storage, device_isolated_drives_folder(firmcode)));
+            common::create_directories(eka2l1::host_path{eka2l1::add_path(conf->storage, device_isolated_drives_folder(firmcode))});
         }
 
         devices.push_back(dvc);
@@ -375,22 +376,22 @@ namespace eka2l1 {
         return add_device_none;
     }
 
-    std::string device_isolated_drives_folder(const std::string &firmware_code) {
-        return "drives/" + common::lowercase_string(firmware_code) + "/";
+    host_path device_isolated_drives_folder(const std::string &firmware_code) {
+        return host_path("drives/" + common::lowercase_string(firmware_code) + "/");
     }
 
-    std::string device_drive_folder(const std::string &firmware_code, const bool isolated_drives, const drive_number drv) {
+    host_path device_drive_folder(const std::string &firmware_code, const bool isolated_drives, const drive_number drv) {
         const std::string drive_name(1, static_cast<char>('a' + static_cast<int>(drv)));
-        return (isolated_drives ? device_isolated_drives_folder(firmware_code) : "drives/") + drive_name + "/";
+        return (isolated_drives ? device_isolated_drives_folder(firmware_code) : host_path("drives/")) + drive_name + "/";
     }
 
-    std::vector<std::string> per_device_storage_paths(const std::string &firmware_code) {
+    std::vector<host_path> per_device_storage_paths(const std::string &firmware_code) {
         const std::string firmcode = common::lowercase_string(firmware_code);
 
-        std::vector<std::string> paths{
-            "drives/z/" + firmcode + "/",
+        std::vector<host_path> paths{
+            host_path("drives/z/" + firmcode + "/"),
             device_isolated_drives_folder(firmcode),
-            "roms/" + firmcode + "/"
+            host_path("roms/" + firmcode + "/")
         };
 
         // Kept in step with the servers that write these: the central repository
@@ -406,16 +407,16 @@ namespace eka2l1 {
 
         for (const char *drive : { "c", "d", "e" }) {
             for (const char *dir : SHARED_DRIVE_DIRS) {
-                paths.push_back(std::string("drives/") + drive + "/" + dir + firmcode + "/");
+                paths.emplace_back(std::string("drives/") + drive + "/" + dir + firmcode + "/");
             }
         }
 
         return paths;
     }
 
-    void delete_device_storage(const std::string &storage, const std::string &firmware_code) {
-        for (const std::string &path : per_device_storage_paths(firmware_code)) {
-            common::delete_folder(eka2l1::add_path(storage, path));
+    void delete_device_storage(const host_path &storage, const std::string &firmware_code) {
+        for (const host_path &path : per_device_storage_paths(firmware_code)) {
+            common::delete_folder(eka2l1::host_path{eka2l1::add_path(storage, path)});
         }
     }
 

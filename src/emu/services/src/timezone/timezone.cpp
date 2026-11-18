@@ -117,7 +117,7 @@ namespace eka2l1 {
 
         std::pair<std::uint32_t, std::string> resolve_zone_from_database(io_system *io,
             const std::string &host_zone) {
-            symfile file = io->open_file(u"z:\\private\\1020383e\\tzdb.dbz", READ_MODE | BIN_MODE);
+            symfile file = io->open_file(eka2l1::guest_path{u"z:\\private\\1020383e\\tzdb.dbz"}, READ_MODE | BIN_MODE);
             if (!file || !file->valid() || file->size() < 52
                 || file->size() > std::numeric_limits<std::uint32_t>::max()) {
                 return { 0, host_zone };

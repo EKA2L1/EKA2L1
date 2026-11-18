@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <services/msv/common.h>
 #include <services/msv/entry.h>
 #include <services/msv/factory.h>
@@ -94,7 +95,7 @@ namespace eka2l1 {
     class msv_server : public service::typical_server {
         friend struct msv_client_session;
 
-        std::u16string message_folder_;
+        guest_path message_folder_;
         epoc::msv::mtm_registry reg_;
 
         std::unique_ptr<epoc::msv::entry_indexer> indexer_;
@@ -112,7 +113,7 @@ namespace eka2l1 {
     public:
         explicit msv_server(eka2l1::system *sys);
 
-        const std::u16string message_folder() const {
+        const guest_path message_folder() const {
             return message_folder_;
         }
         

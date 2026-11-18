@@ -1,3 +1,4 @@
+#include <common/path_types.h>
 #include <common/path.h>
 #include <common/time.h>
 #include <common/vecx.h>
@@ -186,8 +187,8 @@ namespace eka2l1::epoc {
         return static_cast<std::int32_t>((area_ptr - areabase) * sizeof(std::uint32_t)) + 4;
     }
 
-    bool akn_skin_chunk_maintainer::update_filename(const std::uint32_t filename_id, const std::u16string &filename,
-        const std::u16string &filename_base) {
+    bool akn_skin_chunk_maintainer::update_filename(const std::uint32_t filename_id, const guest_path &filename,
+        const guest_path &filename_base) {
         // We need to search for the one and only.
         // Get the base first
         std::uint32_t *areabase = reinterpret_cast<std::uint32_t *>(get_area_base(akn_skin_chunk_area_base_offset::filename_area_base));
@@ -821,11 +822,11 @@ namespace eka2l1::epoc {
         return true;
     }
 
-    bool akn_skin_chunk_maintainer::import(skn_file &skn, const std::u16string &filename_base) {
+    bool akn_skin_chunk_maintainer::import(skn_file &skn, const guest_path &filename_base) {
         // First up import filenames
         std::uint32_t filename_id_end = 0;
         for (auto &filename : skn.filenames_) {
-            if (!update_filename(filename_id_base_ + filename.first, filename.second, filename_base)) {
+            if (!update_filename(filename_id_base_ + filename.first, guest_path(filename.second), filename_base)) {
                 return false;
             }
 
@@ -923,12 +924,12 @@ namespace eka2l1::epoc {
         return true;
     }
 
-    bool akn_skin_chunk_maintainer::inject_skin_background(const std::u16string &path, const std::u16string &base_path) {
+    bool akn_skin_chunk_maintainer::inject_skin_background(const guest_path &path, const guest_path &base_path) {
         return true;
     }
 
     // https://github.com/SymbianSource/oss.FCL.sf.mw.uiresources/blob/b78660bec78835802edd6575b96897d4aba58376/skins/AknSkins/srvsrc/AknsSrvChunkMaintainer.cpp#L238
-    bool akn_skin_chunk_maintainer::set_wallpaper(const std::u16string &path, const std::u16string &base_path) {
+    bool akn_skin_chunk_maintainer::set_wallpaper(const guest_path &path, const guest_path &base_path) {
         akns_item_def wallpaper_def;
         wallpaper_def.id_.first = AKN_SKIN_MAJOR_UID;
         wallpaper_def.id_.second = AKN_SKIN_MINOR_WALLPAPER_UID;

@@ -36,7 +36,7 @@ namespace {
             out.write(reinterpret_cast<const char *>(it->data()), it->size() * sizeof(std::uint32_t));
         }
         out.close();
-        return parse_sis_old(path);
+        return parse_sis_old(eka2l1::host_path{path});
     }
 }
 

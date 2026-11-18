@@ -16,6 +16,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <common/algorithm.h>
 #include <common/fileutils.h>
 #include <common/log.h>
@@ -178,10 +179,10 @@ namespace eka2l1 {
         // keeping, and halving makes the rewrite rare enough not to matter.
         class capped_file_sink final : public spdlog::sinks::base_sink<std::mutex> {
         public:
-            capped_file_sink(const std::string &filename, const std::size_t max_lines)
+            capped_file_sink(const host_path &filename, const std::size_t max_lines)
                 : filename_(filename)
                 , max_lines_(max_lines) {
-                file_.open(filename_, true);
+                file_.open(filename_.utf8(), true);
             }
 
             ~capped_file_sink() override {
@@ -213,7 +214,7 @@ namespace eka2l1 {
             }
 
             void drop_oldest_lines() {
-                const std::string trimmed_path = filename_ + ".trim";
+                const host_path trimmed_path = filename_ + ".trim";
 
                 std::size_t dropped = lines_;
                 std::size_t kept_lines = 0;
@@ -223,7 +224,7 @@ namespace eka2l1 {
                 file_.close();
 
                 {
-                    std::ifstream source(filename_, std::ios::binary);
+                    std::ifstream source(filename_.utf8(), std::ios::binary);
 
                     if (source) {
                         // Counting the dropped lines off rather than seeking to the middle
@@ -237,7 +238,7 @@ namespace eka2l1 {
                             skipped++;
                         }
 
-                        std::ofstream kept(trimmed_path, std::ios::binary | std::ios::trunc);
+                        std::ofstream kept(trimmed_path.utf8(), std::ios::binary | std::ios::trunc);
 
                         if (kept) {
                             const std::string notice = trim_notice(dropped_ + skipped);
@@ -270,7 +271,7 @@ namespace eka2l1 {
                     std::remove(filename_.c_str());
                     std::rename(trimmed_path.c_str(), filename_.c_str());
 
-                    file_.open(filename_, false);
+                    file_.open(filename_.utf8(), false);
                     lines_ = kept_lines;
 
                     return;
@@ -279,7 +280,7 @@ namespace eka2l1 {
                 // The rewrite failed, but the budget still has to hold: start the file
                 // over rather than let it grow.
                 std::remove(trimmed_path.c_str());
-                file_.open(filename_, true);
+                file_.open(filename_.utf8(), true);
 
                 const std::string notice = trim_notice(dropped_);
                 spdlog::memory_buf_t notice_buf;
@@ -290,13 +291,13 @@ namespace eka2l1 {
             }
 
             spdlog::details::file_helper file_;
-            std::string filename_;
+            host_path filename_;
             std::size_t max_lines_;
             std::size_t lines_ = 0;
             std::size_t dropped_ = 0;
         };
 
-        std::shared_ptr<spdlog::sinks::sink> make_capped_file_sink(const std::string &filename, const std::size_t max_lines) {
+        std::shared_ptr<spdlog::sinks::sink> make_capped_file_sink(const host_path &filename, const std::size_t max_lines) {
             return std::make_shared<capped_file_sink>(filename, max_lines);
         }
 
@@ -331,8 +332,8 @@ namespace eka2l1 {
         };
 
         void setup_log(std::shared_ptr<base_logger> gui_logger) {
-            const char *log_file_name = "EKA2L1.log";
-            const char *log_file_name_prev = "EKA2L1_TakeThis.log";
+            const host_path log_file_name("EKA2L1.log");
+            const host_path log_file_name_prev("EKA2L1_TakeThis.log");
 
             if (common::exists(log_file_name)) {
                 common::move_file(log_file_name, log_file_name_prev);
@@ -341,9 +342,9 @@ namespace eka2l1 {
             std::vector<spdlog::sink_ptr> sinks;
 
 #if EKA2L1_PLATFORM(WIN32)
-            DeleteFileA(log_file_name);
+            DeleteFileA(log_file_name.c_str());
 #else
-            remove(log_file_name);
+            common::remove(log_file_name);
 #endif
 
             color_dist_sink = std::make_shared<spdlog::sinks::dist_sink_mt>();

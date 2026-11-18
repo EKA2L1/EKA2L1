@@ -17,12 +17,12 @@
 * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <common/path_types.h>
 #include <common/algorithm.h>
 #include <common/fileutils.h>
 #include <common/log.h>
 #include <common/path.h>
 #include <common/platform.h>
-#include <common/path.h>
 
 #include <scripting/instance.h>
 #include <scripting/manager.h>
@@ -196,10 +196,10 @@ namespace eka2l1::manager {
     void scripts::import_all_modules() {
 #ifdef ENABLE_SCRIPTING_LUA
         // Import all scripts
-        std::string cur_dir;
+        host_path cur_dir;
         common::get_current_directory(cur_dir);
 
-        auto scripts_dir = common::make_directory_iterator("scripts/", "*.lua");
+        auto scripts_dir = common::make_directory_iterator(eka2l1::host_path{"scripts/"}, "*.lua");
         if (!scripts_dir) {
             return;
         }
@@ -208,16 +208,13 @@ namespace eka2l1::manager {
         common::dir_entry scripts_entry;
 
         while (scripts_dir->next_entry(scripts_entry) == 0) {
-            const std::string ext = path_extension(scripts_entry.name);
-
-            auto module_name = filename(scripts_entry.name);
-            import_module("scripts/" + module_name);
+            import_module(host_path{"scripts"}.join(scripts_entry.name));
         }
 
         common::set_current_directory(cur_dir);
 
         // Listen for script change
-        folder_watcher.watch("scripts/", script_file_changed_callback, this, common::directory_change_move | common::directory_change_creation
+        folder_watcher.watch(host_path("scripts/"), script_file_changed_callback, this, common::directory_change_move | common::directory_change_creation
             | common::directory_change_last_write);
 #else
         // No Lua runtime: the shipped scripts/*.lua patches are compiled in as
@@ -227,18 +224,18 @@ namespace eka2l1::manager {
     }
 
 #ifdef ENABLE_SCRIPTING_LUA
-    bool scripts::import_module(const std::string &path) {
-        const std::string name_full = eka2l1::filename(path);
+    bool scripts::import_module(const host_path &path) {
+        const std::string name_full = path.filename().utf8();
         const std::string name = eka2l1::replace_extension(name_full, "");
 
         if (modules.find(name) == modules.end()) {
-            std::string crr_path;
+            host_path crr_path;
             if (!common::get_current_directory(crr_path)) {
                 LOG_ERROR(SCRIPTING, "Unable to get current directory!");
                 return false;
             }
 
-            const std::string &pr_path = eka2l1::absolute_path(eka2l1::file_directory(path), crr_path);
+            const host_path &pr_path = eka2l1::absolute_path(eka2l1::file_directory(path), crr_path);
             std::lock_guard<std::mutex> guard(smutex);
 
             if (!common::set_current_directory(pr_path)) {
@@ -251,7 +248,7 @@ namespace eka2l1::manager {
                 luaL_openlibs(new_state);
                 luaL_dostring(new_state, "package.path = package.path .. ';scripts/?.lua'");
 
-                common::ro_std_file_stream script_stream(name_full, true);
+                common::ro_std_file_stream script_stream(eka2l1::host_path{name_full}, true);
                 std::string script_content(script_stream.size(), '0');
 
                 script_stream.read(script_content.data(), script_content.size());
@@ -279,8 +276,8 @@ namespace eka2l1::manager {
         return true;
     }
 
-    void scripts::unload_module(const std::string &path) {
-        const std::string name_full = eka2l1::filename(path);
+    void scripts::unload_module(const host_path &path) {
+        const std::string name_full = path.filename().utf8();
         const std::string name = eka2l1::replace_extension(name_full, "");
 
         auto find_result = modules.find(name);
@@ -499,7 +496,7 @@ namespace eka2l1::manager {
 
         hle::lib_manager *manager = sys->get_lib_manager();
         if (manager) {
-            if (codeseg_ptr seg = manager->load(common::utf8_to_ucs2(name))) {
+            if (codeseg_ptr seg = manager->load(guest_path::from_utf8(name))) {
                 std::uint32_t uid3_seg = std::get<2>(seg->get_uids());
                 if ((uid3_seg == 0) || (uid3_seg == uid3)) {
                     std::vector<kernel::process*> processes = seg->attached_processes();
@@ -572,7 +569,7 @@ namespace eka2l1::manager {
         } else {
             hle::lib_manager *manager = sys->get_lib_manager();
             if (manager) {
-                if (codeseg_ptr seg = manager->load(common::utf8_to_ucs2(lib_name))) {
+                if (codeseg_ptr seg = manager->load(guest_path::from_utf8(lib_name))) {
                     const bool identity_matches = ((uid3 == 0) || (std::get<2>(seg->get_uids()) == uid3))
                         && ((seghash == 0) || (seg->get_hash() == seghash));
 
@@ -636,7 +633,7 @@ namespace eka2l1::manager {
             return INVALID_HOOK_HANDLE;
         }
 
-        codeseg_ptr seg = manager->load(common::utf8_to_ucs2(lib_name));
+        codeseg_ptr seg = manager->load(guest_path::from_utf8(lib_name));
         if (!seg || !seg->is_rom() || (uid3 && (std::get<2>(seg->get_uids()) != uid3))) {
             return INVALID_HOOK_HANDLE;
         }

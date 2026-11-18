@@ -115,12 +115,12 @@ TEST_CASE("E32 images with missing dependencies fail without caching a partial c
         image.import_section.imports.push_back(dependency);
 
         for (int attempt = 0; attempt < 2; attempt++) {
-            REQUIRE(manager.load_as_e32img(image, u"C:\\sys\\bin\\optional.dll") == nullptr);
+            REQUIRE(manager.load_as_e32img(image, eka2l1::guest_path{u"C:\\sys\\bin\\optional.dll"}) == nullptr);
             REQUIRE(kern.get_by_name<kernel::codeseg>("optional.dll") == nullptr);
         }
 
         image.import_section.imports.clear();
-        auto loaded = manager.load_as_e32img(image, u"C:\\sys\\bin\\optional.dll");
+        auto loaded = manager.load_as_e32img(image, eka2l1::guest_path{u"C:\\sys\\bin\\optional.dll"});
         REQUIRE(loaded != nullptr);
         REQUIRE(kern.destroy(loaded));
     }
@@ -131,18 +131,18 @@ TEST_CASE("Failed cyclic DLL loads roll back without destroying their loading pa
     auto &manager = fixture.manager;
     auto &kern = fixture.kern;
     const char *root = "loader_missing_dependency/";
-    common::create_directories(root);
+    common::create_directories(eka2l1::host_path{root});
     auto filesystem = create_physical_filesystem(epocver::epoc94, "");
     fixture.io.add_filesystem(filesystem);
     REQUIRE(fixture.io.mount_physical_path(drive_c, drive_media::physical, io_attrib_internal,
-        u"loader_missing_dependency/"));
-    manager.search_paths = { u"\\" };
+        eka2l1::host_path{"loader_missing_dependency/"}));
+    manager.search_paths = { eka2l1::guest_path(u"\\") };
 
     SECTION("A missing import after a completed cycle invalidates the entire cycle") {
         write_image("loader_missing_dependency/child.dll", { "parent.dll" });
         write_image("loader_missing_dependency/parent.dll", { "child.dll", "missing.dll" });
         auto parent = make_image({ "child.dll", "missing.dll" });
-        REQUIRE(manager.load_as_e32img(parent, u"C:\\parent.dll") == nullptr);
+        REQUIRE(manager.load_as_e32img(parent, eka2l1::guest_path{u"C:\\parent.dll"}) == nullptr);
         REQUIRE(kern.get_by_name<kernel::codeseg>("parent.dll") == nullptr);
         REQUIRE(kern.get_by_name<kernel::codeseg>("child.dll") == nullptr);
     }
@@ -151,7 +151,7 @@ TEST_CASE("Failed cyclic DLL loads roll back without destroying their loading pa
         write_image("loader_missing_dependency/child.dll", { "parent.dll", "missing.dll" });
         write_image("loader_missing_dependency/parent.dll", { "child.dll" });
         auto parent = make_image({ "child.dll" });
-        REQUIRE(manager.load_as_e32img(parent, u"C:\\parent.dll") == nullptr);
+        REQUIRE(manager.load_as_e32img(parent, eka2l1::guest_path{u"C:\\parent.dll"}) == nullptr);
         REQUIRE(kern.get_by_name<kernel::codeseg>("parent.dll") == nullptr);
         REQUIRE(kern.get_by_name<kernel::codeseg>("child.dll") == nullptr);
     }
@@ -160,8 +160,8 @@ TEST_CASE("Failed cyclic DLL loads roll back without destroying their loading pa
         write_image("loader_missing_dependency/child.dll", { "parent.dll" });
         write_image("loader_missing_dependency/parent.dll", { "child.dll" });
         auto parent = make_image({ "child.dll" });
-        REQUIRE(manager.load_as_e32img(parent, u"C:\\parent.dll") != nullptr);
+        REQUIRE(manager.load_as_e32img(parent, eka2l1::guest_path{u"C:\\parent.dll"}) != nullptr);
         REQUIRE(kern.get_by_name<kernel::codeseg>("child.dll") != nullptr);
     }
-    common::delete_folder(root);
+    common::delete_folder(eka2l1::host_path{root});
 }

@@ -114,7 +114,7 @@ namespace eka2l1::qt::btnmap {
 
         if (!joystick_image_resource_.loaded()) {
             int width, height, comp;
-            FILE *joystick_base_file = common::open_c_file(JOYSTICK_BASE_PNG_PATH, "rb");
+            FILE *joystick_base_file = common::open_c_file(eka2l1::host_path{JOYSTICK_BASE_PNG_PATH}, "rb");
             if (joystick_base_file == nullptr) {
                 LOG_ERROR(FRONTEND_UI, "Joystick image file does not exist for mapping editor! (check {} if it exists)", JOYSTICK_BASE_PNG_PATH);
             } else {

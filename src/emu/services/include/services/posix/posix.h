@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <kernel/server.h>
 #include <services/context.h>
 
@@ -95,7 +96,7 @@ namespace eka2l1 {
     public:
         explicit posix_file_manager(io_system *io);
 
-        fid open(const std::u16string &path, int mode, bool readable, bool writable, int &terrno);
+        fid open(const guest_path &path, int mode, bool readable, bool writable, int &terrno);
         void close(const fid id, int &terrno);
         size_t seek(const fid id, const int off, const eka2l1::file_seek_mode whine, int &terrno);
 
@@ -107,14 +108,14 @@ namespace eka2l1 {
         size_t write(const fid id, const size_t len, char *buf, int &terrno);
 
         void stat(const fid id, posix_stat *filestat, int &terrno);
-        void stat(const std::u16string &path, posix_stat *filestat, int &terrno);
+        void stat(const guest_path &path, posix_stat *filestat, int &terrno);
     };
 
     class posix_server : public service::server {
         std::uint32_t associated_process_uid;
         posix_file_manager file_manager;
 
-        std::u16string working_dir;
+        guest_path working_dir;
 
         void open(service::ipc_context &ctx);
         void close(service::ipc_context &ctx);
@@ -138,7 +139,7 @@ namespace eka2l1 {
 
     public:
         posix_server(eka2l1::system *sys, process_ptr &associated_process,
-            const std::u16string &executable_path);
-        void update_executable_path(const std::u16string &executable_path);
+            const guest_path &executable_path);
+        void update_executable_path(const guest_path &executable_path);
     };
 }

@@ -15,11 +15,11 @@ TEST_CASE("copy_file rejects copying a file onto itself without truncating it", 
     const std::string contents = "Original JAR contents";
     struct cleanup {
         const std::string &path;
-        ~cleanup() { eka2l1::common::remove(path); }
+        ~cleanup() { eka2l1::common::remove(eka2l1::host_path{path}); }
     } cleanup{ path };
     std::ofstream(path, std::ios::binary) << contents;
 
-    REQUIRE_FALSE(eka2l1::common::copy_file(path, path, true));
+    REQUIRE_FALSE(eka2l1::common::copy_file(eka2l1::host_path{path}, eka2l1::host_path{path}, true));
     std::ifstream file(path, std::ios::binary);
     REQUIRE(std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>()) == contents);
 }

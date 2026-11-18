@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <drivers/audio/backend/minibae/player_minibae.h>
 #include <drivers/audio/backend/baeplat_impl.h>
 #include <drivers/audio/audio.h>
@@ -54,10 +55,11 @@ namespace eka2l1::drivers {
             }
         }
 
-        void handle_bank_change(const midi_bank_type type, const std::string &new_path) {
+        void handle_bank_change(const midi_bank_type type, const host_path &new_path) {
             if (type == MIDI_BANK_TYPE_HSB) {
                 BAEBankToken new_token = nullptr;
-                BAEResult result = BAEMixer_AddBankFromFile(mixer_, const_cast<char*>(new_path.data()), &new_token);
+                auto native_path = new_path.utf8();
+                BAEResult result = BAEMixer_AddBankFromFile(mixer_, native_path.data(), &new_token);
 
                 if (result != BAE_NO_ERROR) {
                     LOG_ERROR(DRIVER_AUD, "Failed to new miniBae banks!");
@@ -83,23 +85,24 @@ namespace eka2l1::drivers {
                     return nullptr;
                 }
 
-                std::string default_bank_path("resources/defaultbank.hsb");
+                host_path default_bank_path("resources/defaultbank.hsb");
                 audio_driver *drv = BAE_GetActiveAudioDriver();
 
                 if (drv) {
-                    std::optional<std::string> path = drv->get_bank_path(MIDI_BANK_TYPE_HSB);
+                    std::optional<host_path> path = drv->get_bank_path(MIDI_BANK_TYPE_HSB);
                     if (path.has_value()) {
                         default_bank_path = path.value();
                     }
                 }
 
-                result = BAEMixer_AddBankFromFile(mixer_, &default_bank_path[0], &current_bank_);
+                auto native_path = default_bank_path.utf8();
+                result = BAEMixer_AddBankFromFile(mixer_, native_path.data(), &current_bank_);
                 if (result != BAE_NO_ERROR) {
                     LOG_ERROR(DRIVER_AUD, "Failed to load miniBae banks!");
                     return nullptr;
                 }
 
-                bank_change_callback_handle_ = drv->add_bank_change_callback([&](const midi_bank_type type, const std::string &path) {
+                bank_change_callback_handle_ = drv->add_bank_change_callback([&](const midi_bank_type type, const host_path &path) {
                     return this->handle_bank_change(type, path);
                 });
             }

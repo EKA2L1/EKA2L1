@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <loader/sis_old.h>
 
 #include <common/cvt.h>
@@ -127,7 +128,7 @@ namespace eka2l1::loader {
 
         return nullptr;
     }
-    std::optional<sis_old> parse_sis_old(const std::string &path) {
+    std::optional<sis_old> parse_sis_old(const host_path &path) {
         common::ro_std_file_stream stream(path, true);
 
         if (!stream.valid()) {

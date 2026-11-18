@@ -19,6 +19,7 @@
 */
 
 #include <common/types.h>
+#include <common/path_types.h>
 #include <string>
 
 namespace eka2l1 {
@@ -28,10 +29,10 @@ namespace eka2l1 {
         /**
          * \brief Get nearest existed language file.
          */
-        std::u16string get_nearest_lang_file(io_system *io, const std::u16string &path,
+        guest_path get_nearest_lang_file(io_system *io, const guest_path &path,
             const language preferred_lang, const drive_number on_drive);
 
-        bool is_file_compatible_with_language(const std::string &path, const std::string &target_ext,
+        bool is_file_compatible_with_language(const guest_path &path, const std::string &target_ext,
             const language ideal_lang);
     }
 }

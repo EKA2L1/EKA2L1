@@ -84,6 +84,24 @@ namespace eka2l1::control {
 
         explicit impl(handler frontend)
             : frontend(std::move(frontend)) {}
+        std::uint64_t cancel_input() {
+            std::uint64_t epoch;
+            {
+                std::lock_guard<std::mutex> lock(sleep_mutex);
+                epoch = ++input_epoch;
+            }
+            wake.notify_all();
+            return epoch;
+        }
+
+        void request_stop() {
+            {
+                std::lock_guard<std::mutex> lock(sleep_mutex);
+                stopped = true;
+            }
+            wake.notify_all();
+        }
+
         void sleep(double ms, std::uint64_t epoch = UINT64_MAX) {
             if (!std::isfinite(ms) || ms < 0 || ms > 3600000)
                 throw api_error(400, "bad_request", "duration must be between 0 and 3600000 ms");
@@ -114,7 +132,7 @@ namespace eka2l1::control {
         }
         response storage(const request &req) {
             auto resolved = checked({ "RESOLVE", req.path, req.query, {}, {} });
-            const auto path = required_string(json::parse(resolved.body), "hostPath");
+            const host_path path(required_string(json::parse(resolved.body), "hostPath"));
             return req.path.back() == "files" ? host_files(req, path) : host_log(req, path);
         }
         response atomic_input(const std::string &kind, const json &data, const std::string &method = "POST") {
@@ -345,8 +363,7 @@ namespace eka2l1::control {
                     if (session["state"].string() != "running")
                         throw api_error(422, "launch_failed", "Games did not launch");
                 }
-                const auto epoch = ++input_epoch;
-                wake.notify_all();
+                const auto epoch = cancel_input();
                 {
                     std::lock_guard<std::mutex> input_guard(input_mutex);
                     atomic_input("release", json::object{});
@@ -402,8 +419,7 @@ namespace eka2l1::control {
                     const auto start = clock::now();
                     response res;
                     try {
-                        ++self->input_epoch;
-                        self->wake.notify_all();
+                        self->cancel_input();
                         std::lock_guard<std::mutex> input_guard(self->input_mutex);
                         res = self->call(std::move(req));
                     } catch (const api_error &e) {
@@ -492,8 +508,7 @@ namespace eka2l1::control {
                 || (p == std::vector<std::string>{ "v1", "session" } && req.method == "DELETE")
                 || (p == std::vector<std::string>{ "v1", "input", "release" } && req.method == "POST");
             if (changes_session) {
-                ++input_epoch;
-                wake.notify_all();
+                cancel_input();
                 lifecycle_input = std::unique_lock<std::mutex>(input_mutex);
             }
             const bool launch = p.size() == 4 && p[1] == "apps" && p[3] == "launch" && req.method == "POST";
@@ -568,8 +583,7 @@ namespace eka2l1::control {
     void service::stop() {
         if (!impl_)
             return;
-        impl_->stopped = true;
-        impl_->wake.notify_all();
+        impl_->request_stop();
         impl_->timed_workers.join();
         impl_->workers.join();
         impl_->job_worker.join();

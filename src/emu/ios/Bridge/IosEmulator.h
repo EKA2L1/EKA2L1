@@ -121,6 +121,10 @@ typedef NS_ENUM(NSInteger, EKA2L1InstallResult) {
 // letter). nil for other drives or when no device is booted.
 - (nullable NSString *)currentDeviceDrivePath:(unichar)driveLetter;
 
+// Resolve a guest filename inside that device's own C, D or E storage.
+- (nullable NSString *)resolveDeviceStoragePath:(NSString *)guestPath
+    NS_SWIFT_NAME(resolveDeviceStoragePath(_:));
+
 // Install a device from a raw ROM dump (and optionally an RPKG file). Mirrors
 // the Android launcher::install_device path: install_rpkg when the ROM needs
 // it, else install_rom. Writes into the sandbox storage and persists

@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <qt/btnmap/executor.h>
 #include <common/log.h>
 
@@ -61,7 +62,7 @@ namespace eka2l1::qt::btnmap {
         return false;
     }
 
-    void executor::serialize(const std::string &conf_path) {
+    void executor::serialize(const eka2l1::host_path &conf_path) {
         YAML::Emitter emitter;
 
         emitter << YAML::BeginSeq;
@@ -75,7 +76,7 @@ namespace eka2l1::qt::btnmap {
         fclose(f);
     }
 
-    void executor::deserialize(const std::string &conf_path) {
+    void executor::deserialize(const eka2l1::host_path &conf_path) {
         FILE *f = common::open_c_file(conf_path, "rb");
         if (!f) {
             return;

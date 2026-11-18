@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <services/fbs/fbs.h>
 #include <services/ui/skin/bitmap_store.h>
 #include <services/ui/skin/common.h>
@@ -261,7 +262,7 @@ namespace eka2l1::epoc {
          * 
          * \see     update_definition
          */
-        bool update_filename(const std::uint32_t filename_id, const std::u16string &filename, const std::u16string &filename_base);
+        bool update_filename(const std::uint32_t filename_id, const guest_path &filename, const guest_path &filename_base);
 
         /**
          * \brief Lookup filename and returns its data offset from filename area.
@@ -318,7 +319,7 @@ namespace eka2l1::epoc {
          * 
          * \returns True on success.
          */
-        bool import(skn_file &skn, const std::u16string &filename_base);
+        bool import(skn_file &skn, const guest_path &filename_base);
 
         /**
          * \brief    Get an item's definition with given ID.
@@ -330,9 +331,9 @@ namespace eka2l1::epoc {
 
         bool store_scalable_gfx(const pid item_id, const skn_layout_info layout_info, fbsbitmap *bmp, fbsbitmap *mask);
 
-        bool set_wallpaper(const std::u16string &path, const std::u16string &base_path);
+        bool set_wallpaper(const guest_path &path, const guest_path &base_path);
 
-        bool inject_skin_background(const std::u16string &path, const std::u16string &base_path);
+        bool inject_skin_background(const guest_path &path, const guest_path &base_path);
 
         const std::uint32_t filename_id_base() const {
             return filename_id_base_;

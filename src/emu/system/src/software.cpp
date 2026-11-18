@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <system/software.h>
 
 #include <algorithm>
@@ -37,11 +38,11 @@
 #include <optional>
 
 namespace eka2l1::loader {
-    static bool determine_rpkg_symbian_version_through_platform_file(const std::string &extracted_path, epocver &ver) {
-        const std::string platform_ini_path = common::resolve_case_insensitive_path(extracted_path, "resource\\versions\\platform.txt");
+    static bool determine_rpkg_symbian_version_through_platform_file(const host_path &extracted_path, epocver &ver) {
+        const host_path platform_ini_path(extracted_path.resolve_guest(eka2l1::guest_path::from_utf8("resource\\versions\\platform.txt")));
         common::ini_file platform_ini;
 
-        if (platform_ini.load(platform_ini_path.c_str()) != 0) {
+        if (platform_ini.load(platform_ini_path) != 0) {
             LOG_ERROR(SYSTEM, "Unable to load platform.txt in Z:\\Resources\\Versions.");
             return false;
         }
@@ -157,8 +158,8 @@ namespace eka2l1::loader {
         return std::nullopt;
     }
 
-    static bool determine_rpkg_symbian_version_through_series60_sis(const std::string &extracted_path, epocver &ver) {
-        std::string sis_path = common::resolve_case_insensitive_path(extracted_path, "system\\install\\");
+    static bool determine_rpkg_symbian_version_through_series60_sis(const host_path &extracted_path, epocver &ver) {
+        host_path sis_path(extracted_path.resolve_guest(eka2l1::guest_path::from_utf8("system\\install\\")));
 
         auto directory = common::make_directory_iterator(sis_path, "series60v*.sis");
         if (!directory) {
@@ -174,7 +175,7 @@ namespace eka2l1::loader {
                 continue;
             }
 
-            const common::pystr sis_filename = eka2l1::filename(entry.name);
+            const common::pystr sis_filename(entry.name.filename().utf8());
             auto version_strings = sis_filename.split('.');
 
             if (version_strings.size() < 2) {
@@ -195,11 +196,11 @@ namespace eka2l1::loader {
         }
 
         if (!found) {
-            if (common::exists(common::resolve_case_insensitive_path(extracted_path, "system\\install\\series80v20.sis"))) {
+            if (common::exists(eka2l1::host_path{extracted_path.resolve_guest(eka2l1::guest_path::from_utf8("system\\install\\series80v20.sis"))})) {
                 // It's funny))
                 ver = epocver::epoc7;
                 return true;
-            } else if (common::exists(common::resolve_case_insensitive_path(extracted_path, "system\\install\\series80v10.sis"))) {
+            } else if (common::exists(eka2l1::host_path{extracted_path.resolve_guest(eka2l1::guest_path::from_utf8("system\\install\\series80v10.sis"))})) {
                 ver = epocver::epoc6;
                 return true;
             }
@@ -212,17 +213,17 @@ namespace eka2l1::loader {
         return (ver == epocver::epoc93fp2);
     }
 
-    epocver determine_rpkg_symbian_version(const std::string &extracted_path) {
-        if (common::exists(common::resolve_case_insensitive_path(extracted_path, "system\\install\\uiq21platform.sis"))) {
+    epocver determine_rpkg_symbian_version(const host_path &extracted_path) {
+        if (common::exists(eka2l1::host_path{extracted_path.resolve_guest(eka2l1::guest_path::from_utf8("system\\install\\uiq21platform.sis"))})) {
             return epocver::epoc70;
         }
 
-        if (common::exists(common::resolve_case_insensitive_path(extracted_path, "system\\install\\uiq30platform.sis"))) {
+        if (common::exists(eka2l1::host_path{extracted_path.resolve_guest(eka2l1::guest_path::from_utf8("system\\install\\uiq30platform.sis"))})) {
             return epocver::epoc91;
         }
 
-        if (common::exists(common::resolve_case_insensitive_path(extracted_path, "system\\install\\series90v10.sis"))
-            || common::exists(common::resolve_case_insensitive_path(extracted_path, "system\\install\\series90v11.sis"))) {
+        if (common::exists(eka2l1::host_path{extracted_path.resolve_guest(eka2l1::guest_path::from_utf8("system\\install\\series90v10.sis"))})
+            || common::exists(eka2l1::host_path{extracted_path.resolve_guest(eka2l1::guest_path::from_utf8("system\\install\\series90v11.sis"))})) {
             return epocver::epoc7;
         }
 
@@ -253,13 +254,13 @@ namespace eka2l1::loader {
         return target_ver;
     }
 
-    static bool determine_rpkg_product_info_from_platform_txt(const std::string &extracted_path,
+    static bool determine_rpkg_product_info_from_platform_txt(const host_path &extracted_path,
         std::string &manufacturer, std::string &firmcode, std::string &model) {
-        const std::string version_folder = common::resolve_case_insensitive_path(extracted_path, "resource\\versions\\");
-        std::string product_ini_path = common::resolve_case_insensitive_path(version_folder, "product.txt");
+        const host_path version_folder(extracted_path.resolve_guest(eka2l1::guest_path::from_utf8("resource\\versions\\")));
+        host_path product_ini_path(version_folder.resolve_guest(eka2l1::guest_path::from_utf8("product.txt")));
         common::ini_file product_ini;
 
-        if (product_ini.load(product_ini_path.c_str(), false) != 0) {
+        if (product_ini.load(product_ini_path, false) != 0) {
             LOG_ERROR(SYSTEM, "Failed to load the file.");
             return false;
         }
@@ -271,23 +272,23 @@ namespace eka2l1::loader {
         return true;
     }
 
-    static bool determine_rpkg_product_info_from_various_txts(const std::string &extracted_path,
+    static bool determine_rpkg_product_info_from_various_txts(const host_path &extracted_path,
         std::string &manufacturer, std::string &firmcode, std::string &model) {
-        std::string version_folder = common::resolve_case_insensitive_path(extracted_path, "resource\\versions\\");
+        host_path version_folder(extracted_path.resolve_guest(eka2l1::guest_path::from_utf8("resource\\versions\\")));
 
         if (!common::exists(version_folder)) {
-            version_folder = common::resolve_case_insensitive_path(extracted_path, "system\\versions\\");
+            version_folder = extracted_path.resolve_guest(eka2l1::guest_path::from_utf8("system\\versions\\"));
         }
 
         if (!common::exists(version_folder)) {
             return false;
         }
 
-        common::dynamic_ifile sw_file(common::resolve_case_insensitive_path(version_folder, "sw.txt"));
+        common::dynamic_ifile sw_file(eka2l1::host_path{version_folder.resolve_guest(eka2l1::guest_path::from_utf8("sw.txt"))});
         std::string line_buffer;
 
         if (sw_file.fail()) {
-            sw_file = common::dynamic_ifile(common::resolve_case_insensitive_path(version_folder, "langsw.txt"));
+            sw_file = common::dynamic_ifile(eka2l1::host_path{version_folder.resolve_guest(eka2l1::guest_path::from_utf8("langsw.txt"))});
 
             if (sw_file.fail()) {
                 LOG_ERROR(SYSTEM, "Can't load langsw.txt!");
@@ -308,7 +309,7 @@ namespace eka2l1::loader {
             manufacturer = sw_infos[3].strip_reserverd().std_str();
         }
 
-        common::dynamic_ifile model_file(common::resolve_case_insensitive_path(version_folder, "model.txt"));
+        common::dynamic_ifile model_file(eka2l1::host_path{version_folder.resolve_guest(eka2l1::guest_path::from_utf8("model.txt"))});
         if (model_file.fail()) {
             LOG_ERROR(SYSTEM, "Can't load model.txt, use backup!");
             model = sw_infos[0].std_str();
@@ -319,8 +320,8 @@ namespace eka2l1::loader {
         return true;
     }
 
-    static bool determine_rpkg_product_info_from_sis(const std::string &extracted_path, std::string &manufacturer, std::string &firmcode, std::string &model) {
-        std::string sis_path = common::resolve_case_insensitive_path(extracted_path, "system\\install\\");
+    static bool determine_rpkg_product_info_from_sis(const host_path &extracted_path, std::string &manufacturer, std::string &firmcode, std::string &model) {
+        host_path sis_path(extracted_path.resolve_guest(eka2l1::guest_path::from_utf8("system\\install\\")));
 
         auto directory = common::make_directory_iterator(sis_path, "dev*.sis");
         if (!directory) {
@@ -335,7 +336,7 @@ namespace eka2l1::loader {
                 continue;
             }
 
-            const common::pystr sis_filename = eka2l1::filename(entry.name);
+            const common::pystr sis_filename(entry.name.filename().utf8());
             auto device_filename_parts = sis_filename.split('.');
 
             if (device_filename_parts.size() < 2) {
@@ -357,7 +358,7 @@ namespace eka2l1::loader {
         return false;
     }
 
-    std::uint32_t determine_rpkg_machine_uid(const std::string &extracted_path) {
+    std::uint32_t determine_rpkg_machine_uid(const host_path &extracted_path) {
         // hal.dll stores its attribute defaults, indexed by HALData number, right after the
         // "HAL-UserHal" name descriptor. Attribute 5 is EMachineUid.
         static const char *HAL_PATHS[] = { "system\\libs\\hal.dll", "sys\\bin\\hal.dll" };
@@ -369,7 +370,7 @@ namespace eka2l1::loader {
         static constexpr std::size_t MACHINE_UID_ATTRIBUTE = 5;
 
         for (const char *hal_path : HAL_PATHS) {
-            common::ro_std_file_stream hal_file(common::resolve_case_insensitive_path(extracted_path, hal_path), true);
+            common::ro_std_file_stream hal_file(eka2l1::host_path{extracted_path.resolve_guest(eka2l1::guest_path::from_utf8(hal_path))}, true);
 
             if (!hal_file.valid()) {
                 continue;
@@ -418,7 +419,7 @@ namespace eka2l1::loader {
         return files;
     }
 
-    static bool determine_product_info_from_machine_uid(const std::string &extracted_path,
+    static bool determine_product_info_from_machine_uid(const host_path &extracted_path,
         std::string &manufacturer, std::string &firmcode, std::string &model) {
         // UIQ has no naming file (devinf still says P800 on a P900 ROM), so name it by machine
         // UID. The pairs are the ones MOPHUN.DLL tests.
@@ -446,10 +447,10 @@ namespace eka2l1::loader {
         return true;
     }
 
-    static bool determine_product_info_from_semc_product_ini(const std::string &extracted_path,
+    static bool determine_product_info_from_semc_product_ini(const host_path &extracted_path,
         std::string &manufacturer, std::string &firmcode, std::string &model) {
         // Sony Ericsson UIQ 3 lists its HAL attributes as "<HALData number>=<decimal value>" lines.
-        common::dynamic_ifile product_file(common::resolve_case_insensitive_path(extracted_path, "resource\\apps\\productinfo.ini"));
+        common::dynamic_ifile product_file(eka2l1::host_path{extracted_path.resolve_guest(eka2l1::guest_path::from_utf8("resource\\apps\\productinfo.ini"))});
         if (product_file.fail()) {
             return false;
         }
@@ -490,8 +491,8 @@ namespace eka2l1::loader {
         return false;
     }
 
-    bool determine_rpkg_product_info(const std::string &extracted_path, std::string &manufacturer, std::string &firmcode, std::string &model) {
-        if (common::exists(common::resolve_case_insensitive_path(extracted_path, "system\\install\\sonyericssonp90xplatform.sis"))) {
+    bool determine_rpkg_product_info(const host_path &extracted_path, std::string &manufacturer, std::string &firmcode, std::string &model) {
+        if (common::exists(eka2l1::host_path{extracted_path.resolve_guest(eka2l1::guest_path::from_utf8("system\\install\\sonyericssonp90xplatform.sis"))})) {
             if (determine_product_info_from_machine_uid(extracted_path, manufacturer, firmcode, model)) {
                 return true;
             }
@@ -501,7 +502,7 @@ namespace eka2l1::loader {
             return true;
         }
 
-        if (common::exists(common::resolve_case_insensitive_path(extracted_path, "system\\install\\uiq30platform.sis"))
+        if (common::exists(eka2l1::host_path{extracted_path.resolve_guest(eka2l1::guest_path::from_utf8("system\\install\\uiq30platform.sis"))})
             && determine_product_info_from_semc_product_ini(extracted_path, manufacturer, firmcode, model)) {
             return true;
         }

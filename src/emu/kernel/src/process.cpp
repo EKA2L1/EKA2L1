@@ -190,7 +190,7 @@ namespace eka2l1::kernel {
         elem.first = nullptr;
     }
 
-    process::process(kernel_system *kern, memory_system *mem, const std::string &process_name, const std::u16string &exe_path,
+    process::process(kernel_system *kern, memory_system *mem, const std::string &process_name, const guest_path &exe_path,
         const std::u16string &cmd_args, bool use_memory)
         : kernel_obj(kern, process_name, nullptr, access_type::local_access)
         , mm_impl_(nullptr)

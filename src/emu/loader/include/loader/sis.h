@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <common/types.h>
 
 #include <loader/sis_fields.h>
@@ -40,7 +41,7 @@ namespace eka2l1 {
         };
 
         // Identify epoc version from the SIS
-        std::optional<sis_type> identify_sis_type(const std::string &path);
-        sis_contents parse_sis(const std::string &path, const bool is_stub);
+        std::optional<sis_type> identify_sis_type(const host_path &path);
+        sis_contents parse_sis(const host_path &path, const bool is_stub);
     }
 }

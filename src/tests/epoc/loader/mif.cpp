@@ -28,7 +28,7 @@ using namespace eka2l1;
 
 TEST_CASE("simple_icon_handler", "mif_file") {
     const char *rsc_name = "loaderassets//itried.mif";
-    symfile f = eka2l1::physical_file_proxy(rsc_name, READ_MODE | BIN_MODE);
+    symfile f = eka2l1::physical_file_proxy(eka2l1::host_path{rsc_name}, READ_MODE | BIN_MODE);
 
     REQUIRE(f);
 

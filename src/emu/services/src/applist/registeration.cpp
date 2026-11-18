@@ -63,8 +63,15 @@ namespace eka2l1 {
         return true;
     }
 
+    static bool read_path_aligned(common::ro_stream *stream, guest_path &path) {
+        std::u16string text;
+        if (!read_str16_aligned(stream, text) || text.find(u'\0') != text.npos) return false;
+        path = guest_path(std::move(text));
+        return true;
+    }
+
     static bool read_non_localisable_info(common::ro_stream *stream, apa_app_registry &reg, const drive_number land_drive) {
-        if (!read_str16_aligned(stream, reg.localised_info_rsc_path)) {
+        if (!read_path_aligned(stream, reg.localised_info_rsc_path)) {
             return false;
         }
 
@@ -203,7 +210,7 @@ namespace eka2l1 {
             return false;
         }
 
-        reg.icon_file_path = cap;
+        reg.icon_file_path = guest_path(cap);
 
         std::uint16_t view_count = 0;
         if (stream->read(&view_count, 2) != 2) {
@@ -228,7 +235,7 @@ namespace eka2l1 {
                 return false;
             }
             reg.view_datas[i].icon_count_ = icon_count_temp;
-            if (!read_str16_aligned(stream, reg.view_datas[i].icon_path_)) {
+            if (!read_path_aligned(stream, reg.view_datas[i].icon_path_)) {
                 return false;
             }
         }

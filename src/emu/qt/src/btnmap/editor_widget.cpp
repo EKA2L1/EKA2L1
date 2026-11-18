@@ -275,7 +275,7 @@ void editor_widget::on_save_toggle_profile_btn_clicked() {
     } else {
         QString previous_profile_path_name = (profile_folder_path_ + "/" + ui_->profile_combo_box->currentText() + ".yml");
         map_editor_.export_to(map_exec_);
-        map_exec_->serialize(previous_profile_path_name.toStdString());
+        map_exec_->serialize(eka2l1::host_path(previous_profile_path_name.toStdString()));
 
         ui_->edit_mode_btn->setDisabled(true);
         ui_->delete_mode_btn->setDisabled(true);
@@ -294,11 +294,11 @@ void editor_widget::on_profile_combo_box_activated(int index) {
     if (previous_profile_combo_index_ >= 0) {
         QString previous_profile_path_name = (profile_folder_path_ + "/" + ui_->profile_combo_box->itemText(previous_profile_combo_index_) + ".yml");
         map_editor_.export_to(map_exec_);
-        map_exec_->serialize(previous_profile_path_name.toStdString());
+        map_exec_->serialize(eka2l1::host_path(previous_profile_path_name.toStdString()));
     }
 
     QString profile_path_name = (profile_folder_path_ + "/" + ui_->profile_combo_box->itemText(index) + ".yml");
-    map_exec_->deserialize(profile_path_name.toStdString());
+    map_exec_->deserialize(eka2l1::host_path(profile_path_name.toStdString()));
     map_editor_.import_from(map_exec_);
 
     QFile file(profile_use_config_file_);

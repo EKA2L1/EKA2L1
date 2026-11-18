@@ -14,8 +14,8 @@
 #include "ngage_agent.h"
 
 namespace eka2l1::control {
-    static const std::u16string executable = u"C:\\sys\\bin\\eka2l1_ngage_launch.exe";
-    static const std::u16string response_path = u"C:\\private\\e000ea02\\response.bin";
+    static const guest_path executable{u"C:\\sys\\bin\\eka2l1_ngage_launch.exe"};
+    static const guest_path response_path{u"C:\\private\\e000ea02\\response.bin"};
 
     struct ngage_controller::impl {
         struct completion {
@@ -81,9 +81,9 @@ namespace eka2l1::control {
             const auto destination = io->get_raw_path(executable);
             if (!destination)
                 return response::error(409, "no_device", "no writable system drive");
-            const auto host_path = common::ucs2_to_utf8(*destination);
-            common::create_directories(file_directory(host_path));
-            auto *file = common::open_c_file(host_path, "wb");
+            const auto &agent_file = *destination;
+            common::create_directories(agent_file.parent());
+            auto *file = common::open_c_file(agent_file, "wb");
             if (!file)
                 return response::error(422, "ngage_failed", "cannot stage Games IPC agent");
             const bool written = fwrite(ngage_agent, 1, sizeof(ngage_agent), file) == sizeof(ngage_agent);
@@ -132,7 +132,7 @@ namespace eka2l1::control {
         const auto path = io->get_raw_path(response_path);
         std::vector<std::uint8_t> data;
         if (path) {
-            auto *file = common::open_c_file(common::ucs2_to_utf8(*path), "rb");
+            auto *file = common::open_c_file(eka2l1::host_path{common::ucs2_to_utf8(*path)}, "rb");
             if (file) {
                 std::uint8_t buffer[4096];
                 std::size_t size;

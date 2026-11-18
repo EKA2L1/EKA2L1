@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <dispatch/audio.h>
 #include <dispatch/dispatcher.h>
 #include <vfs/vfs.h>
@@ -141,29 +142,29 @@ namespace eka2l1::dispatch {
         return 0;
     }
 
-    bool dsp_epoc_player::open_record_clip(const std::string &host_path) {
+    bool dsp_epoc_player::open_record_clip(const eka2l1::host_path &file_path) {
         if (is_recording()) {
             return false;
         }
 
-        record_clip_ = drivers::new_clip_writer(host_path);
-        record_clip_path_ = host_path;
+        record_clip_ = drivers::new_clip_writer(eka2l1::host_path{file_path});
+        record_clip_path_ = file_path;
 
         return record_clip_ != nullptr;
     }
 
-    bool dsp_epoc_player::start_recording(drivers::audio_driver *driver, const std::string &host_path) {
+    bool dsp_epoc_player::start_recording(drivers::audio_driver *driver, const eka2l1::host_path &file_path) {
         if (record_stream_ || !driver) {
             return false;
         }
 
-        if ((!record_clip_ || (record_clip_path_ != host_path)) && !open_record_clip(host_path)) {
-            LOG_ERROR(HLE_AUD, "Unable to record into {}: its format cannot be written or appended to", host_path);
+        if ((!record_clip_ || (record_clip_path_ != file_path)) && !open_record_clip(file_path)) {
+            LOG_ERROR(HLE_AUD, "Unable to record into {}: its format cannot be written or appended to", file_path);
             return false;
         }
 
         if (!record_clip_->begin()) {
-            LOG_ERROR(HLE_AUD, "Unable to open {} for recording", host_path);
+            LOG_ERROR(HLE_AUD, "Unable to open {} for recording", file_path);
             return false;
         }
 
@@ -279,20 +280,26 @@ namespace eka2l1::dispatch {
 
         if (is_local_audio_url(url_str)) {
             // It should be a local path. Transform it to host path
-            std::optional<std::u16string> host_path = sys->get_io_system()->get_raw_path(url_str);
+            std::optional<eka2l1::host_path> native_path = sys->get_io_system()->get_raw_path(eka2l1::guest_path{url_str});
 
-            if (host_path.has_value()) {
-                url_str = std::move(host_path.value());
+            if (native_path.has_value()) {
+                url_str = native_path->utf16();
             }
         }
 
         return url_str;
     }
 
+    static std::optional<host_path> resolve_audio_file(system *sys, const std::uint16_t *url, const std::uint32_t length) {
+        std::u16string text(reinterpret_cast<const char16_t *>(url), length);
+        if (text.find(u'\0') != text.npos) return std::nullopt;
+        return sys->get_io_system()->get_raw_path(guest_path(std::move(text)));
+    }
+
     BRIDGE_FUNC_DISPATCHER(std::int32_t, eaudio_player_supply_url, eka2l1::ptr<void> handle,
         const std::uint16_t *url, const std::uint32_t url_length, std::uint64_t *duration_us) {
         const std::u16string guest_url(reinterpret_cast<const char16_t *>(url), url_length);
-        if (is_local_audio_url(guest_url) && !sys->get_io_system()->exist(guest_url)) {
+        if (is_local_audio_url(guest_url) && !sys->get_io_system()->exist(eka2l1::guest_path{guest_url})) {
             return epoc::error_not_found;
         }
 
@@ -463,9 +470,10 @@ namespace eka2l1::dispatch {
             eplayer->impl_.reset();
         }
 
-        const std::string host_path = common::ucs2_to_utf8(resolve_audio_url(sys, url, url_length));
+        const auto file_path = resolve_audio_file(sys, url, url_length);
+        if (!file_path) return epoc::error_not_found;
 
-        if (!eplayer->start_recording(sys->get_audio_driver(), host_path)) {
+        if (!eplayer->start_recording(sys->get_audio_driver(), *file_path)) {
             return epoc::error_not_supported;
         }
 
@@ -845,7 +853,9 @@ namespace eka2l1::dispatch {
             return epoc::error_in_use;
         }
 
-        if (!eplayer->open_record_clip(common::ucs2_to_utf8(resolve_audio_url(sys, url, url_length)))) {
+        const auto file_path = resolve_audio_file(sys, url, url_length);
+        if (!file_path) return epoc::error_not_found;
+        if (!eplayer->open_record_clip(*file_path)) {
             return epoc::error_not_supported;
         }
 
@@ -1527,7 +1537,7 @@ namespace eka2l1::dispatch {
         }
 
         const std::u16string path = filename->to_std_string(sys->get_kernel_system()->crr_process());
-        symfile file = sys->get_io_system()->open_file(path, READ_MODE | BIN_MODE);
+        symfile file = sys->get_io_system()->open_file(eka2l1::guest_path{path}, READ_MODE | BIN_MODE);
 
         if (!file) {
             return epoc::error_not_found;

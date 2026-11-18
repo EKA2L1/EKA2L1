@@ -39,7 +39,7 @@ namespace eka2l1 {
      * \brief Parse a new centrep ini file.
 	 * \returns False if IO error or invalid centrep configs.
 	*/
-    bool parse_new_centrep_ini(const std::string &path, central_repo &repo);
+    bool parse_new_centrep_ini(const host_path &path, central_repo &repo);
 
     class central_repo_server;
 

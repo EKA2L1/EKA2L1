@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <jni.h>
 #include <string>
 #include <filesystem>
@@ -69,8 +70,8 @@ static void start_debug_control(int port) {
     using namespace eka2l1;
     control::native_frontend frontend;
     frontend.platform = "android";
-    frontend.documents = std::filesystem::current_path().string();
-    frontend.log = (std::filesystem::current_path() / "EKA2L1.log").string();
+    frontend.documents = host_path{std::filesystem::current_path().string()};
+    frontend.log = host_path{(std::filesystem::current_path() / "EKA2L1.log").string()};
     frontend.get_system = [] { return state->symsys.get(); };
     frontend.frames = [] { return state->debug_frames.load(); };
     frontend.can_capture = [] { return s_surf && !state->should_graphics_pause.load(); };
@@ -121,11 +122,11 @@ Java_com_github_eka2l1_emu_Emulator_setDirectory(
     jclass clazz,
     jstring path) {
     const char *cstr = env->GetStringUTFChars(path, nullptr);
-    std::string cpath = std::string(cstr);
+    eka2l1::host_path cpath{std::string(cstr)};
     env->ReleaseStringUTFChars(path, cstr);
 
     const auto executable_directory = eka2l1::file_directory(cpath);
-    eka2l1::common::set_current_directory(executable_directory);
+    eka2l1::common::set_current_directory(eka2l1::host_path{executable_directory});
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
@@ -227,7 +228,7 @@ extern "C" JNIEXPORT jint JNICALL
 Java_com_github_eka2l1_emu_Emulator_installApp(JNIEnv *env, jclass clazz, jstring path) {
     auto control_guard = lock_debug_control();
     const char *cstr = env->GetStringUTFChars(path, nullptr);
-    std::string cpath = std::string(cstr);
+    eka2l1::host_path cpath{std::string(cstr)};
     env->ReleaseStringUTFChars(path, cstr);
 
     return state->launcher->install_app(cpath);
@@ -306,10 +307,10 @@ Java_com_github_eka2l1_emu_Emulator_installDevice(JNIEnv *env, jclass clazz, jst
     jstring rom_path, jboolean install_rpkg, jboolean isolate_drives) {
     auto control_guard = lock_debug_control();
     const char *cstr = env->GetStringUTFChars(rpkg_path, nullptr);
-    std::string crpkg_path = std::string(cstr);
+    eka2l1::host_path crpkg_path{std::string(cstr)};
     env->ReleaseStringUTFChars(rpkg_path, cstr);
     cstr = env->GetStringUTFChars(rom_path, nullptr);
-    std::string crom_path = std::string(cstr);
+    eka2l1::host_path crom_path{std::string(cstr)};
     env->ReleaseStringUTFChars(rom_path, cstr);
 
     return state->launcher->install_device(crpkg_path, crom_path, install_rpkg, isolate_drives);
@@ -319,7 +320,7 @@ extern "C" JNIEXPORT jboolean JNICALL
 Java_com_github_eka2l1_emu_Emulator_doesRomNeedRPKG(JNIEnv *env, jclass clazz, jstring rom_path) {
     auto control_guard = lock_debug_control();
     const char *cstr = env->GetStringUTFChars(rom_path, nullptr);
-    const bool result = state->launcher->does_rom_need_rpkg(cstr);
+    const bool result = state->launcher->does_rom_need_rpkg(eka2l1::host_path(cstr));
 
     env->ReleaseStringUTFChars(rom_path, cstr);
     return result;
@@ -349,7 +350,7 @@ extern "C" JNIEXPORT void JNICALL
 Java_com_github_eka2l1_emu_Emulator_mountSdCard(JNIEnv *env, jclass clazz, jstring path) {
     auto control_guard = lock_debug_control();
     const char *cstr = env->GetStringUTFChars(path, nullptr);
-    std::string cpath = std::string(cstr);
+    eka2l1::host_path cpath{std::string(cstr)};
     env->ReleaseStringUTFChars(path, cstr);
 
     state->launcher->mount_sd_card(cpath);
@@ -456,7 +457,7 @@ Java_com_github_eka2l1_emu_Emulator_setScreenParams(JNIEnv *env, jclass clazz,
                                                     jboolean bg_img_keep_aspect) {
     auto control_guard = lock_debug_control();
     const char *cstr = env->GetStringUTFChars(bg_img_path, nullptr);
-    std::string cpath = std::string(cstr);
+    eka2l1::host_path cpath{std::string(cstr)};
     env->ReleaseStringUTFChars(bg_img_path, cstr);
 
     state->launcher->set_screen_params(background_color, scale_ratio, scale_type, gravity, cpath, bg_img_opacity, bg_img_keep_aspect);
@@ -553,7 +554,7 @@ JNIEXPORT jint JNICALL
 Java_com_github_eka2l1_emu_Emulator_installNGageGame(JNIEnv *env, jclass clazz, jstring path) {
     auto control_guard = lock_debug_control();
     const char *cstr = env->GetStringUTFChars(path, nullptr);
-    std::string cpath = std::string(cstr);
+    eka2l1::host_path cpath{std::string(cstr)};
     env->ReleaseStringUTFChars(path, cstr);
 
     return state->launcher->install_ngage_game(cpath);
@@ -606,7 +607,7 @@ JNIEXPORT jboolean JNICALL
 Java_com_github_eka2l1_emu_Emulator_saveScreenshotTo(JNIEnv *env, jclass clazz, jstring file_path) {
     auto control_guard = lock_debug_control();
     const char *cstr = env->GetStringUTFChars(file_path, nullptr);
-    std::string file_path_std = std::string(cstr);
+    eka2l1::host_path file_path_std{std::string(cstr)};
     env->ReleaseStringUTFChars(file_path, cstr);
 
     return state->launcher->save_screenshot_to(file_path_std);

@@ -81,7 +81,9 @@ namespace eka2l1::package {
     }
 
     void file_description::do_state(common::chunkyseri &seri) {
-        epoc::absorb_des_string(target, seri, true);
+        auto text = target.utf16();
+        epoc::absorb_des_string(text, seri, true);
+        if (seri.get_seri_mode() == common::SERI_MODE_READ) target = guest_path(std::move(text));
         epoc::absorb_des_string(mime_type, seri, true);
         seri.absorb(operation);
         seri.absorb(operation_options);

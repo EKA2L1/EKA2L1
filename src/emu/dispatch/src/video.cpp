@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <common/log.h>
 #include <common/cvt.h>
 #include <dispatch/video.h>
@@ -256,8 +257,8 @@ namespace eka2l1::dispatch {
         }
     }
 
-    bool epoc_video_player::open_file(const std::u16string &real_path) {
-        return video_player_->open_file(common::ucs2_to_utf8(real_path));
+    bool epoc_video_player::open_file(const host_path &real_path) {
+        return video_player_->open_file(real_path);
     }
 
     bool epoc_video_player::open_with_custom_stream(std::unique_ptr<common::ro_stream> &stream) {
@@ -569,18 +570,18 @@ namespace eka2l1::dispatch {
 
         io_system *ios = sys->get_io_system();
 
-        if (!ios->exist(virtual_filename)) {
+        if (!ios->exist(eka2l1::guest_path{virtual_filename})) {
             return epoc::error_not_found;            
         }
 
-        std::optional<std::u16string> real_filename = ios->get_raw_path(virtual_filename);
+        std::optional<host_path> real_filename = ios->get_raw_path(eka2l1::guest_path{virtual_filename});
 
         bool open_res = false;
 
         if (real_filename.has_value()) {
             open_res = player->open_file(real_filename.value());            
         } else {
-            symfile f = ios->open_file(virtual_filename, READ_MODE | BIN_MODE);
+            symfile f = ios->open_file(eka2l1::guest_path{virtual_filename}, READ_MODE | BIN_MODE);
             if (!f) {
                 return epoc::error_not_found;
             }

@@ -45,7 +45,7 @@ namespace eka2l1::kernel {
         explicit btrace(kernel_system *kern, io_system *io);
         ~btrace();
 
-        bool start_trace_session(const std::u16string &trace_path);
+        bool start_trace_session(const guest_path &trace_path);
         bool close_trace_session();
 
         bool out(const std::uint32_t a0, const std::uint32_t a1, const std::uint32_t a2,

@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 #pragma once
+#include <common/path_types.h>
 
 #include <common/container.h>
 #include <common/linked.h>
@@ -153,7 +154,7 @@ namespace eka2l1::kernel {
 
         std::array<pass_arg, 16> args;
 
-        std::u16string exe_path;
+        guest_path exe_path;
         std::u16string cmd_args;
 
         object_ix process_handles;
@@ -240,7 +241,7 @@ namespace eka2l1::kernel {
             const process_priority pri);
 
         explicit process(kernel_system *kern, memory_system *mem, const std::string &process_name,
-            const std::u16string &exe_path, const std::u16string &cmd_args, bool use_memory = true);
+            const guest_path &exe_path, const std::u16string &cmd_args, bool use_memory = true);
 
         ~process() = default;
 
@@ -288,7 +289,7 @@ namespace eka2l1::kernel {
             return cmd_args;
         }
 
-        std::u16string get_exe_path() const {
+        guest_path get_exe_path() const {
             return exe_path;
         }
 

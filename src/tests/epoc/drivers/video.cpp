@@ -35,7 +35,7 @@ TEST_CASE("video_pause_seek_and_range_completion_follow_media_time", "[video]") 
     bool packed_frames = true;
     auto player = eka2l1::drivers::new_best_video_player(nullptr);
     REQUIRE(player);
-    REQUIRE(player->open_file("videoassets/seek.mp4"));
+    REQUIRE(player->open_file(eka2l1::host_path{"videoassets/seek.mp4"}));
     REQUIRE(player->duration() == 2000000);
 
     player->set_image_frame_available_callback([&](void *, const std::uint8_t *, std::size_t size) {

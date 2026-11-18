@@ -19,13 +19,13 @@ namespace {
         config::state conf;
 
         firmware_fixture() {
-            common::delete_folder(root);
-            common::create_directories(root);
-            conf.storage = root;
+            common::delete_folder(eka2l1::host_path{root});
+            common::create_directories(eka2l1::host_path{root});
+            conf.storage = eka2l1::host_path{root};
         }
 
         ~firmware_fixture() {
-            common::delete_folder(root);
+            common::delete_folder(eka2l1::host_path{root});
         }
 
         void check_installed(device_manager &devices) {
@@ -36,14 +36,14 @@ namespace {
             auto fs = create_physical_filesystem(epocver::epoc91, "");
             io.add_filesystem(fs);
             REQUIRE(io.mount_physical_path(drive_a, drive_media::physical, io_attrib_internal,
-                common::utf8_to_ucs2(add_path(root, "drives/z/case-1/"))));
-            auto dir = io.open_dir(u"A:\\private\\12345678\\*.MID", {}, io_attrib_include_file);
+                eka2l1::host_path{add_path(root, "drives/z/case-1/")}));
+            auto dir = io.open_dir(eka2l1::guest_path{u"A:\\private\\12345678\\*.MID"}, {}, io_attrib_include_file);
             REQUIRE(dir);
             const auto entry = dir->get_next_entry();
             REQUIRE(entry);
-            REQUIRE(entry->name == "Intro_Groove 01.mid");
+            REQUIRE(entry->name.utf16() == u"Intro_Groove 01.mid");
             REQUIRE_FALSE(dir->get_next_entry());
-            REQUIRE(io.open_file(u"A:\\PRIVATE\\12345678\\intro_groove 01.MID", READ_MODE));
+            REQUIRE(io.open_file(eka2l1::guest_path{u"A:\\PRIVATE\\12345678\\intro_groove 01.MID"}, READ_MODE));
         }
     };
 }
@@ -79,7 +79,7 @@ TEST_CASE("rpkg_installation_preserves_firmware_names", "[installation]") {
     }
     device_manager devices(&fixture.conf);
     std::string code;
-    REQUIRE(loader::install_rpkg(&devices, path, add_path(fixture.root, "drives/z/"), code,
+    REQUIRE(loader::install_rpkg(&devices, eka2l1::host_path{path}, eka2l1::host_path{add_path(fixture.root, "drives/z/")}, code,
         false, nullptr, nullptr) == device_installation_none);
     REQUIRE(code == "case-1");
     fixture.check_installed(devices);
@@ -88,8 +88,8 @@ TEST_CASE("rpkg_installation_preserves_firmware_names", "[installation]") {
 TEST_CASE("archive_installation_preserves_firmware_names", "[installation]") {
     firmware_fixture fixture;
     device_manager devices(&fixture.conf);
-    REQUIRE(loader::install_archive(&devices, "systemassets/case_device.zip",
-        add_path(fixture.root, "roms/"), add_path(fixture.root, "drives/z/"), false,
+    REQUIRE(loader::install_archive(&devices, eka2l1::host_path{"systemassets/case_device.zip"},
+        eka2l1::host_path{add_path(fixture.root, "roms/")}, eka2l1::host_path{add_path(fixture.root, "drives/z/")}, false,
         nullptr, nullptr) == device_installation_none);
     fixture.check_installed(devices);
 }

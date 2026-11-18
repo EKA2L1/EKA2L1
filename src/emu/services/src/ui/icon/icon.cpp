@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <services/fbs/fbs.h>
 #include <services/ui/icon/icon.h>
 #include <services/ui/icon/ops.h>
@@ -102,7 +103,7 @@ namespace eka2l1 {
 
     // Open an icon container, resolving bare names (e.g. "Calcsoft.mif") against the
     // standard resource locations the way AknIconServer would.
-    static symfile open_icon_container(io_system *io, const std::u16string &path) {
+    static symfile open_icon_container(io_system *io, const guest_path &path) {
         symfile f = io->open_file(path, READ_MODE | BIN_MODE);
         if (f) {
             return f;
@@ -119,7 +120,7 @@ namespace eka2l1 {
                     continue;
                 }
                 for (const char16_t *prefix : kPrefixes) {
-                    std::u16string candidate;
+                    guest_path candidate;
                     candidate += drive_to_char16(drv);
                     candidate += u":";
                     candidate += prefix;
@@ -137,7 +138,7 @@ namespace eka2l1 {
 
     // Load a .mif icon entry (SVG / NVG vector) into a renderable lunasvg document.
     static std::unique_ptr<lunasvg::Document> load_mif_icon_document(io_system *io,
-        const std::u16string &path, const int icon_index, const int want_w, const int want_h) {
+        const guest_path &path, const int icon_index, const int want_w, const int want_h) {
         symfile f = open_icon_container(io, path);
         if (!f) {
             return nullptr;
@@ -234,7 +235,7 @@ namespace eka2l1 {
     }
 
     // Load a raster .mbm bitmap entry into RGBA8888 at its natural size.
-    static bool load_mbm_icon_rgba(io_system *io, fbs_server *fbss, const std::u16string &path,
+    static bool load_mbm_icon_rgba(io_system *io, fbs_server *fbss, const guest_path &path,
         const int index, std::vector<std::uint8_t> &rgba, int &out_w, int &out_h) {
         symfile f = open_icon_container(io, path);
         if (!f) {
@@ -298,7 +299,7 @@ namespace eka2l1 {
 
     // Produce a rendered RGBA buffer for an icon container entry, honouring the requested
     // size. Handles vector (.mif SVG/NVG via lunasvg) and raster (.mbm) containers.
-    static bool produce_icon_rgba(io_system *io, fbs_server *fbss, const std::u16string &path,
+    static bool produce_icon_rgba(io_system *io, fbs_server *fbss, const guest_path &path,
         const int index, const int req_w, const int req_h, std::vector<std::uint8_t> &out_rgba,
         int &fw, int &fh) {
         auto sane = [](const int v, const int fallback) -> int {
@@ -354,7 +355,7 @@ namespace eka2l1 {
         std::optional<epoc::akn_icon_srv_return_data> cached = find_existing_icon(spec.value(), &icon_index);
         if (!cached) {
             io_system *io = sys->get_io_system();
-            const std::u16string icon_path = spec->file_name.to_std_string(nullptr);
+            const guest_path icon_path(spec->file_name.to_std_string(nullptr));
 
             std::vector<std::uint8_t> rgba;
             int w = 0;

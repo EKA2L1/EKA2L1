@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <loader/sis.h>
 #include <loader/sis_common.h>
 #include <loader/sis_fields.h>
@@ -39,7 +40,7 @@ namespace eka2l1 {
         };
 
         // Given a SIS path, identify the EPOC version
-        std::optional<sis_type> identify_sis_type(const std::string &path) {
+        std::optional<sis_type> identify_sis_type(const host_path &path) {
             common::ro_std_file_stream stream(path, true);
 
             if (!stream.valid()) {
@@ -72,7 +73,7 @@ namespace eka2l1 {
             return std::nullopt;
         }
 
-        sis_contents parse_sis(const std::string &path, const bool is_stub) {
+        sis_contents parse_sis(const host_path &path, const bool is_stub) {
             sis_parser parser(path);
 
             if (!is_stub)

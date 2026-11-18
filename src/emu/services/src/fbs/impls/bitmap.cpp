@@ -569,7 +569,7 @@ namespace eka2l1 {
             }
         }
 
-        symfile source_file = ctx->sys->get_io_system()->open_file(name.value(), READ_MODE | BIN_MODE);
+        symfile source_file = ctx->sys->get_io_system()->open_file(eka2l1::guest_path{name.value()}, READ_MODE | BIN_MODE);
 
         if (!source_file) {
             ctx->complete(epoc::error_not_found);

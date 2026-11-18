@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <services/posix/op.h>
 #include <services/posix/posix.h>
 #include <services/fs/std.h>
@@ -98,7 +99,7 @@ namespace eka2l1 {
             return first && last && (last == first + size - 1);
         }
 
-        std::optional<std::u16string> read_guest_path(kernel::process *process, const ptr<std::int16_t> path) {
+        std::optional<guest_path> read_guest_path(kernel::process *process, const ptr<std::int16_t> path) {
             std::u16string result;
             result.reserve(POSIX_MAX_PATH);
 
@@ -110,7 +111,7 @@ namespace eka2l1 {
                 }
 
                 if (*character == 0) {
-                    return result;
+                    return guest_path(std::move(result));
                 }
 
                 result.push_back(*character);
@@ -141,7 +142,7 @@ namespace eka2l1 {
         return static_cast<fid>(std::distance(files.begin(), free_slot)) + 1;
     }
 
-    fid posix_file_manager::open(const std::u16string &path, const int mode,
+    fid posix_file_manager::open(const guest_path &path, const int mode,
         const bool readable, const bool writable, int &terrno) {
         const fid suit_fid = get_lowest_usable_fid();
 
@@ -150,7 +151,7 @@ namespace eka2l1 {
             return 0;
         }
 
-        symfile handle = io->open_file(path, mode);
+        symfile handle = io->open_file(eka2l1::guest_path{path}, mode);
         if (!handle) {
             terrno = ENOENT;
             return 0;
@@ -271,7 +272,7 @@ namespace eka2l1 {
         stat(files[id - 1]->handle->file_name(), filestat, terrno);
     }
 
-    void posix_file_manager::stat(const std::u16string &path, posix_stat *filestat, int &terrno) {
+    void posix_file_manager::stat(const guest_path &path, posix_stat *filestat, int &terrno) {
         std::optional<entry_info> info = io->get_entry_info(path);
         if (!info) {
             terrno = ENOENT;
@@ -340,13 +341,13 @@ namespace eka2l1 {
     void posix_server::chdir(service::ipc_context &ctx) {
         POSIX_REQUEST_INIT(ctx);
 
-        const std::optional<std::u16string> current_dir = read_guest_path(own_process, params->cwptr[0]);
+        const std::optional<guest_path> current_dir = read_guest_path(own_process, params->cwptr[0]);
         if (!current_dir) {
             params->ret = -1;
             POSIX_REQUEST_FINISH_WITH_ERR(ctx, EFAULT);
         }
 
-        const std::u16string requested_dir = eka2l1::absolute_path(*current_dir, working_dir, true);
+        const guest_path requested_dir = eka2l1::absolute_path(*current_dir, working_dir, true);
         io_system *io = ctx.sys->get_io_system();
         if (!io->exist(requested_dir)) {
             params->ret = -1;
@@ -367,13 +368,13 @@ namespace eka2l1 {
     void posix_server::mkdir(service::ipc_context &ctx) {
         POSIX_REQUEST_INIT(ctx);
 
-        const std::optional<std::u16string> current_dir = read_guest_path(own_process, params->cwptr[0]);
+        const std::optional<guest_path> current_dir = read_guest_path(own_process, params->cwptr[0]);
         if (!current_dir) {
             params->ret = -1;
             POSIX_REQUEST_FINISH_WITH_ERR(ctx, EFAULT);
         }
 
-        const std::u16string full_new_path = eka2l1::absolute_path(*current_dir, working_dir, true);
+        const guest_path full_new_path(eka2l1::absolute_path(*current_dir, working_dir, true));
 
         io_system *io = ctx.sys->get_io_system();
         if (io->exist(full_new_path)) {
@@ -390,13 +391,13 @@ namespace eka2l1 {
     void posix_server::unlink(service::ipc_context &ctx) {
         POSIX_REQUEST_INIT(ctx);
 
-        const std::optional<std::u16string> path = read_guest_path(own_process, params->cwptr[0]);
+        const std::optional<guest_path> path = read_guest_path(own_process, params->cwptr[0]);
         if (!path) {
             params->ret = -1;
             POSIX_REQUEST_FINISH_WITH_ERR(ctx, EFAULT);
         }
 
-        const std::u16string full_path = eka2l1::absolute_path(*path, working_dir, true);
+        const guest_path full_path(eka2l1::absolute_path(*path, working_dir, true));
         io_system *io = ctx.sys->get_io_system();
         if (!io->exist(full_path)) {
             params->ret = -1;
@@ -415,24 +416,24 @@ namespace eka2l1 {
     void posix_server::open(service::ipc_context &ctx) {
         POSIX_REQUEST_INIT(ctx);
 
-        std::u16string base_dir = working_dir;
+        guest_path base_dir = working_dir;
         io_system *io = ctx.sys->get_io_system();
 
         // Get mode
         const int posix_open_mode = params->pint[0];
         if (posix_open_mode & POSIX_O_TMPFILE) {
             // Put the temporary file in tmp folder of the correspond private space of process in C drive
-            base_dir = std::u16string(u"C:\\private\\")
-                + common::utf8_to_ucs2(common::to_string(associated_process_uid, std::hex)) + u"\\tmp\\";
+            base_dir = guest_path(std::u16string(u"C:\\private\\")
+                + common::utf8_to_ucs2(common::to_string(associated_process_uid, std::hex)) + u"\\tmp\\");
         }
 
-        const std::optional<std::u16string> current_dir = read_guest_path(own_process, params->cwptr[0]);
+        const std::optional<guest_path> current_dir = read_guest_path(own_process, params->cwptr[0]);
         if (!current_dir) {
             params->ret = -1;
             POSIX_REQUEST_FINISH_WITH_ERR(ctx, EFAULT);
         }
 
-        const std::u16string path_u16 = eka2l1::absolute_path(*current_dir, base_dir, true);
+        const guest_path path_u16(eka2l1::absolute_path(*current_dir, base_dir, true));
 
         const std::int32_t access_mode = posix_open_mode & POSIX_O_ACCMODE;
         if ((access_mode != POSIX_O_RDONLY) && (access_mode != POSIX_O_WRONLY)
@@ -642,7 +643,7 @@ namespace eka2l1 {
     }
 
     posix_server::posix_server(eka2l1::system *sys, process_ptr &associated_process,
-        const std::u16string &executable_path)
+        const guest_path &executable_path)
         : service::server(sys->get_kernel_system(), sys, nullptr, std::string("Posix-") + common::to_string(associated_process->unique_id()), true)
         , associated_process_uid(associated_process->get_uid())
         , file_manager(sys->get_io_system()) {
@@ -664,9 +665,7 @@ namespace eka2l1 {
         REGISTER_IPC(posix_server, terminate_process, PMterminateprocess, "Posix::TerminateProcess");
     }
 
-    void posix_server::update_executable_path(const std::u16string &executable_path) {
-        working_dir = common::utf8_to_ucs2(eka2l1::root_name(
-                          common::ucs2_to_utf8(executable_path), true))
-            + u'\\';
+    void posix_server::update_executable_path(const guest_path &executable_path) {
+        working_dir = executable_path.root_name() + u'\\';
     }
 }

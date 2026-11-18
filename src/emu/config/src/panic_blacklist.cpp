@@ -28,7 +28,7 @@ namespace eka2l1::config {
         try {
             YAML::Node the_node;
 
-            common::ro_std_file_stream blacklist_stream("compat//panicBlackList.json", true);
+            common::ro_std_file_stream blacklist_stream(eka2l1::host_path{"compat//panicBlackList.json"}, true);
             if (!blacklist_stream.valid()) {
                 LOG_ERROR(CONFIG, "Failed to open thread panic blacklist file!");
                 return;

@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <common/algorithm.h>
 #include <common/log.h>
 
@@ -76,6 +77,8 @@ namespace eka2l1 {
              */
             template <typename T>
             std::optional<T> get_argument_value(const int idx);
+
+            std::optional<guest_path> get_path_argument(const int idx);
 
             /**
              * \brief    Convert descriptor data to a struct.

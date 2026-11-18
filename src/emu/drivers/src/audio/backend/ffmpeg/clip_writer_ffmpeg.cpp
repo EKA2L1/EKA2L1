@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <drivers/audio/clip_writer.h>
 
 #include <common/fileutils.h>
@@ -198,7 +199,7 @@ namespace eka2l1::drivers {
         }
 
     public:
-        explicit clip_writer_ffmpeg(const std::string &path, const clip_codec &codec)
+        explicit clip_writer_ffmpeg(const host_path &path, const clip_codec &codec)
             : clip_writer(path)
             , codec_(codec) {
             format_ = codec_.default_format;
@@ -215,7 +216,7 @@ namespace eka2l1::drivers {
             existing_frames_ = 0;
             end_pts_ = 0;
 
-            std::FILE *file = common::open_c_file(path_, "rb");
+            std::FILE *file = common::open_c_file(eka2l1::host_path{path_}, "rb");
             if (!file) {
                 return true;
             }
@@ -442,16 +443,16 @@ namespace eka2l1::drivers {
         }
     };
 
-    static std::unique_ptr<clip_writer> new_clip_writer_ffmpeg(const std::string &path, const clip_codec &codec) {
+    static std::unique_ptr<clip_writer> new_clip_writer_ffmpeg(const host_path &path, const clip_codec &codec) {
         auto writer = std::make_unique<clip_writer_ffmpeg>(path, codec);
         return writer->probe() ? std::move(writer) : nullptr;
     }
 
-    std::unique_ptr<clip_writer> new_clip_writer_amr(const std::string &path) {
+    std::unique_ptr<clip_writer> new_clip_writer_amr(const host_path &path) {
         return new_clip_writer_ffmpeg(path, AMR_NB_CODEC);
     }
 
-    std::unique_ptr<clip_writer> new_clip_writer_aac_mp4(const std::string &path) {
+    std::unique_ptr<clip_writer> new_clip_writer_aac_mp4(const host_path &path) {
         return new_clip_writer_ffmpeg(path, AAC_LC_CODEC);
     }
 }

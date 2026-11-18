@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <common/algorithm.h>
 #include <common/buffer.h>
 #include <common/bytepair.h>
@@ -33,21 +34,21 @@ namespace eka2l1::loader {
         dir = 0x0010
     };
 
-    loader::rom_dir *rom::burn_tree_find_dir(const std::string &vir_path) {
+    loader::rom_dir *rom::burn_tree_find_dir(const guest_path &vir_path) {
         if (root.root_dirs.empty()) {
             return nullptr;
         }
 
-        auto ite = path_iterator(vir_path);
+        auto ite = path_iterator_16(vir_path.utf16());
         loader::rom_dir *last_dir_found = &(root.root_dirs[0].dir);
 
         // Skip through the drive
         ite++;
 
-        std::vector<std::string> components;
+        std::vector<guest_path> components;
 
         for (; ite; ite++) {
-            components.push_back(*ite);
+            components.emplace_back(*ite);
         }
 
         if (components.size() == 0) {
@@ -56,12 +57,12 @@ namespace eka2l1::loader {
 
         for (std::size_t i = 0; i < components.size(); i++) {
             loader::rom_dir temp;
-            temp.name = common::utf8_to_ucs2(components[i]);
+            temp.name = components[i].utf16();
 
             auto res1 = std::lower_bound(last_dir_found->subdirs.begin(), last_dir_found->subdirs.end(), temp,
-                [](const loader::rom_dir &lhs, const loader::rom_dir &rhs) { return common::compare_ignore_case(lhs.name, rhs.name) == -1; });
+                [](const loader::rom_dir &lhs, const loader::rom_dir &rhs) { return guest_path(lhs.name) < guest_path(rhs.name); });
 
-            if (res1 != last_dir_found->subdirs.end() && (common::compare_ignore_case(res1->name, temp.name) == 0)) {
+            if (res1 != last_dir_found->subdirs.end() && (guest_path(res1->name) == guest_path(temp.name))) {
                 last_dir_found = &(last_dir_found->subdirs[std::distance(last_dir_found->subdirs.begin(), res1)]);
             } else {
                 return nullptr;
@@ -71,7 +72,7 @@ namespace eka2l1::loader {
         return last_dir_found;
     }
 
-    std::optional<loader::rom_entry> rom::burn_tree_find_entry(const std::string &vir_path) {
+    std::optional<loader::rom_entry> rom::burn_tree_find_entry(const guest_path &vir_path) {
         loader::rom_dir *last_dir_found = burn_tree_find_dir(eka2l1::file_directory(vir_path, true));
 
         if (!last_dir_found) {
@@ -79,12 +80,12 @@ namespace eka2l1::loader {
         }
 
         loader::rom_entry temp_entry;
-        temp_entry.name = common::utf8_to_ucs2(eka2l1::filename(vir_path, true));
+        temp_entry.name = vir_path.filename().utf16();
 
         auto res2 = std::lower_bound(last_dir_found->entries.begin(), last_dir_found->entries.end(), temp_entry,
-            [](const loader::rom_entry &lhs, const loader::rom_entry &rhs) { return common::compare_ignore_case(lhs.name, rhs.name) == -1; });
+            [](const loader::rom_entry &lhs, const loader::rom_entry &rhs) { return guest_path(lhs.name) < guest_path(rhs.name); });
 
-        if (res2 != last_dir_found->entries.end() && !res2->dir && (common::compare_ignore_case(temp_entry.name, res2->name) == 0)) {
+        if (res2 != last_dir_found->entries.end() && !res2->dir && (guest_path(temp_entry.name) == guest_path(res2->name))) {
             return *res2;
         }
 
@@ -226,12 +227,12 @@ namespace eka2l1::loader {
 
         // Sort this for lower_bound binary search
         std::sort(dir.entries.begin(), dir.entries.end(), [](const rom_entry &lhs, const rom_entry &rhs) {
-            return common::compare_ignore_case(lhs.name, rhs.name) == -1;
+            return guest_path(lhs.name) < guest_path(rhs.name);
         });
 
         // Sort this for lower_bound binary search
         std::sort(dir.subdirs.begin(), dir.subdirs.end(), [](const rom_dir &lhs, const rom_dir &rhs) {
-            return common::compare_ignore_case(lhs.name, rhs.name) == -1;
+            return guest_path(lhs.name) < guest_path(rhs.name);
         });
 
         return dir;
@@ -272,7 +273,7 @@ namespace eka2l1::loader {
 
         // Sort this for lower_bound binary search
         std::sort(list.root_dirs.begin(), list.root_dirs.end(), [](const root_dir &lhs, const root_dir &rhs) {
-            return (common::compare_ignore_case(lhs.dir.name, rhs.dir.name) == -1);
+            return (guest_path(lhs.dir.name) < guest_path(rhs.dir.name));
         });
 
         return list;
@@ -396,11 +397,11 @@ namespace eka2l1::loader {
         return 1;
     }
 
-    static bool dump_rom_file(common::ro_stream *stream, rom_entry &entry, const std::string &path_base, const std::uint32_t rom_base,
+    static bool dump_rom_file(common::ro_stream *stream, rom_entry &entry, const host_path &path_base, const std::uint32_t rom_base,
         std::size_t &passed_size, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
-        const std::u16string fname = eka2l1::add_path(common::utf8_to_ucs2(path_base), entry.name);
+        const host_path fname = path_base.resolve_guest(guest_path(entry.name));
 
-        common::wo_std_file_stream file_out_stream(common::ucs2_to_utf8(fname), true);
+        common::wo_std_file_stream file_out_stream(eka2l1::host_path{common::ucs2_to_utf8(fname)}, true);
         stream->seek(entry.address_lin - rom_base, common::seek_where::beg);
 
         static constexpr std::int64_t MAX_CHUNK_SIZE = 0x10000;
@@ -430,7 +431,7 @@ namespace eka2l1::loader {
         return true;
     }
 
-    static bool dump_rom_directory(common::ro_stream *stream, rom_dir &dir, std::string base, std::uint32_t rom_base,
+    static bool dump_rom_directory(common::ro_stream *stream, rom_dir &dir, host_path base, std::uint32_t rom_base,
         std::size_t &passed_size, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         common::create_directories(base);
 
@@ -443,7 +444,7 @@ namespace eka2l1::loader {
         }
 
         for (auto &subdir : dir.subdirs) {
-            const std::string new_base = eka2l1::add_path(base, common::ucs2_to_utf8(subdir.name));
+            const host_path new_base = base.resolve_guest(guest_path(subdir.name));
 
             if (!dump_rom_directory(stream, subdir, new_base, rom_base, passed_size, progress_cb, cancel_cb)) {
                 return false;
@@ -453,7 +454,7 @@ namespace eka2l1::loader {
         return true;
     }
 
-    bool dump_rom_files(common::ro_stream *stream, const std::string &dest_base, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
+    bool dump_rom_files(common::ro_stream *stream, const host_path &dest_base, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
         std::optional<rom> rom_parse_result = load_rom(stream);
         if (!rom_parse_result.has_value()) {
             return false;

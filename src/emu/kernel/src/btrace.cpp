@@ -12,7 +12,7 @@ namespace eka2l1::kernel {
         close_trace_session();
     }
 
-    bool btrace::start_trace_session(const std::u16string &trace_path) {
+    bool btrace::start_trace_session(const guest_path &trace_path) {
         if (trace_) {
             return false;
         }
@@ -29,7 +29,7 @@ namespace eka2l1::kernel {
         return trace_->close();
     }
 
-    static const std::u16string DEFAULT_TRACE_FILE = u"c:\\btrace.txt";
+    static const guest_path DEFAULT_TRACE_FILE(u"c:\\btrace.txt");
 
     bool btrace::out(const std::uint32_t a0, const std::uint32_t a1, const std::uint32_t a2,
         const std::uint32_t a3) {

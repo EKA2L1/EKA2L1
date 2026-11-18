@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <common/types.h>
 #include <cstdint>
 
@@ -92,7 +93,7 @@ namespace eka2l1::common {
      *
      * \returns A valid pointer to the mapped region on success.
     */
-    void *map_file(const std::string &file_name, const prot perm = prot_read, const std::size_t size = 0,
+    void *map_file(const host_path &path, const prot perm = prot_read, const std::size_t size = 0,
         const bool is_private = false);
 
     /**

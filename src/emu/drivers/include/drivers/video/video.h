@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <common/vecx.h>
 
 #include <cstdint>
@@ -79,7 +80,7 @@ namespace eka2l1::drivers {
 
         virtual ~video_player() = default;
 
-        virtual bool open_file(const std::string &path) = 0;
+        virtual bool open_file(const host_path &path) = 0;
         virtual bool open_custom_io(common::ro_stream &stream) = 0;
         virtual void close() = 0;
 

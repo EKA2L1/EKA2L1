@@ -82,10 +82,10 @@ namespace eka2l1 {
         memory_system *mem;
 
         std::uint8_t *file_ptr;
-        std::u16string input_path;
+        guest_path input_path;
 
         explicit rom_file(memory_system *mem, loader::rom *supreme_mother, loader::rom_entry entry,
-            const std::u16string &inpp)
+            const guest_path &inpp)
             : parent(supreme_mother)
             , file(entry)
             , mem(mem)
@@ -178,7 +178,7 @@ namespace eka2l1 {
             return crr_pos;
         }
 
-        std::u16string file_name() const override {
+        guest_path file_name() const override {
             return input_path;
         }
 
@@ -194,8 +194,8 @@ namespace eka2l1 {
     struct physical_file : public file {
         FILE *file;
 
-        std::u16string input_name;
-        std::u16string physical_path;
+        guest_path input_name;
+        host_path physical_path;
 
         int fmode;
 
@@ -322,7 +322,7 @@ namespace eka2l1 {
         return val;                                                                           \
     }
 
-        physical_file(const utf16_str &vfs_path, const utf16_str &real_path, const int mode)
+        physical_file(const guest_path &vfs_path, const host_path &real_path, const int mode)
             : file(nullptr) {
             init(vfs_path, real_path, mode);
         }
@@ -346,7 +346,7 @@ namespace eka2l1 {
             return fmode;
         }
 
-        void init(const utf16_str &vfs_path, const utf16_str &real_path, const int mode) {
+        void init(const guest_path &vfs_path, const host_path &real_path, const int mode) {
             // Disable directory check here
             closed = false;
 
@@ -357,7 +357,7 @@ namespace eka2l1 {
             physical_path = real_path;
             fmode = mode;
 
-            file = common::open_c_file(common::ucs2_to_utf8(real_path).c_str(), translate_mode(mode));
+            file = common::open_c_file(eka2l1::host_path{common::ucs2_to_utf8(real_path).c_str()}, translate_mode(mode));
 
             // LOG_TRACE(VFS, "Open with mode: {}", cmode);
 
@@ -444,7 +444,7 @@ namespace eka2l1 {
             return ftell(file);
         }
 
-        std::u16string file_name() const override {
+        guest_path file_name() const override {
             WARN_CLOSE
 
             return input_name;
@@ -476,11 +476,11 @@ namespace eka2l1 {
             fclose(file);
             file = nullptr;
 
-            int err_code = common::resize(common::ucs2_to_utf8(physical_path), new_size);
+            int err_code = common::resize(eka2l1::host_path{common::ucs2_to_utf8(physical_path)}, new_size);
 
             // Reopen the file again...
 #if EKA2L1_PLATFORM(WIN32)
-            _wfopen_s(&file, common::ucs2_to_wstr(physical_path).c_str(), translate_mode_w(fmode, true));
+            _wfopen_s(&file, common::ucs2_to_wstr(physical_path.utf16()).c_str(), translate_mode_w(fmode, true));
 #else
             file = fopen(common::ucs2_to_utf8(physical_path).c_str(), translate_mode(fmode, true));
 #endif
@@ -500,7 +500,7 @@ namespace eka2l1 {
         }
 
         std::uint64_t last_modify_since_0ad() override {
-            return common::get_last_modifiy_since_ad(physical_path);
+            return common::get_last_modifiy_since_ad(eka2l1::host_path::from_utf16(physical_path.utf16()));
         }
 
         std::string get_error_descriptor() override {
@@ -518,7 +518,7 @@ namespace eka2l1 {
 
     /* DIRECTORY VFS */
     class physical_directory : public directory {
-        std::string vir_path;
+        guest_path vir_path;
 
         std::unique_ptr<common::dir_iterator> iterator;
         common::dir_entry entry;
@@ -531,8 +531,8 @@ namespace eka2l1 {
         abstract_file_system *inst;
 
     public:
-        physical_directory(abstract_file_system *inst, const std::string &phys_path,
-            const std::string &vir_path, const std::string &filter, epoc::uid_type type,
+        physical_directory(abstract_file_system *inst, const host_path &phys_path,
+            const guest_path &vir_path, const std::string &filter, epoc::uid_type type,
             const std::uint32_t attrib)
             : directory(attrib)
             , vir_path(vir_path)
@@ -560,7 +560,7 @@ namespace eka2l1 {
                     return std::optional<entry_info>{};
                 }
 
-                std::string name = "";
+                host_path name;
                 int error_code = iterator->next_entry(entry);
 
                 if (error_code != 0) {
@@ -583,14 +583,14 @@ namespace eka2l1 {
                     }
                 }
 
-                const std::u16string path_to_retinfo = common::utf8_to_ucs2(eka2l1::add_path(vir_path, name));
+                const guest_path path_to_retinfo = vir_path / guest_path::from_utf8(name.utf8());
                 std::optional<entry_info> info = inst->get_entry_info(path_to_retinfo);
 
                 if (info.has_value()) {
                     if ((info->type == io_component_type::file) && (attribute & io_attrib_allow_uid)
                         && (utype.uid1 || utype.uid2 || utype.uid3)) {
                         std::array<std::uint32_t, 4> checked_uid{};
-                        common::ro_std_file_stream temp_file_holder(eka2l1::add_path(iterator->dir_name, entry.name), true);
+                        common::ro_std_file_stream temp_file_holder(eka2l1::host_path{eka2l1::add_path(iterator->dir_name, entry.name)}, true);
                         if (temp_file_holder.read(checked_uid.data(), sizeof(checked_uid)) != sizeof(checked_uid)
                             || crypt::calculate_checked_uid_checksum(checked_uid.data()) != checked_uid[3]) {
                             continue;
@@ -637,12 +637,12 @@ namespace eka2l1 {
         std::string firmcode;
         epocver ver;
 
-        std::int32_t path_stack_level(const std::u16string &vert_path) {
+        std::int32_t path_stack_level(const guest_path &vert_path) {
             if (vert_path.empty()) {
                 return false;
             }
 
-            eka2l1::path_iterator_16 iterator(vert_path);
+            eka2l1::path_iterator_16 iterator(vert_path.utf16());
             std::int32_t size_stack = 0;
 
             iterator++;
@@ -650,7 +650,7 @@ namespace eka2l1 {
             std::vector<std::string> components;
 
             for (; iterator; iterator++) {
-                const std::u16string ite_value = *iterator;
+                const guest_path ite_value(*iterator);
                 if (ite_value == u"..") {
                     size_stack--;
                 } else if (ite_value != u".") {
@@ -678,7 +678,7 @@ namespace eka2l1 {
         }
 
         bool do_mount(const drive_number drv, const drive_media media, const std::uint32_t attrib,
-            const std::u16string &physical_path) {
+            const host_path &physical_path) {
             const std::lock_guard<std::mutex> guard(fs_mutex);
 
             if (mappings[static_cast<int>(drv)].second) {
@@ -689,9 +689,9 @@ namespace eka2l1 {
 
             map_drive.attribute = attrib;
             map_drive.type = io_component_type::drive;
-            map_drive.drive_name += drive_number_to_ascii(drv) + ':';
+            map_drive.drive_name = guest_path(std::u16string{char16_t(drive_number_to_ascii(drv)), u':'});
             map_drive.media_type = media;
-            map_drive.real_path = common::ucs2_to_utf8(physical_path);
+            map_drive.real_path = physical_path;
 
             if (!eka2l1::is_separator(map_drive.real_path.back())) {
                 map_drive.real_path += eka2l1::get_separator(false);
@@ -703,7 +703,7 @@ namespace eka2l1 {
             return true;
         }
 
-        std::optional<std::u16string> get_real_physical_path(const std::u16string &vert_path, bool *is_root = nullptr) {
+        std::optional<host_path> get_real_physical_path(const guest_path &vert_path, bool *is_root = nullptr) {
             const std::int32_t stack_level = path_stack_level(vert_path);
 
             if (stack_level < 0) {
@@ -714,11 +714,10 @@ namespace eka2l1 {
                 *is_root = (stack_level == 0);
             }
 
-            std::string path_ucs8 = common::ucs2_to_utf8(vert_path);
-            const std::string root = eka2l1::root_name(path_ucs8);
-            std::u16string vert_path_copy = vert_path;
+            const guest_path root = vert_path.root_name();
+            guest_path vert_path_copy = vert_path;
 
-            if (root == "") {
+            if (root.empty()) {
                 return std::nullopt;
             }
 
@@ -731,32 +730,32 @@ namespace eka2l1 {
             }
 
             drive &drv = mappings[ascii_to_drive_number(root_letter)].first;
-            std::u16string map_path = common::utf8_to_ucs2(drv.real_path);
+            host_path map_path = drv.real_path;
 
             if (!eka2l1::is_separator(static_cast<char>(map_path.back()))) {
-                map_path += static_cast<char16_t>(eka2l1::get_separator());
+                map_path += eka2l1::get_separator();
             }
 
             if (drv.media_type == drive_media::rom) {
                 if (firmcode.empty()) {
                     LOG_ERROR(VFS, "IO error: No device has been set for the emulator.");
-                    return u"";
+                    return std::nullopt;
                 }
 
-                map_path += common::utf8_to_ucs2(common::lowercase_string(firmcode));
+                map_path /= host_path(common::lowercase_string(firmcode));
             }
 
             if (static_cast<int>(ver) >= static_cast<int>(epocver::eka2)) {
-                if (common::compare_ignore_case(u"\\system\\libs", vert_path_copy.substr(2, 12)) == 0) {
+                if (vert_path_copy.substr(2, 12) == u"\\system\\libs") {
                     vert_path_copy.replace(2, 12, u"\\sys\\bin");
-                } else if (common::compare_ignore_case(u"\\system\\programs", vert_path_copy.substr(2, 16)) == 0) {
+                } else if (vert_path_copy.substr(2, 16) == u"\\system\\programs") {
                     vert_path_copy.replace(2, 16, u"\\sys\\bin");
                 }
             }
 
-            const std::u16string vert_path_no_root = vert_path_copy.substr(root.size());
-            const std::u16string exact_path = eka2l1::add_path(map_path, vert_path_no_root);
-            if (common::exists(common::ucs2_to_utf8(exact_path))) {
+            const guest_path vert_path_no_root = vert_path_copy.substr(root.size());
+            const host_path exact_path = map_path / host_path::from_utf16(vert_path_no_root.utf16());
+            if (common::exists(eka2l1::host_path{common::ucs2_to_utf8(exact_path)})) {
                 return exact_path;
             }
 
@@ -764,8 +763,7 @@ namespace eka2l1 {
             // the real entries on hosts that distinguish case instead of lowercasing the
             // guest path: directory enumeration must still return the spelling installed
             // by the application.
-            return common::utf8_to_ucs2(common::resolve_case_insensitive_path(common::ucs2_to_utf8(map_path),
-                common::ucs2_to_utf8(vert_path_no_root)));
+            return map_path.resolve_guest(vert_path_no_root);
         }
 
     public:
@@ -782,66 +780,66 @@ namespace eka2l1 {
             ver = ever;
         }
 
-        std::optional<std::u16string> get_raw_path(const std::u16string &path) override {
+        std::optional<host_path> get_raw_path(const guest_path &path) override {
             return get_real_physical_path(path);
         }
 
-        bool delete_entry(const std::u16string &path) override {
-            std::optional<std::u16string> path_real = get_real_physical_path(path);
+        bool delete_entry(const guest_path &path) override {
+            std::optional<host_path> path_real = get_real_physical_path(path);
 
             if (!path_real) {
                 return false;
             }
 
-            return common::remove(common::ucs2_to_utf8(*path_real));
+            return common::remove(eka2l1::host_path{common::ucs2_to_utf8(*path_real)});
         }
 
         void set_product_code(const std::string &pc) override {
             firmcode = pc;
         }
 
-        bool exists(const std::u16string &path) override {
-            std::optional<std::u16string> real_path = get_real_physical_path(path);
-            return real_path ? common::exists(common::ucs2_to_utf8(*real_path)) : false;
+        bool exists(const guest_path &path) override {
+            std::optional<host_path> real_path = get_real_physical_path(path);
+            return real_path ? common::exists(eka2l1::host_path{common::ucs2_to_utf8(*real_path)}) : false;
         }
 
-        bool replace(const std::u16string &old_path, const std::u16string &new_path) override {
-            std::optional<std::u16string> old_path_real = get_real_physical_path(old_path);
-            std::optional<std::u16string> new_path_real = get_real_physical_path(new_path);
+        bool replace(const guest_path &old_path, const guest_path &new_path) override {
+            std::optional<host_path> old_path_real = get_real_physical_path(old_path);
+            std::optional<host_path> new_path_real = get_real_physical_path(new_path);
 
             if (!old_path_real || !new_path_real) {
                 return false;
             }
 
-            return common::move_file(common::ucs2_to_utf8(*old_path_real),
-                common::ucs2_to_utf8(*new_path_real));
+            return common::move_file(eka2l1::host_path{common::ucs2_to_utf8(*old_path_real)},
+                eka2l1::host_path{common::ucs2_to_utf8(*new_path_real)});
         }
 
-        bool create_directories(const std::u16string &path) override {
-            std::optional<std::u16string> real_path = get_real_physical_path(path);
+        bool create_directories(const guest_path &path) override {
+            std::optional<host_path> real_path = get_real_physical_path(path);
 
             if (!real_path) {
                 return false;
             }
 
-            common::create_directories(common::ucs2_to_utf8(*real_path));
+            common::create_directories(eka2l1::host_path{common::ucs2_to_utf8(*real_path)});
             return true;
         }
 
-        bool create_directory(const std::u16string &path) override {
-            std::optional<std::u16string> real_path = get_real_physical_path(path);
+        bool create_directory(const guest_path &path) override {
+            std::optional<host_path> real_path = get_real_physical_path(path);
 
             if (!real_path) {
                 return false;
             }
 
-            common::create_directory(common::ucs2_to_utf8(*real_path));
+            common::create_directory(eka2l1::host_path{common::ucs2_to_utf8(*real_path)});
 
             return true;
         }
 
         bool mount_volume_from_path(const drive_number drv, const drive_media media, const std::uint32_t attrib,
-            const std::u16string &physical_path) override {
+            const host_path &physical_path) override {
             if (media == drive_media::rom) {
                 return false;
             }
@@ -874,8 +872,8 @@ namespace eka2l1 {
             return mappings[static_cast<int>(drv)].first;
         }
 
-        std::unique_ptr<directory> open_directory(const std::u16string &path, epoc::uid_type type, const std::uint32_t attrib) override {
-            std::u16string vir_path = path;
+        std::unique_ptr<directory> open_directory(const guest_path &path, epoc::uid_type type, const std::uint32_t attrib) override {
+            guest_path vir_path = path;
 
             size_t pos_bs = vir_path.find_last_of(u"\\");
             size_t pos_fs = vir_path.find_last_of(u"//");
@@ -896,7 +894,7 @@ namespace eka2l1 {
             if (pos_check != std::string::npos && pos_check != vir_path.length() - 1) {
                 // Substring this, get the filter
                 filter = common::ucs2_to_utf8(vir_path.substr(pos_check + 1, vir_path.length() - pos_check - 1));
-                vir_path.erase(vir_path.begin() + pos_check + 1, vir_path.end());
+                vir_path.erase(pos_check + 1);
             }
 
             bool is_root = false;
@@ -910,50 +908,43 @@ namespace eka2l1 {
                 vir_path = eka2l1::root_path(vir_path);
             }
 
-            std::string new_path_utf8 = common::ucs2_to_utf8(*new_path);
-
-            if (!common::exists(new_path_utf8)) {
+            if (!common::exists(eka2l1::host_path{new_path->utf8()})) {
                 return std::unique_ptr<directory>(nullptr);
             }
 
-            return std::make_unique<physical_directory>(this, new_path_utf8,
-                common::ucs2_to_utf8(vir_path), filter, type, attrib);
+            return std::make_unique<physical_directory>(this, *new_path, vir_path, filter, type, attrib);
         }
 
-        std::optional<entry_info> get_entry_info(const std::u16string &path) override {
-            std::optional<std::u16string> real_path = get_real_physical_path(path);
+        std::optional<entry_info> get_entry_info(const guest_path &path) override {
+            std::optional<host_path> real_path = get_real_physical_path(path);
 
             if (!real_path) {
                 return std::nullopt;
             }
 
-            std::string real_path_utf8 = common::ucs2_to_utf8(*real_path);
-
-            if (!common::exists(real_path_utf8)) {
+            if (!common::exists(eka2l1::host_path{real_path->utf8()})) {
                 return std::nullopt;
             }
 
             entry_info info;
 
-            if (common::is_file(real_path_utf8, common::FILE_DIRECTORY)) {
+            if (common::is_file(eka2l1::host_path{real_path->utf8()}, common::FILE_DIRECTORY)) {
                 info.type = io_component_type::dir;
                 info.size = 0;
             } else {
                 info.type = io_component_type::file;
-                info.size = common::file_size(real_path_utf8);
+                info.size = common::file_size(eka2l1::host_path{real_path->utf8()});
             }
 
-            info.last_write = common::get_last_modifiy_since_ad(*real_path);
+            info.last_write = common::get_last_modifiy_since_ad(eka2l1::host_path::from_utf16(real_path->utf16()));
             if (info.last_write == 0xFFFFFFFFFFFFFFFFULL) {
                 info.last_write = 0;
             }
 
-            std::string path_utf8 = common::ucs2_to_utf8(path);
+            info.full_path = path;
+            info.name = path.filename();
 
-            info.full_path = path_utf8;
-            info.name = eka2l1::filename(path_utf8);
-
-            const std::string root = eka2l1::root_name(path_utf8);
+            const guest_path root = path.root_name();
             drive &drv = mappings[ascii_to_drive_number(static_cast<char>(std::towlower(root[0])))].first;
 
             info.attribute = drv.attribute;
@@ -961,11 +952,11 @@ namespace eka2l1 {
             return info;
         }
 
-        std::unique_ptr<file> open_file(const std::u16string &path, const int mode) override {
-            const std::u16string &root = eka2l1::root_name(path, true);
+        std::unique_ptr<file> open_file(const guest_path &path, const int mode) override {
+            const guest_path &root = eka2l1::root_name(path, true);
 
             if (!root.empty()) {
-                const drive_number drv = char16_to_drive(root[0]);
+                const drive_number drv = char16_to_drive(root.lookup_key()[0]);
 
                 if (!mappings[static_cast<int>(drv)].second) {
                     return nullptr;
@@ -979,15 +970,13 @@ namespace eka2l1 {
                 }
             }
 
-            std::optional<std::u16string> real_path = get_real_physical_path(path);
+            std::optional<host_path> real_path = get_real_physical_path(path);
 
             if (!real_path) {
                 return nullptr;
             }
 
-            std::string real_path_utf8 = common::ucs2_to_utf8(*real_path);
-
-            if (!(mode & WRITE_MODE) && (!common::exists(real_path_utf8) || common::is_file(real_path_utf8, common::FILE_DIRECTORY))) {
+            if (!(mode & WRITE_MODE) && (!common::exists(eka2l1::host_path{real_path->utf8()}) || common::is_file(eka2l1::host_path{real_path->utf8()}, common::FILE_DIRECTORY))) {
                 return nullptr;
             }
 
@@ -1003,22 +992,22 @@ namespace eka2l1 {
             return opened;
         }
 
-        std::int64_t watch_directory(const std::u16string &path, common::directory_watcher_callback callback,
+        std::int64_t watch_directory(const guest_path &path, common::directory_watcher_callback callback,
             void *callback_userdata, const std::uint32_t filters) override {
-            const std::optional<std::u16string> real_path = get_raw_path(path);
+            const std::optional<host_path> real_path = get_raw_path(path);
 
             if (!real_path.has_value()) {
                 return -1;
             }
 
-            const std::u16string root = common::lowercase_ucs2_string(eka2l1::root_name(path, true));
-            const drive_number drv = char16_to_drive(root[0]);
+            const guest_path root = path.root_name();
+            const drive_number drv = char16_to_drive(root.lookup_key()[0]);
 
             if (!watcher_) {
                 watcher_ = std::make_unique<common::directory_watcher>();
             }
 
-            const std::int64_t handle = watcher_->watch(common::ucs2_to_utf8(real_path.value()), callback, callback_userdata, filters);
+            const std::int64_t handle = watcher_->watch(real_path.value(), callback, callback_userdata, filters);
             if (handle < 0) {
                 return handle;
             }
@@ -1063,19 +1052,19 @@ namespace eka2l1 {
             , mem(mem) {
         }
 
-        bool delete_entry(const std::u16string &path) override {
+        bool delete_entry(const guest_path &path) override {
             return false;
         }
 
-        bool create_directories(const std::u16string &path) override {
+        bool create_directories(const guest_path &path) override {
             return false;
         }
 
-        bool create_directory(const std::u16string &path) override {
+        bool create_directory(const guest_path &path) override {
             return false;
         }
 
-        bool replace(const std::u16string &old_path, const std::u16string &new_path) override {
+        bool replace(const guest_path &old_path, const guest_path &new_path) override {
             return false;
         }
 
@@ -1085,7 +1074,7 @@ namespace eka2l1 {
         }
 
         bool mount_volume_from_path(const drive_number drv, const drive_media media, const std::uint32_t attrib,
-            const std::u16string &physical_path) override {
+            const host_path &physical_path) override {
             if (media != drive_media::rom) {
                 return false;
             }
@@ -1093,20 +1082,20 @@ namespace eka2l1 {
             return do_mount(drv, media, attrib, physical_path);
         }
 
-        abstract_file_system_err_code is_entry_in_rom(const std::u16string &path) override {
+        abstract_file_system_err_code is_entry_in_rom(const guest_path &path) override {
             // Don't bother getting an entry if it's not even available on host
             if (!exists(path)) {
                 return abstract_file_system_err_code::no;
             }
 
-            if (rom_cache->burn_tree_find_entry(common::ucs2_to_utf8(path))) {
+            if (rom_cache->burn_tree_find_entry(path)) {
                 return abstract_file_system_err_code::ok;
             }
 
             return abstract_file_system_err_code::no;
         }
 
-        std::unique_ptr<file> open_file(const std::u16string &path, const int mode) override {
+        std::unique_ptr<file> open_file(const guest_path &path, const int mode) override {
             if (mode & WRITE_MODE) {
                 LOG_ERROR(VFS, "Opening a read-only file (ROM + ROFS) with write mode");
                 return nullptr;
@@ -1117,17 +1106,17 @@ namespace eka2l1 {
                 return nullptr;
             }
 
-            std::u16string new_path = path;
+            guest_path new_path = path;
 
             if (static_cast<int>(ver) >= static_cast<int>(epocver::eka2)) {
-                if (common::compare_ignore_case(u"\\system\\libs", new_path.substr(2, 12)) == 0) {
+                if (new_path.substr(2, 12) == u"\\system\\libs") {
                     new_path.replace(2, 12, u"\\sys\\bin");
-                } else if (common::compare_ignore_case(u"\\system\\programs", new_path.substr(2, 16)) == 0) {
+                } else if (new_path.substr(2, 16) == u"\\system\\programs") {
                     new_path.replace(2, 16, u"\\sys\\bin");
                 }
             }
 
-            auto entry = rom_cache->burn_tree_find_entry(common::ucs2_to_utf8(new_path));
+            auto entry = rom_cache->burn_tree_find_entry(new_path);
             auto ff = physical_file_system::open_file(new_path, mode);
 
             // Dont change order!
@@ -1138,13 +1127,13 @@ namespace eka2l1 {
             return std::make_unique<rom_file>(mem, rom_cache, *entry, path);
         }
 
-        std::optional<entry_info> get_entry_info(const std::u16string &path) override {
+        std::optional<entry_info> get_entry_info(const guest_path &path) override {
             // Don't bother getting an entry if it's not even available on host
             if (!exists(path)) {
                 return std::nullopt;
             }
 
-            auto entry = rom_cache->burn_tree_find_entry(common::ucs2_to_utf8(path));
+            auto entry = rom_cache->burn_tree_find_entry(path);
 
             if (!entry) {
                 return physical_file_system::get_entry_info(path);
@@ -1155,20 +1144,20 @@ namespace eka2l1 {
             info.has_raw_attribute = true;
             info.raw_attribute = entry->attrib;
             info.size = entry->size;
-            info.name = common::ucs2_to_utf8(entry->name);
-            info.full_path = common::ucs2_to_utf8(path);
+            info.name = guest_path(entry->name);
+            info.full_path = path;
             info.last_write = (rom_cache->header.rom_base == loader::EKA1_ROM_BASE) ? rom_cache->header.eka1_diff0.time
                                                                                     : rom_cache->header.eka2_diff0.time;
 
             return info;
         }
 
-        std::optional<std::u16string> find_entry_with_address(const std::u16string &clue, const address addr) override {
-            std::u16string the_base_path = clue;
+        std::optional<guest_path> find_entry_with_address(const guest_path &clue, const address addr) override {
+            guest_path the_base_path = clue;
             loader::rom_dir *the_base_dir = &(rom_cache->root.root_dirs[0].dir);
 
             if (!the_base_path.empty()) {
-                the_base_dir = rom_cache->burn_tree_find_dir(common::ucs2_to_utf8(clue));
+                the_base_dir = rom_cache->burn_tree_find_dir(clue);
             }
 
             if (!the_base_dir) {
@@ -1177,7 +1166,7 @@ namespace eka2l1 {
 
             for (const auto &entry : the_base_dir->entries) {
                 if (entry.address_lin == addr) {
-                    return entry.name;
+                    return guest_path(entry.name);
                 }
             }
 
@@ -1238,7 +1227,7 @@ namespace eka2l1 {
     }
 
     bool io_system::mount_physical_path(const drive_number drv, const drive_media media, const std::uint32_t attrib,
-        const std::u16string &real_path) {
+        const host_path &real_path) {
         const std::lock_guard<std::mutex> guard(access_lock);
 
         for (auto &[id, file_system] : filesystems) {
@@ -1276,7 +1265,7 @@ namespace eka2l1 {
         return std::nullopt;
     }
 
-    std::unique_ptr<file> io_system::open_file(utf16_str vir_path, int mode) {
+    std::unique_ptr<file> io_system::open_file(guest_path vir_path, int mode) {
         const std::lock_guard<std::mutex> guard(access_lock);
 
         for (auto &[id, fs] : filesystems) {
@@ -1288,7 +1277,7 @@ namespace eka2l1 {
         return nullptr;
     }
 
-    std::unique_ptr<directory> io_system::open_dir(std::u16string vir_path, epoc::uid_type type, const std::uint32_t attrib) {
+    std::unique_ptr<directory> io_system::open_dir(guest_path vir_path, epoc::uid_type type, const std::uint32_t attrib) {
         const std::lock_guard<std::mutex> guard(access_lock);
 
         for (auto &[id, fs] : filesystems) {
@@ -1300,7 +1289,7 @@ namespace eka2l1 {
         return nullptr;
     }
 
-    bool io_system::exist(const std::u16string &path) {
+    bool io_system::exist(const guest_path &path) {
         const std::lock_guard<std::mutex> guard(access_lock);
 
         for (auto &[id, fs] : filesystems) {
@@ -1312,7 +1301,7 @@ namespace eka2l1 {
         return false;
     }
 
-    bool io_system::rename(const std::u16string &old_path, const std::u16string &new_path) {
+    bool io_system::rename(const guest_path &old_path, const guest_path &new_path) {
         const std::lock_guard<std::mutex> guard(access_lock);
 
         for (auto &[id, fs] : filesystems) {
@@ -1324,11 +1313,11 @@ namespace eka2l1 {
         return false;
     }
 
-    bool io_system::delete_entry(const std::u16string &path) {
+    bool io_system::delete_entry(const guest_path &path) {
         const std::lock_guard<std::mutex> guard(access_lock);
 
         for (auto &[id, fs] : filesystems) {
-            if (fs->delete_entry(path)) {
+            if (fs->delete_entry(eka2l1::guest_path{path})) {
                 return true;
             }
         }
@@ -1336,7 +1325,7 @@ namespace eka2l1 {
         return false;
     }
 
-    bool io_system::is_entry_in_rom(const std::u16string &path) {
+    bool io_system::is_entry_in_rom(const guest_path &path) {
         const std::lock_guard<std::mutex> guard(access_lock);
 
         for (auto &[id, fs] : filesystems) {
@@ -1348,11 +1337,11 @@ namespace eka2l1 {
         return false;
     }
 
-    bool io_system::create_directories(const std::u16string &path) {
+    bool io_system::create_directories(const guest_path &path) {
         const std::lock_guard<std::mutex> guard(access_lock);
 
         for (auto &[id, fs] : filesystems) {
-            if (fs->create_directories(path)) {
+            if (fs->create_directories(eka2l1::guest_path{path})) {
                 return true;
             }
         }
@@ -1360,11 +1349,11 @@ namespace eka2l1 {
         return false;
     }
 
-    bool io_system::create_directory(const std::u16string &path) {
+    bool io_system::create_directory(const guest_path &path) {
         const std::lock_guard<std::mutex> guard(access_lock);
 
         for (auto &[id, fs] : filesystems) {
-            if (fs->create_directory(path)) {
+            if (fs->create_directory(eka2l1::guest_path{path})) {
                 return true;
             }
         }
@@ -1372,7 +1361,7 @@ namespace eka2l1 {
         return false;
     }
 
-    std::optional<entry_info> io_system::get_entry_info(const std::u16string &path) {
+    std::optional<entry_info> io_system::get_entry_info(const guest_path &path) {
         const std::lock_guard<std::mutex> guard(access_lock);
 
         for (auto &[id, fs] : filesystems) {
@@ -1384,7 +1373,7 @@ namespace eka2l1 {
         return std::nullopt;
     }
 
-    std::optional<std::u16string> io_system::find_entry_with_address(const std::u16string &clue, const address addr) {
+    std::optional<guest_path> io_system::find_entry_with_address(const guest_path &clue, const address addr) {
         const std::lock_guard<std::mutex> guard(access_lock);
 
         for (auto &[id, fs] : filesystems) {
@@ -1396,11 +1385,11 @@ namespace eka2l1 {
         return std::nullopt;
     }
 
-    std::optional<std::u16string> io_system::get_raw_path(const std::u16string &path) {
+    std::optional<host_path> io_system::get_raw_path(const guest_path &path) {
         const std::lock_guard<std::mutex> guard(access_lock);
 
         for (auto &[id, fs] : filesystems) {
-            if (auto p = fs->get_raw_path(path)) {
+            if (auto p = fs->get_raw_path(eka2l1::guest_path{path})) {
                 return p;
             }
         }
@@ -1408,7 +1397,7 @@ namespace eka2l1 {
         return std::nullopt;
     }
 
-    bool io_system::is_directory(const std::u16string &path) {
+    bool io_system::is_directory(const guest_path &path) {
         std::optional<entry_info> ent = get_entry_info(path);
 
         if (!ent) {
@@ -1434,12 +1423,12 @@ namespace eka2l1 {
         }
     }
 
-    std::int64_t io_system::watch_directory(const std::u16string &path, common::directory_watcher_callback callback,
+    std::int64_t io_system::watch_directory(const guest_path &path, common::directory_watcher_callback callback,
         void *callback_userdata, const std::uint32_t filters) {
         const std::lock_guard<std::mutex> guard(access_lock);
 
         for (auto &[id, fs] : filesystems) {
-            const std::int64_t result = fs->watch_directory(path, callback, callback_userdata, filters);
+            const std::int64_t result = fs->watch_directory(eka2l1::guest_path{path}, callback, callback_userdata, filters);
 
             if (result != -1) {
                 return result | (id << 32);
@@ -1501,8 +1490,8 @@ namespace eka2l1 {
         }
     }
 
-    symfile physical_file_proxy(const std::string &path, int mode) {
-        return std::make_unique<physical_file>(common::utf8_to_ucs2(path), common::utf8_to_ucs2(path), mode);
+    symfile physical_file_proxy(const host_path &path, int mode) {
+        return std::make_unique<physical_file>(guest_path{}, path, mode);
     }
 
     void ro_file_stream::seek(const std::int64_t amount, common::seek_where wh) {

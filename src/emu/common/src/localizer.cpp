@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <common/fileutils.h>
 #include <common/localizer.h>
 #include <common/path.h>
@@ -54,10 +55,10 @@ namespace eka2l1::common {
         }
     }
 
-    string_table get_localised_string_table(const std::string &resource_folder, const std::string &table_file_name, const language lang) {
-        const std::string source_path = eka2l1::add_path(resource_folder, fmt::format("\\local\\{}", table_file_name));
+    string_table get_localised_string_table(const host_path &resource_folder, const std::string &table_file_name, const language lang) {
+        const host_path source_path = eka2l1::add_path(resource_folder, fmt::format("\\local\\{}", table_file_name));
 
-        const std::string localised_path = eka2l1::add_path(resource_folder, fmt::format("\\local-{}\\strings.xml", LANGUAGE_CODE_ARR[static_cast<int>(lang)], table_file_name));
+        const host_path localised_path = eka2l1::add_path(resource_folder, fmt::format("\\local-{}\\strings.xml", LANGUAGE_CODE_ARR[static_cast<int>(lang)], table_file_name));
 
         string_table table;
 

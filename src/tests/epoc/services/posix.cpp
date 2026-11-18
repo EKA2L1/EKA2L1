@@ -13,24 +13,24 @@
 TEST_CASE("POSIX stat reports files and directories without opening them", "[posix]") {
     struct test_directory {
         test_directory() {
-            eka2l1::common::delete_folder("posix_stat_test");
-            eka2l1::common::create_directories("posix_stat_test/levels");
+            eka2l1::common::delete_folder(eka2l1::host_path{"posix_stat_test"});
+            eka2l1::common::create_directories(eka2l1::host_path{"posix_stat_test/levels"});
             std::ofstream("posix_stat_test/levels/test.wad", std::ios::binary) << "PWADdata";
         }
         ~test_directory() {
-            eka2l1::common::delete_folder("posix_stat_test");
+            eka2l1::common::delete_folder(eka2l1::host_path{"posix_stat_test"});
         }
     } directory;
 
     eka2l1::io_system io;
     auto fs = eka2l1::create_physical_filesystem(epocver::epoc70, "");
     io.add_filesystem(fs);
-    REQUIRE(io.mount_physical_path(drive_e, drive_media::physical, io_attrib_internal, u"posix_stat_test"));
+    REQUIRE(io.mount_physical_path(drive_e, drive_media::physical, io_attrib_internal, eka2l1::host_path{"posix_stat_test"}));
     eka2l1::posix_file_manager files(&io);
     eka2l1::posix_stat result{};
     int error = 0;
 
-    files.stat(u"E:\\levels\\test.wad", &result, error);
+    files.stat(eka2l1::guest_path{u"E:\\levels\\test.wad"}, &result, error);
     REQUIRE(error == 0);
     REQUIRE(result.size == 8);
     REQUIRE(result.mode == (0100000 | 0200));
@@ -39,7 +39,7 @@ TEST_CASE("POSIX stat reports files and directories without opening them", "[pos
     REQUIRE(result.link_count == 1);
     REQUIRE(result.block_size == 512);
 
-    const auto handle = files.open(u"E:\\levels\\test.wad", READ_MODE | BIN_MODE, true, false, error);
+    const auto handle = files.open(eka2l1::guest_path{u"E:\\levels\\test.wad"}, READ_MODE | BIN_MODE, true, false, error);
     REQUIRE(error == 0);
     REQUIRE(handle != 0);
     eka2l1::posix_stat descriptor_result{};
@@ -50,10 +50,10 @@ TEST_CASE("POSIX stat reports files and directories without opening them", "[pos
     REQUIRE(descriptor_result.modification_time == result.modification_time);
     files.close(handle, error);
 
-    files.stat(u"E:\\levels", &result, error);
+    files.stat(eka2l1::guest_path{u"E:\\levels"}, &result, error);
     REQUIRE(error == 0);
     REQUIRE((result.mode & 0170000) == 0040000);
 
-    files.stat(u"E:\\missing.wad", &result, error);
+    files.stat(eka2l1::guest_path{u"E:\\missing.wad"}, &result, error);
     REQUIRE(error == ENOENT);
 }

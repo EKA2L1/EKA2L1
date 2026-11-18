@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <services/drm/rights/db.h>
 
 #include <common/crypt.h>
@@ -24,7 +25,7 @@
 #include <common/algorithm.h>
 
 namespace eka2l1::epoc::drm {
-    rights_database::rights_database(const std::u16string &database_path)
+    rights_database::rights_database(const host_path &database_path)
         : database_(nullptr)
         , get_cid_exist_stmt_(nullptr)
         , delete_record_stmt_(nullptr)
@@ -37,7 +38,7 @@ namespace eka2l1::epoc::drm {
         , get_encrypt_key_stmt_(nullptr)
         , get_cid_exist_full_stmt_(nullptr)
         , db_path_(database_path) {
-        int result = sqlite3_open16(database_path.data(), &database_);
+        int result = sqlite3_open16(database_path.utf16().c_str(), &database_);
         if (result != SQLITE_OK) {
             LOG_ERROR(SERVICE_DRMSYS, "Fail to open DRM database!");
             return;
@@ -208,7 +209,7 @@ namespace eka2l1::epoc::drm {
         reset();
 
         // Reopen the database. Previous reset will save the database to disk
-        int result = sqlite3_open16(db_path_.c_str(), &database_);
+        int result = sqlite3_open16(db_path_.utf16().c_str(), &database_);
         if (result != SQLITE_OK) {
             LOG_ERROR(SERVICE_DRMSYS, "Fail to reopen DRM database!");
             return;

@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <common/uid.h>
 #include <common/vecx.h>
 #include <cstdint>
@@ -115,7 +116,7 @@ namespace eka2l1::loader {
          * 
          * \returns True on success
          */
-        bool save_bitmap_to_file(const std::size_t index, const char *name);
+        bool save_bitmap_to_file(const std::size_t index, const host_path &name);
 
         /**
          * @brief       Get the offset from the beginning of the file to the bitmap data.

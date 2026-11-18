@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <config/config.h>
 #include <dispatch/dispatcher.h>
 #include <dispatch/libraries/register.h>
@@ -358,7 +359,7 @@ namespace eka2l1::dispatch {
         return ite->second;
     }
 
-    bool dispatcher::patch_libraries(const std::u16string &path, const patch_info *patches,
+    bool dispatcher::patch_libraries(const guest_path &path, const patch_info *patches,
         const std::size_t patch_count) {
         codeseg_ptr seg = libmngr_->load(path);
 

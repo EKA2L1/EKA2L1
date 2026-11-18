@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <system/devices.h>
 #include <system/installation/raw_dump.h>
 #include <system/software.h>
@@ -27,11 +28,10 @@
 #include <common/path.h>
 
 namespace eka2l1::loader {
-    device_installation_error install_raw_dump(device_manager *dvcmngr, const std::string &path_to_dump, const std::string &devices_z_path, std::string &firmware_code,
+    device_installation_error install_raw_dump(device_manager *dvcmngr, const host_path &path_to_dump, const host_path &devices_z_path, std::string &firmware_code,
         std::atomic<int> &res) {
-        const std::string temp_path = add_path(devices_z_path, "temp\\");
-        // Rename all file to lowercase
-        common::copy_folder(path_to_dump, temp_path, common::FOLDER_COPY_FLAG_LOWERCASE_NAME, &res);
+        const host_path temp_path(add_path(devices_z_path, "temp\\"));
+        common::copy_guest_tree(path_to_dump, temp_path, 0, [&res](std::size_t done, std::size_t total) { res = total ? static_cast<int>(done * 100 / total) : 100; });
 
         const epocver ver = determine_rpkg_symbian_version(temp_path);
         std::string platform_name, manufacturer, model;
@@ -42,7 +42,7 @@ namespace eka2l1::loader {
 
         platform_name = common::lowercase_string(platform_name);
 
-        if (!common::move_file(temp_path, add_path(devices_z_path, platform_name + eka2l1::get_separator()))) {
+        if (!common::move_file(temp_path, eka2l1::host_path{add_path(devices_z_path, platform_name + eka2l1::get_separator())})) {
             return device_installation_raw_dump_fail_to_copy;
         }
 

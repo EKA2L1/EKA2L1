@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <services/drm/rights/rights.h>
 #include <services/drm/rights/import.h>
 #include <services/fs/fs.h>
@@ -54,9 +55,9 @@ namespace eka2l1 {
             return;
         }
 
-        io->create_directories(RIGHTS_FOLDER_PATH);
+        io->create_directories(eka2l1::guest_path{RIGHTS_FOLDER_PATH});
 
-        std::optional<std::u16string> path = io->get_raw_path(RIGHTS_DB_PATH);
+        std::optional<host_path> path = io->get_raw_path(eka2l1::guest_path{RIGHTS_DB_PATH});
         if (!path.has_value()) {
             LOG_ERROR(SERVICE_DRMSYS, "No real path to rights DB available!");
             return;
@@ -186,20 +187,20 @@ namespace eka2l1 {
             return;
         }
 
-        std::u16string import_db_path_drv(1, '\0');
+        guest_path import_db_path_drv(u"A");
         import_db_path_drv += IMPORT_DR_PATH;
 
         // Intentionally skip drive Z
         for (drive_number drv = drive_a; drv < drive_z; drv++) {
             if (io->get_drive_entry(drv).has_value()) {
-                import_db_path_drv[0] = drive_to_char16(drv);
+                import_db_path_drv.replace(0, 1, std::u16string(1, drive_to_char16(drv)));
                 std::unique_ptr<eka2l1::directory> dir_vir = io->open_dir(import_db_path_drv);
 
                 if (dir_vir) {
                     while (std::optional<eka2l1::entry_info> dr_entry = dir_vir->get_next_entry()) {
-                        std::optional<std::u16string> dr_entry_real_path = io->get_raw_path(common::utf8_to_ucs2(dr_entry->full_path));
+                        std::optional<host_path> dr_entry_real_path = io->get_raw_path(eka2l1::guest_path{common::utf8_to_ucs2(dr_entry->full_path)});
                         if (dr_entry_real_path) {
-                            std::wstring dr_entry_real_wpath = common::ucs2_to_wstr(dr_entry_real_path.value());
+                            std::wstring dr_entry_real_wpath = common::ucs2_to_wstr(dr_entry_real_path->utf16());
                             pugi::xml_document document;
                             document.load_file(dr_entry_real_wpath.data());
 
@@ -208,7 +209,7 @@ namespace eka2l1 {
                                     if (!database_->add_or_update_record(obj.value())) {
                                         LOG_ERROR(SERVICE_DRMSYS, "Fail to add/update right object with content ID: {}", obj->common_data_.content_id_);
                                     } else {
-                                        io->delete_entry(common::utf8_to_ucs2(dr_entry->full_path));
+                                        io->delete_entry(eka2l1::guest_path{common::utf8_to_ucs2(dr_entry->full_path)});
                                     }
                                 }
                             }
@@ -253,7 +254,7 @@ namespace eka2l1 {
             return;
         }
 
-        symfile temp = fss->get_temp_file(TEMP_FILE_PATH);
+        symfile temp = fss->get_temp_file(guest_path(TEMP_FILE_PATH));
         if (!temp) {
             LOG_ERROR(SERVICE_DRMSYS, "Can't open a new temp file to write entry list!");
             ctx->complete(epoc::error_general);
@@ -288,7 +289,7 @@ namespace eka2l1 {
             temp->write_file(data_to_write.data(), 1, static_cast<std::uint32_t>(data_to_write.size()));
         }
 
-        ctx->write_arg(0, temp->file_name());
+        ctx->write_arg(0, temp->file_name().utf16());
         temp->close();
 
         ctx->complete(epoc::error_none);

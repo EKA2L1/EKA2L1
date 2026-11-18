@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <services/drm/rights/object.h>
 
 #include <sqlite3.h>
@@ -39,7 +40,7 @@ namespace eka2l1::epoc::drm {
         sqlite3_stmt *get_encrypt_key_stmt_;
         sqlite3_stmt *get_cid_exist_full_stmt_;
 
-        std::u16string db_path_;
+        host_path db_path_;
 
         int add_constraint(const rights_constraint &constraint, const int perm_id);
         bool get_constraint(const int constraint_id, rights_constraint &result);
@@ -47,7 +48,7 @@ namespace eka2l1::epoc::drm {
         void reset();
 
     public:
-        explicit rights_database(const std::u16string &database);
+        explicit rights_database(const host_path &database);
         ~rights_database();
 
         bool add_or_update_record(rights_object &obj);

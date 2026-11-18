@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <algorithm>
 #include <atomic>
 #include <queue>
@@ -432,7 +433,7 @@ namespace eka2l1 {
         static constexpr std::size_t SPACE_RESERVED_START_OFFSET = 0x2000000;
 
         // Create kernel process. This process will be forever queued
-        nanokern_pr_ = create<kernel::process>(mem_, KERN_PROCESS_NAME, KERN_EXE_NAME, u"");
+        nanokern_pr_ = create<kernel::process>(mem_, KERN_PROCESS_NAME, guest_path(KERN_EXE_NAME), u"");
         if (nanokern_pr_) {
             nanokern_pr_->set_is_kernel_process(true);
 
@@ -904,7 +905,7 @@ namespace eka2l1 {
     }
 
     // We can support also ELF!
-    process_ptr kernel_system::spawn_new_process(const std::u16string &path, const std::u16string &cmd_arg, const kernel::uid promised_uid3,
+    process_ptr kernel_system::spawn_new_process(const guest_path &path, const std::u16string &cmd_arg, const kernel::uid promised_uid3,
         const std::uint32_t stack_size, int *error) {
         if (error) {
             *error = epoc::error_not_found;
@@ -917,17 +918,17 @@ namespace eka2l1 {
 
         // NOTE: Workaround for launching game on S^3 or more with keeping the path same for both applist and system calls
         // For ID3works games
-        std::u16string corrected_path = path;
+        guest_path corrected_path(path);
 
         if (get_epoc_version() >= epocver::epoc95) {
             auto root_path = eka2l1::root_path(corrected_path, true);
             auto rel_path = eka2l1::file_directory(corrected_path, true);
             if (!root_path.empty() && (root_path == rel_path)) {
-                corrected_path.erase(corrected_path.begin() + 2);
+                corrected_path.erase(2, 1);
             }
         }
 
-        std::u16string full_path;
+        guest_path full_path;
         auto imgs = lib_mngr_->try_search_and_parse(corrected_path, &full_path);
 
         if (!imgs.first && !imgs.second) {
@@ -1018,7 +1019,7 @@ namespace eka2l1 {
         return pr;
     }
 
-    bool kernel_system::start_boot_server(const std::u16string &path, const bool wait_for_start) {
+    bool kernel_system::start_boot_server(const guest_path &path, const bool wait_for_start) {
         if (starting_boot_server_) {
             queued_boot_servers_.emplace_back(path, wait_for_start);
             return true;
@@ -1445,8 +1446,8 @@ namespace eka2l1 {
         return thr_sch_->should_terminate();
     }
 
-    bool kernel_system::map_rom(const mem::vm_address addr, const std::string &path) {
-        const std::size_t rom_size = common::file_size(path);
+    bool kernel_system::map_rom(const mem::vm_address addr, const host_path &path) {
+        const std::size_t rom_size = common::file_size(eka2l1::host_path{path});
 
         // The multiple model needs padding before an unaligned ROM base.
         mem::vm_address chunk_base = addr;

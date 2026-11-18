@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <common/types.h>
 
 #include <atomic>
@@ -78,5 +79,5 @@ namespace eka2l1::loader {
         bool read(common::ro_stream &stream, const int version);
     };
 
-    bool dump_rofs_system(common::ro_stream &stream, const std::string &path, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb);
+    bool dump_rofs_system(common::ro_stream &stream, const host_path &path, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb);
 }

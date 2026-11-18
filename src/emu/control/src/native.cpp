@@ -85,7 +85,7 @@ namespace eka2l1::control {
         std::set<std::uint32_t> held_keys;
         std::set<int> held_pointers;
         json acceleration;
-        std::string card_path;
+        eka2l1::host_path card_path;
         ngage_controller ngage;
 
         explicit impl(native_frontend frontend)
@@ -147,7 +147,7 @@ namespace eka2l1::control {
             std::lock_guard<std::mutex> guard(session_mutex);
             return session;
         }
-        json card() { return { { "mounted", !card_path.empty() }, { "name", card_path.empty() ? json(nullptr) : json(fs::path(card_path).filename().string()) } }; }
+        json card() { return { { "mounted", !card_path.empty() }, { "name", card_path.empty() ? json(nullptr) : json(card_path.filename().utf8()) } }; }
         json screen() {
             auto *server = windows();
             if (!server)
@@ -166,50 +166,47 @@ namespace eka2l1::control {
         json status() {
             return { { "api", 1 }, { "started", true }, { "busy", false }, { "device", current_device() },
                 { "card", card() }, { "session", session_snapshot() }, { "frames", frontend.frames() },
-                { "documents", frontend.documents }, { "log", frontend.log }, { "screen", screen() } };
+                { "documents", frontend.documents.utf8() }, { "log", frontend.log.utf8() }, { "screen", screen() } };
         }
-        fs::path host_path(std::string raw) {
+        eka2l1::host_path resolve_host_path(std::string raw) {
             std::replace(raw.begin(), raw.end(), '\\', '/');
-            if (lower(raw).substr(0, 5) == "host:") {
-                fs::path host = fs::u8path(raw.substr(5));
-                require(host.is_absolute(), "bad_request", "host: requires an absolute path", 400);
-                return host;
+            const auto scheme = lower(raw).substr(0, 5);
+            if (scheme == "host:") {
+                const fs::path native = fs::u8path(raw.substr(5));
+                require(native.is_absolute(), "bad_request", "host: requires an absolute path", 400);
+                return eka2l1::host_path(raw.substr(5));
             }
-            fs::path path = fs::u8path(raw);
+            const fs::path native = fs::u8path(raw);
 #if defined(_WIN32)
-            if (path.is_absolute() && (raw.size() < 2 || std::string("cCdDeE").find(raw[0]) == std::string::npos))
-                return path;
+            if (native.is_absolute() && (raw.size() < 2 || std::string("cCdDeE").find(raw[0]) == std::string::npos))
 #else
-            if (path.is_absolute())
-                return path;
+            if (native.is_absolute())
 #endif
-            std::string root, rest;
-            if (lower(raw).substr(0, 5) == "docs:") {
-                root = frontend.documents;
-                rest = raw.substr(5);
-            } else if (raw.size() >= 2 && raw[1] == ':' && std::string("cCdDeE").find(raw[0]) != std::string::npos) {
-                root = sys().get_device_drive_path(static_cast<drive_number>(std::tolower(raw[0]) - 'a'));
-                rest = raw.substr(2);
-            } else
-                throw api_error(400, "bad_request", "path must be docs:/..., C:/..., D:/..., E:/... or an absolute host path");
-            require(!root.empty(), "no_device", "device drive unavailable", 409);
-            fs::path resolved(root);
-            for (const auto &part : fs::path(rest).relative_path()) {
+                return eka2l1::host_path(raw);
+            const bool documents = scheme == "docs:";
+            const bool guest = raw.size() >= 2 && raw[1] == ':' && std::string("cCdDeE").find(raw[0]) != std::string::npos;
+            require(documents || guest, "bad_request", "path must be docs:/..., C:/..., D:/..., E:/... or an absolute host path", 400);
+            const auto rest = raw.substr(documents ? 5 : 2);
+            host_path document_relative;
+            guest_path guest_relative;
+            std::size_t pos = 0;
+            while (pos <= rest.size()) {
+                const auto end = rest.find('/', pos);
+                const auto part = rest.substr(pos, end == std::string::npos ? end : end - pos);
                 require(part != "..", "bad_request", ".. is not allowed", 400);
-                if (part == ".")
-                    continue;
-                auto next = resolved / part;
-                if (!fs::exists(next) && fs::is_directory(resolved)) {
-                    for (const auto &entry : fs::directory_iterator(resolved))
-                        if (lower(entry.path().filename().string()) == lower(part.string())) {
-                            next = entry.path();
-                            break;
-                        }
+                if (!part.empty() && part != ".") {
+                    if (documents) document_relative = document_relative.join(part);
+                    else guest_relative = guest_relative.join(guest_path::from_utf8(part));
                 }
-                resolved = next;
+                if (end == std::string::npos) break;
+                pos = end + 1;
             }
-            return resolved;
+            if (documents) return frontend.documents.join(document_relative);
+            const auto root = sys().get_device_drive_path(static_cast<drive_number>(std::tolower(raw[0]) - 'a'));
+            require(!root.empty(), "no_device", "device drive unavailable", 409);
+            return root.resolve_guest(guest_relative);
         }
+
         json input_state() {
             json::array keys, pointers;
             for (auto key : held_keys)
@@ -287,7 +284,7 @@ namespace eka2l1::control {
             return { { "audioMasterVolume", c.audio_master_volume }, { "cpuBackend", c.cpu_backend }, { "language", c.language },
                 { "cpuLoadSave", c.cpu_load_save }, { "enableHwGles1", c.enable_hw_gles1 }, { "nearestNeighborFiltering", c.nearest_neighbor_filtering },
                 { "integerScaling", c.integer_scaling }, { "rtosLevel", c.rtos_level }, { "imei", c.imei }, { "mmcId", c.mmc_id },
-                { "extensiveLogging", c.extensive_logging }, { "deviceDisplayName", c.device_display_name }, { "backgroundImage", c.background_image },
+                { "extensiveLogging", c.extensive_logging }, { "deviceDisplayName", c.device_display_name }, { "backgroundImage", c.background_image.utf8() },
                 { "btnetDiscoveryMode", c.btnet_discovery_mode }, { "btnetListenPort", c.internet_bluetooth_port }, { "btnetPassword", c.btnet_password }, { "btCentralServerUrl", c.bt_central_server_url },
                 { "hideSystemApps", c.hide_system_apps }, { "logFilter", c.log_filter }, { "screenBufferSync", c.screen_buffer_sync_string } };
         }
@@ -299,10 +296,10 @@ namespace eka2l1::control {
             if (req.method == "RESOLVE" && p == std::vector<std::string>{ "v1", "files" }) {
                 const auto raw = req.param("path");
                 require(!raw.empty(), "bad_request", "path query parameter required", 400);
-                return response::from_json({ { "hostPath", host_path(raw).string() } });
+                return response::from_json({ { "hostPath", resolve_host_path(raw).utf8() } });
             }
             if (req.method == "RESOLVE" && p == std::vector<std::string>{ "v1", "log" })
-                return response::from_json({ { "hostPath", frontend.log } });
+                return response::from_json({ { "hostPath", frontend.log.utf8() } });
             auto body = req.data();
             if ((p == std::vector<std::string>{ "v1", "ngage2", "games" } && req.method == "GET")
                 || (p.size() == 5 && p[1] == "ngage2" && p[2] == "games" && p[4] == "launch" && req.method == "POST")) {
@@ -324,7 +321,7 @@ namespace eka2l1::control {
                     const auto storage = sys().get_config()->storage;
                     const auto roms = add_path(storage, "roms/"), drives = add_path(storage, "drives/z/");
                     const bool isolate = body["isolateDrives"].boolean();
-                    auto result = body.contains("archive") ? loader::install_archive(manager, required_string(body, "archive"), roms, drives, isolate, [&req](std::size_t done, std::size_t total) { if (req.progress && total) req.progress(double(done) / total); }, nullptr) : loader::install_rom_with_optional_rpkg(manager, required_string(body, "rom"), body["rpkg"].string(), roms, drives, isolate, [&req](std::size_t done, std::size_t total) { if (req.progress && total) req.progress(double(done) / total); }, nullptr);
+                    auto result = body.contains("archive") ? loader::install_archive(manager, eka2l1::host_path{required_string(body, "archive")}, eka2l1::host_path{roms}, eka2l1::host_path{drives}, isolate, [&req](std::size_t done, std::size_t total) { if (req.progress && total) req.progress(double(done) / total); }, nullptr) : loader::install_rom_with_optional_rpkg(manager, eka2l1::host_path{required_string(body, "rom")}, eka2l1::host_path{body["rpkg"].string()}, eka2l1::host_path{roms}, eka2l1::host_path{drives}, isolate, [&req](std::size_t done, std::size_t total) { if (req.progress && total) req.progress(double(done) / total); }, nullptr);
                     require(result == device_installation_none, "install_failed", "device installation failed: " + std::to_string(int(result)));
                     manager->save_devices();
                     if (body["boot"].boolean(true))
@@ -376,11 +373,11 @@ namespace eka2l1::control {
                                                                                                                : "ngage");
                     bool ok = false;
                     if (type == "sis")
-                        frontend.run_blocking([&] { ok = sys().install_package(common::utf8_to_ucs2(path), sys().get_default_install_drive()) == package::installation_result_success; });
+                        frontend.run_blocking([&] { ok = sys().install_package(eka2l1::host_path{path}, sys().get_default_install_drive()) == package::installation_result_success; });
                     else if (type == "ngage")
-                        frontend.run_blocking([&] { ok = int(sys().install_ngage_game_card(path, nullptr)) == 0; });
+                        frontend.run_blocking([&] { ok = int(sys().install_ngage_game_card(eka2l1::host_path{path}, nullptr)) == 0; });
                     else if (type == "ngage2") {
-                        auto dir = fs::u8path(sys().get_device_drive_path(drive_e)) / "n-gage";
+                        auto dir = fs::u8path(sys().get_device_drive_path(drive_e).utf8()) / "n-gage";
                         fs::create_directories(dir);
                         fs::copy_file(fs::u8path(path), dir / fs::u8path(path).filename(), fs::copy_options::overwrite_existing);
                         ok = true;
@@ -475,10 +472,10 @@ namespace eka2l1::control {
                 if (req.method == "PUT") {
                     auto path = required_string(body, "path");
                     if (fs::is_directory(fs::u8path(path)))
-                        sys().mount(drive_e, drive_media::physical, path, io_attrib_removeable | io_attrib_write_protected);
+                        sys().mount(drive_e, drive_media::physical, eka2l1::host_path(path), io_attrib_removeable | io_attrib_write_protected);
                     else
-                        require(sys().mount_game_zip(drive_e, drive_media::physical, path, io_attrib_removeable | io_attrib_write_protected) == zip_mount_error_none, "mount_failed", "card mount failed");
-                    card_path = path;
+                        require(sys().mount_game_zip(drive_e, drive_media::physical, eka2l1::host_path(path), io_attrib_removeable | io_attrib_write_protected) == zip_mount_error_none, "mount_failed", "card mount failed");
+                    card_path = eka2l1::host_path(path);
                 } else if (req.method == "DELETE") {
                     sys().mount_device_drive(drive_e);
                     card_path.clear();
@@ -564,13 +561,17 @@ namespace eka2l1::control {
                         { "hideSystemApps", &c.hide_system_apps }, { "extensiveLogging", &c.extensive_logging } };
                     std::map<std::string, std::string *> strings{ { "imei", &c.imei }, { "mmcId", &c.mmc_id }, { "rtosLevel", &c.rtos_level },
                         { "cpuBackend", &c.cpu_backend }, { "deviceDisplayName", &c.device_display_name }, { "logFilter", &c.log_filter },
-                        { "backgroundImage", &c.background_image }, { "btnetPassword", &c.btnet_password }, { "btCentralServerUrl", &c.bt_central_server_url } };
+                        { "btnetPassword", &c.btnet_password }, { "btCentralServerUrl", &c.bt_central_server_url } };
                     for (const auto &[key, value] : body.members()) {
                         if (booleans.count(key)) {
                             require(value.is_boolean(), "bad_request", key + " must be boolean", 400);
                             auto *target = booleans.at(key);
                             const bool v = value.boolean();
                             apply.emplace_back([target, v] { *target = v; });
+                        } else if (key == "backgroundImage") {
+                            require(value.is_string(), "bad_request", "backgroundImage must be a string", 400);
+                            const auto path = eka2l1::host_path(value.string());
+                            apply.emplace_back([&c, path] { c.background_image = path; });
                         } else if (strings.count(key)) {
                             require(value.is_string(), "bad_request", key + " must be a string", 400);
                             auto *target = strings.at(key);

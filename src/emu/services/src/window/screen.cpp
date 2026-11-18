@@ -612,7 +612,7 @@ namespace eka2l1::epoc {
         requested_ui_scale_factor = setting.screen_upscale;
 
         if (driver) {
-            driver->set_upscale_shader(setting.filter_shader_path);
+            driver->set_upscale_shader(setting.filter_shader_name);
         }
     }
 
@@ -629,7 +629,7 @@ namespace eka2l1::epoc {
         setting.screen_upscale = requested_ui_scale_factor;
 
         if (driver) {
-            setting.filter_shader_path = driver->get_active_upscale_shader();
+            setting.filter_shader_name = driver->get_active_upscale_shader();
         }
     }
 

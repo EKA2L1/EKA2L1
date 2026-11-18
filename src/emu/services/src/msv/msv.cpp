@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <services/msv/msv.h>
 #include <services/msv/store.h>
 #include <services/msv/operations/change.h>
@@ -88,12 +89,12 @@ namespace eka2l1 {
 
         DEFAULT_MSG_MTM_FILE_DIR[0] = drive_to_char16(drv_target);
 
-        auto mtm_module_dir = io->open_dir(DEFAULT_MSG_MTM_FILE_DIR, {}, io_attrib_include_file);
+        auto mtm_module_dir = io->open_dir(eka2l1::guest_path{DEFAULT_MSG_MTM_FILE_DIR}, {}, io_attrib_include_file);
 
         if (mtm_module_dir) {
             while (std::optional<entry_info> info = mtm_module_dir->get_next_entry()) {
-                const std::u16string nearest = utils::get_nearest_lang_file(io,
-                    common::utf8_to_ucs2(info->full_path), sys->get_system_language(), drv_target);
+                const guest_path nearest = utils::get_nearest_lang_file(io,
+                    eka2l1::guest_path{common::utf8_to_ucs2(info->full_path)}, sys->get_system_language(), drv_target);
 
                 reg_.install_group(nearest);
             }
@@ -113,10 +114,10 @@ namespace eka2l1 {
         std::vector<epoc::msv::entry*> entries = indexer_->get_entries_by_parent(epoc::msv::MSV_ROOT_ID_VALUE);
         for (std::size_t i = 0; i < entries.size(); i++) {
             if (entries[i]->mtm_uid_ == epoc::msv::MSV_MSG_TYPE_UID) {
-                std::optional<std::u16string> path = indexer_->get_entry_data_file(entries[i]);
+                std::optional<guest_path> path = indexer_->get_entry_data_file(entries[i]);
                 if (path.has_value()) {
                     io_system *io = sys->get_io_system();
-                    symfile f = io->open_file(path.value(), READ_MODE | BIN_MODE);
+                    symfile f = io->open_file(eka2l1::guest_path{path.value()}, READ_MODE | BIN_MODE);
 
                     epoc::msv::store the_store;
 
@@ -138,7 +139,7 @@ namespace eka2l1 {
                         f->close();
                     }
 
-                    f = io->open_file(path.value(), WRITE_MODE | BIN_MODE);
+                    f = io->open_file(eka2l1::guest_path{path.value()}, WRITE_MODE | BIN_MODE);
                     
                     if (f) {
                         eka2l1::wo_file_stream wstream(f.get());
@@ -154,18 +155,18 @@ namespace eka2l1 {
     void msv_server::init() {
         // Instantiate the message folder
         device_manager *mngr = sys->get_device_manager();
-        message_folder_ = eka2l1::add_path(kern->is_eka1() ? DEFAULT_MSG_DATA_DIR_OLD : DEFAULT_MSG_DATA_DIR,
+        message_folder_ = eka2l1::add_path(guest_path(kern->is_eka1() ? DEFAULT_MSG_DATA_DIR_OLD : DEFAULT_MSG_DATA_DIR),
             common::utf8_to_ucs2(mngr->get_current()->firmware_code) + u"\\");
 
         io_system *io = sys->get_io_system();
 
-        if (!io->exist(message_folder_)) {
-            io->create_directories(message_folder_);
+        if (!io->exist(eka2l1::guest_path{message_folder_})) {
+            io->create_directories(eka2l1::guest_path{message_folder_});
         }
 
         if (kern->is_eka1()) {
-            reg_.set_list_path(u"C:\\System\\mtm\\" + common::utf8_to_ucs2(mngr->get_current()->firmware_code)
-                + u"\\Mtm Registry v2");
+            reg_.set_list_path(guest_path(u"C:\\System\\mtm\\" + common::utf8_to_ucs2(mngr->get_current()->firmware_code)
+                + u"\\Mtm Registry v2"));
         }
 
         reg_.load_mtm_list();
@@ -252,26 +253,26 @@ namespace eka2l1 {
 
         if (current_own_service != new_own_service) {
             // Move attachments to new folder
-            std::optional<std::u16string> old_folder_path = indexer_->get_entry_data_directory(id,
+            std::optional<guest_path> old_folder_path = indexer_->get_entry_data_directory(id,
                 epoc::msv::MSV_NORMAL_UID, current_own_service);
 
-            std::optional<std::u16string> new_folder_path = indexer_->get_entry_data_directory(id,
+            std::optional<guest_path> new_folder_path = indexer_->get_entry_data_directory(id,
                 epoc::msv::MSV_NORMAL_UID, new_own_service);
 
             if (!old_folder_path.has_value() || !new_folder_path.has_value()) {
                 LOG_WARN(SERVICE_MSV, "Unable to construct store path, store will not be moved");
             } else {
-                const std::u16string store_name = epoc::msv::get_folder_name(id, epoc::msv::MSV_FOLDER_TYPE_NORMAL);
-                const std::u16string external_name = epoc::msv::get_folder_name(id, epoc::msv::MSV_FOLDER_TYPE_PATH);
+                const guest_path store_name(epoc::msv::get_folder_name(id, epoc::msv::MSV_FOLDER_TYPE_NORMAL));
+                const guest_path external_name(epoc::msv::get_folder_name(id, epoc::msv::MSV_FOLDER_TYPE_PATH));
 
                 io_system *io = sys->get_io_system();
 
-                std::u16string path_to_store = eka2l1::add_path(old_folder_path.value(), store_name);
+                guest_path path_to_store(eka2l1::add_path(old_folder_path.value(), store_name));
                 if (io->exist(path_to_store)) {
                     io->rename(path_to_store, eka2l1::add_path(new_folder_path.value(), store_name));
                 }
 
-                std::u16string path_to_external = eka2l1::add_path(old_folder_path.value(), external_name);
+                guest_path path_to_external(eka2l1::add_path(old_folder_path.value(), external_name));
                 if (io->exist(path_to_external)) {
                     io->rename(path_to_external, eka2l1::add_path(new_folder_path.value(), external_name));
                 }
@@ -617,14 +618,14 @@ namespace eka2l1 {
     }
 
     void msv_client_session::get_message_directory(service::ipc_context *ctx) {
-        const std::u16string folder = server<msv_server>()->message_folder();
+        const guest_path folder(server<msv_server>()->message_folder());
 
-        ctx->write_arg(0, folder);
+        ctx->write_arg(0, folder.utf16());
         ctx->complete(epoc::error_none);
     }
 
     void msv_client_session::get_message_drive(service::ipc_context *ctx) {
-        const std::u16string folder = server<msv_server>()->message_folder();
+        const guest_path folder(server<msv_server>()->message_folder());
         const drive_number drv = char16_to_drive(folder[0]);
 
         ctx->complete(static_cast<int>(drv));
@@ -902,7 +903,8 @@ namespace eka2l1 {
             // Legacy does not contain filename
             if (!kern->is_eka1() && (comp->specific_uid_ == epoc::msv::MTM_DEFAULT_SPECIFIC_UID)) {
                 //std::string filename_utf8 = common::ucs2_to_utf8(comp->filename_);
-                epoc::absorb_des_string(comp->filename_, seri, true);
+                auto filename = comp->filename_.utf16();
+                epoc::absorb_des_string(filename, seri, true);
             }
 
             // EKA1's packed record grew these three 32-bit fields in Symbian 8.0.
@@ -947,7 +949,7 @@ namespace eka2l1 {
             return;
         }
 
-        ctx->write_arg(3, comp->filename_);
+        ctx->write_arg(3, comp->filename_.utf16());
         ctx->complete(epoc::error_none);
     }
 
@@ -955,7 +957,7 @@ namespace eka2l1 {
         std::optional<epoc::uid> uid1 = ctx->get_argument_value<epoc::uid>(0);
         std::optional<epoc::uid> uid2 = ctx->get_argument_value<epoc::uid>(1);
         std::optional<epoc::uid> uid3 = ctx->get_argument_value<epoc::uid>(2);
-        std::optional<std::u16string> path = ctx->get_argument_value<std::u16string>(3);
+        std::optional<guest_path> path = ctx->get_path_argument(3);
 
         if (!uid1.has_value() || !uid2.has_value() || !uid3.has_value() || !path.has_value()) {
             ctx->complete(epoc::error_argument);
@@ -973,7 +975,7 @@ namespace eka2l1 {
             return;
         }
 
-        comp->filename_ = path.value();
+        comp->filename_ = *path;
         ctx->complete(epoc::error_none);
     }
 
@@ -1405,7 +1407,7 @@ namespace eka2l1 {
             return;
         }
 
-        std::optional<std::u16string> path = msver->indexer()->get_entry_data_file(ent);
+        std::optional<guest_path> path = msver->indexer()->get_entry_data_file(ent);
         if (!path.has_value()) {
             LOG_ERROR(SERVICE_MSV, "Can't construct file store path for entry 0x{:X}", id.value());
             ctx->complete(epoc::error_general);
@@ -1460,7 +1462,7 @@ namespace eka2l1 {
             return;
         }
 
-        std::optional<std::u16string> path = msver->indexer()->get_entry_data_file(ent);
+        std::optional<guest_path> path = msver->indexer()->get_entry_data_file(ent);
         if (!path.has_value()) {
             LOG_ERROR(SERVICE_MSV, "Can't construct file store path for entry 0x{:X}", id.value());
             ctx->complete(epoc::error_general);
@@ -1506,7 +1508,7 @@ namespace eka2l1 {
             return;
         }
 
-        std::optional<std::u16string> path = msver->indexer()->get_entry_data_file(ent);
+        std::optional<guest_path> path = msver->indexer()->get_entry_data_file(ent);
         if (!path.has_value()) {
             LOG_ERROR(SERVICE_MSV, "Can't construct file store path for entry 0x{:X}", id.value());
             ctx->complete(epoc::error_general);
@@ -1514,7 +1516,7 @@ namespace eka2l1 {
         }
 
         io_system *io = msver->get_io_system();
-        io->delete_entry(path.value());
+        io->delete_entry(eka2l1::guest_path{path.value()});
 
         if (!io->rename(path.value() + TEMP_EXT_STR, path.value())) {
             ctx->complete(epoc::error_not_found);
@@ -1569,7 +1571,7 @@ namespace eka2l1 {
             return;
         }
 
-        std::optional<std::u16string> path = msver->indexer()->get_entry_data_file(ent);
+        std::optional<guest_path> path = msver->indexer()->get_entry_data_file(ent);
         if (!path.has_value()) {
             LOG_ERROR(SERVICE_MSV, "Can't construct file store path for entry 0x{:X}", id.value());
             ctx->complete(0);
@@ -1577,7 +1579,7 @@ namespace eka2l1 {
         }
 
         io_system *io = msver->get_io_system();
-        bool result = io->exist(path.value());
+        bool result = io->exist(eka2l1::guest_path{path.value()});
 
         ctx->complete(static_cast<int>(result));
     }

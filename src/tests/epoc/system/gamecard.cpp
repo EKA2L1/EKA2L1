@@ -40,7 +40,7 @@ namespace {
         system_create_components components;
         std::unique_ptr<eka2l1::system> sys;
 
-        explicit card_mount_fixture(const std::string &cache_root)
+        explicit card_mount_fixture(const eka2l1::host_path &cache_root)
             : settings(&conf) {
             common::delete_folder(cache_root);
 
@@ -53,54 +53,54 @@ namespace {
             sys->startup();
         }
 
-        std::string mounted_path() const {
+        eka2l1::host_path mounted_path() const {
             std::optional<drive> entry = sys->get_io_system()->get_drive_entry(drive_e);
-            return entry.has_value() ? entry->real_path : std::string();
+            return entry.has_value() ? entry->real_path : eka2l1::host_path();
         }
     };
 }
 
 TEST_CASE("mount_game_zip_drops_the_folder_wrapping_the_card", "gamecard") {
-    card_mount_fixture fixture("gamecardcache_wrapped/");
+    card_mount_fixture fixture(eka2l1::host_path{"gamecardcache_wrapped/"});
 
-    REQUIRE(fixture.sys->mount_game_zip(drive_e, drive_media::physical, WRAPPED_CARD_PATH)
+    REQUIRE(fixture.sys->mount_game_zip(drive_e, drive_media::physical, eka2l1::host_path{WRAPPED_CARD_PATH})
         == zip_mount_error_none);
 
-    const std::string root = fixture.mounted_path();
+    const auto root = fixture.mounted_path();
     REQUIRE_FALSE(root.empty());
-    REQUIRE(common::is_dir(add_path(root, "System//Apps//6R63//")));
-    REQUIRE(common::exists(add_path(root, "Images//cover.txt")));
-    REQUIRE_FALSE(common::exists(add_path(root, "System Rush//")));
+    REQUIRE(common::is_dir(eka2l1::host_path{add_path(root, "System//Apps//6R63//")}));
+    REQUIRE(common::exists(eka2l1::host_path{add_path(root, "Images//cover.txt")}));
+    REQUIRE_FALSE(common::exists(eka2l1::host_path{add_path(root, "System Rush//")}));
 }
 
 TEST_CASE("mount_game_zip_keeps_a_card_packed_at_the_top", "gamecard") {
-    card_mount_fixture fixture("gamecardcache_flat/");
+    card_mount_fixture fixture(eka2l1::host_path{"gamecardcache_flat/"});
 
-    REQUIRE(fixture.sys->mount_game_zip(drive_e, drive_media::physical, FLAT_CARD_PATH)
+    REQUIRE(fixture.sys->mount_game_zip(drive_e, drive_media::physical, eka2l1::host_path{FLAT_CARD_PATH})
         == zip_mount_error_none);
 
-    const std::string root = fixture.mounted_path();
+    const auto root = fixture.mounted_path();
     REQUIRE_FALSE(root.empty());
-    REQUIRE(common::exists(add_path(root, "System//Apps//6R63//6R63.APP")));
+    REQUIRE(common::exists(eka2l1::host_path{add_path(root, "System//Apps//6R63//6R63.APP")}));
 }
 
 TEST_CASE("mount_game_zip_reads_past_a_wrapper_ending_in_the_root_folder_name", "gamecard") {
-    card_mount_fixture fixture("gamecardcache_backupsystem/");
+    card_mount_fixture fixture(eka2l1::host_path{"gamecardcache_backupsystem/"});
 
     // BackupSystem must not hide the real System component that follows it.
-    REQUIRE(fixture.sys->mount_game_zip(drive_e, drive_media::physical, BACKUP_SYSTEM_CARD_PATH)
+    REQUIRE(fixture.sys->mount_game_zip(drive_e, drive_media::physical, eka2l1::host_path{BACKUP_SYSTEM_CARD_PATH})
         == zip_mount_error_none);
 
-    const std::string root = fixture.mounted_path();
+    const auto root = fixture.mounted_path();
     REQUIRE_FALSE(root.empty());
-    REQUIRE(common::exists(add_path(root, "System//Apps//6R63//6R63.APP")));
-    REQUIRE(common::exists(add_path(root, "Images//cover.txt")));
+    REQUIRE(common::exists(eka2l1::host_path{add_path(root, "System//Apps//6R63//6R63.APP")}));
+    REQUIRE(common::exists(eka2l1::host_path{add_path(root, "Images//cover.txt")}));
 }
 
 TEST_CASE("mount_game_zip_refuses_an_archive_without_a_system_folder", "gamecard") {
-    card_mount_fixture fixture("gamecardcache_nosystem/");
+    card_mount_fixture fixture(eka2l1::host_path{"gamecardcache_nosystem/"});
 
-    REQUIRE(fixture.sys->mount_game_zip(drive_e, drive_media::physical, NO_SYSTEM_CARD_PATH)
+    REQUIRE(fixture.sys->mount_game_zip(drive_e, drive_media::physical, eka2l1::host_path{NO_SYSTEM_CARD_PATH})
         == zip_mount_error_no_system_folder);
     REQUIRE(fixture.mounted_path().empty());
 }

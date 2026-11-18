@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <common/types.h>
 #include <loader/sis_common.h>
 
@@ -231,6 +232,6 @@ namespace eka2l1 {
             std::vector<language> langs;
         };
 
-        std::optional<sis_old> parse_sis_old(const std::string &path);
+        std::optional<sis_old> parse_sis_old(const host_path &path);
     }
 }

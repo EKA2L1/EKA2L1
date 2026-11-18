@@ -13,6 +13,9 @@ else ()
 endif ()
 
 add_library(common
+        include/common/path_types.h
+        src/path_types.cpp
+        src/path_case_folding.inl
         include/common/applauncher.h
         include/common/archive.h
         include/common/arghandler.h

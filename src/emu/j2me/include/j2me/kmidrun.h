@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <j2me/common.h>
 #include <functional>
 
@@ -35,6 +36,6 @@ namespace eka2l1::j2me {
     class app_list;
 
     bool launch_through_kmidrun(system *sys, const app_entry &entry, std::function<void(kernel::process*)> exit_cb);
-    install_error install_for_kmidrun(system *sys, app_list *applist, const std::string &path, app_entry &entry_ino);
+    install_error install_for_kmidrun(system *sys, app_list *applist, const host_path &path, app_entry &entry_ino);
     void uninstall_for_kmidrun(system *sys, app_list *applist, const app_entry &entry);
 }

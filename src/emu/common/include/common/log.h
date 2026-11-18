@@ -19,6 +19,7 @@
  */
 #pragma once
 
+#include <common/path_types.h>
 #include <spdlog/spdlog.h>
 
 #include <common/configure.h>
@@ -86,7 +87,7 @@ namespace eka2l1 {
          * The budget stands in for a size cap: log lines measure 110-160 bytes, so the
          * default keeps the file near 100 MB.
          */
-        std::shared_ptr<spdlog::sinks::sink> make_capped_file_sink(const std::string &filename, const std::size_t max_lines);
+        std::shared_ptr<spdlog::sinks::sink> make_capped_file_sink(const host_path &filename, const std::size_t max_lines);
 
         static constexpr std::size_t LOG_FILE_MAX_LINES = 640000;
     }

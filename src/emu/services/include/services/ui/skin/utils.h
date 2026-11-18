@@ -35,7 +35,7 @@ namespace eka2l1::epoc {
      * 
      * \returns The path to the skin file with specified PID, else nullopt.
      */
-    std::optional<std::u16string> find_skin_file(eka2l1::io_system *io, const epoc::pid skin_pid);
+    std::optional<guest_path> find_skin_file(eka2l1::io_system *io, const epoc::pid skin_pid);
 
     /**
      * @brief   Search the skin folders, and pick the first skin that's available.
@@ -54,7 +54,7 @@ namespace eka2l1::epoc {
      * 
      * \returns The path to the resource folder correspond to specified PID, else nullopt.
      */
-    std::optional<std::u16string> get_resource_path_of_skin(eka2l1::io_system *io, const epoc::pid skin_pid);
+    std::optional<guest_path> get_resource_path_of_skin(eka2l1::io_system *io, const epoc::pid skin_pid);
 
     /**
      * @brief Produced a string containing the UID and timestamp (if available) in hex format.

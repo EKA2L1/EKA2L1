@@ -269,7 +269,7 @@ namespace eka2l1 {
         p += u":\\Private\\10202BE9\\persists\\" + firm_code + u"\\" + common::utf8_to_ucs2(common::to_string(uid, std::hex)) + u".cre";
 
         const std::u16string output = atomic ? p + u".tmp" : p;
-        symfile f = io->open_file(output, WRITE_MODE | BIN_MODE);
+        symfile f = io->open_file(eka2l1::guest_path{output}, WRITE_MODE | BIN_MODE);
 
         if (!f) {
             LOG_ERROR(SERVICE_CENREP, "Can't write CRE changes, opening {} failed", common::ucs2_to_utf8(p));
@@ -284,17 +284,17 @@ namespace eka2l1 {
         }
 
         if (written && closed) {
-            const auto from = io->get_raw_path(output);
-            const auto to = io->get_raw_path(p);
+            const auto from = io->get_raw_path(eka2l1::guest_path{output});
+            const auto to = io->get_raw_path(eka2l1::guest_path{p});
             if (from && to) {
                 std::error_code error;
-                std::filesystem::rename(std::filesystem::path(*from), std::filesystem::path(*to), error);
+                std::filesystem::rename(std::filesystem::path(from->utf8()), std::filesystem::path(to->utf8()), error);
                 if (!error) {
                     return true;
                 }
             }
         }
-        io->delete_entry(output);
+        io->delete_entry(eka2l1::guest_path{output});
         return false;
     }
 

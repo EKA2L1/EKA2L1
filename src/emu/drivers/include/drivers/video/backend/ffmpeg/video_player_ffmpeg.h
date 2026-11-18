@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <atomic>
 #include <thread>
 
@@ -75,7 +76,7 @@ namespace eka2l1::drivers {
         explicit video_player_ffmpeg(audio_driver *driver);
         ~video_player_ffmpeg() override;
 
-        bool open_file(const std::string &path) override;
+        bool open_file(const host_path &path) override;
         bool open_custom_io(common::ro_stream &stream) override;
         void close() override;
 

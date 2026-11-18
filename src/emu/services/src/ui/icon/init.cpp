@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <kernel/libmanager.h>
 #include <services/fbs/fbs.h>
 #include <services/ui/icon/common.h>
@@ -36,7 +37,7 @@ namespace eka2l1 {
 
         // Get the ROM device, and read the rsc
         eka2l1::io_system *io = sys->get_io_system();
-        std::u16string path;
+        guest_path path;
 
         // Find the ROM drive
         // Stepping one below drive_a would leave the enum's value range.

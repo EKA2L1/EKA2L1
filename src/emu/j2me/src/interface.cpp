@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <j2me/interface.h>
 #include <j2me/kmidrun.h>
 #include <j2me/applist.h>
@@ -38,7 +39,7 @@ namespace eka2l1::j2me {
         return false;
     }
 
-    install_error install(system *sys, const std::string &path, app_entry &entry_info) {
+    install_error install(system *sys, const host_path &path, app_entry &entry_info) {
         app_list *applist = sys->get_j2me_applist();
         const epocver sysver = sys->get_symbian_version_use();
         if (sysver <= epocver::epoc6) {

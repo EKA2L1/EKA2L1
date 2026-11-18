@@ -98,7 +98,8 @@ namespace eka2l1 {
         std::size_t last_size = seri.size();
 
         for (std::size_t i = start_index; i < (count_filename ? obj->file_descriptions.size() : (start_index + fcount)); i++) {
-            epoc::absorb_des_string(obj->file_descriptions[i].target, seri, true);
+            auto target = obj->file_descriptions[i].target.utf16();
+            epoc::absorb_des_string(target, seri, true);
 
             if (count_filename) {
                 if (seri.size() <= max_size) {

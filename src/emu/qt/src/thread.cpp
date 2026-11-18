@@ -408,8 +408,8 @@ namespace eka2l1::desktop {
         if (state.debug_control_port) {
             control::native_frontend frontend;
             frontend.platform = "qt";
-            frontend.documents = std::filesystem::current_path().string();
-            frontend.log = (std::filesystem::current_path() / "EKA2L1.log").string();
+            common::get_current_directory(frontend.documents);
+            frontend.log = frontend.documents / "EKA2L1.log";
             frontend.get_system = [&state] { return state.symsys.get(); };
             frontend.frames = [&state] { return state.debug_frames.load(); };
             frontend.launch = [&state](auto uid) { return state.ui_main->control_launch(uid); };

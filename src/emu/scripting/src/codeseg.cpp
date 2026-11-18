@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <scripting/codeseg.h>
 #include <scripting/instance.h>
 #include <scripting/process.h>
@@ -113,7 +114,7 @@ EKA2L1_EXPORT eka2l1::scripting::codeseg *eka2l1_load_codeseg(const char *path) 
     eka2l1::system *sys = eka2l1::scripting::get_current_instance();
     eka2l1::hle::lib_manager *libmngr = sys->get_lib_manager();
 
-    eka2l1::kernel::codeseg_ptr seg = libmngr->load(eka2l1::common::utf8_to_ucs2(path));
+    eka2l1::kernel::codeseg_ptr seg = libmngr->load(eka2l1::guest_path::from_utf8(path));
 
     if (!seg) {
         return nullptr;

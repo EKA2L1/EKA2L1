@@ -131,18 +131,18 @@ TEST_CASE("replace_extension", "path_resolving_test") {
 
 TEST_CASE("find_case_sensitive_directory_name", "path_resolving_test") {
     REQUIRE(eka2l1::common::find_case_sensitive_file_name(
-                "commonassets", "mixedcasedirectory", eka2l1::common::FILE_DIRECTORY)
+                eka2l1::host_path{"commonassets"}, eka2l1::guest_path(u"mixedcasedirectory"), eka2l1::common::FILE_DIRECTORY)
         == "MixedCaseDirectory");
 }
 
 TEST_CASE("copy_folder_lowercases_destination_without_lowercasing_source", "path_resolving_test") {
     const std::string destination = "commonassets-copy-output";
-    eka2l1::common::delete_folder(destination);
+    eka2l1::common::delete_folder(eka2l1::host_path{destination});
 
     REQUIRE(eka2l1::common::copy_folder(
-        "commonassets", destination, eka2l1::common::FOLDER_COPY_FLAG_LOWERCASE_NAME));
+        eka2l1::host_path{"commonassets"}, eka2l1::host_path{destination}, eka2l1::common::FOLDER_COPY_FLAG_LOWERCASE_NAME));
     REQUIRE(eka2l1::common::exists(
-        eka2l1::add_path(destination, "mixedcasedirectory/marker.txt")));
+        eka2l1::host_path{eka2l1::add_path(destination, "mixedcasedirectory/marker.txt")}));
 
-    REQUIRE(eka2l1::common::delete_folder(destination));
+    REQUIRE(eka2l1::common::delete_folder(eka2l1::host_path{destination}));
 }

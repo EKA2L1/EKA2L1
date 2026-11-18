@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <drivers/input/common.h>
 
 #include <qt/cmdhandler.h>
@@ -106,20 +107,20 @@ int main(int argc, char *argv[]) {
     QString data_path = QStandardPaths::writableLocation(QStandardPaths::GenericDataLocation) + "/EKA2L1/";
     QDir root_dir = QDir::root();
     root_dir.mkpath(data_path);
-    std::string data_path_str = data_path.toUtf8().toStdString();
+    eka2l1::host_path data_path_str(data_path.toUtf8().toStdString());
     
     QString app_path = QDir(QCoreApplication::applicationDirPath()).path();
-    std::string app_path_str = app_path.toUtf8().toStdString();
-    eka2l1::common::copy_folder(app_path_str + "/patch", data_path_str + "/patch", 0, nullptr);
-    eka2l1::common::copy_folder(app_path_str + "/resources", data_path_str + "/resources", 0, nullptr);
+    eka2l1::host_path app_path_str(app_path.toUtf8().toStdString());
+    eka2l1::common::copy_folder(eka2l1::host_path{app_path_str + "/patch"}, eka2l1::host_path{data_path_str + "/patch"}, 0, nullptr);
+    eka2l1::common::copy_folder(eka2l1::host_path{app_path_str + "/resources"}, eka2l1::host_path{data_path_str + "/resources"}, 0, nullptr);
 
     // Keep shipped compatibility scripts current across application upgrades.
     // copy_folder merges into the destination, so separately named user scripts
     // remain untouched while updated bundled scripts replace stale copies.
-    eka2l1::common::copy_folder(app_path_str + "/scripts", data_path_str + "/scripts", 0, nullptr);
+    eka2l1::common::copy_folder(eka2l1::host_path{app_path_str + "/scripts"}, eka2l1::host_path{data_path_str + "/scripts"}, 0, nullptr);
     
-    if (!eka2l1::common::exists(data_path_str + "/compat/")) {
-        eka2l1::common::copy_folder(app_path_str + "/compat", data_path_str + "/compat", 0, nullptr);
+    if (!eka2l1::common::exists(eka2l1::host_path{data_path_str + "/compat/"})) {
+        eka2l1::common::copy_folder(eka2l1::host_path{app_path_str + "/compat"}, eka2l1::host_path{data_path_str + "/compat"}, 0, nullptr);
     }
 
     eka2l1::common::set_current_directory(data_path_str);

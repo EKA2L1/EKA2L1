@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <QMainWindow>
 #include <QMessageBox>
 #include <QDir>
@@ -91,14 +92,14 @@ public:
 
     bool notify_error(const QString &err) {
         QMessageBox::critical(this, tr("Update failed"), err);
-        common::delete_folder("temp\\");
+        common::delete_folder(eka2l1::host_path{"temp\\"});
         return false;
     }
 
     bool extract() {
         std::vector<common::archive_entry_info> entries;
 
-        if (!common::list_archive(ZIP_STAGING_FILENAME, entries)) {
+        if (!common::list_archive(eka2l1::host_path{ZIP_STAGING_FILENAME}, entries)) {
             return notify_error(tr("Downloaded update is not a zip file!"));
         }
 
@@ -121,22 +122,22 @@ public:
             total_uncomp_size_ += entry.size;
         }
 
-        std::string current_dir;
+        eka2l1::host_path current_dir;
         common::get_current_directory(current_dir);
 
-        const std::string temp_folder = eka2l1::absolute_path("temp\\", current_dir);
+        const eka2l1::host_path temp_folder(current_dir.join("temp\\"));
 
         eka2l1::common::delete_folder(temp_folder);
         eka2l1::common::create_directories(temp_folder);
 
-        const bool unpacked = common::extract_archive(ZIP_STAGING_FILENAME,
-            [&](const common::archive_entry_info &entry) -> std::string {
+        const bool unpacked = common::extract_archive(eka2l1::host_path{ZIP_STAGING_FILENAME},
+            [&](const common::archive_entry_info &entry) -> eka2l1::host_path {
                 if (!wanted(entry)) {
-                    return std::string();
+                    return {};
                 }
 
                 emit_update_log(tr("Extracted: %1").arg(QString::fromStdString(entry.path)));
-                return eka2l1::add_path(temp_folder, entry.path);
+                return temp_folder.join(entry.path);
             },
             [this](const std::size_t done, const std::size_t total) {
                 if (total) {
@@ -150,20 +151,20 @@ public:
             return notify_error(tr("The downloaded archive zip is corrupted"));
         }
 
-        common::copy_folder(temp_folder, "..", 0, [this](const std::uint64_t current, const std::uint64_t total) {
+        common::copy_folder(temp_folder, eka2l1::host_path{".."}, 0, [this](const std::uint64_t current, const std::uint64_t total) {
             emit_update_progress_bar(100 * current / total, true);
         });
 
         emit_update_progress_bar(100, true);
 
         common::delete_folder(temp_folder);
-        common::remove(ZIP_STAGING_FILENAME);
+        common::remove(eka2l1::host_path{ZIP_STAGING_FILENAME});
 
         return true;
     }
 
     void run() {
-        if (!common::exists(ZIP_STAGING_FILENAME)) {
+        if (!common::exists(eka2l1::host_path{ZIP_STAGING_FILENAME})) {
             notify_error(tr("Update's archive file does not exist!"));
             close();
             return;

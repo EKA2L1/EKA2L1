@@ -244,8 +244,8 @@ namespace eka2l1::ios {
 
         config::state conf;
         window_server *winserv = nullptr;
-        std::string documents_root;
-        std::string caches_root;
+        eka2l1::host_path documents_root;
+        eka2l1::host_path caches_root;
 
         std::atomic<bool> running{false};
         std::atomic<bool> paused{false};
@@ -359,7 +359,7 @@ namespace eka2l1::ios {
         std::atomic<int> thread_priority{ eka2l1::common::thread_priority_normal };
 
         // Guarded by session_mutex; firmware identity survives device-list reordering.
-        std::string mounted_card_path;
+        eka2l1::host_path mounted_card_path;
         std::string mounted_card_firmware;
         std::string mounted_card_mmc_id;
         std::uint32_t mounted_card_attrib{0};
@@ -418,14 +418,14 @@ namespace eka2l1::ios {
     // mid-boot; that device is then skipped by the auto-boot and reported to
     // the frontend, leaving the user with a working app they can delete or
     // reinstall the bad dump from.
-    static std::string boot_attempt_marker_path(emulator *state) {
+    static eka2l1::host_path boot_attempt_marker_path(emulator *state) {
         return eka2l1::add_path(state->conf.storage, "boot_attempt.txt");
     }
 
     static void mark_boot_attempt(emulator *state, const std::string &firmware_code) {
         state->pending_boot_firmware = firmware_code;
         state->boot_in_flight = true;
-        FILE *f = common::open_c_file(boot_attempt_marker_path(state), "wb");
+        FILE *f = common::open_c_file(eka2l1::host_path{boot_attempt_marker_path(state)}, "wb");
         if (!f) {
             LOG_WARN(eka2l1::FRONTEND_CMDLINE, "Unable to record the device boot attempt marker");
             return;
@@ -441,7 +441,7 @@ namespace eka2l1::ios {
             return;
         }
         state->pending_boot_firmware.clear();
-        common::remove(boot_attempt_marker_path(state));
+        common::remove(eka2l1::host_path{boot_attempt_marker_path(state)});
     }
 
     // Read the marker left by a previous run and delete it, so a device is only
@@ -449,7 +449,7 @@ namespace eka2l1::ios {
     // dump that works again (reinstalled, or the crash was unrelated) is not
     // locked out.
     static std::string take_boot_attempt(emulator *state) {
-        const std::string marker = boot_attempt_marker_path(state);
+        const eka2l1::host_path marker(boot_attempt_marker_path(state));
         std::string firmware_code;
         if (FILE *f = common::open_c_file(marker, "rb")) {
             char buf[128] = { 0 };
@@ -507,8 +507,8 @@ namespace eka2l1::ios {
     }
 
     // Match Qt/Android's CID convention for dumps keyed to their original card.
-    static std::string mmc_id_from_card_path(const std::string &path) {
-        const std::string name = eka2l1::filename(path);
+    static std::string mmc_id_from_card_path(const eka2l1::host_path &path) {
+        const std::string name = path.filename().utf8();
         if (name.empty()) {
             return std::string();
         }
@@ -523,7 +523,7 @@ namespace eka2l1::ios {
     }
 
     // Call under session_mutex to keep the main-thread snapshot in sync.
-    static void set_mounted_card(emulator *state, std::string path, const std::uint32_t attrib,
+    static void set_mounted_card(emulator *state, eka2l1::host_path path, const std::uint32_t attrib,
         std::string mmc_id = {}) {
         state->mounted_card_mmc_id = std::move(mmc_id);
         state->mounted_card_path = std::move(path);
@@ -609,7 +609,7 @@ namespace eka2l1::ios {
 
     // Decodes into RGBA rows, top row first, capped so a camera photo
     // does not cost more texture memory than a phone screen can show.
-    static std::vector<std::uint8_t> decode_background_image(const std::string &path, eka2l1::vec2 &size) {
+    static std::vector<std::uint8_t> decode_background_image(const eka2l1::host_path &path, eka2l1::vec2 &size) {
         @autoreleasepool {
             UIImage *image = [UIImage imageWithContentsOfFile:[NSString stringWithUTF8String:path.c_str()]];
             CGImageRef cg_image = image.CGImage;
@@ -649,7 +649,7 @@ namespace eka2l1::ios {
             return;
         }
 
-        std::string path;
+        eka2l1::host_path path;
         {
             std::lock_guard<std::mutex> background_lock(state->background_mutex);
             path = state->conf.background_image;
@@ -942,10 +942,10 @@ namespace eka2l1::ios {
         drivers::ui::set_automatic_input_view(false);
         // Same folder lib_manager::load_patch_libraries scans, which the
         // frontend redirects into the read-only app bundle at startup.
-        const std::string patch_dir = eka2l1::runtime_resource_path("patch");
-        const std::vector<std::tuple<std::u16string, std::string, epocver>> dlls_need_to_copy = {
-            { u"Z:\\sys\\bin\\goommonitor.dll", "goommonitor_general.dll", epocver::epoc94 },
-            { u"Z:\\sys\\bin\\avkonfep.dll", "avkonfep_general.dll", epocver::epoc93fp1 }
+        const eka2l1::host_path patch_dir(eka2l1::runtime_resource_path(eka2l1::host_path{"patch"}));
+        const std::vector<std::tuple<eka2l1::guest_path, eka2l1::host_path, epocver>> dlls_need_to_copy = {
+            { eka2l1::guest_path(u"Z:\\sys\\bin\\goommonitor.dll"), eka2l1::host_path("goommonitor_general.dll"), epocver::epoc94 },
+            { eka2l1::guest_path(u"Z:\\sys\\bin\\avkonfep.dll"), eka2l1::host_path("avkonfep_general.dll"), epocver::epoc93fp1 }
         };
 
         for (const auto &entry : dlls_need_to_copy) {
@@ -953,18 +953,18 @@ namespace eka2l1::ios {
                 continue;
             }
 
-            auto destination = io->get_raw_path(std::get<0>(entry));
+            auto destination = io->get_raw_path(eka2l1::guest_path{std::get<0>(entry)});
             if (!destination.has_value()) {
                 continue;
             }
 
-            const std::string source = eka2l1::add_path(patch_dir, std::get<1>(entry));
-            const std::string dest = common::ucs2_to_utf8(destination.value());
+            const eka2l1::host_path source(eka2l1::add_path(patch_dir, std::get<1>(entry)));
+            const eka2l1::host_path dest(destination.value());
             if (!common::exists(source)) {
                 continue;
             }
 
-            const std::string backup = dest + ".bak";
+            const eka2l1::host_path backup(dest + ".bak");
             if (common::exists(dest) && !common::exists(backup)) {
                 common::move_file(dest, backup);
             }
@@ -1031,7 +1031,7 @@ namespace eka2l1::ios {
         std::lock_guard<std::recursive_mutex> session_lock(_sessionMutex);
         _state = std::make_unique<eka2l1::ios::emulator>(_sessionMutex);
     }
-    _state->documents_root = documentsPath.UTF8String;
+    _state->documents_root = eka2l1::host_path(documentsPath.UTF8String);
 
     // Build the sandbox layout up front so later steps can rely on it.
     NSFileManager *fm = NSFileManager.defaultManager;
@@ -1041,7 +1041,7 @@ namespace eka2l1::ios {
                                     create:YES
                                      error:nil];
     if (cachesURL) {
-        _state->caches_root = cachesURL.path.UTF8String;
+        _state->caches_root = eka2l1::host_path(cachesURL.path.UTF8String);
     }
     // Drive letters mirror Symbian's uppercase convention. iOS app data
     // containers are case-sensitive (despite the host APFS volume being
@@ -1087,7 +1087,7 @@ namespace eka2l1::ios {
     // expects live one level down (see src/emu/ios/CMakeLists.txt).
     NSString *bundleResourceRoot = [NSBundle.mainBundle.resourcePath
         stringByAppendingPathComponent:@"emures"];
-    eka2l1::set_runtime_resource_root(bundleResourceRoot.UTF8String);
+    eka2l1::set_runtime_resource_root(eka2l1::host_path{bundleResourceRoot.UTF8String});
 
     // Earlier builds copied those resources into the sandbox instead of reading
     // them from the bundle. Nothing reads the copies anymore, so drop them rather
@@ -1114,7 +1114,7 @@ namespace eka2l1::ios {
 
 
     _state->conf.deserialize();
-    _state->conf.storage = dataRoot.UTF8String;
+    _state->conf.storage = eka2l1::host_path(dataRoot.UTF8String);
 
     // Pick up (and clear) the marker a previous run left behind if it died
     // while bringing a device up — a damaged ROM/RPKG only shows itself there,
@@ -1168,9 +1168,9 @@ namespace eka2l1::ios {
         // defaults unless the user pointed them somewhere else, so resolve them
         // against the bundle; an absolute user path passes through untouched.
         _state->audio_driver->set_bank_path(eka2l1::drivers::MIDI_BANK_TYPE_HSB,
-            eka2l1::runtime_resource_path(_state->conf.hsb_bank_path));
+            eka2l1::host_path{eka2l1::runtime_resource_path(eka2l1::host_path{_state->conf.hsb_bank_path})});
         _state->audio_driver->set_bank_path(eka2l1::drivers::MIDI_BANK_TYPE_SF2,
-            eka2l1::runtime_resource_path(_state->conf.sf2_bank_path));
+            eka2l1::host_path{eka2l1::runtime_resource_path(eka2l1::host_path{_state->conf.sf2_bank_path})});
     } else {
         LOG_WARN(eka2l1::FRONTEND_CMDLINE,
             "iOS audio: cubeb_audio_driver instance is null; services will fall back to silence");
@@ -1412,7 +1412,7 @@ namespace eka2l1::ios {
         return nil;
     }
     std::lock_guard<std::mutex> dvc_lock(dvc->lock);
-    const std::string path = _state->symsys->get_device_drive_path(
+    const eka2l1::host_path path = _state->symsys->get_device_drive_path(
         static_cast<drive_number>(drive_c + (letter - 'c')));
     if (path.empty()) {
         return nil;
@@ -1420,12 +1420,27 @@ namespace eka2l1::ios {
     return [NSString stringWithUTF8String:path.c_str()];
 }
 
+- (NSString *)resolveDeviceStoragePath:(NSString *)guestPath {
+    NSData *bytes = [guestPath dataUsingEncoding:NSUTF8StringEncoding];
+    if (!bytes || bytes.length == 0) return nil;
+    const std::string_view text(static_cast<const char *>(bytes.bytes), bytes.length);
+    if (text.find('\0') != text.npos) return nil;
+    const auto path = eka2l1::guest_path::from_utf8(text);
+    if (path.root_name().size() != 2) return nil;
+    const auto letter = path.lookup_key().front();
+    if (letter < u'c' || letter > u'e') return nil;
+    NSString *root = [self currentDeviceDrivePath:letter];
+    if (!root) return nil;
+    const auto resolved = eka2l1::host_path(root.UTF8String).resolve_guest(path.relative());
+    return [NSString stringWithUTF8String:resolved.c_str()];
+}
+
 // Shared body of the two install entry points below. `installer` is handed the
 // device manager plus the two storage folders every installer writes into, and
 // does the format-specific work; everything around it (freezing the emulator,
 // progress plumbing, persisting devices.yml) is the same either way.
 - (EKA2L1InstallResult)runDeviceInstall:(eka2l1::device_installation_error (^)(eka2l1::device_manager *dvc,
-                                            const std::string &romResidentPath, const std::string &rootZPath,
+                                            const eka2l1::host_path &romResidentPath, const eka2l1::host_path &rootZPath,
                                             progress_changed_callback progressCb,
                                             cancel_requested_callback cancelCb))installer
                                progress:(void (^)(double))progress
@@ -1452,23 +1467,23 @@ namespace eka2l1::ios {
         return EKA2L1InstallResultGeneralFailure;
     }
 
-    const std::string storage = _state->conf.storage;
-    const std::string staging = eka2l1::add_path(storage,
+    const eka2l1::host_path storage(_state->conf.storage);
+    const eka2l1::host_path staging = eka2l1::add_path(storage,
         std::string("device-import-") + NSUUID.UUID.UUIDString.UTF8String + "/");
     struct staging_cleanup {
-        std::string path;
+        eka2l1::host_path path;
         bool discard = true;
         ~staging_cleanup() {
             if (discard) {
-                eka2l1::common::delete_folder(path);
+                eka2l1::common::delete_folder(eka2l1::host_path{path});
             }
         }
     } cleanup{staging};
     eka2l1::config::state staging_conf;
     staging_conf.storage = staging;
     eka2l1::device_manager staging_devices(&staging_conf);
-    const std::string root_z_path = eka2l1::add_path(staging, "drives/z/");
-    const std::string rom_resident_path = eka2l1::add_path(staging, "roms/");
+    const eka2l1::host_path root_z_path(eka2l1::add_path(staging, "drives/z/"));
+    const eka2l1::host_path rom_resident_path(eka2l1::add_path(staging, "roms/"));
     eka2l1::common::create_directories(rom_resident_path);
 
     // The installers report (done, total) pairs whose scale changes between
@@ -1535,11 +1550,11 @@ namespace eka2l1::ios {
         return EKA2L1InstallResultNotExist;
     }
 
-    const std::string rom_std = romPath.UTF8String;
-    const std::string rpkg_std = rpkgPath ? std::string(rpkgPath.UTF8String) : std::string();
+    const eka2l1::host_path rom_std(romPath.UTF8String);
+    const eka2l1::host_path rpkg_std(rpkgPath ? std::string(rpkgPath.UTF8String) : std::string());
 
-    return [self runDeviceInstall:^(eka2l1::device_manager *dvc, const std::string &rom_resident_path,
-                                     const std::string &root_z_path, progress_changed_callback progress_cb,
+    return [self runDeviceInstall:^(eka2l1::device_manager *dvc, const eka2l1::host_path &rom_resident_path,
+                                     const eka2l1::host_path &root_z_path, progress_changed_callback progress_cb,
                                      cancel_requested_callback cancel_cb) {
         return eka2l1::loader::install_rom_with_optional_rpkg(dvc, rom_std, rpkg_std, rom_resident_path,
             root_z_path, isolateDrives == YES, progress_cb, cancel_cb);
@@ -1554,10 +1569,10 @@ namespace eka2l1::ios {
         return EKA2L1InstallResultNotExist;
     }
 
-    const std::string archive_std = archivePath.UTF8String;
+    const eka2l1::host_path archive_std(archivePath.UTF8String);
 
-    return [self runDeviceInstall:^(eka2l1::device_manager *dvc, const std::string &rom_resident_path,
-                                     const std::string &root_z_path, progress_changed_callback progress_cb,
+    return [self runDeviceInstall:^(eka2l1::device_manager *dvc, const eka2l1::host_path &rom_resident_path,
+                                     const eka2l1::host_path &root_z_path, progress_changed_callback progress_cb,
                                      cancel_requested_callback cancel_cb) {
         return eka2l1::loader::install_archive(dvc, archive_std, rom_resident_path, root_z_path,
             isolateDrives == YES, progress_cb, cancel_cb);
@@ -1577,7 +1592,7 @@ namespace eka2l1::ios {
     if (!_state) {
         return NO;
     }
-    const std::string storage = _state->conf.storage;
+    const eka2l1::host_path storage(_state->conf.storage);
 
     // Rebuild the system so device_manager reloads devices.yml fresh and the
     // kernel comes up clean for the selected device. device_manager only
@@ -1611,7 +1626,7 @@ namespace eka2l1::ios {
     _state->present_status[1] = 0;
     _state->present_slot = 0;
 
-    const std::string card_path = _state->mounted_card_path;
+    const eka2l1::host_path card_path(_state->mounted_card_path);
     const std::string card_firmware = _state->mounted_card_firmware;
     const std::uint32_t card_attrib = _state->mounted_card_attrib;
     const std::string card_mmc_id = _state->mounted_card_mmc_id;
@@ -1670,7 +1685,7 @@ namespace eka2l1::ios {
     if (!card_path.empty() && card_firmware == firmware_code
         && eka2l1::common::is_dir(card_path)
         && sys->get_io_system()->mount_physical_path(drive_e, drive_media::physical,
-            card_attrib, eka2l1::common::utf8_to_ucs2(card_path))) {
+            card_attrib, card_path)) {
         eka2l1::ios::set_mounted_card(_state.get(), card_path, card_attrib, card_mmc_id);
         _state->conf.current_mmc_id = card_mmc_id.empty() ? _state->conf.mmc_id : card_mmc_id;
     } else {
@@ -1778,7 +1793,7 @@ namespace eka2l1::ios {
     // UID ships different art per device), so it would otherwise feed stale icons to
     // a reinstalled device.
     if (!_state->caches_root.empty()) {
-        eka2l1::common::delete_folder(eka2l1::add_path(_state->caches_root, "icons/" + eka2l1::common::lowercase_string(firmcode) + "/"));
+        eka2l1::common::delete_folder(eka2l1::host_path{eka2l1::add_path(_state->caches_root, "icons/" + eka2l1::common::lowercase_string(firmcode) + "/")});
     }
 
     // Keep conf.device in step with device_manager's adjusted current index so
@@ -2148,7 +2163,7 @@ namespace eka2l1::ios {
     if (!_state || !_state->symsys) {
         return NO;
     }
-    std::u16string upath = eka2l1::common::utf8_to_ucs2(sisPath.UTF8String);
+    eka2l1::host_path upath(sisPath.UTF8String);
     const drive_number install_drive = _state->symsys->get_default_install_drive();
     auto result = static_cast<eka2l1::package::installation_result>(
         _state->symsys->install_package(upath, install_drive));
@@ -2175,7 +2190,7 @@ namespace eka2l1::ios {
         std::lock_guard<std::recursive_mutex> session_lock(_state->session_mutex);
         const bool was_mounted = _state->mounted;
         auto loop_lock = eka2l1::ios::pause_loop_and_lock(_state.get());
-        result = _state->symsys->install_ngage_game_card(cardPath.UTF8String, [&](std::string name) {
+        result = _state->symsys->install_ngage_game_card(eka2l1::host_path{cardPath.UTF8String}, [&](std::string name) {
             gameName = std::move(name);
         });
         _state->mounted = was_mounted;
@@ -2198,9 +2213,9 @@ namespace eka2l1::ios {
     std::lock_guard<std::recursive_mutex> session_lock(_state->session_mutex);
     report.cardMounted = !_state->mounted_card_path.empty();
 
-    std::string card_path = path.UTF8String;
+    eka2l1::host_path card_path(path.UTF8String);
     while (!card_path.empty() && eka2l1::is_separator(card_path.back())) {
-        card_path.pop_back();
+        card_path.erase(card_path.size() - 1);
     }
 
     const bool is_folder = eka2l1::common::is_dir(card_path);
@@ -2226,7 +2241,7 @@ namespace eka2l1::ios {
     const std::uint32_t attrib = io_attrib_removeable | io_attrib_write_protected;
     if (is_folder) {
         if (io->mount_physical_path(drive_e, drive_media::physical, attrib,
-                eka2l1::common::utf8_to_ucs2(card_path))) {
+                card_path)) {
             eka2l1::ios::set_mounted_card(_state.get(), card_path, attrib, mmc_id);
             report.result = EKA2L1MountResultSuccess;
         }
@@ -2251,7 +2266,7 @@ namespace eka2l1::ios {
         if (report.result == EKA2L1MountResultSuccess) {
             std::optional<eka2l1::drive> entry = io->get_drive_entry(drive_e);
             eka2l1::ios::set_mounted_card(_state.get(),
-                entry.has_value() ? entry->real_path : std::string(), attrib, mmc_id);
+                entry.has_value() ? entry->real_path : eka2l1::host_path(), attrib, mmc_id);
         }
     }
 
@@ -2317,7 +2332,8 @@ namespace eka2l1::ios {
     if (!manager->package(uid, 0) && manager->augmentations(uid).empty()) {
         eka2l1::package::object *owner = manager->package_owning_executable(uid);
         if (!owner && reg) {
-            owner = manager->package_owning_file(reg->mandatory_info.app_path.to_std_string(nullptr));
+            const eka2l1::guest_path app_path(reg->mandatory_info.app_path.to_std_string(nullptr));
+            owner = manager->package_owning_file(app_path);
         }
         if (owner) {
             package_uid = owner->uid;
@@ -2354,15 +2370,15 @@ namespace eka2l1::ios {
         return;
     }
     auto *io = _state->symsys->get_io_system();
-    if (!io || !io->exist(reg->rsc_path)) {
+    if (!io || !io->exist(eka2l1::guest_path{reg->rsc_path})) {
         return;
     }
-    const std::u16string app_path = reg->mandatory_info.app_path.to_std_string(nullptr);
+    const eka2l1::guest_path app_path(reg->mandatory_info.app_path.to_std_string(nullptr));
     if (app_path.empty() || io->exist(app_path)) {
         return;
     }
 
-    const std::u16string rsc_path = reg->rsc_path;
+    const eka2l1::guest_path rsc_path(reg->rsc_path);
     io->delete_entry(rsc_path);
 
     auto *alserv = eka2l1::ios::get_applist_server(_state->symsys->get_kernel_system());
@@ -2388,26 +2404,24 @@ namespace eka2l1::ios {
     if (!reg || reg->land_drive == drive_z || reg->rsc_path.empty()) {
         return NO;
     }
-    const std::u16string rsc_path = reg->rsc_path;
-    const std::u16string app_dir = eka2l1::file_directory(rsc_path, true);
+    const eka2l1::guest_path rsc_path(reg->rsc_path);
+    const eka2l1::guest_path app_dir(eka2l1::file_directory(rsc_path, true));
 
     // Only ever delete a per-app folder. A registration sitting directly in the
     // Apps root (or anywhere else) is not ours to remove wholesale.
-    const std::string app_dir_utf8 = eka2l1::common::lowercase_string(
-        eka2l1::common::ucs2_to_utf8(app_dir));
-    const std::string apps_root = "\\system\\apps\\";
-    const std::size_t apps_root_pos = app_dir_utf8.find(apps_root);
-    if ((apps_root_pos == std::string::npos)
-        || (app_dir_utf8.find_first_not_of("\\/", apps_root_pos + apps_root.length()) == std::string::npos)) {
+    const auto apps_root = u"\\system\\apps\\";
+    const std::size_t apps_root_pos = app_dir.find(apps_root);
+    if (apps_root_pos == eka2l1::guest_path::npos
+        || app_dir.find_first_not_of(u"\\/", apps_root_pos + std::char_traits<char16_t>::length(apps_root)) == eka2l1::guest_path::npos) {
         return NO;
     }
 
     auto *io = _state->symsys->get_io_system();
-    std::optional<std::u16string> real_dir = io ? io->get_raw_path(app_dir) : std::nullopt;
+    std::optional<eka2l1::host_path> real_dir = io ? io->get_raw_path(app_dir) : std::nullopt;
     if (!real_dir || real_dir->empty()) {
         return NO;
     }
-    const std::string real_dir_utf8 = eka2l1::common::ucs2_to_utf8(*real_dir);
+    const eka2l1::host_path &real_dir_utf8 = *real_dir;
     if (!eka2l1::common::exists(real_dir_utf8) || !eka2l1::common::delete_folder(real_dir_utf8)) {
         return NO;
     }
@@ -3115,7 +3129,7 @@ static constexpr std::uint8_t k_unlimited_refresh_rate = 240;
     if ([backgroundImage isKindOfClass:NSString.class]) {
         {
             std::lock_guard<std::mutex> background_lock(_state->background_mutex);
-            _state->conf.background_image = backgroundImage.UTF8String;
+            _state->conf.background_image = eka2l1::host_path(backgroundImage.UTF8String);
             _state->background_dirty = true;
         }
         [self scheduleRePresent];
@@ -3249,7 +3263,7 @@ static constexpr std::uint8_t k_unlimited_refresh_rate = 240;
     if (!alserv) return nil;
     auto *reg = alserv->get_registration(uid);
     if (!reg) return nil;
-    const std::string cache_root = _state->caches_root.empty() ? std::string()
+    const eka2l1::host_path cache_root = _state->caches_root.empty() ? eka2l1::host_path()
         : eka2l1::add_path(_state->caches_root, "icons");
     auto icon = alserv->get_host_icon(*reg, cache_root);
     if (!icon) return nil;

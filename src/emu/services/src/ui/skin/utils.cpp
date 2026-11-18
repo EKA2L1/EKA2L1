@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <common/cvt.h>
 #include <common/path.h>
 #include <common/pystr.h>
@@ -58,7 +59,7 @@ namespace eka2l1::epoc {
     std::optional<epoc::pid> pick_first_skin(eka2l1::io_system *io) {
         for (drive_number drv = drive_a; drv <= drive_z; drv++) {
             if (io->get_drive_entry(drv)) {
-                std::u16string skin_folder_path(1, drive_to_char16(drv));
+                guest_path skin_folder_path(std::u16string(1, drive_to_char16(drv)));
                 skin_folder_path += u":";
                 skin_folder_path += SKIN_FOLDER;
 
@@ -90,14 +91,14 @@ namespace eka2l1::epoc {
                             continue;
                         }
 
-                        auto dir_skn = io->open_dir(common::utf8_to_ucs2(eka2l1::add_path(entry->full_path, "/*.skn")), {}, io_attrib_include_file);
+                        auto dir_skn = io->open_dir(eka2l1::guest_path{common::utf8_to_ucs2(entry->full_path.join(u"*.skn"))}, {}, io_attrib_include_file);
                         if (!dir_skn) {
                             continue;
                         }
 
                         if (dir_skn->peek_next_entry().has_value()) {
                             // Separate this entry name to PID and return
-                            return string_to_pid(entry->name);
+                            return string_to_pid(entry->name.utf8());
                         }
                     }
                 }
@@ -107,10 +108,10 @@ namespace eka2l1::epoc {
         return std::nullopt;
     }
 
-    std::optional<std::u16string> find_skin_file(eka2l1::io_system *io, const epoc::pid skin_pid) {
+    std::optional<guest_path> find_skin_file(eka2l1::io_system *io, const epoc::pid skin_pid) {
         for (drive_number drv = drive_a; drv <= drive_z; drv++) {
             if (io->get_drive_entry(drv)) {
-                std::u16string skin_folder_path(1, drive_to_char16(drv));
+                guest_path skin_folder_path(std::u16string(1, drive_to_char16(drv)));
                 skin_folder_path += u":";
                 skin_folder_path += SKIN_FOLDER;
                 skin_folder_path += pid_to_string(skin_pid);
@@ -128,7 +129,7 @@ namespace eka2l1::epoc {
                 // Pick the first one that's not a folder
                 while (auto entry = dir->get_next_entry()) {
                     if (entry->type == io_component_type::file) {
-                        return common::utf8_to_ucs2(entry->full_path);
+                        return entry->full_path;
                     }
                 }
             }
@@ -137,15 +138,15 @@ namespace eka2l1::epoc {
         return std::nullopt;
     }
 
-    std::optional<std::u16string> get_resource_path_of_skin(eka2l1::io_system *io, const epoc::pid skin_pid) {
-        std::u16string formal_path = u"\\resource\\skins\\";
+    std::optional<guest_path> get_resource_path_of_skin(eka2l1::io_system *io, const epoc::pid skin_pid) {
+        guest_path formal_path(u"\\resource\\skins\\");
         formal_path += pid_to_string(skin_pid);
 
         // Stepping one below drive_a would leave the enum's value range.
         for (int drv_index = drive_z; drv_index >= drive_a; drv_index--) {
             const drive_number drv = static_cast<drive_number>(drv_index);
             if (io->get_drive_entry(drv)) {
-                std::u16string skin_folder_path(1, drive_to_char16(drv));
+                guest_path skin_folder_path(std::u16string(1, drive_to_char16(drv)));
                 skin_folder_path += u":";
                 skin_folder_path += formal_path;
                 skin_folder_path += u"\\";

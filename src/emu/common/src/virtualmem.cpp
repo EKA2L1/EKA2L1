@@ -18,6 +18,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <common/cvt.h>
 #include <common/platform.h>
 #include <common/virtualmem.h>
@@ -192,7 +193,8 @@ namespace eka2l1::common {
 #endif
     }
 
-    void *map_file(const std::string &file_name, const prot perm, const std::size_t size, const bool is_private) {
+    void *map_file(const host_path &path, const prot perm, const std::size_t size, const bool is_private) {
+        const auto &file_name = path.utf8();
 #if EKA2L1_PLATFORM(WIN32)
         DWORD desired_access = 0;
         DWORD share_mode = 0;

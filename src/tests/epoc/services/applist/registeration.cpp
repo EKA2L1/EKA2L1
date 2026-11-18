@@ -30,7 +30,7 @@ using namespace eka2l1;
 
 static bool read_resource_from_file(const char *name, const int id, std::vector<std::uint8_t> &dat,
     bool confirm_sig = false) {
-    symfile f = eka2l1::physical_file_proxy(name, READ_MODE | BIN_MODE);
+    symfile f = eka2l1::physical_file_proxy(eka2l1::host_path{name}, READ_MODE | BIN_MODE);
 
     if (!f) {
         return false;

@@ -34,7 +34,7 @@ static std::string ucs2_setting_value(const std::string &value) {
 TEST_CASE("ini_loader_no_default_meta_range", "centralrepo") {
     central_repo repo;
 
-    REQUIRE(parse_new_centrep_ini("centralrepoassets/EFFF0000.ini", repo));
+    REQUIRE(parse_new_centrep_ini(eka2l1::host_path{"centralrepoassets/EFFF0000.ini"}, repo));
     REQUIRE(repo.entries.size() == 3);
 
     central_repo_entry *e1 = repo.find_entry(12);
@@ -56,7 +56,7 @@ TEST_CASE("ini_loader_no_default_meta_range", "centralrepo") {
 TEST_CASE("ini_loader_meta_default_and_range", "centralrepo") {
     central_repo repo;
 
-    REQUIRE(parse_new_centrep_ini("centralrepoassets/EFFF0001.ini", repo));
+    REQUIRE(parse_new_centrep_ini(eka2l1::host_path{"centralrepoassets/EFFF0001.ini"}, repo));
     REQUIRE(repo.entries.size() == 2);
 
     central_repo_entry *e1 = repo.find_entry(5);
@@ -72,7 +72,7 @@ TEST_CASE("ini_loader_meta_default_and_range", "centralrepo") {
 TEST_CASE("ini_loader_all_value_types", "centralrepo") {
     central_repo repo;
 
-    REQUIRE(parse_new_centrep_ini("centralrepoassets/EFFF0002.ini", repo));
+    REQUIRE(parse_new_centrep_ini(eka2l1::host_path{"centralrepoassets/EFFF0002.ini"}, repo));
     REQUIRE(repo.owner_uid == 0x10203040);
     REQUIRE(repo.entries.size() == 12);
 

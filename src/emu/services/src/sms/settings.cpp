@@ -159,7 +159,7 @@ namespace eka2l1::epoc::sms {
         // 1st. Supply data to SMS settings dat file, and modify the MSV store file that contains
         static const char16_t *SMS_SETTING_DIR = u"C:\\System\\Data\\";
         static const char16_t *SMS_SETTING_PATH = u"C:\\System\\Data\\sms_settings.dat";
-        symfile setting_read_file = io->open_file(SMS_SETTING_PATH, READ_MODE | BIN_MODE);
+        symfile setting_read_file = io->open_file(eka2l1::guest_path{SMS_SETTING_PATH}, READ_MODE | BIN_MODE);
         
         sms_settings settings;
 
@@ -200,9 +200,9 @@ namespace eka2l1::epoc::sms {
             setting_read_file->close();
         }
 
-        io->create_directories(SMS_SETTING_DIR);
+        io->create_directories(eka2l1::guest_path{SMS_SETTING_DIR});
 
-        setting_read_file = io->open_file(SMS_SETTING_PATH, WRITE_MODE | BIN_MODE);
+        setting_read_file = io->open_file(eka2l1::guest_path{SMS_SETTING_PATH}, WRITE_MODE | BIN_MODE);
         if (!setting_read_file) {
             LOG_ERROR(SERVICE_SMS, "Unable to create SMS setting file!");
         } else {

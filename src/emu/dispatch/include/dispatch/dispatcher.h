@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <cstdint>
 
 #include <dispatch/management.h>
@@ -155,7 +156,7 @@ namespace eka2l1::dispatch {
 
         // The clip a recorder utility opened; its format applies to the destination settings.
         std::unique_ptr<drivers::clip_writer> record_clip_;
-        std::string record_clip_path_;
+        host_path record_clip_path_;
 
         std::unique_ptr<drivers::audio_input_stream> record_stream_;
         std::mutex record_lock_;
@@ -165,10 +166,10 @@ namespace eka2l1::dispatch {
         explicit dsp_epoc_player(dsp_manager *manager, const std::uint32_t init_flags);
         ~dsp_epoc_player() override;
 
-        bool open_record_clip(const std::string &host_path);
+        bool open_record_clip(const eka2l1::host_path &file_path);
 
         // Captured audio is encoded as it is flushed; the guest watches the clip grow to estimate free space.
-        bool start_recording(drivers::audio_driver *driver, const std::string &host_path);
+        bool start_recording(drivers::audio_driver *driver, const eka2l1::host_path &file_path);
         bool flush_recording();
         bool stop_recording();
         bool is_recording() const {
@@ -415,7 +416,7 @@ namespace eka2l1::dispatch {
         void set_graphics_driver(drivers::graphics_driver *driver);
         void shutdown(drivers::graphics_driver *driver);
 
-        bool patch_libraries(const std::u16string &path, const patch_info *patches,
+        bool patch_libraries(const guest_path &path, const patch_info *patches,
             const std::size_t patch_count);
 
         void resolve(eka2l1::system *sys, const std::uint32_t function_ord);

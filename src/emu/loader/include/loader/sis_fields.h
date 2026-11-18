@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <common/types.h>
 #include <common/buffer.h>
 
@@ -418,7 +419,7 @@ namespace eka2l1 {
             void switch_stream();
             void set_alternative_stream(std::shared_ptr<common::ro_stream> astream);
 
-            explicit sis_parser(const std::string name);
+            explicit sis_parser(const host_path &name);
             explicit sis_parser(std::shared_ptr<common::ro_stream> stream);
 
             sis_header parse_header();

@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <qt/utils.h>
 
 #include <config/app_settings.h>
@@ -183,8 +184,8 @@ QString epocver_to_symbian_readable_name(const epocver ver) {
     return QString("Unknown");
 }
 
-std::optional<std::string> get_mmc_id_from_path(const std::string &path) {
-    std::string folder_name = eka2l1::filename(path);
+std::optional<std::string> get_mmc_id_from_path(const eka2l1::host_path &path) {
+    std::string folder_name = path.filename().utf8();
     if (folder_name.empty()) {
         return std::nullopt;
     }

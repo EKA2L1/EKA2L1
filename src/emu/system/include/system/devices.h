@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <common/types.h>
 
 #include <mutex>
@@ -155,7 +156,7 @@ namespace eka2l1 {
 
     /*! \brief drives/<lowercase firmware code>/, the folder holding a device's isolated drives.
     */
-    std::string device_isolated_drives_folder(const std::string &firmware_code);
+    host_path device_isolated_drives_folder(const std::string &firmware_code);
 
     /*! \brief The folder backing one of a device's writable drives (C, D or E).
      *
@@ -163,7 +164,7 @@ namespace eka2l1 {
      *          drives/<lowercase firmware code>/<drive>/ for a device with isolated
      *          drives, drives/<drive>/ otherwise.
     */
-    std::string device_drive_folder(const std::string &firmware_code, const bool isolated_drives, const drive_number drv);
+    host_path device_drive_folder(const std::string &firmware_code, const bool isolated_drives, const drive_number drv);
 
     /*! \brief Storage folders that belong to one device alone.
      *
@@ -178,8 +179,8 @@ namespace eka2l1 {
      * \returns Folder paths relative to the emulator's data root, each with a
      *          trailing separator. They are not guaranteed to exist.
     */
-    std::vector<std::string> per_device_storage_paths(const std::string &firmware_code);
+    std::vector<host_path> per_device_storage_paths(const std::string &firmware_code);
 
     // Delete every folder per_device_storage_paths() lists under the given data root.
-    void delete_device_storage(const std::string &storage, const std::string &firmware_code);
+    void delete_device_storage(const host_path &storage, const std::string &firmware_code);
 }

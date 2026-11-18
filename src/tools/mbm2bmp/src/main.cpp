@@ -40,7 +40,7 @@ int main(int argc, char **argv) {
         return -1;
     }
 
-    const char *target_mbm = argv[1];
+    const eka2l1::host_path target_mbm{argv[1]};
 
     // Map the file into memory as read-only
     std::uint8_t *mbm_ptr = reinterpret_cast<std::uint8_t *>(eka2l1::common::map_file(target_mbm));
@@ -59,9 +59,9 @@ int main(int argc, char **argv) {
     }
 
     for (std::size_t i = 0; i < mbmf.trailer.count; i++) {
-        std::string bmp_name = eka2l1::replace_extension(eka2l1::filename(target_mbm), "");
+        eka2l1::host_path bmp_name = eka2l1::replace_extension(eka2l1::filename(target_mbm), "");
         bmp_name += "_" + eka2l1::common::to_string(i) + ".bmp";
-        if (!mbmf.save_bitmap_to_file(i, bmp_name.c_str())) {
+        if (!mbmf.save_bitmap_to_file(i, bmp_name)) {
             LOG_ERROR(eka2l1::SYSTEM, "Can't save bitmap number {}!", i);
         }
     }

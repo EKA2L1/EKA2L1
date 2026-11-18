@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <scripting/platform.h>
 #include <scripting/thread.h>
 
@@ -49,7 +50,7 @@ namespace eka2l1::scripting {
         std::uint32_t read_dword(const std::uint32_t addr);
         std::uint64_t read_qword(const std::uint32_t addr);
 
-        std::string get_executable_path();
+        guest_path get_executable_path();
         std::string get_name();
 
         std::unique_ptr<scripting::thread> first_thread();

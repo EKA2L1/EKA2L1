@@ -1046,33 +1046,23 @@ private final class DebugControlServer {
             return path
         }
         if normalized.hasPrefix("/") { return normalized }
-        let root: String
+        let documents = normalized.lowercased().hasPrefix("docs:")
         let rest: String
-        if normalized.lowercased().hasPrefix("docs:") {
-            root = documentsRoot()
+        if documents {
             rest = String(normalized.dropFirst(5))
-        } else if normalized.count >= 2, normalized[normalized.index(after: normalized.startIndex)] == ":",
-                  let letter = normalized.first?.lowercased().utf16.first {
-            guard let drive = EKA2L1Emulator.shared().currentDeviceDrivePath(letter) else {
-                throw APIError.badRequest("drive \(normalized.prefix(2)) is not available (C, D, E of a booted device)")
-            }
-            root = drive
+        } else if normalized.count >= 2, normalized[normalized.index(after: normalized.startIndex)] == ":" {
             rest = String(normalized.dropFirst(2))
         } else {
             throw APIError.badRequest("`path` must be C:/…, docs:/… or an absolute host path")
         }
-        var resolved = root
-        for component in rest.split(separator: "/").map(String.init) where !component.isEmpty && component != "." {
-            guard component != ".." else { throw APIError.badRequest("`..` is not allowed") }
-            let exact = (resolved as NSString).appendingPathComponent(component)
-            if FileManager.default.fileExists(atPath: exact) {
-                resolved = exact
-            } else if let match = (try? FileManager.default.contentsOfDirectory(atPath: resolved))?
-                        .first(where: { $0.caseInsensitiveCompare(component) == .orderedSame }) {
-                resolved = (resolved as NSString).appendingPathComponent(match)
-            } else {
-                resolved = exact
-            }
+        let components = rest.split(separator: "/").map(String.init).filter { !$0.isEmpty && $0 != "." }
+        guard !components.contains("..") else { throw APIError.badRequest("`..` is not allowed") }
+        if documents {
+            return components.reduce(URL(fileURLWithPath: documentsRoot())) { $0.appendingPathComponent($1) }.path
+        }
+        let guest = "\(normalized.prefix(2))/\(components.joined(separator: "/"))"
+        guard let resolved = EKA2L1Emulator.shared().resolveDeviceStoragePath(guest) else {
+            throw APIError.badRequest("drive \(normalized.prefix(2)) is not available (C, D, E of a booted device)")
         }
         return resolved
     }

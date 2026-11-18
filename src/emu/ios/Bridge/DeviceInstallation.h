@@ -14,7 +14,7 @@
 
 namespace eka2l1::ios {
     inline bool commit_device_install(device_manager &manager, device imported,
-        const std::string &staging, const std::string &storage, bool &discard_staging) {
+        const host_path &staging, const host_path &storage, bool &discard_staging) {
         namespace fs = std::filesystem;
         std::unique_lock<std::mutex> guard(manager.lock);
         const std::string code = common::lowercase_string(imported.firmware_code);
@@ -34,10 +34,10 @@ namespace eka2l1::ios {
             bool installed = false;
         };
         std::array<directory_swap, 2> swaps{{
-            {fs::path(staging) / "drives/z" / code, fs::path(storage) / "drives/z" / code,
-                fs::path(staging) / "previous-z"},
-            {fs::path(staging) / "roms" / code, fs::path(storage) / "roms" / code,
-                fs::path(staging) / "previous-rom"}}};
+            {fs::path(staging.utf8()) / "drives/z" / code, fs::path(storage.utf8()) / "drives/z" / code,
+                fs::path(staging.utf8()) / "previous-z"},
+            {fs::path(staging.utf8()) / "roms" / code, fs::path(storage.utf8()) / "roms" / code,
+                fs::path(staging.utf8()) / "previous-rom"}}};
         std::error_code rom_error;
         if (!fs::is_regular_file(swaps[1].source / "SYM.ROM", rom_error)
             || fs::file_size(swaps[1].source / "SYM.ROM", rom_error) == 0 || rom_error) {
@@ -82,7 +82,7 @@ namespace eka2l1::ios {
 
         if (imported.isolated_drives) {
             std::error_code error;
-            fs::create_directories(fs::path(storage) / device_isolated_drives_folder(firmware_code), error);
+            fs::create_directories(fs::path(storage.join(device_isolated_drives_folder(firmware_code)).utf8()), error);
             if (error) {
                 rollback();
                 return false;

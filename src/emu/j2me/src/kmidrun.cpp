@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <j2me/applist.h>
 #include <j2me/common.h>
 #include <j2me/kmidrun.h>
@@ -64,17 +65,17 @@ namespace eka2l1::j2me {
         return newstr;
     }
 
-    static std::string build_path_to_jar_dir(const app_entry &entry) {
-        return fmt::format("C:\\system\\midp\\{}\\untrusted\\{}\\{}\\", reduce_special_character_in_name(entry.author_),
-            reduce_special_character_in_name(entry.name_), reduce_special_character_in_name(entry.version_));
+    static guest_path build_path_to_jar_dir(const app_entry &entry) {
+        return guest_path::from_utf8(fmt::format("C:\\system\\midp\\{}\\untrusted\\{}\\{}\\", reduce_special_character_in_name(entry.author_),
+            reduce_special_character_in_name(entry.name_), reduce_special_character_in_name(entry.version_)));
     }
 
-    static std::string build_path_to_jar(const app_entry &entry) {
-        return build_path_to_jar_dir(entry) + fmt::format("{}.jar", reduce_special_character_in_name(entry.name_));
+    static guest_path build_path_to_jar(const app_entry &entry) {
+        return build_path_to_jar_dir(entry) + guest_path::from_utf8(fmt::format("{}.jar", reduce_special_character_in_name(entry.name_)));
     }
 
     bool launch_through_kmidrun(system *sys, const app_entry &entry, std::function<void(kernel::process*)> exit_cb) {
-        std::u16string jar_path = common::utf8_to_ucs2(build_path_to_jar(entry));
+        guest_path jar_path = build_path_to_jar(entry);
         io_system *io = sys->get_io_system();
 
         if (!io->exist(jar_path)) {
@@ -82,8 +83,7 @@ namespace eka2l1::j2me {
             return false;
         }
 
-        std::u16string jad_path = jar_path;
-        jad_path.back() = 'd';
+        guest_path jad_path = jar_path.with_extension(u".jad");
         
         if (!io->exist(jad_path)) {
             auto f_jad = io->open_file(jad_path, WRITE_MODE | BIN_MODE);
@@ -92,7 +92,7 @@ namespace eka2l1::j2me {
                 return false;
             }
 
-            std::string jar_real_path = common::ucs2_to_utf8(io->get_raw_path(jar_path).value());
+            host_path jar_real_path(io->get_raw_path(jar_path).value());
             std::string jad_content;
 
             install_error err = create_jad_fake_link_from_jar(jar_real_path, jad_content);
@@ -107,10 +107,10 @@ namespace eka2l1::j2me {
 
         // PortNumber*MidletUIDInDecimal*MidletTitle*JARPath*JADPATH*
         const std::u16string args = std::u16string(u"7049*268437956*") + common::utf8_to_ucs2(entry.original_title_)
-            + u"*" + jar_path + u"*" + jad_path + u"*";
+            + u"*" + jar_path.utf16() + u"*" + jad_path.utf16() + u"*";
 
         kernel_system *kern = sys->get_kernel_system();
-        kernel::process *pr = kern->spawn_new_process(u"Z:\\system\\programs\\kmidrun.exe", args);
+        kernel::process *pr = kern->spawn_new_process(guest_path(u"Z:\\system\\programs\\kmidrun.exe"), args);
 
         if (!pr) {
             LOG_ERROR(J2ME, "Can't launch KMidRun for running Midlet!");
@@ -123,7 +123,7 @@ namespace eka2l1::j2me {
         return true;
     }
 
-    install_error install_for_kmidrun(system *sys, app_list *applist, const std::string &path, app_entry &entry_info) {
+    install_error install_for_kmidrun(system *sys, app_list *applist, const host_path &path, app_entry &entry_info) {
         if (!common::exists(path)) {
             return INSTALL_ERROR_JAR_NOT_FOUND;
         }
@@ -132,7 +132,8 @@ namespace eka2l1::j2me {
         int midp_ver;
         std::string jad_content;
 
-        install_error fin_err = get_app_entry(path, entry, jad_content, midp_ver);
+        std::string icon_entry;
+        install_error fin_err = get_app_entry(path, entry, jad_content, midp_ver, icon_entry);
         if (fin_err != INSTALL_ERROR_JAR_SUCCESS) {
             return fin_err;
         }
@@ -141,8 +142,8 @@ namespace eka2l1::j2me {
             return INSTALL_ERROR_JAR_ONLY_MIDP1_SUPPORTED;
         }
 
-        std::string real_icon_path;
-        if (extract_icon_to_store(path, *sys->get_config(), entry, real_icon_path) == INSTALL_ERROR_JAR_SUCCESS) {
+        host_path real_icon_path;
+        if (extract_icon_to_store(path, *sys->get_config(), entry, icon_entry, real_icon_path) == INSTALL_ERROR_JAR_SUCCESS) {
             entry.icon_path_ = real_icon_path;
         }
 
@@ -154,18 +155,18 @@ namespace eka2l1::j2me {
         entry.id_ = add_res;
         entry_info = entry;
 
-        std::u16string path_to_dir = common::utf8_to_ucs2(build_path_to_jar_dir(entry));
+        guest_path path_to_dir = build_path_to_jar_dir(entry);
         io_system *io = sys->get_io_system();
 
         io->create_directories(path_to_dir);
-        std::optional<std::u16string> raw_path_to_dir = io->get_raw_path(path_to_dir);
+        std::optional<host_path> raw_path_to_dir = io->get_raw_path(path_to_dir);
 
         if (raw_path_to_dir.has_value()) {
-            std::string path_to_real = common::ucs2_to_utf8(raw_path_to_dir.value()) + fmt::format("{}.jar", reduce_special_character_in_name(entry.name_));
+            host_path path_to_real = raw_path_to_dir->join(fmt::format("{}.jar", reduce_special_character_in_name(entry.name_)));
             common::copy_file(path, path_to_real, true);
 
             // Change to jad
-            path_to_real.back() = 'd';
+            path_to_real = path_to_real.with_extension(".jad");
             FILE *f = common::open_c_file(path_to_real, "wb");
             if (f) {
                 fwrite(jad_content.c_str(), 1, jad_content.size(), f);
@@ -179,14 +180,14 @@ namespace eka2l1::j2me {
     void uninstall_for_kmidrun(system *sys, app_list *applist, const app_entry &entry) {
         applist->remove_entry(entry.id_);
 
-        const std::string icon_real_path = eka2l1::add_path(sys->get_config()->storage, entry.icon_path_);
+        const host_path icon_real_path(eka2l1::add_path(sys->get_config()->storage, entry.icon_path_));
         common::remove(icon_real_path);
 
-        std::u16string jar_path = common::utf8_to_ucs2(build_path_to_jar(entry));
+        guest_path jar_path = build_path_to_jar(entry);
         io_system *io = sys->get_io_system();
 
         io->delete_entry(jar_path);
-        jar_path.back() = 'd';
+        jar_path = jar_path.with_extension(u".jad");
 
         io->delete_entry(jar_path);
     }

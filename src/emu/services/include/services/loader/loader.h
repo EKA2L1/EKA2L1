@@ -29,7 +29,7 @@
 #include <vector>
 
 namespace eka2l1 {
-    std::vector<std::u16string> get_library_search_paths(const std::u16string &search_list);
+    std::vector<guest_path> get_library_search_paths(const std::u16string &search_list);
 
     const std::string get_loader_server_name_through_epocver(const epocver ver);
 

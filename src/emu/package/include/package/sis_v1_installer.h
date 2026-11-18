@@ -1,5 +1,6 @@
 #pragma once
 
+#include <common/path_types.h>
 #include <common/types.h>
 #include <package/common.h>
 #include <package/registry.h>
@@ -27,7 +28,7 @@ namespace eka2l1::loader {
      * 
      * \returns True on success.
      */
-    bool install_sis_old(const std::u16string &path, io_system *io, drive_number drive, package::object &info,
+    bool install_sis_old(const host_path &path, io_system *io, drive_number drive, package::object &info,
         choose_lang_func choose_lang_cb, var_value_resolver_func resolver_cb, progress_changed_callback progress_cb,
         cancel_requested_callback cancel_cb, const bool stub = false);
 }

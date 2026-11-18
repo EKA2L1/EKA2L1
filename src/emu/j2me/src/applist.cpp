@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <j2me/applist.h>
 #include <j2me/common.h>
 
@@ -78,8 +79,8 @@ namespace eka2l1::j2me {
     }
 
     void app_list::create_and_initialize_database(const config::state &conf) {
-        common::create_directories(eka2l1::add_path(conf.storage, APPLIST_DB_DIR));
-        const std::string path_to_db = eka2l1::add_path(conf.storage, APPLIST_DB_NAME);
+        common::create_directories(eka2l1::host_path{eka2l1::add_path(conf.storage, APPLIST_DB_DIR)});
+        const host_path path_to_db(eka2l1::add_path(conf.storage, APPLIST_DB_NAME));
         const int result = sqlite3_open(path_to_db.c_str(), &database_);
         if (result != SQLITE_OK) {
             LOG_ERROR(J2ME, "Failed to open new J2ME app database connection!");
@@ -279,7 +280,7 @@ namespace eka2l1::j2me {
         entry.id_ = sqlite3_column_int(stmt, 0);
         entry.name_ = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1));
         entry.author_ = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 2));
-        entry.icon_path_ =  reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3));
+        entry.icon_path_ = host_path(reinterpret_cast<const char*>(sqlite3_column_text(stmt, 3)));
         entry.title_ = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 4));
         entry.original_title_ = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 5));
         entry.version_ =  reinterpret_cast<const char*>(sqlite3_column_text(stmt, 6));
@@ -340,8 +341,8 @@ namespace eka2l1::j2me {
     void app_list::flush() {
         reset();
         
-        common::create_directories(eka2l1::add_path(conf_.storage, APPLIST_DB_DIR));
-        const std::string path_to_db = eka2l1::add_path(conf_.storage, APPLIST_DB_NAME);
+        common::create_directories(eka2l1::host_path{eka2l1::add_path(conf_.storage, APPLIST_DB_DIR)});
+        const host_path path_to_db(eka2l1::add_path(conf_.storage, APPLIST_DB_NAME));
         const int result = sqlite3_open(path_to_db.c_str(), &database_);
 
         if (result != SQLITE_OK) {

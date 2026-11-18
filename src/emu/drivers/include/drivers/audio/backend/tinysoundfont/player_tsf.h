@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <drivers/audio/player.h>
 #include <drivers/audio/stream.h>
 
@@ -54,14 +55,14 @@ namespace eka2l1::drivers {
 
     protected:
         std::size_t data_callback(std::int16_t *buffer, const std::size_t frame_count);
-        tsf *load_bank_from_file(const std::string &path);
+        tsf *load_bank_from_file(const host_path &path);
 
     public:
         explicit player_tsf(audio_driver *driver);
         ~player_tsf() override;
 
         void call_song_done();
-        void call_bank_change(const midi_bank_type type, const std::string &new_path);
+        void call_bank_change(const midi_bank_type type, const host_path &new_path);
 
         bool play() override;
         bool record() override;

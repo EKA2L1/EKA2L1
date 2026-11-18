@@ -257,8 +257,7 @@ namespace eka2l1 {
                         // EKA1 GUI applications run inside AppRun.exe. Once its .app image is
                         // attached, that image determines the POSIX current drive rather than
                         // AppRun's Z: drive.
-                        if (common::lowercase_ucs2_string(eka2l1::path_extension(code_segment->get_full_path()))
-                            == u".app") {
+                        if (code_segment->get_full_path().has_extension(u".app")) {
                             existing_server->second->update_executable_path(code_segment->get_full_path());
                         }
                         return;
@@ -423,8 +422,8 @@ namespace eka2l1 {
 
             kernel_system *kern = sys->get_kernel_system();
             for (const boot_process &process : BOOT_PROCESSES) {
-                if (sys->get_io_system()->exist(process.path)) {
-                    kern->start_boot_server(process.path, process.wait_for_start);
+                if (sys->get_io_system()->exist(eka2l1::guest_path{process.path})) {
+                    kern->start_boot_server(guest_path(process.path), process.wait_for_start);
                 }
             }
         }

@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -59,5 +60,5 @@ namespace eka2l1::scripting {
         void set_entry_point_disabled();
     };
 
-    std::unique_ptr<scripting::codeseg> load_codeseg(const std::string &virt_path);
+    std::unique_ptr<scripting::codeseg> load_codeseg(const guest_path &virt_path);
 }

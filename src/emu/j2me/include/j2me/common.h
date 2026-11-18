@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <cstdint>
 #include <cstdio>
 #include <string>
@@ -41,7 +42,7 @@ namespace eka2l1::j2me {
 
     struct app_entry;
 
-    install_error create_jad_fake_link_from_jar(const std::string &jar_path, std::string &jad_content);
-    install_error get_app_entry(const std::string &jar_path, app_entry &entry, std::string &jad_content, int &midp_ver);
-    install_error extract_icon_to_store(const std::string &jar_path, const config::state &conf, const app_entry &entry, std::string &final_real_path);
+    install_error create_jad_fake_link_from_jar(const host_path &jar_path, std::string &jad_content);
+    install_error get_app_entry(const host_path &jar_path, app_entry &entry, std::string &jad_content, int &midp_ver, std::string &icon_entry);
+    install_error extract_icon_to_store(const host_path &jar_path, const config::state &conf, const app_entry &entry, const std::string &icon_entry, host_path &final_real_path);
 }

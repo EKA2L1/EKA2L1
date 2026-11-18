@@ -21,6 +21,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <services/fbs/fbs.h>
 #include <services/fbs/linked_font_config.h>
 
@@ -1079,7 +1080,7 @@ namespace eka2l1 {
     }
 
     void fbscli::add_font_file_store(service::ipc_context *ctx) {
-        std::optional<std::u16string> filename = ctx->get_argument_value<std::u16string>(0);
+        std::optional<guest_path> filename = ctx->get_path_argument(0);
         if (!filename.has_value()) {
             ctx->complete(epoc::error_argument);
             return;
@@ -1130,7 +1131,7 @@ namespace eka2l1 {
 
     void fbs_server::load_fonts_from_directory(eka2l1::io_system *io, eka2l1::directory *folder) {
         while (auto entry = folder->get_next_entry()) {
-            add_single_font(io, common::utf8_to_ucs2(entry->full_path));
+            add_single_font(io, entry->full_path);
         }
     }
 
@@ -1166,7 +1167,7 @@ namespace eka2l1 {
         return false;
     }
 
-    bool fbs_server::add_single_font(eka2l1::io_system *io, const std::u16string &path) {
+    bool fbs_server::add_single_font(eka2l1::io_system *io, const guest_path &path) {
         symfile f = io->open_file(path, READ_MODE | BIN_MODE);
 
         if (!f) {
@@ -1185,9 +1186,9 @@ namespace eka2l1 {
     // Fonts the user imported through a frontend. They live in <storage>/fonts,
     // outside the guest drives, so one import serves every installed device and
     // survives a device being reinstalled (which rewrites its Z drive).
-    void fbs_server::load_custom_fonts(const std::string &storage) {
-        const std::string fonts_folder_path = eka2l1::add_path(storage, "fonts");
-        auto folder = common::make_directory_iterator(fonts_folder_path, "");
+    void fbs_server::load_custom_fonts(const host_path &storage) {
+        const host_path fonts_folder_path = eka2l1::add_path(storage, "fonts");
+        auto folder = common::make_directory_iterator(eka2l1::host_path{fonts_folder_path}, "");
 
         if (!folder || !folder->is_valid()) {
             return;
@@ -1200,10 +1201,10 @@ namespace eka2l1 {
                 continue;
             }
 
-            const std::string font_path = eka2l1::add_path(fonts_folder_path, entry.name);
+            const host_path font_path = eka2l1::add_path(fonts_folder_path, entry.name);
             common::ro_std_file_stream stream(font_path, true);
 
-            if (stream.valid() && add_font(stream, entry.name, true)) {
+            if (stream.valid() && add_font(stream, entry.name.utf8(), true)) {
                 LOG_TRACE(SERVICE_FBS, "Loaded custom font {}", font_path);
             }
         }
@@ -1216,13 +1217,13 @@ namespace eka2l1 {
         for (int drv_index = drive_z; drv_index >= drive_a; drv_index--) {
             const drive_number drv = static_cast<drive_number>(drv_index);
             if (io->get_drive_entry(drv)) {
-                load_linked_fonts_from_directory(io, std::u16string{ drive_to_char16(drv) } + (kern->is_eka1() ? u":\\System\\Fonts\\" : u":\\Resource\\Fonts\\"));
+                load_linked_fonts_from_directory(io, guest_path(std::u16string{ drive_to_char16(drv) } + (kern->is_eka1() ? u":\\System\\Fonts\\" : u":\\Resource\\Fonts\\")));
             }
         }
     }
 
-    void fbs_server::load_linked_fonts_from_directory(eka2l1::io_system *io, const std::u16string &fonts_folder_path) {
-        const std::u16string link_path = fonts_folder_path + u"link.ini";
+    void fbs_server::load_linked_fonts_from_directory(eka2l1::io_system *io, const guest_path &fonts_folder_path) {
+        const guest_path link_path(fonts_folder_path + u"link.ini");
         symfile f = io->open_file(link_path, READ_MODE | BIN_MODE);
 
         if (!f) {
@@ -1253,8 +1254,8 @@ namespace eka2l1 {
         for (int drv_index = drive_z; drv_index >= drive_a; drv_index--) {
             const drive_number drv = static_cast<drive_number>(drv_index);
             if (io->get_drive_entry(drv)) {
-                const std::u16string fonts_folder_path = std::u16string{ drive_to_char16(drv) } + (kern->is_eka1() ? u":\\System\\Fonts\\" : u":\\Resource\\Fonts\\");
-                auto folder = io->open_dir(fonts_folder_path, {}, io_attrib_include_file);
+                const guest_path fonts_folder_path(std::u16string{ drive_to_char16(drv) } + (kern->is_eka1() ? u":\\System\\Fonts\\" : u":\\Resource\\Fonts\\"));
+                auto folder = io->open_dir(eka2l1::guest_path{fonts_folder_path}, {}, io_attrib_include_file);
 
                 if (folder) {
                     LOG_TRACE(SERVICE_FBS, "Found font folder: {}", common::ucs2_to_utf8(fonts_folder_path));

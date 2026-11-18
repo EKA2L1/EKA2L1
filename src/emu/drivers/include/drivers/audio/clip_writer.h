@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -42,7 +43,7 @@ namespace eka2l1::drivers {
      */
     class clip_writer {
     protected:
-        std::string path_;
+        host_path path_;
         clip_record_format format_;
 
         // Whether the clip held audio when it was probed, and how many frames of it.
@@ -51,7 +52,7 @@ namespace eka2l1::drivers {
         std::uint64_t written_frames_ = 0;
 
     public:
-        explicit clip_writer(const std::string &path)
+        explicit clip_writer(const host_path &path)
             : path_(path) {
         }
 
@@ -86,5 +87,5 @@ namespace eka2l1::drivers {
      * \returns Null if the extension names a format this build cannot encode, or the clip already
      *          holds audio of another format.
      */
-    std::unique_ptr<clip_writer> new_clip_writer(const std::string &path);
+    std::unique_ptr<clip_writer> new_clip_writer(const host_path &path);
 }

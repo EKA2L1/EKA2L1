@@ -19,6 +19,7 @@
  */
 
 #pragma once
+#include <common/path_types.h>
 
 #include <common/container.h>
 #include <common/types.h>
@@ -107,7 +108,7 @@ namespace eka2l1 {
         // A patch image loaded in place of the original whenever the original is loaded.
         struct image_replacement {
             std::string name_;
-            std::string image_path_;
+            host_path image_path_;
             std::uint32_t req_uid2_ = 0;
             std::uint32_t req_uid3_ = 0;
             bool need_dest_rom_ = false;
@@ -149,7 +150,7 @@ namespace eka2l1 {
             std::map<address, address> trampoline_lookup_;
             std::vector<codeseg_ptr> loading_codesegs_;
 
-            codeseg_ptr import_e32img(loader::e32img *img, const std::u16string &path, const address force_code_addr = 0);
+            codeseg_ptr import_e32img(loader::e32img *img, const guest_path &path, const address force_code_addr = 0);
 
         protected:
             const std::uint8_t *entry_points_call_routine_;
@@ -162,11 +163,11 @@ namespace eka2l1 {
             void apply_trick_or_treat_algo();
             void jump_trampoline_through_svc();
 
-            std::optional<loader::e32img> load_replacement_image(const std::u16string &path, file *original);
+            std::optional<loader::e32img> load_replacement_image(const guest_path &path, file *original);
 
         public:
             std::unordered_map<sid, epoc_import_func> svc_funcs_;
-            std::vector<std::u16string> search_paths;
+            std::vector<guest_path> search_paths;
 
             explicit lib_manager(kernel_system *kern, io_system *ios, memory_system *mems);
             ~lib_manager();
@@ -192,20 +193,20 @@ namespace eka2l1 {
              * 
              * Else it will just load E32 Image or a ROM image and returns a codeseg
             */
-            codeseg_ptr load(const std::u16string &name);
+            codeseg_ptr load(const guest_path &name);
 
             // Whether the ROM's kernel keys DLL TLS by handle and DLL UID. Early Symbian 9.1 keys by handle only.
             bool is_dll_tls_keyed_by_uid();
 
             // Search through all drives, which will parse all existing file
             std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>>
-            try_search_and_parse(const std::u16string &path, std::u16string *full_path = nullptr);
+            try_search_and_parse(const guest_path &path, guest_path *full_path = nullptr);
 
-            codeseg_ptr load_as_e32img(loader::e32img &img, const std::u16string &path = u"");
-            codeseg_ptr load_as_romimg(loader::romimg &img, const std::u16string &path = u"", const bool only_shell = false);
+            codeseg_ptr load_as_e32img(loader::e32img &img, const guest_path &path = {});
+            codeseg_ptr load_as_romimg(loader::romimg &img, const guest_path &path = {}, const bool only_shell = false);
             bool stage_rom_image_outside_core(common::ro_stream *stream, address code_address);
 
-            void load_patch_libraries(const std::string &patch_folder);
+            void load_patch_libraries(const host_path &patch_folder);
             bool try_apply_patch(codeseg_ptr original);
 
             system *get_sys();
@@ -215,7 +216,7 @@ namespace eka2l1 {
     namespace epoc {
         struct lib_info;
 
-        bool get_image_info(hle::lib_manager *mngr, const std::u16string &name, epoc::lib_info &linfo);
+        bool get_image_info(hle::lib_manager *mngr, const guest_path &name, epoc::lib_info &linfo);
         std::int32_t get_image_info_from_stream(common::ro_stream *stream, epoc::lib_info &linfo);
     }
 }

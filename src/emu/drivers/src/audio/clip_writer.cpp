@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <drivers/audio/clip_writer.h>
 #include <drivers/audio/player.h>
 
@@ -30,8 +31,8 @@
 #include <cstring>
 
 namespace eka2l1::drivers {
-    std::unique_ptr<clip_writer> new_clip_writer_amr(const std::string &path);
-    std::unique_ptr<clip_writer> new_clip_writer_aac_mp4(const std::string &path);
+    std::unique_ptr<clip_writer> new_clip_writer_amr(const host_path &path);
+    std::unique_ptr<clip_writer> new_clip_writer_aac_mp4(const host_path &path);
 
     static bool contains(const std::vector<std::uint32_t> &values, const std::uint32_t value) {
         return std::find(values.begin(), values.end(), value) != values.end();
@@ -125,7 +126,7 @@ namespace eka2l1::drivers {
         }
 
     public:
-        explicit clip_writer_wav(const std::string &path)
+        explicit clip_writer_wav(const host_path &path)
             : clip_writer(path) {
             format_.sample_rate = 8000;
             format_.channels = 1;
@@ -138,7 +139,7 @@ namespace eka2l1::drivers {
 
         // Returns false if the clip holds audio this writer cannot append to.
         bool probe() {
-            std::FILE *file = common::open_c_file(path_, "rb");
+            std::FILE *file = common::open_c_file(eka2l1::host_path{path_}, "rb");
             if (!file) {
                 return true;
             }
@@ -226,9 +227,9 @@ namespace eka2l1::drivers {
                 return false;
             }
 
-            file_ = common::open_c_file(path_, "r+b");
+            file_ = common::open_c_file(eka2l1::host_path{path_}, "r+b");
             if (!file_) {
-                file_ = common::open_c_file(path_, "w+b");
+                file_ = common::open_c_file(eka2l1::host_path{path_}, "w+b");
             }
 
             if (!file_) {
@@ -278,8 +279,8 @@ namespace eka2l1::drivers {
         }
     };
 
-    std::unique_ptr<clip_writer> new_clip_writer(const std::string &path) {
-        const std::string extension = common::lowercase_string(eka2l1::path_extension(path));
+    std::unique_ptr<clip_writer> new_clip_writer(const host_path &path) {
+        const std::string extension = common::lowercase_string(path.extension().utf8());
 
         if (extension == ".amr") {
             return new_clip_writer_amr(path);
@@ -294,12 +295,12 @@ namespace eka2l1::drivers {
     }
 
 #ifndef EKA2L1_HAS_FFMPEG
-    std::unique_ptr<clip_writer> new_clip_writer_amr(const std::string &path) {
+    std::unique_ptr<clip_writer> new_clip_writer_amr(const host_path &path) {
         LOG_ERROR(DRIVER_AUD, "Recording AMR into {} needs FFmpeg, which this build lacks", path);
         return nullptr;
     }
 
-    std::unique_ptr<clip_writer> new_clip_writer_aac_mp4(const std::string &path) {
+    std::unique_ptr<clip_writer> new_clip_writer_aac_mp4(const host_path &path) {
         LOG_ERROR(DRIVER_AUD, "Recording AAC into {} needs FFmpeg, which this build lacks", path);
         return nullptr;
     }

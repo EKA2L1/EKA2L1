@@ -20,6 +20,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <common/types.h>
 
 #include <functional>
@@ -113,7 +114,7 @@ namespace eka2l1 {
 
         config::state *conf_;
         config::app_settings *settings_;
-        std::string cache_root_;
+        host_path cache_root_;
 
         explicit system_create_components();
     };
@@ -150,7 +151,7 @@ namespace eka2l1 {
         void prepare_reschedule();
 
         void startup();
-        bool load(const std::u16string &path, const std::u16string &cmd_arg);
+        bool load(const guest_path &path, const std::u16string &cmd_arg);
 
         int loop();
 
@@ -176,7 +177,7 @@ namespace eka2l1 {
 
         void set_config(config::state *conf);
 
-        void mount(drive_number drv, const drive_media media, std::string path, const std::uint32_t attrib = io_attrib_none);
+        void mount(drive_number drv, const drive_media media, host_path path, const std::uint32_t attrib = io_attrib_none);
 
         // Mount C, D and E on the current device's folders. They follow later device
         // switches, unless replaced in the meantime (a game card on E, for instance).
@@ -184,14 +185,14 @@ namespace eka2l1 {
         bool mount_device_drive(const drive_number drv);
 
         // Host folder backing drive C, D or E of the current device; empty without a device.
-        std::string get_device_drive_path(const drive_number drv);
-        zip_mount_error mount_game_zip(drive_number drv, const drive_media media, const std::string &zip_path, const std::uint32_t base_attrib = io_attrib_none,
+        host_path get_device_drive_path(const drive_number drv);
+        zip_mount_error mount_game_zip(drive_number drv, const drive_media media, const host_path &zip_path, const std::uint32_t base_attrib = io_attrib_none,
             progress_changed_callback progress_cb = nullptr, cancel_requested_callback cancel_cb = nullptr);
 
         // Installs a classic N-Gage game card onto drive E. `card_path` is either the card folder
         // itself or an archive holding it (anything libarchive reads - .zip, .7z), told apart by
         // whether the path is a directory.
-        ngage_game_card_install_error install_ngage_game_card(const std::string &card_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb = nullptr);
+        ngage_game_card_install_error install_ngage_game_card(const host_path &card_path, std::function<void(std::string)> game_name_found_cb, progress_changed_callback progress_cb = nullptr);
         bool get_ngage_game_info_mounted(apa_app_registry &result);
 
         bool reset();
@@ -200,7 +201,7 @@ namespace eka2l1 {
         bool unpause();
 
         bool set_device(const std::uint8_t idx);
-        int install_package(std::u16string path, drive_number drv);
+        int install_package(host_path path, drive_number drv);
 
         void request_exit();
         bool should_exit() const;

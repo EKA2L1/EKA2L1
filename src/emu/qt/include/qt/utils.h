@@ -19,6 +19,7 @@
 
 #pragma once
 
+#include <common/path_types.h>
 #include <optional>
 #include <services/ui/cap/oom_app.h>
 
@@ -58,4 +59,4 @@ std::optional<eka2l1::akn_running_app_info> get_active_app_info(eka2l1::system *
 QMessageBox::StandardButton make_dialog_with_checkbox_and_choices(const QString &title, const QString &text, const QString &checkbox_text, const bool checkbox_state, dialog_checkbox_toggled_callback checkbox_callback, const bool two_choices);
 QString get_emulator_window_title();
 QString epocver_to_symbian_readable_name(const epocver ver);
-std::optional<std::string> get_mmc_id_from_path(const std::string &path);
+std::optional<std::string> get_mmc_id_from_path(const eka2l1::host_path &path);

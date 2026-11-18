@@ -73,8 +73,8 @@ namespace eka2l1 {
 
         bool read_query_buttons(eka2l1::system *sys, std::int32_t resource, std::array<epoc::notifier::message_query_button, 2> &buttons) {
             auto *io = sys->get_io_system();
-            const auto path = utils::get_nearest_lang_file(io, u"Z:\\resource\\avkon.rsc", sys->get_system_language(), drive_z);
-            auto file = io->open_file(path, READ_MODE | BIN_MODE);
+            const auto path = utils::get_nearest_lang_file(io, eka2l1::guest_path{u"Z:\\resource\\avkon.rsc"}, sys->get_system_language(), drive_z);
+            auto file = io->open_file(eka2l1::guest_path{path}, READ_MODE | BIN_MODE);
             if (!file) {
                 return false;
             }

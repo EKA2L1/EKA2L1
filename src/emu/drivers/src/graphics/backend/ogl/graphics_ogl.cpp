@@ -299,15 +299,15 @@ namespace eka2l1::drivers {
     static constexpr const char *pen_f_path = "resources//pen.frag";
 
     void ogl_graphics_driver::do_init() {
-        auto sprite_norm_vertex_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(sprite_norm_v_path), shader_module_type::vertex);
-        auto brush_vertex_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(brush_v_path), shader_module_type::vertex);
-        auto pen_vertex_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(pen_v_path), shader_module_type::vertex);
+        auto sprite_norm_vertex_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(eka2l1::host_path{sprite_norm_v_path}), shader_module_type::vertex);
+        auto brush_vertex_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(eka2l1::host_path{brush_v_path}), shader_module_type::vertex);
+        auto pen_vertex_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(eka2l1::host_path{pen_v_path}), shader_module_type::vertex);
 
-        auto sprite_norm_fragment_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(sprite_norm_f_path), shader_module_type::fragment);
-        auto sprite_mask_fragment_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(sprite_mask_f_path), shader_module_type::fragment);
-        auto sprite_upscale_fragment_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(sprite_upscaled_f_path), shader_module_type::fragment);
-        auto brush_fragment_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(brush_f_path), shader_module_type::fragment);
-        auto pen_fragment_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(pen_f_path), shader_module_type::fragment);
+        auto sprite_norm_fragment_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(eka2l1::host_path{sprite_norm_f_path}), shader_module_type::fragment);
+        auto sprite_mask_fragment_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(eka2l1::host_path{sprite_mask_f_path}), shader_module_type::fragment);
+        auto sprite_upscale_fragment_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(eka2l1::host_path{sprite_upscaled_f_path}), shader_module_type::fragment);
+        auto brush_fragment_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(eka2l1::host_path{brush_f_path}), shader_module_type::fragment);
+        auto pen_fragment_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(eka2l1::host_path{pen_f_path}), shader_module_type::fragment);
 
         sprite_program = std::make_unique<ogl_shader_program>();
         mask_program = std::make_unique<ogl_shader_program>();
@@ -422,10 +422,11 @@ namespace eka2l1::drivers {
 
         std::string extra_header = "";
 
+        host_path shader_file;
         if ((pending_upscale_shader_ == "default") || (pending_upscale_shader_ == "Default")) {
-            pending_upscale_shader_ = sprite_upscaled_f_path;
+            shader_file = host_path(sprite_upscaled_f_path);
         } else {
-            pending_upscale_shader_ = "resources//upscale//" + pending_upscale_shader_ + ".frag";
+            shader_file = host_path("resources/upscale/").join(pending_upscale_shader_ + ".frag");
             if (is_gles) {
                 extra_header = "#version 300 es\n";
             } else {
@@ -433,8 +434,8 @@ namespace eka2l1::drivers {
             }
         }
 
-        auto sprite_norm_vertex_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(sprite_norm_v_path), shader_module_type::vertex);
-        auto sprite_upscale_fragment_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(pending_upscale_shader_), shader_module_type::fragment, extra_header);
+        auto sprite_norm_vertex_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(eka2l1::host_path{sprite_norm_v_path}), shader_module_type::vertex);
+        auto sprite_upscale_fragment_module = std::make_unique<ogl_shader_module>(eka2l1::runtime_resource_path(shader_file), shader_module_type::fragment, extra_header);
 
         auto upscale_program_new = std::make_unique<ogl_shader_program>();
 

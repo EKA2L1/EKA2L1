@@ -79,7 +79,7 @@ namespace eka2l1::service {
             epoc::apa::command_line launch_cmdline;
             launch_cmdline.do_it_newarch(seri);
 
-            std::u16string run_command = launch_cmdline.executable_path_;
+            std::u16string run_command = launch_cmdline.executable_path_.utf16();
 
             if (run_command.find(MAPPED_EXECUTABLE_HEAD_STRING) == 0) {
                 run_command = run_command.substr(MAPPED_EXECUTABLE_HEAD_STRING_LENGTH + 1,

@@ -20,6 +20,7 @@
 #pragma once
 
 #include <common/configure.h>
+#include <common/path_types.h>
 #include <config/options.inl>
 
 #include <array>
@@ -93,8 +94,8 @@ namespace eka2l1::config {
     struct keybind_profile {
         std::vector<keybind> keybinds;
 
-        void serialize(const std::string &file = KEYBIND_DEFAULT_FILE);
-        void deserialize(const std::string &file = KEYBIND_DEFAULT_FILE);
+        void serialize(const host_path &file = host_path(KEYBIND_DEFAULT_FILE));
+        void deserialize(const host_path &file = host_path(KEYBIND_DEFAULT_FILE));
     };
 
     struct friend_address {
@@ -104,8 +105,8 @@ namespace eka2l1::config {
 
     struct state {
         float ui_scale{ 1.0 };
-        std::string bkg_path;
-        std::string font_path;
+        host_path bkg_path;
+        host_path font_path;
 
         bool log_read{ false };
         bool log_write{ false };
@@ -132,7 +133,7 @@ namespace eka2l1::config {
         int gdb_port{ 24689 };
         int internet_bluetooth_port{ 35689 };
 
-        std::string storage = "data"; // Set this to dot, avoid making it absolute
+        host_path storage{ "data" }; // Set this to dot, avoid making it absolute
 
         bool enable_srv_rights{ true };
         bool enable_srv_sa{ true };
@@ -167,12 +168,12 @@ namespace eka2l1::config {
         std::string screen_buffer_sync_string{ "preferred" };
         std::string device_display_name{ "EKA2L1" };
         std::string midi_backend_string{ "tsf" };
-        std::string hsb_bank_path{ "resources/defaultbank.hsb" };
-        std::string sf2_bank_path{ "resources/defaultbank.sf2" };
+        host_path hsb_bank_path{ "resources/defaultbank.hsb" };
+        host_path sf2_bank_path{ "resources/defaultbank.sf2" };
         std::string log_filter{ DEFAULT_LOG_FILTERING };
         std::string bt_central_server_url{ "btnetplay.12z1.com" };
         host_map hosts;
-        std::string background_image{ "" };
+        host_path background_image{ "" };
 
         screen_buffer_sync_option screen_buffer_sync{ screen_buffer_sync_option_preferred };
         midi_backend_type midi_backend{ MIDI_BACKEND_TSF };

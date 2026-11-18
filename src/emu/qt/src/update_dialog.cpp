@@ -445,7 +445,7 @@ void update_dialog::on_new_update_download_finished(QNetworkReply *reply) {
 #if EKA2L1_PLATFORM(WIN32)
         std::vector<eka2l1::common::archive_entry_info> entries;
 
-        if (!eka2l1::common::list_archive(UPDATE_FILE_STORE_PATH, entries)) {
+        if (!eka2l1::common::list_archive(eka2l1::host_path{UPDATE_FILE_STORE_PATH}, entries)) {
             update_encounter_error(tr("Downloaded update is not in zip format!"));
             return;
         }
@@ -458,17 +458,17 @@ void update_dialog::on_new_update_download_finished(QNetworkReply *reply) {
 
         // Only the updater folder is unpacked here, straight over the running installation: the updater
         // is what performs the rest of the update, so it has to be the new build before it is launched.
-        const bool unpacked = eka2l1::common::extract_archive(UPDATE_FILE_STORE_PATH,
-            [&](const eka2l1::common::archive_entry_info &entry) -> std::string {
+        const bool unpacked = eka2l1::common::extract_archive(eka2l1::host_path{UPDATE_FILE_STORE_PATH},
+            [&](const eka2l1::common::archive_entry_info &entry) -> eka2l1::host_path {
                 if (entry.is_directory) {
-                    return std::string();
+                    return {};
                 }
 
                 const std::string head = entry.path.substr(0,
                     eka2l1::common::min(strlen(UPDATER_FOLDER), entry.path.length()));
 
                 if (eka2l1::common::compare_ignore_case(head.c_str(), UPDATER_FOLDER) != 0) {
-                    return std::string();
+                    return {};
                 }
 
                 const std::string real_filename = eka2l1::filename(entry.path);
@@ -477,7 +477,7 @@ void update_dialog::on_new_update_download_finished(QNetworkReply *reply) {
                     updater_patched = true;
                 }
 
-                return entry.path;
+                return eka2l1::host_path{entry.path};
             },
             nullptr, nullptr);
 

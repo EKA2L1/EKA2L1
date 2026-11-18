@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
 
     const char *target_gdr = argv[1];
 
-    eka2l1::common::ro_std_file_stream stream(target_gdr, true);
+    eka2l1::common::ro_std_file_stream stream(eka2l1::host_path{target_gdr}, true);
     std::optional<eka2l1::loader::firmware::fpsx_header> header = eka2l1::loader::firmware::read_fpsx_header(stream);
 
     if (!header.has_value()) {

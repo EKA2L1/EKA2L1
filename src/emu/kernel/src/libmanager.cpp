@@ -17,6 +17,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <common/path_types.h>
 #include <common/algorithm.h>
 #include <common/armemitter.h>
 #include <common/cvt.h>
@@ -105,7 +106,7 @@ namespace eka2l1::hle {
     static bool pe_fix_up_iat(memory_system *mem, hle::lib_manager &mngr, const std::uint32_t iat_offset_from_codebase,
         loader::e32img_import_block &import_block, uint32_t &crr_idx, codeseg_ptr &parent_codeseg) {
         const std::string dll_name8 = get_real_dll_name(import_block.dll_name);
-        const std::u16string dll_name = common::utf8_to_ucs2(dll_name8);
+        const guest_path dll_name(guest_path::from_utf8(dll_name8));
 
         codeseg_ptr cs = mngr.load(dll_name);
 
@@ -140,10 +141,10 @@ namespace eka2l1::hle {
         // LOG_INFO(KERNEL, "Fixup for: {}", import_block.dll_name);
 
         const std::string dll_name8 = get_real_dll_name(import_block.dll_name);
-        const std::u16string dll_name = common::utf8_to_ucs2(dll_name8);
+        const guest_path dll_name(guest_path::from_utf8(dll_name8));
 
         // Use parent drive first
-        const std::u16string dll_name_with_drive = eka2l1::root_name(parent_cs->get_full_path(), true) + dll_name;
+        const guest_path dll_name_with_drive(eka2l1::root_name(parent_cs->get_full_path(), true) + dll_name);
 
         codeseg_ptr cs = mngr.load(dll_name_with_drive);
 
@@ -198,7 +199,7 @@ namespace eka2l1::hle {
         return true;
     }
 
-    static std::string get_e32_codeseg_name_from_path(const std::u16string &path) {
+    static std::string get_e32_codeseg_name_from_path(const guest_path &path) {
         std::string res = common::lowercase_string(common::ucs2_to_utf8(eka2l1::filename(path)));
         if (!res.empty() && res.back() == '\0') {
             res.pop_back();
@@ -207,7 +208,7 @@ namespace eka2l1::hle {
         return res;
     }
 
-    codeseg_ptr lib_manager::import_e32img(loader::e32img *img, const std::u16string &path, const address force_code_addr) {
+    codeseg_ptr lib_manager::import_e32img(loader::e32img *img, const guest_path &path, const address force_code_addr) {
         std::uint32_t data_seg_size = img->header.data_size + img->header.bss_size;
         kernel::codeseg_create_info info;
 
@@ -436,7 +437,7 @@ namespace eka2l1::hle {
         return "";
     }
 
-    void lib_manager::load_patch_libraries(const std::string &patch_folder) {
+    void lib_manager::load_patch_libraries(const host_path &patch_folder) {
         auto iterator = common::make_directory_iterator(patch_folder, "*.map");
         if (!iterator) {
             return;
@@ -447,20 +448,20 @@ namespace eka2l1::hle {
         patches_.clear();
         replacements_.clear();
 
-        std::vector<std::string> patch_image_paths;
+        std::vector<host_path> patch_image_paths;
 
         while (iterator->next_entry(entry) == 0) {
-            const std::string original_map_name = eka2l1::replace_extension(eka2l1::filename(entry.name), "");
-            const std::string patch_map_path = eka2l1::add_path(patch_folder, entry.name);
+            const std::string original_map_name = entry.name.filename().with_extension("").utf8();
+            const host_path patch_map_path(eka2l1::add_path(patch_folder, entry.name));
 
             epocver start_ver = kern_->get_epoc_version();
 
-            std::string patch_dll_map;
+            host_path patch_dll_map;
 
             // Look for map file. These describes the export maps.
             // This function will replace original ROM subroutines with route to these functions.
             common::ini_file map_file_parser;
-            map_file_parser.load(patch_map_path.c_str());
+            map_file_parser.load(patch_map_path);
 
             const auto requirements_node = map_file_parser.find("requirements");
             auto *requirements = requirements_node && requirements_node->get_node_type() == common::INI_NODE_SECTION
@@ -603,7 +604,7 @@ namespace eka2l1::hle {
         const std::uint32_t last_add_mode = additional_mode_;
         additional_mode_ = 0;
 
-        std::unordered_map<std::string, codeseg_ptr> patch_segs_lookup;
+        std::unordered_map<host_path, codeseg_ptr> patch_segs_lookup;
 
         for (std::size_t i = 0; i < patch_image_paths.size(); i++) {
             codeseg_ptr patch_seg = nullptr;
@@ -613,7 +614,7 @@ namespace eka2l1::hle {
                 patch_seg = lookup_result->second;
             } else {
                 // We want to patch ROM image though. Do it.
-                auto e32imgfile = eka2l1::physical_file_proxy(patch_image_paths[i], READ_MODE | BIN_MODE);
+                auto e32imgfile = eka2l1::physical_file_proxy(host_path(patch_image_paths[i]), READ_MODE | BIN_MODE);
                 eka2l1::ro_file_stream image_data_stream(e32imgfile.get());
 
                 // Try to load them to ROM section
@@ -644,7 +645,7 @@ namespace eka2l1::hle {
 
                 // Relocate! Import
                 std::memcpy(code_chunk->host_base(), e32img->data.data() + e32img->header.code_offset, e32img->header.code_size);
-                patch_seg = import_e32img(&e32img.value(), common::utf8_to_ucs2(patch_image_paths[i]),
+                patch_seg = import_e32img(&e32img.value(), guest_path::from_utf8(patch_image_paths[i].filename().utf8()),
                     code_chunk->base(nullptr).ptr_address());
 
                 patch_segs_lookup.emplace(patch_image_paths[i], patch_seg);
@@ -722,7 +723,7 @@ namespace eka2l1::hle {
             && (plugin.debug == host.debug) && (plugin.build_key == host.build_key);
     }
 
-    std::optional<loader::e32img> lib_manager::load_replacement_image(const std::u16string &path, file *original) {
+    std::optional<loader::e32img> lib_manager::load_replacement_image(const guest_path &path, file *original) {
         const std::string name = common::ucs2_to_utf8(eka2l1::filename(path));
 
         auto replacement = std::find_if(replacements_.begin(), replacements_.end(), [&](const image_replacement &candidate) {
@@ -783,7 +784,7 @@ namespace eka2l1::hle {
             return std::nullopt;
         }
 
-        symfile replacement_file = eka2l1::physical_file_proxy(replacement->image_path_, READ_MODE | BIN_MODE);
+        symfile replacement_file = eka2l1::physical_file_proxy(host_path(replacement->image_path_), READ_MODE | BIN_MODE);
         if (!replacement_file) {
             return std::nullopt;
         }
@@ -834,7 +835,7 @@ namespace eka2l1::hle {
     void lib_manager::apply_trick_or_treat_algo() {
         for (auto &patch : patches_) {
             // Auto apply
-            codeseg_ptr cc = load(common::utf8_to_ucs2(patch.name_));
+            codeseg_ptr cc = load(guest_path::from_utf8(patch.name_));
         }
     }
 
@@ -892,7 +893,7 @@ namespace eka2l1::hle {
         return rom_drv_;
     }
 
-    codeseg_ptr lib_manager::load_as_e32img(loader::e32img &img, const std::u16string &path) {
+    codeseg_ptr lib_manager::load_as_e32img(loader::e32img &img, const guest_path &path) {
         if (auto seg = kern_->get_by_name<kernel::codeseg>(get_e32_codeseg_name_from_path(path))) {
             return seg;
         }
@@ -936,7 +937,7 @@ namespace eka2l1::hle {
         return true;
     }
 
-    codeseg_ptr lib_manager::load_as_romimg(loader::romimg &romimg, const std::u16string &path, const bool only_shell) {
+    codeseg_ptr lib_manager::load_as_romimg(loader::romimg &romimg, const guest_path &path, const bool only_shell) {
         if (auto seg = kern_->pull_codeseg_by_ep(romimg.header.entry_point)) {
             return seg;
         }
@@ -1052,17 +1053,17 @@ namespace eka2l1::hle {
 
                             // Load new romimage and add dependency
                             loader::romimg rimg = *loader::parse_romimg(reinterpret_cast<common::ro_stream *>(&buf_stream), mem_, kern_->get_epoc_version());
-                            std::u16string path_to_dll;
+                            guest_path path_to_dll;
 
                             for (std::size_t i = 0; i < search_paths.size(); i++) {
                                 if (!eka2l1::has_root_name(search_paths[i])) {
-                                    path_to_dll = drive_to_char16(get_drive_rom());
+                                    path_to_dll = guest_path(std::u16string(1, drive_to_char16(get_drive_rom())));
                                     path_to_dll += u':';
                                 }
 
                                 path_to_dll += search_paths[i];
 
-                                std::optional<std::u16string> dll_name = io_->find_entry_with_address(path_to_dll, romimg_addr);
+                                std::optional<guest_path> dll_name = io_->find_entry_with_address(path_to_dll, romimg_addr);
 
                                 if (dll_name) {
                                     path_to_dll += dll_name.value();
@@ -1086,11 +1087,11 @@ namespace eka2l1::hle {
         return cs;
     }
 
-    std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>> lib_manager::try_search_and_parse(const std::u16string &path, std::u16string *full_path) {
-        std::u16string lib_path = path;
+    std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>> lib_manager::try_search_and_parse(const guest_path &path, guest_path *full_path) {
+        guest_path lib_path(path);
 
         // Try opening e32img, if fail, try open as romimg
-        auto open_and_get = [&](const std::u16string &path) -> std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>> {
+        auto open_and_get = [&](const guest_path &path) -> std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>> {
             std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>>
                 result{ std::nullopt, std::nullopt };
 
@@ -1143,10 +1144,10 @@ namespace eka2l1::hle {
                     if (!org_root_name.empty()) {
                         lib_path = org_root_name;
                     } else if (!only_once) {
-                        lib_path = drvc;
+                        lib_path = guest_path(std::u16string(1, drvc));
                         lib_path += u':';
                     } else {
-                        lib_path = u"";
+                        lib_path.clear();
                     }
 
                     lib_path += search_paths[i];
@@ -1173,7 +1174,7 @@ namespace eka2l1::hle {
             // A path like \sys\bin\foo.exe names a directory but no drive. Symbian's
             // loader searches every drive for it; opening it verbatim finds nothing.
             for (drive_number drv = drive_a; drv <= drive_z; drv = static_cast<drive_number>(static_cast<int>(drv) + 1)) {
-                std::u16string candidate(1, drive_to_char16(drv));
+                guest_path candidate(std::u16string(1, drive_to_char16(drv)));
                 candidate += u':';
                 candidate += lib_path;
 
@@ -1205,7 +1206,7 @@ namespace eka2l1::hle {
                 return true;
             }
 
-            codeseg_ptr euser = load(u"Z:\\sys\\bin\\euser.dll");
+            codeseg_ptr euser = load(guest_path(u"Z:\\sys\\bin\\euser.dll"));
             if (!euser) {
                 return false;
             }
@@ -1215,20 +1216,20 @@ namespace eka2l1::hle {
         return dll_tls_keyed_by_uid_.value();
     }
 
-    codeseg_ptr lib_manager::load(const std::u16string &name) {
+    codeseg_ptr lib_manager::load(const guest_path &name) {
         bool is_driver_lib = false;
 
         if (kern_->is_eka1()) {
-            const std::u16string filename = eka2l1::filename(name);
+            const guest_path filename(eka2l1::filename(name));
             for (std::size_t i = 0; i < LDD_SKIP_LOAD_LIST.size(); i++) {
-                if (common::compare_ignore_case(filename, LDD_SKIP_LOAD_LIST[i]) == 0) {
+                if (filename == LDD_SKIP_LOAD_LIST[i]) {
                     is_driver_lib = true;
                     break;
                 }
             }
         }
     
-        auto load_depend_on_drive = [&](const std::u16string &lib_path, const bool is_driver_lib = false) -> codeseg_ptr {
+        auto load_depend_on_drive = [&](const guest_path &lib_path, const bool is_driver_lib = false) -> codeseg_ptr {
             symfile f = io_->open_file(lib_path, READ_MODE | BIN_MODE | additional_mode_);
             if (!f) {
                 LOG_ERROR(KERNEL, "Can't open {}", common::ucs2_to_utf8(lib_path));
@@ -1269,14 +1270,14 @@ namespace eka2l1::hle {
             return nullptr;
         };
 
-        std::u16string lib_path = name;
+        guest_path lib_path(name);
 
         // A Symbian absolute path can be rooted without naming a drive (for
         // example, "\\sys\\bin\\foo.dll"). Resolve that form against each
         // mounted drive instead of treating it as a complete VFS path.
         if (eka2l1::has_root_dir(lib_path) && eka2l1::root_name(lib_path, true).empty()) {
             for (drive_number drv = drive_a; drv <= drive_z; drv = static_cast<drive_number>(static_cast<int>(drv) + 1)) {
-                std::u16string candidate(1, drive_to_char16(drv));
+                guest_path candidate(std::u16string(1, drive_to_char16(drv)));
                 candidate += u':';
                 candidate += lib_path;
 
@@ -1312,10 +1313,10 @@ namespace eka2l1::hle {
                         lib_path = org_root_name;
                     } else {
                         if (!only_once) {
-                            lib_path = drvc;
+                            lib_path = guest_path(std::u16string(1, drvc));
                             lib_path += u':';
                         } else {
-                            lib_path = u"";
+                            lib_path.clear();
                         }
                     }
 
@@ -1426,7 +1427,7 @@ namespace eka2l1::hle {
             return false;
         }
 
-        codeseg_ptr userlib = load(u"euser.dll");
+        codeseg_ptr userlib = load(guest_path(u"euser.dll"));
 
         if (!userlib) {
             LOG_ERROR(KERNEL, "Unable to load euser.dll to build EKA1 bootstrap code!");
@@ -1619,11 +1620,11 @@ namespace eka2l1::hle {
         }
 
         if (kern_->is_eka1()) {
-            search_paths.push_back(u"\\System\\Libs\\");
-            search_paths.push_back(u"\\System\\Programs\\");
-            search_paths.push_back(u"\\System\\Fep\\");
+            search_paths.emplace_back(u"\\System\\Libs\\");
+            search_paths.emplace_back(u"\\System\\Programs\\");
+            search_paths.emplace_back(u"\\System\\Fep\\");
         } else {
-            search_paths.push_back(u"\\Sys\\Bin\\");
+            search_paths.emplace_back(u"\\Sys\\Bin\\");
 
             // Circumvent ROM vs ROFS issue at the moment.
             additional_mode_ = PREFER_PHYSICAL;
@@ -1656,7 +1657,7 @@ namespace eka2l1::hle {
 }
 
 namespace eka2l1::epoc {
-    bool get_image_info(hle::lib_manager *mngr, const std::u16string &name, epoc::lib_info &linfo) {
+    bool get_image_info(hle::lib_manager *mngr, const guest_path &name, epoc::lib_info &linfo) {
         auto imgs = mngr->try_search_and_parse(name);
         LOG_TRACE(KERNEL, "Get Info of {}", common::ucs2_to_utf8(name));
 

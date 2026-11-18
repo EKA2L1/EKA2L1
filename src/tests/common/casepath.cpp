@@ -36,21 +36,21 @@ namespace {
 
         explicit scratch_tree(const std::string &name)
             : root(name) {
-            common::delete_folder(root);
-            common::create_directories(root);
+            common::delete_folder(eka2l1::host_path{root});
+            common::create_directories(eka2l1::host_path{root});
         }
 
         ~scratch_tree() {
-            common::delete_folder(root);
+            common::delete_folder(eka2l1::host_path{root});
         }
 
         void make_dir(const std::string &relative) {
-            common::create_directories(eka2l1::add_path(root, relative));
+            common::create_directories(eka2l1::host_path{eka2l1::add_path(root, relative)});
         }
 
         void make_file(const std::string &relative) {
             const std::string full = eka2l1::add_path(root, relative);
-            common::create_directories(eka2l1::file_directory(full));
+            common::create_directories(eka2l1::host_path{eka2l1::file_directory(full)});
 
             std::ofstream out(full, std::ios::binary);
             out.put('x');
@@ -61,11 +61,11 @@ namespace {
     // volume that does not, the direct lookup already succeeds and every
     // assertion below would hold trivially.
     bool volume_distinguishes_case(const std::string &dir) {
-        return !common::is_path_case_insensitive(dir);
+        return !common::is_path_case_insensitive(eka2l1::host_path{dir});
     }
 
     std::size_t count_entries(const std::string &dir) {
-        auto ite = common::make_directory_iterator(dir, "");
+        auto ite = common::make_directory_iterator(eka2l1::host_path{dir}, "");
         common::dir_entry entry;
         std::size_t count = 0;
 
@@ -89,8 +89,7 @@ TEST_CASE("case_insensitive_resolve_finds_entries_stored_in_another_case", "case
 
     tree.make_file("SIMLIFE/SCRIPT/ISLAND.CFG");
 
-    const std::string resolved = common::resolve_case_insensitive_path(tree.root,
-        "simlife\\script\\island.cfg");
+    const eka2l1::host_path resolved = eka2l1::host_path{tree.root}.resolve_guest(eka2l1::guest_path::from_utf8("simlife\\script\\island.cfg"));
 
     REQUIRE(common::exists(resolved));
     REQUIRE(eka2l1::filename(resolved) == "ISLAND.CFG");
@@ -109,23 +108,21 @@ TEST_CASE("case_insensitive_resolve_keeps_the_prefix_it_did_resolve", "casepath"
     // otherwise the create lands in a directory that does not exist.
     tree.make_dir("SIMLIFE");
 
-    const std::string resolved = common::resolve_case_insensitive_path(tree.root,
-        "simlife\\save.dat");
+    const eka2l1::host_path resolved = eka2l1::host_path{tree.root}.resolve_guest(eka2l1::guest_path::from_utf8("simlife\\save.dat"));
 
     REQUIRE_FALSE(common::exists(resolved));
-    REQUIRE(common::exists(eka2l1::file_directory(resolved)));
+    REQUIRE(common::exists(eka2l1::host_path{eka2l1::file_directory(resolved)}));
     REQUIRE(eka2l1::filename(resolved) == "save.dat");
 }
 
 TEST_CASE("case_insensitive_resolve_leaves_unmatched_components_alone", "casepath") {
     scratch_tree tree("casepath_absent");
 
-    const std::string resolved = common::resolve_case_insensitive_path(tree.root,
-        "nowhere\\at\\all.dat");
+    const eka2l1::host_path resolved = eka2l1::host_path{tree.root}.resolve_guest(eka2l1::guest_path::from_utf8("nowhere\\at\\all.dat"));
 
     // Nothing matched, so the answer is just the path as asked for -- the caller
     // gets the same thing it would have built itself.
-    REQUIRE(resolved == common::resolve_case_insensitive_path(tree.root, "nowhere/at/all.dat"));
+    REQUIRE(resolved == eka2l1::host_path{tree.root}.resolve_guest(eka2l1::guest_path::from_utf8("nowhere/at/all.dat")));
     REQUIRE(eka2l1::filename(resolved) == "all.dat");
     REQUIRE_FALSE(common::exists(resolved));
 }
@@ -135,8 +132,7 @@ TEST_CASE("case_insensitive_resolve_passes_through_a_path_already_spelled_right"
 
     tree.make_file("data/entry.dat");
 
-    const std::string resolved = common::resolve_case_insensitive_path(tree.root,
-        "data\\entry.dat");
+    const eka2l1::host_path resolved = eka2l1::host_path{tree.root}.resolve_guest(eka2l1::guest_path::from_utf8("data\\entry.dat"));
 
     REQUIRE(common::exists(resolved));
     REQUIRE(eka2l1::filename(resolved) == "entry.dat");
@@ -159,8 +155,7 @@ TEST_CASE("case_insensitive_resolve_does_not_treat_wildcards_as_literal_names", 
     tree.make_file("RESOURCE/APPS/VisualRadio.r*");
 #endif
 
-    const std::string resolved = common::resolve_case_insensitive_path(tree.root,
-        "resource\\apps\\visualradio.r*");
+    const eka2l1::host_path resolved = eka2l1::host_path{tree.root}.resolve_guest(eka2l1::guest_path::from_utf8("resource\\apps\\visualradio.r*"));
     const std::string expected_prefix = eka2l1::add_path(tree.root,
         "RESOURCE/APPS/");
 
@@ -173,15 +168,15 @@ TEST_CASE("path_case_sensitivity_is_answered_per_path_not_per_build", "casepath"
     // Whatever the answer is for this volume, it has to be stable, and it has to
     // survive being asked about a path that does not exist yet -- callers ask
     // before creating.
-    const bool insensitive = common::is_path_case_insensitive(tree.root);
+    const bool insensitive = common::is_path_case_insensitive(eka2l1::host_path{tree.root});
 
-    REQUIRE(common::is_path_case_insensitive(tree.root) == insensitive);
-    REQUIRE(common::is_path_case_insensitive(eka2l1::add_path(tree.root, "not/created/yet.dat"))
+    REQUIRE(common::is_path_case_insensitive(eka2l1::host_path{tree.root}) == insensitive);
+    REQUIRE(common::is_path_case_insensitive(eka2l1::host_path{eka2l1::add_path(tree.root, "not/created/yet.dat")})
         == insensitive);
 
     // And it has to agree with what the filesystem actually does.
     tree.make_file("Probe.dat");
-    REQUIRE(common::exists(eka2l1::add_path(tree.root, "probe.dat")) == insensitive);
+    REQUIRE(common::exists(eka2l1::host_path{eka2l1::add_path(tree.root, "probe.dat")}) == insensitive);
 }
 
 TEST_CASE("copy_folder_folds_a_differently_cased_name_into_the_existing_one", "casepath") {
@@ -196,7 +191,7 @@ TEST_CASE("copy_folder_folds_a_differently_cased_name_into_the_existing_one", "c
     dest.make_file("system/apps/other/other.app");
     dest.make_file("system/libs/gameutils.dll");
 
-    REQUIRE(common::copy_folder(source.root, dest.root, 0));
+    REQUIRE(common::copy_guest_tree(eka2l1::host_path{source.root}, eka2l1::host_path{dest.root}, 0));
 
     // One system folder, not two: a second one differing only in case would hide
     // everything in the first from every case-insensitive lookup.
@@ -204,8 +199,8 @@ TEST_CASE("copy_folder_folds_a_differently_cased_name_into_the_existing_one", "c
     REQUIRE(count_entries(eka2l1::add_path(dest.root, "system")) == 2);
     REQUIRE(count_entries(eka2l1::add_path(dest.root, "system/libs")) == 1);
 
-    REQUIRE(common::exists(eka2l1::add_path(dest.root, "system/apps/other/other.app")));
-    REQUIRE(common::exists(eka2l1::add_path(dest.root, "system/apps/GAME/GAME.APP")));
+    REQUIRE(common::exists(eka2l1::host_path{eka2l1::add_path(dest.root, "system/apps/other/other.app")}));
+    REQUIRE(common::exists(eka2l1::host_path{eka2l1::add_path(dest.root, "system/apps/GAME/GAME.APP")}));
 }
 
 TEST_CASE("copy_folder_keeps_names_the_destination_has_no_counterpart_for", "casepath") {
@@ -215,9 +210,9 @@ TEST_CASE("copy_folder_keeps_names_the_destination_has_no_counterpart_for", "cas
     source.make_file("System/Apps/GAME/GAME.APP");
     dest.make_dir("system");
 
-    REQUIRE(common::copy_folder(source.root, dest.root, 0));
+    REQUIRE(common::copy_guest_tree(eka2l1::host_path{source.root}, eka2l1::host_path{dest.root}, 0));
 
     // Only "System" had something to fold onto. The rest arrives spelled as the
     // source spelled it, the way a case-preserving filesystem behaves.
-    REQUIRE(common::exists(eka2l1::add_path(dest.root, "system/Apps/GAME/GAME.APP")));
+    REQUIRE(common::exists(eka2l1::host_path{eka2l1::add_path(dest.root, "system/Apps/GAME/GAME.APP")}));
 }

@@ -117,11 +117,10 @@ namespace eka2l1::common {
 
                     directory_change change;
                     change.change_ = 0;
-                    change.filename_.assign(evt->name, evt->name + evt->len);
-
-                    // Remove null terminated characters
-                    change.filename_.erase(std::find(change.filename_.begin(), change.filename_.end(), '\0'),
-                        change.filename_.end());
+                    std::string name(evt->name, evt->len);
+                    const auto terminator = name.find('\0');
+                    if (terminator != name.npos) name.resize(terminator);
+                    change.filename_ = host_path(std::move(name));
 
                     if (evt->mask & IN_MOVED_FROM) {
                         change.change_ |= directory_change_action_moved_from;
@@ -235,7 +234,7 @@ namespace eka2l1::common {
         return filters;
     }
 
-    std::int32_t directory_watcher_impl::watch(const std::string &folder, directory_watcher_callback callback,
+    std::int32_t directory_watcher_impl::watch(const host_path &folder, directory_watcher_callback callback,
         void *callback_userdata, const std::uint32_t mask) {
         const int wd_handle = inotify_add_watch(instance_, folder.c_str(), IN_CREATE | IN_DELETE | IN_MODIFY);
 
