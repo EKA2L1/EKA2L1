@@ -142,6 +142,10 @@ target_include_directories(pugixml PUBLIC pugixml/src)
 
 # fmt
 add_subdirectory(fmt)
+if (ANDROID)
+    # fmt 11.2 uses malloc/free in a public header without including <stdlib.h>.
+    target_compile_options(fmt PUBLIC "$<$<COMPILE_LANGUAGE:CXX>:SHELL:-include stdlib.h>")
+endif()
 add_library(fmt::fmt ALIAS fmt)
 set (fmt_DIR fmt)
 
@@ -216,6 +220,10 @@ if (NOT ARCHITECTURE_ARM32 AND (NOT EKA2L1_IOS OR EKA2L1_IOS_DYNARMIC))
     # (simulator default, sideload-only device builds); App Store / TestFlight
     # builds omit it entirely.
     add_subdirectory(dynarmic)
+    if (ANDROID)
+        # Dynarmic's bundled Boost still inherits from std::unary_function.
+        target_compile_definitions(dynarmic PRIVATE _LIBCPP_ENABLE_CXX17_REMOVED_UNARY_BINARY_FUNCTION=1)
+    endif()
 endif()
 
 # lunasvg 3.5.0 (upstream submodule) bundles the plutovg rasterizer. Turn off
