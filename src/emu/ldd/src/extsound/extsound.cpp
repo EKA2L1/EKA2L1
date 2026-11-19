@@ -13,7 +13,6 @@
 
 #include <algorithm>
 #include <array>
-#include <bit>
 #include <cstring>
 #include <mutex>
 #include <vector>
@@ -24,6 +23,15 @@ namespace eka2l1::ldd {
         constexpr std::uint32_t min_buffer = 16;
         constexpr std::uint32_t max_buffer = 65536;
         constexpr std::array<std::uint32_t, 9> sample_rates{8000, 11025, 12000, 16000, 22050, 24000, 32000, 44100, 48000};
+
+        std::uint32_t sample_rate_from_mask(std::uint32_t mask) {
+            for (std::size_t i = 0; i < sample_rates.size(); ++i) {
+                if (mask == (1U << i)) {
+                    return sample_rates[i];
+                }
+            }
+            return 0;
+        }
 
         enum control : std::uint32_t {
             playback_capabilities = 0,
@@ -251,15 +259,15 @@ namespace eka2l1::ldd {
                     }
                     playback_config value;
                     std::memcpy(&value, source, sizeof(value));
-                    const auto rate_index = static_cast<std::size_t>(std::countr_zero(value.rate_mask));
-                    if (value.format != pcm16 || !std::has_single_bit(value.rate_mask) || rate_index >= sample_rates.size()
+                    const auto rate = sample_rate_from_mask(value.rate_mask);
+                    if (value.format != pcm16 || !rate
                         || value.channels < 1 || value.channels > 2
                         || value.buffer_size < min_buffer || value.buffer_size > max_buffer
                         || value.buffer_size % (sizeof(std::int16_t) * value.channels)) {
                         return epoc::error_not_supported;
                     }
                     config_ = value;
-                    rate_ = sample_rates[rate_index];
+                    rate_ = rate;
                     return epoc::error_none;
                 }
                 case playback_open:
