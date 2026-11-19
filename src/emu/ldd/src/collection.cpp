@@ -41,6 +41,8 @@ namespace eka2l1::ldd {
 #define FACTORY_REGISTER(lddname, type) \
     { lddname, factory_create_##type }
 
+    std::unique_ptr<factory> make_ext_sound_factory(system *sys);
+
     FACTORY_DECLARE(mmcif_factory)
     FACTORY_DECLARE(ecomm_factory)
     FACTORY_DECLARE(hal_factory)
@@ -51,6 +53,7 @@ namespace eka2l1::ldd {
     FACTORY_DECLARE(accelerometer_factory)
 
     static std::unordered_map<std::string, factory_instantiate_func> insts_map = {
+        { "ext_sound_drv", make_ext_sound_factory },
         FACTORY_REGISTER("gd1drv", mmcif_factory),
         FACTORY_REGISTER("ecomm", ecomm_factory),
         FACTORY_REGISTER("dhal", hal_factory),

@@ -11,6 +11,7 @@ add_library(epocldd
         include/ldd/videodriver/videodriver.h
         src/collection.cpp
         src/ecomm/ecomm.cpp
+        src/extsound/extsound.cpp
         src/ekeyb/ekeyb.cpp
         src/hal/hal.cpp
         src/mmcif/mmcif.cpp
