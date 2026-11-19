@@ -436,6 +436,15 @@ set (BUILD_TESTING OFF CACHE INTERNAL "Enable testing with ctest." FORCE)
 set(USE_LIBCPP OFF CACHE BOOL "" FORCE)
 
 add_subdirectory(uvw)
+if (ANDROID)
+    foreach (uv_target uv uv_a)
+        if (TARGET ${uv_target})
+            # Both libuv and its callers must select the same uv_barrier_t layout.
+            target_compile_options(${uv_target} PUBLIC
+                "SHELL:-include \"${CMAKE_CURRENT_SOURCE_DIR}/compat/libuv-android.h\"")
+        endif()
+    endforeach()
+endif()
 add_subdirectory(uvlooper)
 
 # UPNP
