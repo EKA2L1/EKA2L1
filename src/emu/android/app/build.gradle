@@ -24,7 +24,7 @@ android {
         targetSdkVersion 34
         versionCode 12
         versionName "0.1.0"
-        ndkVersion = '25.1.8937393'
+        ndkVersion = '30.0.16248370'
         buildConfigField "String", "GIT_HASH", "\"${getGitHash()}\""
         ndk {
             abiFilters "armeabi-v7a", "arm64-v8a"
