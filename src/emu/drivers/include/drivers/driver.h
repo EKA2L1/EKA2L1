@@ -52,13 +52,14 @@ namespace eka2l1::drivers {
     };
 
     /**
-     * \brief A linked list of command.
+     * \brief Contiguous commands passed to the driver as one batch.
      */
     struct command_list {
         command *base_;
 
         std::size_t size_;
         std::size_t max_cap_;
+        std::size_t allocated_ = 0;
 
         explicit command_list(std::size_t max_cap = 0)
             : base_(nullptr)
@@ -75,15 +76,7 @@ namespace eka2l1::drivers {
                 return nullptr;
             }
 
-            if (!base_) {
-                renew();
-            } else if (size_ >= max_cap_) {
-                command *grown = new command[max_cap_ * 2];
-                std::copy(base_, base_ + size_, grown);
-                delete[] base_;
-                base_ = grown;
-                max_cap_ *= 2;
-            }
+            reserve(size_ + 1);
 
             command *res = base_ + size_;
             res->status_ = nullptr;
@@ -93,14 +86,22 @@ namespace eka2l1::drivers {
             return res;
         }
 
-        void renew() {
-            if (max_cap_ == 0) {
+        void reserve(std::size_t count) {
+            if (count <= allocated_) {
                 return;
             }
-            // NOTE: After command all iterated, the base will be deleted.
-            // No memory leak!
-            base_ = new command[max_cap_];
-            size_ = 0;
+
+            // Most frame submissions use only a small part of the flush budget.
+            const auto limit = count > max_cap_ ? std::max(count, max_cap_ * 2) : max_cap_;
+            const auto capacity = std::clamp<std::size_t>(allocated_ ? allocated_ * 2 : 32, count, limit);
+            command *grown = new command[capacity];
+            if (base_) {
+                std::copy_n(base_, size_, grown);
+                delete[] base_;
+            }
+            base_ = grown;
+            allocated_ = capacity;
+            max_cap_ = limit;
         }
     };
 

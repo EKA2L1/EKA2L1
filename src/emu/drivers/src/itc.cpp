@@ -37,10 +37,7 @@ namespace eka2l1::drivers {
         cmd.status_ = &status;
 
         command_list cmd_list(1);
-        cmd_list.renew();
-
-        cmd_list.size_ = 1;
-        *cmd_list.base_ = cmd;
+        *cmd_list.retrieve_next() = cmd;
 
         std::unique_lock<std::mutex> ulock(drv->mut_);
         drv->submit_command_list(cmd_list);

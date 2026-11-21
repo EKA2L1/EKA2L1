@@ -39,6 +39,7 @@
 #include <mutex>
 #include <optional>
 #include <string>
+#include <utility>
 
 namespace eka2l1::drivers {
     struct command_list;
@@ -246,18 +247,13 @@ namespace eka2l1::drivers {
         }
 
         void reset_list() {
-            delete list_.base_;
+            delete[] list_.base_;
 
-            list_.size_ = 0;
-            list_.base_ = nullptr;
+            list_ = command_list(list_.max_cap_);
         }
 
         command_list retrieve_command_list() {
-            command_list copy = list_;
-            list_.base_ = nullptr;
-            list_.size_ = 0;
-
-            return copy;
+            return std::exchange(list_, command_list(list_.max_cap_));
         }
 
         command *create_next_command() {
@@ -276,11 +272,12 @@ namespace eka2l1::drivers {
                     return false;
                 }
 
+                list_.reserve(list_.size_ + another.size_);
                 std::memcpy(list_.base_ + list_.size_, another.base_, another.size_ * sizeof(command));
                 list_.size_ += another.size_;
+                delete[] another.base_;
             }
-
-            delete[] another.base_;
+            another = command_list(another.max_cap_);
             return true;
         }
 
