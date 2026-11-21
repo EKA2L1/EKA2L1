@@ -72,8 +72,7 @@ namespace eka2l1::dispatch {
     }
 
     void screen_post_transferer::wait_vsync(epoc::screen *scr, epoc::notify_info &info) {
-        std::uint64_t next_sync = 0;
-        scr->vsync(timing_, next_sync);
+        const auto next_sync = scr->vsync_delay_us();
 
         if (next_sync == 0) {
             info.complete(epoc::error_none);
@@ -218,8 +217,7 @@ namespace eka2l1::dispatch {
 
         while (scr != nullptr) {
             if (scr->number == static_cast<int>(screen_number)) {
-                std::uint64_t next_vsync_us = 0;
-                scr->vsync(sys->get_ntimer(), next_vsync_us);
+                const auto next_vsync_us = scr->vsync_delay_us();
                 if (next_vsync_us) {
                     sys->get_kernel_system()->crr_thread()->sleep(static_cast<std::uint32_t>(next_vsync_us));
                 }
