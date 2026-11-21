@@ -1179,13 +1179,18 @@ void install(backend_env &e, const program &p) {
     std::memcpy(e.mem.data() + p.addr, p.code.data(), p.code.size());
 }
 
-full_state execute(backend_env &e, const program &p) {
+full_state execute(backend_env &e, const program &p, bool single_step = false) {
     for (int i = 0; i < 15; i++) e.cpu->set_reg(i, p.init[i]);
     for (int i = 0; i < 32; i++) e.cpu->set_vfp(i, p.vfp_init[i]);
     e.cpu->set_fpscr(0);
     e.cpu->set_cpsr(p.thumb ? (0x10u | 0x20u) : 0x10u);
     e.cpu->set_pc(p.addr | (p.thumb ? 1u : 0u));
-    e.cpu->run(p.budget);
+    if (single_step) {
+        for (std::uint32_t i = 0; i < p.budget; ++i)
+            e.cpu->step();
+    } else {
+        e.cpu->run(p.budget);
+    }
     return capture(*e.cpu);
 }
 
@@ -1589,7 +1594,7 @@ struct coverage {
 // caches warm is the only way block reuse, the L1 and the ASID tag can be
 // observed at all.
 bool run_pair(const char *suite, backend_env &dc, backend_env &da, const program &p,
-    std::uint32_t seed, bool reset_caches, coverage &cov) {
+    std::uint32_t seed, bool reset_caches, coverage &cov, bool step_oracle = false) {
     seed_data_window(dc.mem, seed);
     seed_data_window(da.mem, seed);
     install(dc, p);
@@ -1612,7 +1617,7 @@ bool run_pair(const char *suite, backend_env &dc, backend_env &da, const program
     cov.accel_bulk_iterations += dyncom_loop_accel_bulk_iterations_for_test();
 
     dynarmic_reset_interpreter_fallback_for_test();
-    const full_state sa = execute(da, p);
+    const full_state sa = execute(da, p, step_oracle);
     const std::uint64_t fallback = dynarmic_interpreter_fallback_for_test();
     cov.fallback_insts += fallback;
     cov.programs++;
@@ -1820,6 +1825,42 @@ std::uint32_t suite_loops(backend_env &dc, backend_env &da, std::uint32_t base_s
 
         p.budget = iterations * 16 + 256;
         if (!run_pair("loops", dc, da, p, seed, true, cov)) failures++;
+    }
+    return failures;
+}
+
+std::uint32_t check_thumb_counted_word_loop(backend_env &dc, backend_env &da, coverage &cov) {
+    program p;
+    p.thumb = true;
+    p.kind = "loop-two-word-mix";
+    // Load two pixels, mix them using a stack coefficient and a literal mask,
+    // spill a scratch word and advance by STM writeback before the signed CMP.
+    for (const std::uint16_t hw : {
+             0x6808, 0x6814, 0x9d00, 0x4e08, 0x46ae, 0x1b00, 0x4368, 0x0a00,
+             0x1900, 0x4030, 0x4676, 0x4330, 0x9601, 0xc201, 0x3104, 0x3301,
+             0x4563, 0xdbed, 0xe7fe, 0x46c0 }) {
+        push16(p.code, hw);
+    }
+    push32(p.code, 0x00ff00ff);
+    p.init[1] = PROG_DATA_PTR - 128;
+    p.init[2] = PROG_DATA_PTR + 512;
+    p.init[3] = static_cast<std::uint32_t>(-19);
+    p.init[12] = 64;
+    p.init[13] = PROG_DATA_PTR + 1024;
+
+    std::uint32_t failures = 0;
+    for (const auto source : { PROG_DATA_PTR - 128, p.init[2] - 4, p.init[13] }) {
+        p.init[1] = source;
+        for (const std::uint32_t budget : { 35, 72, 4096 }) {
+            p.budget = budget;
+            const auto iterations_before = cov.accel_bulk_iterations;
+            if (!run_pair("counted-word-loop", dc, da, p, 0xc0123, true, cov, budget != 4096)) {
+                ++failures;
+            } else if ((cov.accel_bulk_iterations > iterations_before) != (budget != 35)) {
+                std::printf("[HARNESS BUG] unexpected counted word loop batching\n");
+                ++failures;
+            }
+        }
     }
     return failures;
 }
@@ -2301,6 +2342,7 @@ int main(int argc, char **argv) {
         { "loops ", suite_loops(*dc, *da, base_seed, programs / 2 + 4, cov) },
         { "vfp   ", suite_vfp(*dc, *da, base_seed, programs / 2 + 4, cov) },
     };
+    failures += check_thumb_counted_word_loop(*dc, *da, cov);
     failures += check_vfp_mac_cancellation(*dc, *da);
     failures += check_undefined_instructions(*dc);
     failures += check_breakpoint_resume(*dc);

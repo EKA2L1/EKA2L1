@@ -289,6 +289,7 @@ static constexpr unsigned int BBL_IDX = 196;
 static constexpr unsigned int B_COND_THUMB_IDX = 198;
 static constexpr unsigned int CMP_BBL_IDX = 206;
 static constexpr unsigned int CMP_B_COND_THUMB_IDX = 207;
+static constexpr unsigned int THUMB_COUNTED_LOOP_IDX = 208;
 
 enum accel_chain_op : std::uint8_t {
     ACC_SHL,
@@ -1021,6 +1022,8 @@ static std::uint32_t run_accel_bulk(ARMul_State *cpu, const loop_accel_inst *d, 
 #endif
     return done;
 }
+
+#include "thumb_counted_loop.inl"
 
 static unsigned int DPO(Immediate)(ARMul_State *cpu, unsigned int sht_oper) {
     unsigned int immed_8 = BITS(sht_oper, 0, 7);
@@ -1897,6 +1900,20 @@ static int InterpreterTranslateBlock(ARMul_State *cpu, std::size_t &bb_start, st
 #if defined(EKA2L1_DYNCOM_DIFFTEST)
             ++g_loop_accel_attaches;
 #endif
+        } else {
+            thumb_counted_loop counted;
+            if (analyze_thumb_counted_loop(cpu, pc_start, counted)) {
+                const auto alloc_size = sizeof(arm_inst) + sizeof(counted);
+                auto *accel_base = reinterpret_cast<arm_inst *>(&cpu->trans_cache_buf[cpu->trans_cache_buf_top]);
+                cpu->trans_cache_buf_top += (alloc_size + 7) & ~std::size_t{7};
+                accel_base->idx = THUMB_COUNTED_LOOP_IDX;
+                accel_base->cond = ConditionCode::AL;
+                accel_base->br = TransExtData::NON_BRANCH;
+                std::memcpy(accel_base->component, &counted, sizeof(counted));
+#if defined(EKA2L1_DYNCOM_DIFFTEST)
+                ++g_loop_accel_attaches;
+#endif
+            }
         }
     }
 
@@ -2446,6 +2463,8 @@ unsigned InterpreterMainLoop(ARMul_State *cpu, std::uint32_t &num_instrs) {
         goto CMP_BBL_INST;                     \
     case 207:                                  \
         goto CMP_B_COND_THUMB_INST;            \
+    case 208:                                  \
+        goto THUMB_COUNTED_LOOP_INST;          \
     }
 #endif
 
@@ -2675,10 +2694,12 @@ unsigned InterpreterMainLoop(ARMul_State *cpu, std::uint32_t &num_instrs) {
         &&END,
         &&LOOP_ACCEL_INST,
         &&CMP_BBL_INST,
-        &&CMP_B_COND_THUMB_INST };
+        &&CMP_B_COND_THUMB_INST,
+        &&THUMB_COUNTED_LOOP_INST };
     assert(InstLabel[CMP_IDX] == &&CMP_INST && InstLabel[BBL_IDX] == &&BBL_INST
         && InstLabel[B_COND_THUMB_IDX] == &&B_COND_THUMB && InstLabel[CMP_BBL_IDX] == &&CMP_BBL_INST
-        && InstLabel[CMP_B_COND_THUMB_IDX] == &&CMP_B_COND_THUMB_INST);
+        && InstLabel[CMP_B_COND_THUMB_IDX] == &&CMP_B_COND_THUMB_INST
+        && InstLabel[THUMB_COUNTED_LOOP_IDX] == &&THUMB_COUNTED_LOOP_INST);
 #endif
     arm_inst *inst_base;
     unsigned int addr;
@@ -2789,6 +2810,16 @@ LOOP_ACCEL_INST : {
         }
     }
     INC_PC(sizeof(loop_accel_inst));
+    FETCH_INST;
+    GOTO_NEXT_INST;
+}
+THUMB_COUNTED_LOOP_INST : {
+    const auto &loop = *reinterpret_cast<const thumb_counted_loop *>(inst_base->component);
+    --num_instrs; // The dispatch slot is synthetic.
+    const auto budget = cpu->NumInstrsToExecute;
+    if (budget > num_instrs)
+        num_instrs += run_thumb_counted_loop(cpu, loop, budget - num_instrs);
+    INC_PC(sizeof(thumb_counted_loop));
     FETCH_INST;
     GOTO_NEXT_INST;
 }
