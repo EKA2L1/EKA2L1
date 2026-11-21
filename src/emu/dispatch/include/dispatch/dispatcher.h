@@ -322,7 +322,7 @@ namespace eka2l1::dispatch {
         void construct(ntimer *timing);
         void destroy(drivers::graphics_driver *drv);
 
-        void wait_vsync(epoc::screen *scr, epoc::notify_info &info);
+        void wait_vsync(std::uint64_t delay_us, epoc::notify_info &info);
         void cancel_wait_vsync(const epoc::notify_info &info);
 
         drivers::handle transfer_data_to_texture(drivers::graphics_driver *drv, drivers::graphics_command_builder &builder,
