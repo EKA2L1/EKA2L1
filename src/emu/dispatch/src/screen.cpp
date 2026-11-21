@@ -219,8 +219,7 @@ namespace eka2l1::dispatch {
 
         while (scr != nullptr) {
             if (scr->number == static_cast<int>(screen_number)) {
-                std::uint64_t next_vsync_us = 0;
-                scr->vsync(sys->get_ntimer(), next_vsync_us);
+                const auto next_vsync_us = scr->vsync_delay_us();
                 if (next_vsync_us) {
                     sys->get_kernel_system()->crr_thread()->sleep(static_cast<std::uint32_t>(next_vsync_us));
                 }
@@ -271,9 +270,7 @@ namespace eka2l1::dispatch {
             if (scr->number == screen_index) {
                 epoc::notify_info info{ sts, kern->crr_thread() };
 
-                std::uint64_t delay_us = 0;
-                scr->vsync(sys->get_ntimer(), delay_us);
-                transferer.wait_vsync(delay_us, info);
+                transferer.wait_vsync(scr->vsync_delay_us(), info);
                 break;
             }
 

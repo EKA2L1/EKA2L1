@@ -164,6 +164,21 @@ namespace {
     }
 }
 
+TEST_CASE("Screen VSync waits share early edges and skip elapsed periods", "[window_surface][vsync]") {
+    epoc::screen_vsync_clock clock;
+    CHECK(clock.wait_us(1000, 50) == 0);
+    CHECK(clock.wait_us(1100, 50) == 19900);
+    CHECK(clock.wait_us(20999, 50) == 1);
+    CHECK(clock.wait_us(21000, 50) == 20000);
+    CHECK(clock.wait_us(101500, 50) == 0);
+    CHECK(clock.wait_us(102000, 50) == 19000);
+    CHECK(clock.wait_us(103000, 100) == 0);
+    CHECK(clock.wait_us(104000, 100) == 9000);
+    CHECK(clock.wait_us(105000, 0) == 0);
+    CHECK(clock.wait_us(106000, 0) == 0);
+    CHECK(clock.wait_us(107000, 50) == 0);
+}
+
 TEST_CASE("Cancelling a queued VSync releases the posting request", "[window_surface][vsync_cancel]") {
     ntimer timing(1000000);
     timing.reset();

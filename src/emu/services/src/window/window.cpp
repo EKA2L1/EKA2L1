@@ -1982,8 +1982,6 @@ namespace eka2l1 {
         if (auto *driver = get_graphics_driver()) {
             for (epoc::screen *scr = screens; scr; scr = scr->next) {
                 if (scr->direct_framebuffer_mapped && scr->update_direct_framebuffer(epoc::framebuffer_update_source::raw)) {
-                    std::uint64_t next_vsync = 0;
-                    scr->vsync(get_ntimer(), next_vsync);
                     scr->present_framebuffer(driver, kern);
                 }
             }

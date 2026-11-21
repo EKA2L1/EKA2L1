@@ -31,7 +31,7 @@
 #include <drivers/itc.h>
 
 #include <kernel/kernel.h>
-#include <kernel/timing.h>
+#include <chrono>
 #include <thread>
 
 namespace eka2l1::epoc {
@@ -140,7 +140,6 @@ namespace eka2l1::epoc {
         , disp_mode(display_mode::color16ma)
         , dsa_disp_mode(display_mode::color16ma)
         , dsa_disp_mode_initial(display_mode::color16ma)
-        , last_vsync(0)
         , last_fps_check(0)
         , last_fps(0)
         , frame_passed_per_sec(0)
@@ -717,6 +716,19 @@ namespace eka2l1::epoc {
 
     void screen::fire_screen_redraw_callbacks(const bool is_dsa) {
         const std::lock_guard<std::mutex> guard(screen_redraw_callback_mutex);
+        if (is_dsa) {
+            const auto now = std::chrono::steady_clock::now().time_since_epoch();
+            const auto tnow = std::chrono::duration_cast<std::chrono::microseconds>(now).count();
+            const std::uint64_t delta_fps = tnow - last_fps_check;
+            if (delta_fps >= common::microsecs_per_sec) {
+                last_fps = frame_passed_per_sec;
+                last_fps_check = tnow;
+
+                frame_passed_per_sec = 0;
+            }
+
+            frame_passed_per_sec++;
+        }
 
         for (auto &callback : screen_redraw_callbacks) {
             if (callback.second)
@@ -833,31 +845,9 @@ namespace eka2l1::epoc {
         }
     }
 
-    void screen::vsync(ntimer *timing, std::uint64_t &next_vsync_us) {
-        const std::uint64_t tnow = common::get_current_utc_time_in_microseconds_since_epoch();
-
-        std::uint64_t delta = tnow - last_vsync;
-
-        const std::uint64_t microsecs_a_frame = 1000000 / refresh_rate;
-
-        if (delta < microsecs_a_frame) {
-            next_vsync_us = microsecs_a_frame - delta;
-        } else {
-            next_vsync_us = 0;
-        }
-
-        // Skip last vsync to next frame
-        last_vsync = ((tnow + microsecs_a_frame - 1) / microsecs_a_frame) * microsecs_a_frame;
-
-        const std::uint64_t delta_fps = tnow - last_fps_check;
-        if (delta_fps >= common::microsecs_per_sec) {
-            last_fps = frame_passed_per_sec;
-            last_fps_check = tnow;
-
-            frame_passed_per_sec = 0;
-        }
-
-        frame_passed_per_sec++;
+    std::uint64_t screen::vsync_delay_us() {
+        const auto now = std::chrono::steady_clock::now().time_since_epoch();
+        return vsync_clock.wait_us(std::chrono::duration_cast<std::chrono::microseconds>(now).count(), refresh_rate);
     }
 
     const epoc::config::screen_mode *screen::mode_info(const int number) const {

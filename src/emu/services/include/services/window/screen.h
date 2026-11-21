@@ -46,7 +46,6 @@ namespace eka2l1 {
 
     class kernel_system;
     class window_server;
-    class ntimer;
 }
 
 namespace eka2l1::drivers {
@@ -100,7 +99,7 @@ namespace eka2l1::epoc {
         epoc::display_mode dsa_texture_mode = display_mode::color_last;
         framebuffer_depth_tracker framebuffer_depth;
 
-        std::uint64_t last_vsync;
+        screen_vsync_clock vsync_clock;
         std::uint64_t last_fps_check;
         std::uint64_t last_fps;
         std::uint64_t frame_passed_per_sec;
@@ -174,7 +173,7 @@ namespace eka2l1::epoc {
         std::size_t add_screen_mode_change_callback(void *userdata, screen_mode_change_callback_handler handler);
         bool remove_screen_mode_change_callback(const std::size_t cb);
 
-        void vsync(ntimer *timing, std::uint64_t &next_vsync_us);
+        std::uint64_t vsync_delay_us();
 
         explicit screen(const int number, epoc::config::screen &scr_conf, bool reserve_host_focus = false);
 

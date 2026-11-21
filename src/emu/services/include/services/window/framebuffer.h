@@ -18,6 +18,34 @@
 #include <vector>
 
 namespace eka2l1::epoc {
+    class screen_vsync_clock {
+        std::uint64_t edge_us_ = 0;
+        std::uint8_t rate_ = 0;
+
+    public:
+        std::uint64_t wait_us(std::uint64_t now_us, std::uint8_t rate) {
+            if (rate != rate_ || rate == 0) {
+                rate_ = rate;
+                edge_us_ = now_us;
+                return 0;
+            }
+
+            // Requests arriving before an already reserved edge share it.
+            if (now_us < edge_us_)
+                return edge_us_ - now_us;
+
+            const auto period = 1000000u / rate;
+            const auto elapsed = now_us - edge_us_;
+            if (elapsed >= period) {
+                edge_us_ = now_us - elapsed % period;
+                return 0;
+            }
+
+            edge_us_ += period;
+            return edge_us_ - now_us;
+        }
+    };
+
     enum class framebuffer_update_source {
         draw_device,
         raw
