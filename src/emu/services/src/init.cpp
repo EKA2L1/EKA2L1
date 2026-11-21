@@ -22,7 +22,9 @@
 #include <common/path.h>
 #include <common/platform.h>
 
+#include <algorithm>
 #include <initializer_list>
+#include <iterator>
 #include <memory>
 #include <string_view>
 #include <vector>
@@ -135,6 +137,7 @@
 namespace eka2l1::epoc {
     epoc::locale get_locale_info() {
         epoc::locale locale;
+        std::fill(std::begin(locale.language_downgrades_), std::end(locale.language_downgrades_), static_cast<std::uint16_t>(epoc::lang_none));
 
         // TODO: Move to common
 #if EKA2L1_PLATFORM(WIN32)
@@ -179,6 +182,12 @@ namespace eka2l1::epoc {
                 lang.language = static_cast<epoc::language>(dvc.default_language_code);
             } else {
                 lang.language = static_cast<epoc::language>(cfg->language);
+            }
+
+            // Resource files the firmware lacks in that language are found in its own one
+            if (!kern->is_eka1() && (dvc.default_language_code >= 0)
+                && (std::find(dvc.languages.begin(), dvc.languages.end(), static_cast<int>(lang.language)) == dvc.languages.end())) {
+                locale.language_downgrades_[0] = static_cast<std::uint16_t>(dvc.default_language_code);
             }
         }
 
