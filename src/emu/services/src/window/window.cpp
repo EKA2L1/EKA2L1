@@ -2155,6 +2155,12 @@ namespace eka2l1 {
         handle_input_from_driver(evt);
     }
 
+    static void tell_key_watcher(const std::function<void(std::uint32_t, bool)> &watcher, const epoc::event &guest_event) {
+        if (watcher) {
+            watcher(static_cast<std::uint32_t>(guest_event.key_evt_.scancode), guest_event.type == epoc::event_code::key_down);
+        }
+    }
+
     void window_server::handle_input_from_driver(drivers::input_event input_event) {
         epoc::event guest_event;
 
@@ -2187,7 +2193,7 @@ namespace eka2l1 {
                     guest_event.key_evt_.scancode = uiq_scancode(guest_event.key_evt_.scancode);
                 }
 
-                key_shipper.add_new_event(guest_event);
+                key_shipper.add_new_event(guest_event); tell_key_watcher(key_watcher, guest_event);
                 key_shipper.start_shipping();
 
                 shipped = true;
@@ -2198,7 +2204,7 @@ namespace eka2l1 {
         case drivers::input_event_type::button:
             if (make_button_event(input_mapping.button_input_map, input_event, guest_event)) {
                 guest_event.key_evt_.scancode = uiq_scancode(guest_event.key_evt_.scancode);
-                key_shipper.add_new_event(guest_event);
+                key_shipper.add_new_event(guest_event); tell_key_watcher(key_watcher, guest_event);
                 key_shipper.start_shipping();
 
                 shipped = true;
@@ -2260,7 +2266,7 @@ namespace eka2l1 {
                     }
                 } else {
                     if (input_event.key_.state_ != drivers::key_state::repeat) {
-                        key_shipper.add_new_event(guest_event);
+                        key_shipper.add_new_event(guest_event); tell_key_watcher(key_watcher, guest_event);
                         key_shipper.start_shipping();
                     }
                 }
