@@ -290,6 +290,8 @@ static constexpr unsigned int B_COND_THUMB_IDX = 198;
 static constexpr unsigned int CMP_BBL_IDX = 206;
 static constexpr unsigned int CMP_B_COND_THUMB_IDX = 207;
 static constexpr unsigned int THUMB_COUNTED_LOOP_IDX = 208;
+static constexpr unsigned int MOV_IDX = 156;
+static constexpr unsigned int THUMB_SHIFT_PAIR_IDX = 209;
 
 enum accel_chain_op : std::uint8_t {
     ACC_SHL,
@@ -1932,6 +1934,16 @@ static int InterpreterTranslateBlock(ARMul_State *cpu, std::size_t &bb_start, st
             else if (inst_base->idx == B_COND_THUMB_IDX)
                 prev_base->idx = CMP_B_COND_THUMB_IDX;
         }
+        if (cpu->TFlag && prev_base && prev_base->idx == MOV_IDX && inst_base->idx == MOV_IDX) {
+            const auto *left = reinterpret_cast<const mov_inst *>(prev_base->component);
+            const auto *right = reinterpret_cast<const mov_inst *>(inst_base->component);
+            if (left->S && right->S && prev_base->cond == ConditionCode::AL && inst_base->cond == ConditionCode::AL
+                && left->Rd < 8 && right->Rd < 8 && (left->shifter_operand & 15) < 8
+                && (right->shifter_operand & 15) == left->Rd
+                && left->shtop_func == DPO(LogicalShiftLeftByImmediate)
+                && right->shtop_func == DPO(LogicalShiftRightByImmediate))
+                prev_base->idx = THUMB_SHIFT_PAIR_IDX;
+        }
         prev_base = inst_base;
 
         size++;
@@ -2465,6 +2477,8 @@ unsigned InterpreterMainLoop(ARMul_State *cpu, std::uint32_t &num_instrs) {
         goto CMP_B_COND_THUMB_INST;            \
     case 208:                                  \
         goto THUMB_COUNTED_LOOP_INST;          \
+    case 209:                                  \
+        goto THUMB_SHIFT_PAIR_INST;            \
     }
 #endif
 
@@ -2695,11 +2709,13 @@ unsigned InterpreterMainLoop(ARMul_State *cpu, std::uint32_t &num_instrs) {
         &&LOOP_ACCEL_INST,
         &&CMP_BBL_INST,
         &&CMP_B_COND_THUMB_INST,
-        &&THUMB_COUNTED_LOOP_INST };
+        &&THUMB_COUNTED_LOOP_INST,
+        &&THUMB_SHIFT_PAIR_INST };
     assert(InstLabel[CMP_IDX] == &&CMP_INST && InstLabel[BBL_IDX] == &&BBL_INST
         && InstLabel[B_COND_THUMB_IDX] == &&B_COND_THUMB && InstLabel[CMP_BBL_IDX] == &&CMP_BBL_INST
         && InstLabel[CMP_B_COND_THUMB_IDX] == &&CMP_B_COND_THUMB_INST
-        && InstLabel[THUMB_COUNTED_LOOP_IDX] == &&THUMB_COUNTED_LOOP_INST);
+        && InstLabel[THUMB_COUNTED_LOOP_IDX] == &&THUMB_COUNTED_LOOP_INST
+        && InstLabel[MOV_IDX] == &&MOV_INST && InstLabel[THUMB_SHIFT_PAIR_IDX] == &&THUMB_SHIFT_PAIR_INST);
 #endif
     arm_inst *inst_base;
     unsigned int addr;
@@ -3625,6 +3641,33 @@ MLA_INST : {
     }
     cpu->Reg[15] += cpu->GetInstructionSize();
     INC_PC(sizeof(mla_inst));
+    FETCH_INST;
+    GOTO_NEXT_INST;
+}
+THUMB_SHIFT_PAIR_INST : {
+    auto *left = reinterpret_cast<const mov_inst *>(inst_base->component);
+    const auto shifted = DPO(LogicalShiftLeftByImmediate)(cpu, left->shifter_operand);
+    cpu->Reg[left->Rd] = shifted;
+    cpu->Reg[15] += 2;
+    INC_PC(sizeof(mov_inst));
+    if (num_instrs >= cpu->NumInstrsToExecute) {
+        UPDATE_NFLAG(shifted);
+        UPDATE_ZFLAG(shifted);
+        UPDATE_CFLAG_WITH_SC;
+        goto END;
+    }
+
+    inst_base = reinterpret_cast<arm_inst *>(&cpu->trans_cache_buf[ptr]);
+    PROF_STEP(cpu, MOV_IDX);
+    ++num_instrs;
+    auto *right = reinterpret_cast<const mov_inst *>(inst_base->component);
+    const auto result = DPO(LogicalShiftRightByImmediate)(cpu, right->shifter_operand);
+    cpu->Reg[right->Rd] = result;
+    UPDATE_NFLAG(result);
+    UPDATE_ZFLAG(result);
+    UPDATE_CFLAG_WITH_SC;
+    cpu->Reg[15] += 2;
+    INC_PC(sizeof(mov_inst));
     FETCH_INST;
     GOTO_NEXT_INST;
 }

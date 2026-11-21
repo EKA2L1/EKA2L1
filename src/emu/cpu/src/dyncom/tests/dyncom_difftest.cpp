@@ -2342,6 +2342,19 @@ int main(int argc, char **argv) {
         { "loops ", suite_loops(*dc, *da, base_seed, programs / 2 + 4, cov) },
         { "vfp   ", suite_vfp(*dc, *da, base_seed, programs / 2 + 4, cov) },
     };
+    {
+        program shifts;
+        shifts.thumb = true;
+        shifts.kind = "shift-pair";
+        for (const std::uint16_t hw : { 0x0508, 0x0d02, 0x06d0, 0x0800, 0xe7fe })
+            push16(shifts.code, hw);
+        shifts.init[1] = 0x12345abcu;
+        for (unsigned budget = 1; budget <= 5; ++budget) {
+            shifts.budget = budget;
+            if (!run_pair("shift-pair", *dc, *da, shifts, base_seed, true, cov, true))
+                ++failures;
+        }
+    }
     failures += check_thumb_counted_word_loop(*dc, *da, cov);
     failures += check_vfp_mac_cancellation(*dc, *da);
     failures += check_undefined_instructions(*dc);
