@@ -427,17 +427,22 @@ namespace eka2l1::loader {
                 auto read = inflate_machine.read(reinterpret_cast<uint8_t *>(&img.data[img.header.code_offset]),
                     img.uncompressed_size);
             } else if (ctype == compress_type::byte_pair_c) {
-                auto crr_pos = stream->tell();
+                if (img.uncompressed_size < img.header.code_size) {
+                    LOG_ERROR(LOADER, "E32Image is corrupt: uncompressed size is smaller than the code section");
+                    return std::nullopt;
+                }
 
-                std::vector<char> temp(stream->size() - img.header.code_offset);
-                stream->seek(img.header.code_offset, common::seek_where::beg);
-                stream->read(temp.data(), static_cast<uint32_t>(temp.size()));
-
-                common::ro_buf_stream raw_bp_stream(reinterpret_cast<std::uint8_t *>(&temp[0]), temp.size());
+                common::ro_buf_stream raw_bp_stream(reinterpret_cast<std::uint8_t *>(temp_buf.data()), temp_buf.size());
                 common::ibytepair_stream bpstream(reinterpret_cast<common::ro_stream *>(&raw_bp_stream));
 
-                auto codesize = bpstream.read_pages(&img.data[img.header.code_offset], img.header.code_size);
-                auto restsize = bpstream.read_pages(&img.data[img.header.code_offset + img.header.code_size], img.uncompressed_size);
+                char *code_dest = img.data.data() + img.header.code_offset;
+                const auto code_size = bpstream.read_pages(code_dest, img.header.code_size);
+                const auto rest_size = bpstream.read_pages(code_dest + img.header.code_size, img.uncompressed_size - img.header.code_size);
+
+                if ((code_size != img.header.code_size) || (rest_size != img.uncompressed_size - img.header.code_size)) {
+                    LOG_ERROR(LOADER, "E32Image byte-pair stream is truncated: decoded {} code and {} remaining bytes", code_size, rest_size);
+                    return std::nullopt;
+                }
             }
         } else {
             img.uncompressed_size = static_cast<uint32_t>(file_size);
