@@ -9,7 +9,9 @@
  */
 
 #include <catch2/catch.hpp>
+#include <dispatch/dispatcher.h>
 #include <drivers/graphics/graphics.h>
+#include <kernel/timing.h>
 #include <services/window/surface.h>
 #include <services/window/bitmap_cache.h>
 #include <services/window/classes/gstore.h>
@@ -175,6 +177,21 @@ TEST_CASE("Screen VSync waits share early edges and skip elapsed periods", "[win
     CHECK(clock.wait_us(105000, 0) == 0);
     CHECK(clock.wait_us(106000, 0) == 0);
     CHECK(clock.wait_us(107000, 50) == 0);
+}
+
+TEST_CASE("Cancelling a queued VSync releases the posting request", "[window_surface][vsync_cancel]") {
+    ntimer timing(1000000);
+    timing.reset();
+    timing.stop();
+    dispatch::screen_post_transferer transfer;
+    transfer.construct(&timing);
+    epoc::notify_info request{};
+    transfer.wait_vsync(1000000, request);
+    REQUIRE(timing.advance().has_value());
+    transfer.cancel_wait_vsync(request);
+    CHECK_FALSE(timing.advance().has_value());
+    transfer.cancel_wait_vsync(request);
+    transfer.destroy(nullptr);
 }
 
 TEST_CASE("Screen modes change before graphics is available", "[screen_mode]") {

@@ -26,7 +26,7 @@ struct arm_inst {
     unsigned int idx;
     unsigned int cond;
     TransExtData br;
-    char component[0];
+    alignas(8) char component[0];
 };
 
 struct generic_arm_inst {

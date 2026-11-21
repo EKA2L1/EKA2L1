@@ -71,10 +71,8 @@ namespace eka2l1::dispatch {
         delete info;
     }
 
-    void screen_post_transferer::wait_vsync(epoc::screen *scr, epoc::notify_info &info) {
-        const auto next_sync = scr->vsync_delay_us();
-
-        if (next_sync == 0) {
+    void screen_post_transferer::wait_vsync(std::uint64_t delay_us, epoc::notify_info &info) {
+        if (delay_us == 0) {
             info.complete(epoc::error_none);
             return;
         }
@@ -85,7 +83,7 @@ namespace eka2l1::dispatch {
         *info_copy = info;
 
         vsync_notifies_.push_back(info_copy);
-        timing_->schedule_event(static_cast<std::int64_t>(next_sync), vsync_notify_event_,
+        timing_->schedule_event(static_cast<std::int64_t>(delay_us), vsync_notify_event_,
             reinterpret_cast<std::uint64_t>(info_copy));
     }
 
@@ -96,9 +94,13 @@ namespace eka2l1::dispatch {
         });
 
         if (ite != vsync_notifies_.end()) {
-            timing_->unschedule_event(vsync_notify_event_, reinterpret_cast<std::uint64_t>(*ite));
-            (*ite)->complete(epoc::error_cancel);
-
+            auto *pending = *ite;
+            const bool removed = timing_->unschedule_event(vsync_notify_event_, reinterpret_cast<std::uint64_t>(pending));
+            pending->complete(epoc::error_cancel);
+            // A dispatched callback owns the allocation once its timer has left the queue.
+            if (removed) {
+                delete pending;
+            }
             vsync_notifies_.erase(ite);
         }
     }
@@ -268,7 +270,7 @@ namespace eka2l1::dispatch {
             if (scr->number == screen_index) {
                 epoc::notify_info info{ sts, kern->crr_thread() };
 
-                transferer.wait_vsync(scr, info);
+                transferer.wait_vsync(scr->vsync_delay_us(), info);
                 break;
             }
 
