@@ -20,6 +20,10 @@
 #include <services/fbs/adapter/linked_font_adapter.h>
 #include <services/fbs/font_store.h>
 
+#include <common/algorithm.h>
+#include <common/cvt.h>
+#include <common/log.h>
+
 namespace eka2l1::epoc {
     static void fill_typeface_flags(const open_font_face_attrib &attrib, epoc::typeface_info &info) {
         if (attrib.style & epoc::open_font_face_attrib::serif) {
@@ -216,22 +220,97 @@ namespace eka2l1::epoc {
         return true;
     }
 
-    void font_store::attach_user_font_fallbacks() {
+    static bool contains_ignore_case(const std::u16string &haystack, const std::u16string &needle) {
+        if (needle.size() > haystack.size()) {
+            return false;
+        }
+
+        for (std::size_t i = 0; i + needle.size() <= haystack.size(); i++) {
+            if (common::compare_ignore_case(haystack.substr(i, needle.size()), needle) == 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    // Does a device face draw text the user would expect to change with the
+    // system font? A face with no Latin letters (a clock's digits, a symbol
+    // font) is left alone: whatever the imported font has at those code
+    // points is not what the device put there.
+    static bool is_text_face(open_font_info &info) {
+        if (info.face_attrib.style & epoc::open_font_face_attrib::symbol) {
+            return false;
+        }
+
+        return info.adapter->has_character(info.idx, 'a', 0) && info.adapter->has_character(info.idx, 'H', 0);
+    }
+
+    // A ROM face is often called bold without having the bold style bit set
+    // ("Nokia Sans TitleSmBd S60", S60v1's "LatinBold12"), so the name counts
+    // as much as the flag.
+    static bool looks_bold(const open_font_face_attrib &attrib) {
+        if (attrib.style & epoc::open_font_face_attrib::bold) {
+            return true;
+        }
+
+        const std::u16string name = const_cast<open_font_face_attrib &>(attrib).name.to_std_string(nullptr);
+        return contains_ignore_case(name, u"bold") || contains_ignore_case(name, u"smbd");
+    }
+
+    void font_store::attach_user_font_fallbacks(const std::u16string &system_font, const int system_font_scale) {
         struct fallback_font {
             epoc::adapter::linked_font_file_adapter::component component_;
             const open_font_face_attrib *attrib_;
         };
 
         std::vector<fallback_font> fallbacks;
+        std::vector<open_font_info *> system_faces;
 
         for (auto &info : open_font_store) {
             if (info.user_font) {
                 fallbacks.push_back({ { info.adapter, info.idx }, &info.face_attrib });
+
+                // Frontends list families through their own font engines,
+                // which do not all read the same name record as FreeType, so a
+                // full face name is accepted too.
+                if (!system_font.empty() && ((common::compare_ignore_case(info.family, system_font) == 0)
+                    || (common::compare_ignore_case(info.face_attrib.name.to_std_string(nullptr), system_font) == 0))) {
+                    system_faces.push_back(&info);
+                }
             }
         }
 
         if (fallbacks.empty()) {
             return;
+        }
+
+        // The face of the chosen family that best stands in for a device face:
+        // same weight and slant if the family has it, its plain face otherwise.
+        auto pick_system_face = [&](const open_font_face_attrib &device_attrib) -> open_font_info * {
+            const bool want_bold = looks_bold(device_attrib);
+            const bool want_italic = (device_attrib.style & epoc::open_font_face_attrib::italic);
+
+            open_font_info *best = nullptr;
+            int best_score = -1;
+
+            for (open_font_info *candidate : system_faces) {
+                const bool bold = (candidate->face_attrib.style & epoc::open_font_face_attrib::bold);
+                const bool italic = (candidate->face_attrib.style & epoc::open_font_face_attrib::italic);
+                const int score = ((bold == want_bold) ? 2 : 0) + ((italic == want_italic) ? 1 : 0);
+
+                if (score > best_score) {
+                    best = candidate;
+                    best_score = score;
+                }
+            }
+
+            return best;
+        };
+
+        if (!system_font.empty() && system_faces.empty()) {
+            LOG_WARN(SERVICE_FBS, "System font {} is not among the imported fonts, keeping the device's own",
+                common::ucs2_to_utf8(system_font));
         }
 
         for (auto &info : open_font_store) {
@@ -240,11 +319,38 @@ namespace eka2l1::epoc {
             }
 
             std::vector<epoc::adapter::linked_font_file_adapter::component> components;
-            components.push_back({ info.adapter, info.idx });
-
             open_font_face_attrib attrib = info.face_attrib;
 
+            // The system font goes in front of the device face, so it draws
+            // every character it has, while the device face stays canonical:
+            // the name, the sizes and the line metrics the device's layouts
+            // were made for are unchanged, and anything the system font lacks
+            // (S60's private-use symbols, other scripts) still comes from ROM.
+            open_font_info *system_face = system_faces.empty() ? nullptr : pick_system_face(info.face_attrib);
+
+            if (system_face && is_text_face(info)
+                && epoc::adapter::can_present_glyph_as(system_face->adapter->get_output_bitmap_type(),
+                    info.adapter->get_output_bitmap_type())) {
+                epoc::adapter::linked_font_file_adapter::component replacement{ system_face->adapter, system_face->idx };
+                replacement.cap_height_scale_ = common::max(system_font_scale, 1);
+
+                components.push_back(replacement);
+
+                for (std::size_t word = 0; word < 4; word++) {
+                    attrib.coverage[word] |= system_face->face_attrib.coverage[word];
+                }
+            } else {
+                system_face = nullptr;
+            }
+
+            const std::size_t canonical = components.size();
+            components.push_back({ info.adapter, info.idx });
+
             for (const auto &fallback : fallbacks) {
+                if (system_face && (fallback.attrib_ == &system_face->face_attrib)) {
+                    continue;
+                }
+
                 // A glyph bitmap reaches the guest in the format the font as a
                 // whole declares, so a component is only of use where the
                 // linked adapter can present its glyphs as that format.
@@ -264,9 +370,14 @@ namespace eka2l1::epoc {
                 continue;
             }
 
+            if (system_face) {
+                LOG_TRACE(SERVICE_FBS, "Device face {} is drawn with {}", common::ucs2_to_utf8(info.face_attrib.name.to_std_string(nullptr)),
+                    common::ucs2_to_utf8(system_face->face_attrib.name.to_std_string(nullptr)));
+            }
+
             info.face_attrib = attrib;
 
-            auto adapter = std::make_unique<epoc::adapter::linked_font_file_adapter>(std::move(components), 0, attrib);
+            auto adapter = std::make_unique<epoc::adapter::linked_font_file_adapter>(std::move(components), canonical, attrib);
 
             info.adapter = adapter.get();
             info.idx = 0;
