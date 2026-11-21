@@ -24,6 +24,7 @@
 
 #include <common/container.h>
 
+#include <algorithm>
 #include <atomic>
 #include <mutex>
 #include <vector>
@@ -54,7 +55,15 @@ namespace eka2l1::drivers {
         // audio we keep queued ahead - see low_water_mark_samples().
         std::atomic<std::size_t> last_write_samples_;
 
+        // Render-thread scratch for fast-forward playback.
+        std::vector<std::int16_t> speed_scratch_;
+
     protected:
+        // How many times faster than real time the stream is consumed (never below 1).
+        double consume_speed() const {
+            return aud_ ? std::max(aud_->playback_speed(), 1.0) : 1.0;
+        }
+
         virtual bool internal_decode_running_out();
 
         // How little unplayed audio may sit in the ring before we ask the guest for
