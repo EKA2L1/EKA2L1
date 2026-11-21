@@ -2346,10 +2346,10 @@ int main(int argc, char **argv) {
         program shifts;
         shifts.thumb = true;
         shifts.kind = "shift-pair";
-        for (const std::uint16_t hw : { 0x0508, 0x0d02, 0x06d0, 0x0800, 0xe7fe })
+        for (const std::uint16_t hw : { 0x46c0, 0x0508, 0x0d02, 0x06d0, 0x0800, 0xe7fe })
             push16(shifts.code, hw);
         shifts.init[1] = 0x12345abcu;
-        for (unsigned budget = 1; budget <= 5; ++budget) {
+        for (unsigned budget = 1; budget <= 6; ++budget) {
             shifts.budget = budget;
             if (!run_pair("shift-pair", *dc, *da, shifts, base_seed, true, cov, true))
                 ++failures;

@@ -353,7 +353,7 @@ public:
     // definition. Set by dyncom_core right after construction.
     eka2l1::arm::r12l1::tlb *mem_cache_ = nullptr;
 
-    char trans_cache_buf[TRANS_CACHE_SIZE];
+    alignas(8) char trans_cache_buf[TRANS_CACHE_SIZE];
     size_t trans_cache_buf_top = 0;
 
     // Translated basic blocks are tagged with the address space (asid) they were
