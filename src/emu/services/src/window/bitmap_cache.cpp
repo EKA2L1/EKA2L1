@@ -257,20 +257,12 @@ namespace eka2l1::epoc {
     }
 
     std::uint64_t bitmap_cache::hash_bitwise_bitmap(epoc::bitwise_bitmap *bw_bmp) {
-        std::uint64_t hash = 0xB1711A3F;
+        XXH64_state_t metadata;
+        XXH64_reset(&metadata, 0xB1711A3F);
+        XXH64_update(&metadata, &bw_bmp->header_, sizeof(bw_bmp->header_));
+        XXH64_update(&metadata, &bw_bmp->byte_width_, sizeof(bw_bmp->byte_width_));
+        XXH64_update(&metadata, &bw_bmp->uid_, sizeof(bw_bmp->uid_));
 
-        // Hash using XXHASH
-        XXH64_state_t *const state = XXH64_createState();
-        XXH64_reset(state, hash);
-
-        // First, hash the single bitmap header
-        XXH64_update(state, reinterpret_cast<const void *>(&bw_bmp->header_), sizeof(loader::sbm_header));
-
-        // Now, hash the byte width and UID, if it changes, we need to update
-        XXH64_update(state, reinterpret_cast<const void *>(&bw_bmp->byte_width_), sizeof(bw_bmp->byte_width_));
-        XXH64_update(state, reinterpret_cast<const void *>(&bw_bmp->uid_), sizeof(bw_bmp->uid_));
-
-        // Lastly, we needs to hash the data, to see if anything changed
         // The header lives in guest-writable memory, so bitmap_size may claim more
         // data than the backing chunk commits; clamp to what the host can read.
         std::uint8_t *data = bw_bmp->data_pointer(fbss_);
@@ -282,12 +274,8 @@ namespace eka2l1::epoc {
             data_len = std::min<std::size_t>(data_len, fbss_->readable_bytes_from(data));
         }
 
-        XXH64_update(state, data, data_len);
-
-        hash = XXH64_digest(state);
-        XXH64_freeState(state);
-
-        return hash;
+        const auto seed = XXH64_digest(&metadata);
+        return data_len && data ? XXH3_64bits_withSeed(data, data_len, seed) : seed;
     }
 
     std::int64_t bitmap_cache::get_suitable_bitmap_index() {
