@@ -3741,6 +3741,38 @@
         }
       }
     },
+    "settings.interpreter" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Interpreter"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "解释器"
+          }
+        }
+      }
+    },
+    "settings.interpreter.armv6" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ARMv5/v6 (experimental)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ARMv5/v6（实验性）"
+          }
+        }
+      }
+    },
     "settings.jit" : {
       "localizations" : {
         "en" : {
