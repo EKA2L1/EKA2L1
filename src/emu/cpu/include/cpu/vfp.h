@@ -4,6 +4,10 @@
 #include <array>
 #include <cstdint>
 
+inline constexpr std::uint32_t arm11_fpsid = 0x410120b4;
+inline constexpr std::uint32_t arm11_mvfr0 = 0x11111111;
+inline constexpr std::uint32_t arm11_mvfr1 = 0;
+
 struct vfp_register_view {
     std::array<std::uint32_t, 64> &ExtReg;
 };

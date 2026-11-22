@@ -25,9 +25,10 @@
 #include <cpu/dyncom/armstate.h>
 #include <cpu/dyncom/vfp/asm_vfp.h>
 #include <cpu/dyncom/vfp/vfp.h>
+#include <cpu/vfp.h>
 
 void VFPInit(ARMul_State *state) {
-    state->VFP[VFP_FPSID] = VFP_FPSID_IMPLMEN << 24 | VFP_FPSID_SW << 23 | VFP_FPSID_SUBARCH << 16 | VFP_FPSID_PARTNUM << 8 | VFP_FPSID_VARIANT << 4 | VFP_FPSID_REVISION;
+    state->VFP[VFP_FPSID] = arm11_fpsid;
     state->VFP[VFP_FPEXC] = 0;
     state->VFP[VFP_FPSCR] = 0;
 
@@ -36,8 +37,8 @@ void VFPInit(ARMul_State *state) {
     state->VFP[VFP_FPINST2] = 0;
 
     // ARM11 MPCore feature register values.
-    state->VFP[VFP_MVFR0] = 0x11111111;
-    state->VFP[VFP_MVFR1] = 0;
+    state->VFP[VFP_MVFR0] = arm11_mvfr0;
+    state->VFP[VFP_MVFR1] = arm11_mvfr1;
 }
 
 void VMOVBRS(ARMul_State *state, std::uint32_t to_arm, std::uint32_t t, std::uint32_t n, std::uint32_t *value) {

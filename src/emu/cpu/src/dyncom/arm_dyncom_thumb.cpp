@@ -275,7 +275,7 @@ ThumbDecodeStatus TranslateThumbInstruction(std::uint32_t addr, std::uint32_t in
             *ainstr = subset[BITS(tinstr, 6, 7)] // base
                 | (BITS(tinstr, 0, 2) << 12) // Rd
                 | BITS(tinstr, 3, 5); // Rm
-        } else if ((tinstr & 0x0F00) == 0x600) {
+        } else if ((tinstr & 0xfff7) == 0xb650 || (tinstr & 0xffe8) == 0xb660) {
             if (BIT(tinstr, 5) == 0) {
                 // SETEND
                 *ainstr = 0xF1010000 // base
@@ -305,7 +305,9 @@ ThumbDecodeStatus TranslateThumbInstruction(std::uint32_t addr, std::uint32_t in
                     | (BITS(tinstr, 0, 2) << 12) // Rd
                     | BITS(tinstr, 3, 5); // Rm
             }
-        } else {
+        } else if (IsThumbHint(tinstr)) {
+            *ainstr = 0xe320f000 | BITS(tinstr, 4, 7);
+        } else if ((tinstr & 0xf600) == 0xb400 && (tinstr & 0x1ff)) {
             static const std::uint32_t subset[4] = {
                 0xE92D0000, // STMDB sp!,{rlist}
                 0xE92D4000, // STMDB sp!,{rlist,lr}
@@ -314,6 +316,8 @@ ThumbDecodeStatus TranslateThumbInstruction(std::uint32_t addr, std::uint32_t in
             };
             *ainstr = subset[((tinstr & (1 << 11)) >> 10) | ((tinstr & (1 << 8)) >> 8)] // base
                 | (tinstr & 0x00FF); // mask8
+        } else {
+            valid = ThumbDecodeStatus::UNDEFINED;
         }
         break;
 

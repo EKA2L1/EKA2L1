@@ -48,7 +48,11 @@ namespace eka2l1::arm::armv6 {
         extend,
         double_transfer,
         breakpoint,
-        set_endian
+        set_endian,
+        dual_multiply,
+        swap,
+        feature_register,
+        barrier
     };
 
     struct instruction {
@@ -83,6 +87,19 @@ namespace eka2l1::arm::armv6 {
         return words && (!wide || (!(words & 1) && words <= 32)) && first + words <= (wide ? 64 : 32);
     }
 
+    constexpr unsigned vfp_move_word(std::uint32_t bits) {
+        const auto base = 2 * ((bits >> 16) & 15);
+        return base + (bits & 256 ? ((bits >> 2) & 32) + ((bits >> 21) & 1) : (bits >> 7) & 1);
+    }
+
+    constexpr unsigned vfp_move_pair(std::uint32_t bits) {
+        return 2 * (bits & 15) + (bits & 256 ? bits & 32 : (bits >> 5) & 1);
+    }
+
+    constexpr std::uint32_t user_status_mask(std::uint32_t bits) {
+        return (bits & 0x80000 ? 0xf8000000u : 0u) | (bits & 0x40000 ? 0xf0000u : 0u);
+    }
+
     inline instruction decode(std::uint32_t bits, bool thumb) {
         if (thumb) {
             const auto half = static_cast<std::uint16_t>(bits);
@@ -105,9 +122,11 @@ namespace eka2l1::arm::armv6 {
                 return { half, opcode::undefined, 14 };
         }
         const auto cond = static_cast<std::uint8_t>(bits >> 28);
+        const auto rn = (bits >> 16) & 15, rd = (bits >> 12) & 15, rm = bits & 15;
         auto op = opcode::undefined;
         if (cond != 15) {
-            if ((bits & 0x0ffffff0) == 0x012fff10 || (bits & 0x0ffffff0) == 0x012fff30)
+            if ((bits & 0x0ffffff0) == 0x012fff10 || (bits & 0x0ffffff0) == 0x012fff30
+                || (bits & 0x0ffffff0) == 0x012fff20)
                 op = opcode::exchange;
             else if ((bits & 0x0ff000f0) == 0x01200070)
                 op = opcode::breakpoint;
@@ -116,7 +135,7 @@ namespace eka2l1::arm::armv6 {
             else if ((bits & 0x0f8003f0) == 0x06800070 && ((bits >> 20) & 3) != 1)
                 op = opcode::extend;
             else if ((bits & 0x0e1000d0) == 0x000000d0 && (bits & 0x01200000) != 0x00200000 && !((bits >> 12) & 1)
-                && ((bits >> 12) & 15) < 14 && ((bits & (1u << 22)) || (!(bits & 0xf00) && (bits & 15) != 15)))
+                && rd < 14 && ((bits & (1u << 22)) || (!(bits & 0xf00) && rm != 15)))
                 op = opcode::double_transfer;
             else if ((bits & 0x0fff0ff0) == 0x016f0f10)
                 op = opcode::count_leading_zeros;
@@ -135,9 +154,24 @@ namespace eka2l1::arm::armv6 {
                 op = opcode::parallel_arithmetic;
             else if ((bits & 0x0f900090) == 0x01000080)
                 op = opcode::signed_multiply;
-            else if ((bits & 0x0fef0fff) == 0x0e0d0f50 && ((bits >> 12) & 15) != 15)
+            else if ((bits & 0x0fb00090) == 0x07000010 && rm != 15 && ((bits >> 8) & 15) != 15
+                && rn != 15 && (!(bits & (1u << 22))
+                    || (rd != 15 && rd != rn)))
+                op = opcode::dual_multiply;
+            else if ((bits & 0x0fb00ff0) == 0x01000090 && rm != 15
+                && rd != 15 && rn != 15 && rn != rd && rn != rm)
+                op = opcode::swap;
+            else if ((bits & 0x0ffffff0) == 0x0320f000 && rm <= 4)
+                op = opcode::hint;
+            else if ((bits & 0x0fff0fff) == 0x0e1d0f70 && rd != 15)
+                op = opcode::feature_register;
+            else if ((bits & 0x0fff0fff) == 0x0e070fba || (bits & 0x0fff0fff) == 0x0e070f9a
+                || (bits & 0x0fff0fff) == 0x0e070f95)
+                op = opcode::barrier;
+            else if ((bits & 0x0fef0fff) == 0x0e0d0f50 && rd != 15)
                 op = opcode::thread_id;
-            else if ((bits & 0x0fe00fd0) == 0x0c400b10 && ((bits >> 12) & 15) != 15 && ((bits >> 16) & 15) != 15)
+            else if ((bits & 0x0fe00ed0) == 0x0c400a10 && ((bits & 256) || (bits & 47) != 47)
+                && rd != 15 && rn != 15 && (!(bits & (1u << 20)) || rn != rd))
                 op = opcode::vfp_move_double;
             else if ((bits & 0x0fbf0f50) == 0x0eb80b40)
                 op = opcode::vfp_int_to_double;
@@ -145,30 +179,39 @@ namespace eka2l1::arm::armv6 {
                 op = opcode::vfp_arithmetic;
             else if (vfp_multiple(bits))
                 op = opcode::vfp_multiple;
-            else if ((bits & 0x0fe00f7f) == 0x0e000a10 && ((bits >> 12) & 15) != 15)
+            else if ((bits & 0x0fe00f7f) == 0x0e000a10 && rd != 15)
                 op = opcode::vfp_move;
-            else if ((bits & 0x0fef0fff) == 0x0ee10a10 && ((bits & (1u << 20)) || ((bits >> 12) & 15) != 15))
+            else if ((bits & 0x0fc00f7f) == 0x0e000b10 && rd != 15)
+                op = opcode::vfp_move;
+            else if ((bits & 0x0ff00fff) == 0x0ef00a10 && rd != 15
+                && (rn == 0 || rn == 6 || rn == 7))
+                op = opcode::feature_register;
+            else if ((bits & 0x0fef0fff) == 0x0ee10a10 && ((bits & (1u << 20)) || rd != 15))
                 op = opcode::vfp_status;
             else if ((bits & 0x0f200e00) == 0x0d000a00)
                 op = opcode::vfp_transfer;
-            else if ((bits & 0x0f900fff) == 0x01900f9f && ((bits >> 12) & 15) != 15)
+            else if ((bits & 0x0f900fff) == 0x01900f9f && rd != 15)
                 op = opcode::exclusive_read;
-            else if ((bits & 0x0f900ff0) == 0x01800f90 && (bits & 15) != 15)
+            else if ((bits & 0x0f900ff0) == 0x01800f90 && rm != 15)
                 op = opcode::exclusive_write;
             else if ((bits & 0x0fbf0fff) == 0x010f0000 && !(bits & 0x00400000))
                 op = opcode::read_status;
-            else if ((bits & 0x0ffff0f0) == 0x0128f000)
+            else if ((((bits & 0x0ff3fff0) == 0x0120f000 && rm != 15)
+                    || (bits & 0x0ff3f000) == 0x0320f000) && (bits & 0xc0000))
                 op = opcode::write_flags;
             else if ((bits & 0x0ff000f0) == 0x00400090)
                 op = opcode::multiply_accumulate_words;
             else if ((bits & 0x0ff000d0) == 0x07500010
-                || ((bits & 0x0ff000d0) == 0x075000d0 && ((bits >> 12) & 15) != 15))
+                || ((bits & 0x0ff000d0) == 0x075000d0 && rd != 15))
                 op = opcode::multiply_high;
             else if ((bits & 0x0f8000f0) == 0x00800090)
                 op = opcode::long_multiply;
             else if ((bits & 0x0fc000f0) == 0x00000090)
                 op = opcode::multiply;
-            else if ((bits & 0x0e000090) == 0x00000090 && (bits & 0x01200000) != 0x00200000 && (bits & 0x60)
+            else if ((bits & 0x0e000090) == 0x00000090 && (bits & 0x60)
+                && ((bits & 0x01200000) != 0x00200000 || (rn != rd
+                    && rn != 15 && rd != 15
+                    && ((bits & (1u << 22)) || (!(bits & 0xf00) && rm != 15))))
                 && ((bits & (1u << 20)) || (bits & 0x60) == 0x20))
                 op = opcode::half;
             else if ((bits & 0x0c000000) == 0 && ((bits >> 23 & 3) != 2 || (bits >> 20 & 1))
@@ -185,6 +228,9 @@ namespace eka2l1::arm::armv6 {
             op = opcode::branch;
         if ((bits & 0xfd70f000) == 0xf550f000 && (!(bits & (1u << 25)) || !(bits & 16)))
             op = opcode::hint;
+        if ((bits & 0xfff1fe20) == 0xf1000000 && ((bits & 0x20000) || !(bits & 31))
+            && ((bits & 0x80000) ? (bits & 0x1c0) != 0 : (bits & 0x601c0) == 0x20000))
+            op = opcode::hint; // CPS has no effect in User mode.
         if ((bits & ~0x200u) == 0xf1010000)
             op = opcode::set_endian;
         if (bits == 0xf57ff01f)
@@ -247,7 +293,9 @@ namespace eka2l1::arm::armv6 {
         vfp_store,
         vfp_math,
         write_flags,
-        word_loop_entry
+        word_loop_entry,
+        hint,
+        dual_multiply
     };
     struct arm_op {
         arm_code code {};
@@ -264,6 +312,13 @@ namespace eka2l1::arm::armv6 {
         op.shift = (bits >> 7) & 31;
         op.cond = ins.condition;
         switch (ins.op) {
+        case opcode::hint:
+            op.code = arm_code::hint;
+            return op;
+        case opcode::dual_multiply:
+            op.code = arm_code::dual_multiply;
+            op.value = bits;
+            return op;
         case opcode::vfp_transfer:
         case opcode::vfp_multiple: {
             const bool multiple = ins.op == opcode::vfp_multiple;
@@ -281,15 +336,18 @@ namespace eka2l1::arm::armv6 {
             op.value = bits;
             return op;
         case opcode::write_flags:
+            if (bits & (1u << 25))
+                break;
+            op.value = user_status_mask(bits);
             op.code = arm_code::write_flags;
             return op;
         case opcode::vfp_move:
             op.code = bits & (1u << 20) ? arm_code::vmov_from : arm_code::vmov_to;
-            op.value = 2 * op.a + ((bits >> 7) & 1);
+            op.value = vfp_move_word(bits);
             return op;
         case opcode::vfp_move_double:
             op.code = bits & (1u << 20) ? arm_code::vmov_pair_from : arm_code::vmov_pair_to;
-            op.value = 2 * op.b + ((bits & 32) ? 32 : 0);
+            op.value = vfp_move_pair(bits);
             return op;
         case opcode::vfp_int_to_double:
             op.code = arm_code::widen_integer;
@@ -301,7 +359,7 @@ namespace eka2l1::arm::armv6 {
             break;
         }
         if (ins.op == opcode::exchange && op.b != 15) {
-            op.code = bits & 32 ? arm_code::blx : arm_code::bx;
+            op.code = (bits & 48) == 48 ? arm_code::blx : arm_code::bx;
             return op;
         }
         if ((bits & 0x0f7ff000) == 0x051ff000 && ins.condition != 15) {

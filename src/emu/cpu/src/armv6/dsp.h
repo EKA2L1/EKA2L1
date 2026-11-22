@@ -69,6 +69,28 @@ namespace eka2l1::arm::armv6 {
         return result;
     }
 
+    inline void dual_multiply(std::uint32_t bits, std::array<std::uint32_t, 16>& regs, std::uint32_t& flags) {
+        const auto rm = bits & 15, rn = (bits >> 16) & 15, rd = (bits >> 12) & 15;
+        const auto a = regs[rm];
+        auto b = regs[(bits >> 8) & 15];
+        if (bits & 32)
+            b = std::rotl(b, 16);
+        const auto lo = std::int16_t(a) * std::int16_t(b);
+        const auto hi = std::int16_t(a >> 16) * std::int16_t(b >> 16);
+        const auto product = std::int64_t(lo) + (bits & 64 ? -hi : hi);
+        if (bits & (1u << 22)) {
+            const auto acc = (std::uint64_t(regs[rn]) << 32) | regs[rd];
+            const auto sum = acc + product;
+            regs[rn] = static_cast<std::uint32_t>(sum >> 32);
+            regs[rd] = static_cast<std::uint32_t>(sum);
+        } else {
+            const auto sum = product + (rd == 15 ? 0 : std::int32_t(regs[rd]));
+            regs[rn] = static_cast<std::uint32_t>(sum);
+            if (sum != std::int32_t(sum))
+                flags |= 1u << 27;
+        }
+    }
+
     inline void signed_multiply(std::uint32_t bits, std::array<std::uint32_t, 16>& regs, std::uint32_t& cpsr) {
         const unsigned dst = (bits >> 16) & 15, acc = (bits >> 12) & 15;
         const auto lhs = regs[bits & 15], rhs = regs[(bits >> 8) & 15];

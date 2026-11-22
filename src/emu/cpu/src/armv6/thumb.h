@@ -4,6 +4,7 @@
 #include <array>
 #include <bit>
 #include <cstdint>
+#include <cpu/dyncom/arm_dyncom_thumb.h>
 
 namespace eka2l1::arm::thumb {
     enum class code : std::uint8_t {
@@ -72,7 +73,8 @@ namespace eka2l1::arm::thumb {
         push_range,
         pop_range,
         call_pair,
-        call_arm_pair
+        call_arm_pair,
+        hint
     };
 
     struct op {
@@ -162,6 +164,8 @@ namespace eka2l1::arm::thumb {
                     static_cast<std::uint8_t>(count << 4 | start) };
             return { pop ? code::multi_load : code::multi_store, static_cast<std::uint8_t>(h >> 8 & 1), 13, byte };
         }
+        if (IsThumbHint(h))
+            return { code::hint, 0, 0, 0 };
         if ((h >> 12) == 12 && byte && !(byte & (1 << r)))
             return { h & 0x800 ? code::multi_load : code::multi_store, 0, r, byte };
         if ((h >> 11) == 30)

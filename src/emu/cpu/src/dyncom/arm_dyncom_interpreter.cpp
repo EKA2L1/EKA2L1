@@ -1840,7 +1840,7 @@ enum { KEEP_GOING,
     FETCH_EXCEPTION };
 
 static unsigned int InterpreterTranslateInstruction(ARMul_State *cpu, const std::uint32_t phys_addr,
-    ARM_INST_PTR &inst_base) {
+    ARM_INST_PTR &inst_base, ARM_INST_PTR previous = nullptr) {
     std::uint32_t inst_size = 4;
     std::uint32_t inst = cpu->ReadCode(phys_addr & 0xFFFFFFFC);
 
@@ -1853,6 +1853,14 @@ static unsigned int InterpreterTranslateInstruction(ARMul_State *cpu, const std:
         // We have translated the Thumb branch instruction in the Thumb decoder
         if (state == ThumbDecodeStatus::BRANCH) {
             return inst_size;
+        }
+        if (state == ThumbDecodeStatus::UNDEFINED) {
+            if (previous)
+                previous->br = TransExtData::END_OF_PAGE;
+            else
+                cpu->RaiseException(eka2l1::arm::exception_type_undefined_inst, phys_addr);
+            inst_base = nullptr;
+            return 0;
         }
         inst = arm_inst;
     }
@@ -1921,9 +1929,11 @@ static int InterpreterTranslateBlock(ARMul_State *cpu, std::size_t &bb_start, st
 
     ARM_INST_PTR prev_base = nullptr;
     while (ret == TransExtData::NON_BRANCH) {
-        unsigned int inst_size = InterpreterTranslateInstruction(cpu, phys_addr, inst_base);
+        unsigned int inst_size = InterpreterTranslateInstruction(cpu, phys_addr, inst_base, prev_base);
 
         if (!inst_base) {
+            if (prev_base && prev_base->br == TransExtData::END_OF_PAGE)
+                break;
             return FETCH_EXCEPTION;
         }
 
@@ -2761,6 +2771,9 @@ DISPATCH : {
         if (itr != cpu->instruction_cache.end()) {
             ptr = itr->second;
         } else {
+            if (num_instrs >= cpu->NumInstrsToExecute)
+                goto END;
+
             // The translation buffer is a bump allocator that is no longer reset
             // on every context switch (blocks are kept across processes via the
             // asid tag). Flush everything if a fresh block could run past the

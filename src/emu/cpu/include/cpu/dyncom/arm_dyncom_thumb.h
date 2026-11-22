@@ -38,6 +38,10 @@ enum class ThumbDecodeStatus {
 // Translates a Thumb mode instruction into its ARM equivalent.
 ThumbDecodeStatus TranslateThumbInstruction(std::uint32_t addr, std::uint32_t instr, std::uint32_t *ainstr, std::uint32_t *inst_size);
 
+constexpr bool IsThumbHint(std::uint16_t instr) {
+    return (instr & 0xff0f) == 0xbf00 && instr <= 0xbf40;
+}
+
 inline std::uint32_t GetThumbInstruction(std::uint32_t instr, std::uint32_t address) {
     // Normally you would need to handle instruction endianness,
     // however, it is fixed to little-endian on the MPCore, so

@@ -25,6 +25,7 @@
 #include <cpu/arm_dynarmic.h>
 #include <cpu/armv6.h>
 #include <cpu/dyncom/arm_dyncom.h>
+#include <cpu/dyncom/arm_dyncom_thumb.h>
 #include <cpu/dyncom/vfp/asm_vfp.h>
 #include <cpu/dyncom/vfp/vfp.h>
 #include <cpu/12l1r/exclusive_monitor.h>
@@ -2257,6 +2258,132 @@ bool check_thumb_memory_fault(bool store, bool retry, bool writeback, bool armv6
     return valid;
 }
 
+std::uint32_t check_user_instructions(backend_env &dc, backend_env &da, bool armv6, std::uint32_t base_seed,
+    coverage &cov) {
+    std::uint32_t failures = 0;
+    for (unsigned hint = 0; hint < 256; ++hint) {
+        std::uint32_t normalized, size;
+        const auto status = TranslateThumbInstruction(0, 0xbf00 | hint, &normalized, &size);
+        if ((hint & 15) == 0 && hint <= 0x40) {
+            if (status == ThumbDecodeStatus::UNDEFINED || normalized != (0xe320f000 | (hint >> 4)))
+                ++failures;
+        } else if (status != ThumbDecodeStatus::UNDEFINED) {
+            ++failures;
+        }
+    }
+    {
+        program p;
+        p.thumb = true;
+        push16(p.code, 0x2007); // MOVS r0, #7
+        push16(p.code, 0xbf00); // NOP
+        push16(p.code, 0xbf08); // IT is outside the emulated Thumb-1 profile.
+        install(dc, p);
+        dc.cpu->imb_range(p.addr, p.code.size());
+        dc.exceptions = 0;
+        p.budget = 2;
+        const auto prefix = execute(dc, p);
+        if (dc.exceptions || prefix.reg[0] != 7 || prefix.reg[15] != p.addr + 4) {
+            std::printf("[FAIL] Thumb hint prefix r0=%u pc=%x expected=%x exceptions=%llu\n",
+                prefix.reg[0], prefix.reg[15], p.addr + 4, static_cast<unsigned long long>(dc.exceptions));
+            ++failures;
+        }
+        dc.cpu->run(1);
+        if (dc.exceptions != 1 || dc.last_exception != exception_type_undefined_inst
+            || dc.last_exception_pc != p.addr + 4) {
+            std::printf("[FAIL] Thumb undefined pc=%x expected=%x exceptions=%llu\n",
+                dc.last_exception_pc, p.addr + 4, static_cast<unsigned long long>(dc.exceptions));
+            ++failures;
+        }
+    }
+    if (armv6) {
+        program p;
+        p.kind = "dual-multiply";
+        p.init[1] = 0x80007fff;
+        p.init[2] = 0xfffd0005;
+        p.init[3] = 0x7fffffff;
+        for (auto base : { 0xe7003211u, 0xe700f211u, 0xe7410312u }) {
+            for (auto variant : { 0u, 32u, 64u, 96u }) {
+                p.code.clear();
+                push32(p.code, base | variant);
+                p.budget = 1;
+                if (!run_pair(p.kind, dc, da, p, base_seed, true, cov, true))
+                    ++failures;
+            }
+        }
+        p.code.clear();
+        p.init[0] = 0x80051234;
+        p.init[1] = 0xc008abcd;
+        for (auto bits : {
+                 0xe12cf000u, // MSR CPSR_fs, r0
+                 0xe328f102u, // MSR CPSR_f, #0x80000000
+                 0xec410a30u, // VMOV s1, s2, r0, r1
+                 0xec532a30u, // VMOV r2, r3, s1, s2
+                 0xee213b10u, // VMOV d1[1], r3
+                 0xee314b10u, // VMOV r4, d1[1]
+                 0xe10f5000u }) // MRS r5, CPSR
+            push32(p.code, bits);
+        p.budget = 7;
+        install(dc, p);
+        dc.cpu->imb_range(p.addr, p.code.size());
+        const auto moved = execute(dc, p);
+        if (moved.reg[2] != p.init[0] || moved.reg[3] != p.init[1] || moved.vfp[3] != p.init[1]
+            || moved.reg[4] != p.init[1] || moved.reg[5] != 0x80050010)
+            ++failures;
+
+        p.code.clear();
+        p.init[1] = PROG_DATA_PTR;
+        p.init[2] = 0xffff8001;
+        for (auto bits : {
+                 0xe1c120b0u, // STRH r2, [r1]
+                 0xe0f100f2u, // LDRSHT r0, [r1], #2
+                 0xee1d3f70u, // MRC TPIDRURO
+                 0xeef04a10u, // VMRS r4, FPSID
+                 0xeef75a10u, // VMRS r5, MVFR0
+                 0xeef66a10u, // VMRS r6, MVFR1
+                 0xf10c0080u, // CPSID i in User mode
+                 0xe320f003u }) // WFI
+            push32(p.code, bits);
+        p.budget = 8;
+        install(dc, p);
+        dc.cpu->imb_range(p.addr, p.code.size());
+        const auto status = execute(dc, p);
+        if (status.reg[0] != 0xffff8001 || status.reg[1] != PROG_DATA_PTR + 2 || status.reg[3]
+            || status.reg[4] != 0x410120b4 || status.reg[5] != 0x11111111 || status.reg[6]
+            || status.cpsr != 0x10 || status.reg[15] != p.addr + 32)
+            ++failures;
+
+        p.init[1] = 0xc008abcd;
+        p.code.clear();
+        p.init[2] = PROG_DATA_PTR;
+        push32(p.code, 0xe1020091); // SWP r0, r1, [r2]
+        push32(p.code, 0xe1423090); // SWPB r3, r0, [r2]
+        p.budget = 2;
+        unsigned attempts = 0;
+        dc.cpu->exclusive_write_32bit = [&](address addr, std::uint32_t value, std::uint32_t old) {
+            if (++attempts == 1) {
+                std::uint32_t concurrent = 0x12345678;
+                dc.cpu->write_32bit(addr, &concurrent);
+                return 0;
+            }
+            return old == 0x12345678 && dc.cpu->write_32bit(addr, &value) ? 1 : -1;
+        };
+        dc.cpu->exclusive_write_8bit = [&](address addr, std::uint8_t value, std::uint8_t old) {
+            return old == std::uint8_t(p.init[1]) && dc.cpu->write_8bit(addr, &value) ? 1 : -1;
+        };
+        install(dc, p);
+        dc.cpu->imb_range(p.addr, p.code.size());
+        const auto swapped = execute(dc, p);
+        std::uint32_t stored;
+        dc.cpu->read_32bit(PROG_DATA_PTR, &stored);
+        if (attempts != 2 || swapped.reg[0] != 0x12345678 || swapped.reg[3] != std::uint8_t(p.init[1])
+            || stored != ((p.init[1] & ~255u) | 0x78))
+            ++failures;
+        dc.cpu->exclusive_write_32bit = {};
+        dc.cpu->exclusive_write_8bit = {};
+    }
+    return failures;
+}
+
 } // namespace
 
 int main(int argc, char **argv) {
@@ -2421,6 +2548,8 @@ int main(int argc, char **argv) {
     }
     auto da = make_dynarmic_env();
     coverage cov;
+
+    failures += check_user_instructions(*dc, *da, armv6, base_seed, cov);
 
     const std::uint32_t programs = (count / 200 < 4) ? 4 : (count / 200);
     const std::uint32_t rounds = (programs / 8 < 2) ? 2 : (programs / 8);

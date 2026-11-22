@@ -222,7 +222,10 @@ namespace eka2l1::arm {
             }
 
             template <typename U> U data_order(U value) const {
-                return state_.cpsr & 0x200 ? common::byte_swap(value) : value;
+                if constexpr (sizeof(U) == 1)
+                    return value;
+                else
+                    return state_.cpsr & 0x200 ? common::byte_swap(value) : value;
             }
 
             template <typename U> U memory(address addr, bool load, U value = 0) {
@@ -238,6 +241,30 @@ namespace eka2l1::arm {
                     else
                         value = access(addr, value, load ? read_32bit : write_32bit, !load);
                     return load ? data_order(value) : value;
+                }
+            }
+
+            template <typename U, typename Read, typename CompareExchange>
+            bool swap_memory(address addr, U value, std::uint32_t& result, Read& read, CompareExchange& compare_exchange) {
+                U previous;
+                bool retried_fault = false;
+                for (;;) {
+                    if (!read(addr, &previous)) {
+                        if (!exception_handler(exception_type_access_violation_read, addr) || !read(addr, &previous))
+                            return false;
+                    }
+                    const auto status = compare_exchange(addr, data_order(value), previous);
+                    if (status > 0) {
+                        result = data_order(previous);
+                        return true;
+                    }
+                    if (status < 0) {
+                        if (retried_fault || !exception_handler(exception_type_access_violation_write, addr))
+                            return false;
+                        retried_fault = true;
+                    }
+                    if (stopped_)
+                        return false;
                 }
             }
 
@@ -415,9 +442,9 @@ namespace eka2l1::arm {
                 return true;
             };
             while (index < 1024 && remaining) {
-                auto op = ops[index];
-                if (op.code == arm_code::word_loop_entry) {
-                    const auto& loop = slot.loops[op.value];
+                const auto* decoded = &ops[index];
+                if (decoded->code == arm_code::word_loop_entry) {
+                    const auto& loop = slot.loops[decoded->value];
                     if (const auto iterations = run_word_loop(loop, regs, remaining, ptr)) {
                         const auto left = regs[loop.reverse_compare ? loop.limit : loop.counter];
                         const auto right = regs[loop.reverse_compare ? loop.counter : loop.limit];
@@ -427,8 +454,9 @@ namespace eka2l1::arm {
                             index += loop.length;
                         continue;
                     }
-                    op = loop.body[0];
+                    decoded = &loop.body[0];
                 }
+                const auto& op = *decoded;
                 using enum arm_code;
                 auto a = regs[op.a];
                 auto& d = regs[op.d];
@@ -458,11 +486,16 @@ namespace eka2l1::arm {
                         regs[op.a] = updated;
                     break;
                 }
+                case arm_code::hint:
+                    break;
+                case arm_code::dual_multiply:
+                    armv6::dual_multiply(op.value, regs, flags);
+                    break;
                 case vfp_math:
                     execute_vfp_arithmetic(op.value);
                     break;
                 case write_flags:
-                    flags = (flags & ~0xf8000000u) | (regs[op.b] & 0xf8000000u);
+                    flags = (flags & ~op.value) | (regs[op.b] & op.value);
                     break;
                 case vmov_from:
                     d = state_.fpu_registers[op.value];
@@ -795,6 +828,8 @@ namespace eka2l1::arm {
                 const unsigned rhs = op.rhs;
                 std::uint32_t result;
                 switch (op.kind) {
+                case thumb::code::hint:
+                    goto advance;
                 case load_pair:
                 case load_move: {
                     if (!transfer.template operator()<std::uint32_t, false>(lhs + 4 * rhs, op.dst))
@@ -1224,7 +1259,7 @@ namespace eka2l1::arm {
             }
             case opcode::exchange: {
                 const auto target = reg(rm);
-                if (bits & 0x20)
+                if ((bits & 0x30) == 0x30)
                     regs[14] = next | (size == 2);
                 exchange(target);
                 return;
@@ -1234,8 +1269,42 @@ namespace eka2l1::arm {
             case opcode::read_status:
                 regs[rd] = flags;
                 break;
-            case opcode::write_flags:
-                flags = (flags & ~0xf8000000u) | (regs[rm] & 0xf8000000u);
+            case opcode::write_flags: {
+                const auto mask = user_status_mask(bits);
+                const auto value = bits & (1u << 25) ? std::rotr(bits & 255u, int((bits >> 7) & 30)) : regs[rm];
+                flags = (flags & ~mask) | (value & mask);
+                break;
+            }
+            case opcode::barrier:
+                std::atomic_thread_fence(std::memory_order_seq_cst);
+                break;
+            case opcode::feature_register:
+                if ((bits & 0xf00) == 0xf00)
+                    regs[rd] = 0; // The HLE kernel only initializes TPIDRURW.
+                else if (rn == 0)
+                    regs[rd] = arm11_fpsid;
+                else
+                    regs[rd] = rn == 7 ? arm11_mvfr0 : arm11_mvfr1;
+                break;
+            case opcode::swap: {
+                const auto addr = regs[rn];
+                const bool byte = bits & (1u << 22);
+                if (!byte && (addr & 3)) {
+                    exception_handler(exception_type_access_violation_read, addr);
+                    stopped_ = true;
+                    return;
+                }
+                const bool ok = byte
+                    ? swap_memory(addr, static_cast<std::uint8_t>(regs[rm]), regs[rd], read_8bit, exclusive_write_8bit)
+                    : swap_memory(addr, regs[rm], regs[rd], read_32bit, exclusive_write_32bit);
+                if (!ok) {
+                    stopped_ = true;
+                    return;
+                }
+                break;
+            }
+            case opcode::dual_multiply:
+                dual_multiply(bits, regs, flags);
                 break;
             case opcode::multiply_accumulate_words: {
                 const auto product = std::uint64_t(regs[rm]) * regs[(bits >> 8) & 15];
@@ -1363,7 +1432,7 @@ namespace eka2l1::arm {
                 execute_vfp_arithmetic(bits);
                 break;
             case opcode::vfp_move_double: {
-                const unsigned first = 2 * rm + ((bits & 32) ? 32 : 0);
+                const unsigned first = vfp_move_pair(bits);
                 if (bits & (1u << 20)) {
                     regs[rd] = state_.fpu_registers[first];
                     regs[rn] = state_.fpu_registers[first + 1];
@@ -1379,7 +1448,7 @@ namespace eka2l1::arm {
                 break;
             }
             case opcode::vfp_move: {
-                auto& single = state_.fpu_registers[2 * rn + ((bits >> 7) & 1)];
+                auto& single = state_.fpu_registers[vfp_move_word(bits)];
                 if (bits & (1u << 20))
                     regs[rd] = single;
                 else
