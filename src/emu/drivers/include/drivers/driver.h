@@ -60,11 +60,15 @@ namespace eka2l1::drivers {
         std::size_t size_;
         std::size_t max_cap_;
         std::size_t allocated_ = 0;
+        std::size_t first_capacity_;
 
-        explicit command_list(std::size_t max_cap = 0)
+        static constexpr std::size_t DEFAULT_FIRST_CAPACITY = 32;
+
+        explicit command_list(std::size_t max_cap = 0, std::size_t first_capacity = DEFAULT_FIRST_CAPACITY)
             : base_(nullptr)
             , size_(0)
-            , max_cap_(max_cap) {
+            , max_cap_(max_cap)
+            , first_capacity_(first_capacity) {
         }
 
         bool empty() const {
@@ -91,9 +95,13 @@ namespace eka2l1::drivers {
                 return;
             }
 
-            // Most frame submissions use only a small part of the flush budget.
-            const auto limit = count > max_cap_ ? std::max(count, max_cap_ * 2) : max_cap_;
-            const auto capacity = std::clamp<std::size_t>(allocated_ ? allocated_ * 2 : 32, count, limit);
+            // max_cap_ only limits merges; a batch may still outgrow it after a full merge.
+            std::size_t capacity = allocated_ ? allocated_ * 2 : first_capacity_;
+            if (count <= max_cap_) {
+                capacity = std::min(capacity, max_cap_);
+            }
+            capacity = std::max(capacity, count);
+
             command *grown = new command[capacity];
             if (base_) {
                 std::copy_n(base_, size_, grown);
@@ -101,7 +109,6 @@ namespace eka2l1::drivers {
             }
             base_ = grown;
             allocated_ = capacity;
-            max_cap_ = limit;
         }
     };
 

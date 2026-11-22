@@ -4,7 +4,14 @@
 
 using namespace eka2l1::drivers;
 
-TEST_CASE("Graphics command batches grow and merge without changing the flush budget", "[drivers][command-list]") {
+static command_list make_full_batch(graphics_command_builder &builder) {
+    for (std::size_t i = 0; i < MAX_CAP_COMMAND_COUNT; ++i) {
+        builder.create_next_command();
+    }
+    return builder.retrieve_command_list();
+}
+
+TEST_CASE("Graphics command batches grow on demand and keep the merge budget", "[drivers][command-list]") {
     graphics_command_builder source, destination;
     for (unsigned i = 0; i < 257; ++i) {
         auto *cmd = source.create_next_command();
@@ -28,10 +35,12 @@ TEST_CASE("Graphics command batches grow and merge without changing the flush bu
     }
     delete[] batch.base_;
 
-    for (std::size_t i = 0; i < MAX_CAP_COMMAND_COUNT; ++i) {
-        source.create_next_command();
-    }
-    auto full = source.retrieve_command_list();
+    source.create_next_command();
+    auto hinted = source.retrieve_command_list();
+    REQUIRE(hinted.allocated_ == 257);
+    delete[] hinted.base_;
+
+    auto full = make_full_batch(source);
     destination.create_next_command();
     REQUIRE_FALSE(destination.merge(full));
     REQUIRE(full.size_ == MAX_CAP_COMMAND_COUNT);
@@ -43,4 +52,9 @@ TEST_CASE("Graphics command batches grow and merge without changing the flush bu
     REQUIRE(overflow.size_ == MAX_CAP_COMMAND_COUNT + 1);
     REQUIRE(overflow.base_[MAX_CAP_COMMAND_COUNT].data_[0] == 1234);
     delete[] overflow.base_;
+
+    auto second_full = make_full_batch(source);
+    destination.create_next_command();
+    REQUIRE_FALSE(destination.merge(second_full));
+    delete[] second_full.base_;
 }

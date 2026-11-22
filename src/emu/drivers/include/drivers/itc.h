@@ -30,6 +30,7 @@
 #include <drivers/graphics/shader.h>
 #include <drivers/graphics/texture.h>
 
+#include <algorithm>
 #include <atomic>
 #include <condition_variable>
 #include <cstdint>
@@ -226,6 +227,13 @@ namespace eka2l1::drivers {
     class graphics_command_builder {
     protected:
         command_list list_;
+        std::size_t last_batch_size_ = 0;
+
+        command_list fresh_list() const {
+            // Size the next batch like the previous one, so recurring large batches allocate once.
+            return command_list(MAX_CAP_COMMAND_COUNT,
+                std::clamp(last_batch_size_, command_list::DEFAULT_FIRST_CAPACITY, MAX_CAP_COMMAND_COUNT));
+        }
 
     public:
         explicit graphics_command_builder()
@@ -249,11 +257,15 @@ namespace eka2l1::drivers {
         void reset_list() {
             delete[] list_.base_;
 
-            list_ = command_list(list_.max_cap_);
+            list_ = fresh_list();
         }
 
         command_list retrieve_command_list() {
-            return std::exchange(list_, command_list(list_.max_cap_));
+            if (list_.size_) {
+                last_batch_size_ = list_.size_;
+            }
+
+            return std::exchange(list_, fresh_list());
         }
 
         command *create_next_command() {
@@ -266,7 +278,9 @@ namespace eka2l1::drivers {
             }
 
             if (list_.base_ == nullptr) {
+                const std::size_t max_cap = list_.max_cap_;
                 list_ = another;
+                list_.max_cap_ = max_cap;
             } else {
                 if (another.size_ + list_.size_ > list_.max_cap_) {
                     return false;
