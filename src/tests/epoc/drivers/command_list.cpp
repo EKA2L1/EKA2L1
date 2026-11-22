@@ -38,4 +38,9 @@ TEST_CASE("Graphics command batches grow and merge without changing the flush bu
     destination.reset_list();
     REQUIRE(destination.merge(full));
     REQUIRE(destination.need_flush());
+    destination.create_next_command()->data_[0] = 1234;
+    auto overflow = destination.retrieve_command_list();
+    REQUIRE(overflow.size_ == MAX_CAP_COMMAND_COUNT + 1);
+    REQUIRE(overflow.base_[MAX_CAP_COMMAND_COUNT].data_[0] == 1234);
+    delete[] overflow.base_;
 }
