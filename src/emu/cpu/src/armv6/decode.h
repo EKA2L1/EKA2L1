@@ -74,6 +74,11 @@ namespace eka2l1::arm::armv6 {
             || kind == 16 || kind == 17 || (kind >= 24 && kind <= 27);
     }
 
+    constexpr unsigned vfp_payload_words(std::uint32_t bits) {
+        // Legacy double lists include a trailing format word in the address span.
+        return (bits & 255) & ((bits & 256) ? ~1u : ~0u);
+    }
+
     constexpr bool vfp_multiple(std::uint32_t bits) {
         if ((bits & 0x0e000e00) != 0x0c000a00 || ((bits >> 16) & 15) == 15)
             return false;
@@ -83,8 +88,8 @@ namespace eka2l1::arm::armv6 {
         const bool wide = bits & 256;
         const auto high = (bits >> 22) & 1;
         const auto first = 2 * ((bits >> 12) & 15) + (wide ? 32 * high : high);
-        const auto words = bits & 255;
-        return words && (!wide || (!(words & 1) && words <= 32)) && first + words <= (wide ? 64 : 32);
+        const auto words = vfp_payload_words(bits);
+        return words && (!wide || words <= 32) && first + words <= (wide ? 64 : 32);
     }
 
     constexpr unsigned vfp_move_word(std::uint32_t bits) {
@@ -97,7 +102,8 @@ namespace eka2l1::arm::armv6 {
     }
 
     constexpr std::uint32_t user_status_mask(std::uint32_t bits) {
-        return (bits & 0x80000 ? 0xf8000000u : 0u) | (bits & 0x40000 ? 0xf0000u : 0u);
+        return (bits & 0x80000 ? 0xf8000000u : 0u) | (bits & 0x40000 ? 0xf0000u : 0u)
+            | (bits & 0x20000 ? 0x200u : 0u);
     }
 
     inline instruction decode(std::uint32_t bits, bool thumb) {
@@ -196,8 +202,8 @@ namespace eka2l1::arm::armv6 {
                 op = opcode::exclusive_write;
             else if ((bits & 0x0fbf0fff) == 0x010f0000 && !(bits & 0x00400000))
                 op = opcode::read_status;
-            else if ((((bits & 0x0ff3fff0) == 0x0120f000 && rm != 15)
-                    || (bits & 0x0ff3f000) == 0x0320f000) && (bits & 0xc0000))
+            else if ((((bits & 0x0ff0fff0) == 0x0120f000 && rm != 15)
+                    || (bits & 0x0ff0f000) == 0x0320f000) && (bits & 0xf0000))
                 op = opcode::write_flags;
             else if ((bits & 0x0ff000f0) == 0x00400090)
                 op = opcode::multiply_accumulate_words;
@@ -326,7 +332,7 @@ namespace eka2l1::arm::armv6 {
             const auto high = (bits >> 22) & 1;
             op.code = bits & (1u << 20) ? arm_code::vfp_load : arm_code::vfp_store;
             op.b = 2 * op.d + (wide ? 32 * high : high);
-            op.shift = multiple ? bits & 255 : (wide ? 2 : 1);
+            op.shift = multiple ? vfp_payload_words(bits) : (wide ? 2 : 1);
             op.value = (bits & 255) * (up ? 4u : -4u);
             op.flags = (multiple && up ? 1 : 0) | (multiple && (bits & (1u << 21)) ? 2 : 0);
             return op;
@@ -336,7 +342,8 @@ namespace eka2l1::arm::armv6 {
             op.value = bits;
             return op;
         case opcode::write_flags:
-            if (bits & (1u << 25))
+            // The page runner assumes little-endian data until it returns to dispatch.
+            if (bits & ((1u << 25) | (1u << 17)))
                 break;
             op.value = user_status_mask(bits);
             op.code = arm_code::write_flags;

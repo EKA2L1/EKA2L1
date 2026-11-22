@@ -1473,7 +1473,7 @@ namespace eka2l1::arm {
                 const auto base = rn == 15 ? reg(rn) & ~3u : reg(rn);
                 const auto updated = bits & (1u << 23) ? base + offset : base - offset;
                 const auto addr = multiple && (bits & (1u << 23)) ? base : updated;
-                const auto count = multiple ? bits & 255 : wide ? 2u : 1u;
+                const auto count = multiple ? vfp_payload_words(bits) : wide ? 2u : 1u;
                 auto* words = state_.fpu_registers.data() + first;
                 const auto& entry = tlb_.entries[(addr >> 12) & r12l1::TLB_ENTRY_MASK];
                 if (!(flags & 0x200) && (load ? entry.read_addr : entry.write_addr) == (addr & ~4095u)

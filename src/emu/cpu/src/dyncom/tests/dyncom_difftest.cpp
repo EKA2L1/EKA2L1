@@ -2258,6 +2258,67 @@ bool check_thumb_memory_fault(bool store, bool retry, bool writeback, bool armv6
     return valid;
 }
 
+std::uint32_t check_msr_fields(backend_env &env) {
+    std::uint32_t failures = 0;
+    for (unsigned fields = 1; fields <= 15; ++fields) {
+        for (bool immediate : { false, true }) {
+            program p;
+            p.init[0] = 0xffffffff;
+            p.init[1] = PROG_DATA_PTR;
+            std::uint32_t word = 0x12345678;
+            env.cpu->write_32bit(p.init[1], &word);
+            push32(p.code, (immediate ? 0xe320fc02u : 0xe120f000u) | (fields << 16)); // #0x200 or r0
+            push32(p.code, 0xe5912000); // LDR r2, [r1]
+            push32(p.code, 0xe10f3000); // MRS r3, CPSR
+            p.budget = 3;
+            install(env, p);
+            env.cpu->imb_range(p.addr, p.code.size());
+            const bool big_endian = fields & 2;
+            const auto expected = 0x10u | (big_endian ? 0x200u : 0u)
+                | (!immediate && (fields & 4) ? 0xf0000u : 0u)
+                | (!immediate && (fields & 8) ? 0xf8000000u : 0u);
+            const auto state = execute(env, p);
+            if (state.reg[2] != (big_endian ? 0x78563412u : word) || state.reg[3] != expected
+                || state.cpsr != expected || state.reg[15] != p.addr + 12) {
+                std::printf("[FAIL] MSR fields=%x immediate=%d\n", fields, immediate);
+                ++failures;
+            }
+        }
+    }
+    return failures;
+}
+
+std::uint32_t check_vfp_format_word(backend_env &env) {
+    std::uint32_t failures = 0;
+    for (bool big_endian : { false, true }) {
+        program p;
+        p.init[0] = PROG_DATA_PTR + 20;
+        p.init[1] = PROG_DATA_PTR;
+        for (unsigned i = 0; i < 4; ++i)
+            p.vfp_init[i] = 0x10203040u * (i + 1);
+        p.vfp_init[8] = 0xabcdef01;
+        std::uint32_t padding = 0xdeadbeef;
+        env.cpu->write_32bit(PROG_DATA_PTR + 16, &padding);
+        push32(p.code, big_endian ? 0xf1010200 : 0xf1010000); // SETEND
+        push32(p.code, 0xed200b05); // FSTMDBX r0!, {d0-d1}
+        push32(p.code, 0xecb12b05); // FLDMIAX r1!, {d2-d3}
+        p.budget = 3;
+        install(env, p);
+        env.cpu->imb_range(p.addr, p.code.size());
+        const auto state = execute(env, p);
+        std::uint32_t first, last;
+        env.cpu->read_32bit(PROG_DATA_PTR, &first);
+        env.cpu->read_32bit(PROG_DATA_PTR + 16, &last);
+        if (state.reg[0] != PROG_DATA_PTR || state.reg[1] != PROG_DATA_PTR + 20 || last != padding
+            || first != (big_endian ? 0x80604020u : 0x10203040u)
+            || std::memcmp(state.vfp + 4, p.vfp_init, 4 * sizeof(first)) || state.vfp[8] != p.vfp_init[8]) {
+            std::printf("[FAIL] legacy VFP format word, big endian=%d\n", big_endian);
+            ++failures;
+        }
+    }
+    return failures;
+}
+
 std::uint32_t check_user_instructions(backend_env &dc, backend_env &da, bool armv6, std::uint32_t base_seed,
     coverage &cov) {
     std::uint32_t failures = 0;
@@ -2550,6 +2611,10 @@ int main(int argc, char **argv) {
     coverage cov;
 
     failures += check_user_instructions(*dc, *da, armv6, base_seed, cov);
+    if (armv6) {
+        failures += check_msr_fields(*dc);
+        failures += check_vfp_format_word(*dc);
+    }
 
     const std::uint32_t programs = (count / 200 < 4) ? 4 : (count / 200);
     const std::uint32_t rounds = (programs / 8 < 2) ? 2 : (programs / 8);
