@@ -577,7 +577,7 @@ namespace eka2l1::control {
                             auto *target = strings.at(key);
                             auto v = value.string();
                             if (key == "cpuBackend")
-                                require(v == "dynarmic" || v == "dyncom" || v == "r12l1", "bad_request", "invalid CPU backend", 400);
+                                require(v == "dynarmic" || v == "dyncom" || v == "ekalynx" || v == "r12l1", "bad_request", "invalid CPU backend", 400);
                             apply.emplace_back([target, v] { *target = v; });
                         } else if (key == "audioMasterVolume" || key == "btnetListenPort" || key == "btnetDiscoveryMode") {
                             double v = required_number(body, key);

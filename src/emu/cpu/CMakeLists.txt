@@ -85,6 +85,7 @@ add_library(cpu
         include/cpu/arm_utils.h
         src/arm_analyser_capstone.cpp
         src/arm_analyser.cpp
+        src/ekalynx/interpreter.cpp
         src/arm_factory.cpp
         src/arm_utils.cpp
         ${SOURCE_12L1R_PUBLIC}
@@ -157,5 +158,7 @@ if (EKA2L1_BUILD_DYNCOM_DIFFTEST)
     target_compile_definitions(cpu PUBLIC EKA2L1_DYNCOM_DIFFTEST=1)
     add_executable(dyncom_difftest src/dyncom/tests/dyncom_difftest.cpp)
     target_link_libraries(dyncom_difftest PRIVATE cpu common dynarmic)
+    add_executable(arm_replay src/dyncom/tests/arm_replay.cpp)
+    target_link_libraries(arm_replay PRIVATE cpu)
 
 endif()

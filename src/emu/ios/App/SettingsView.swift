@@ -14,7 +14,7 @@ struct SettingsView: View {
 
     @State private var extensiveLogging = false
     @State private var hideSystemApps = true
-    @State private var useJIT = false
+    @State private var cpuBackend = "ekalynx"
     @State private var performanceMode = "balanced"
     @State private var availableLanguages: [EKA2L1LanguageItem] = []
     @State private var systemLanguageCode = -1
@@ -92,9 +92,24 @@ struct SettingsView: View {
                     Text("settings.performanceMode.balanced").tag("balanced")
                 }
                 Toggle("settings.hideSystemApps", isOn: $hideSystemApps)
-                if EKA2L1Bridge.shared.jitCompiledIn {
-                    Toggle("settings.jit", isOn: $useJIT)
+                Picker("settings.cpuBackend", selection: Binding(
+                    get: { cpuBackend },
+                    set: { backend in
+                        let snapshot: [String: Any] = backend == "jit"
+                            ? ["jitEnabled": true]
+                            : ["cpuBackend": backend, "jitEnabled": false]
+                        if EKA2L1Bridge.shared.applyConfigSnapshot(snapshot) {
+                            cpuBackend = backend
+                        }
+                    }
+                )) {
+                    Text(verbatim: "Dyncom").tag("dyncom")
+                    Text("settings.interpreter.ekalynx").tag("ekalynx")
+                    if EKA2L1Bridge.shared.jitCompiledIn {
+                        Text("settings.jit").tag("jit")
+                    }
                 }
+                .accessibilityIdentifier("settings.cpuBackend")
                 HStack {
                     Text(verbatim: "MMC ID")
                     Spacer()
@@ -117,7 +132,7 @@ struct SettingsView: View {
                 } else {
                     Text("settings.mmcId.hint")
                 }
-                if EKA2L1Bridge.shared.jitCompiledIn {
+                if cpuBackend == "jit" {
                     if !EKA2L1Bridge.shared.jitAvailable {
                         Text("settings.jit.unavailable")
                     } else {
@@ -269,7 +284,6 @@ struct SettingsView: View {
                 _ = EKA2L1Bridge.shared.applyConfigSnapshot(["mmcId": normalizedMMCId])
             }
         }
-        .onChange(of: useJIT) { _ in save() }
         .onChange(of: performanceMode) { _ in save() }
         .onChange(of: extensiveLogging) { _ in save() }
         .onChange(of: hideSystemApps) { _ in save() }
@@ -324,8 +338,13 @@ struct SettingsView: View {
         if let value = snapshot["hideSystemApps"] as? NSNumber {
             hideSystemApps = value.boolValue
         }
-        if let value = snapshot["jitEnabled"] as? NSNumber {
-            useJIT = value.boolValue
+        if EKA2L1Bridge.shared.jitCompiledIn, (snapshot["jitEnabled"] as? NSNumber)?.boolValue == true {
+            cpuBackend = "jit"
+        } else {
+            switch (snapshot["cpuBackend"] as? String)?.lowercased() {
+            case "dyncom": cpuBackend = "dyncom"
+            default: cpuBackend = "ekalynx"
+            }
         }
         // Anything the bridge doesn't recognise runs as balanced.
         performanceMode = snapshot["performanceMode"] as? String == "high-performance" ? "high-performance" : "balanced"
@@ -360,7 +379,6 @@ struct SettingsView: View {
             "deviceDisplayName": friendlyPhoneName,
             "extensiveLogging": extensiveLogging,
             "hideSystemApps": hideSystemApps,
-            "jitEnabled": useJIT && EKA2L1Bridge.shared.jitCompiledIn,
             "performanceMode": performanceMode,
             "btnetDiscoveryMode": btDiscoveryMode,
             "btnetListenPort": min(max(btListenPort, 1), 65535),

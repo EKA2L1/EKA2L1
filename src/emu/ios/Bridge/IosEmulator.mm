@@ -3028,8 +3028,9 @@ static constexpr std::uint8_t k_unlimited_refresh_rate = 240;
         _state->conf.extensive_logging = extensive.boolValue;
     }
     NSString *cpuBackend = snapshot[@"cpuBackend"];
-    if ([cpuBackend isKindOfClass:NSString.class]) {
+    if ([cpuBackend isKindOfClass:NSString.class] && _state->conf.cpu_backend != cpuBackend.UTF8String) {
         _state->conf.cpu_backend = cpuBackend.UTF8String;
+        _state->needs_reboot_before_launch = true;
     }
     NSNumber *jitEnabled = snapshot[@"jitEnabled"];
     if (jitEnabled && jitEnabled.boolValue != _state->conf.ios_use_jit) {

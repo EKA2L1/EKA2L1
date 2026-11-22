@@ -3405,6 +3405,22 @@
         }
       }
     },
+    "settings.cpuBackend" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CPU Backend"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "CPU 后端"
+          }
+        }
+      }
+    },
     "settings.device" : {
       "localizations" : {
         "en" : {
@@ -3737,6 +3753,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "IMEI 应为 15 位数字。仍会保存当前值。"
+          }
+        }
+      }
+    },
+    "settings.interpreter.ekalynx" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ekalynx (experimental)"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ekalynx（实验性）"
           }
         }
       }

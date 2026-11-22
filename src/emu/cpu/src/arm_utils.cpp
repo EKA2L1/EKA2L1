@@ -51,6 +51,9 @@ namespace eka2l1::arm {
         case arm_emulator_type::unicorn:
             return unicorn_jit_backend_formal_name;
 
+        case arm_emulator_type::ekalynx:
+            return "ekalynx";
+
         case arm_emulator_type::dyncom:
             return dyncom_jit_backend_formal_name;
 
@@ -72,6 +75,9 @@ namespace eka2l1::arm {
 
         if (backend_lowered == dynarmic_jit_backend_name)
             return arm_emulator_type::dynarmic;
+
+        if (backend_lowered == "ekalynx")
+            return arm_emulator_type::ekalynx;
 
         if (backend_lowered == dyncom_jit_backend_name) {
             return arm_emulator_type::dyncom;

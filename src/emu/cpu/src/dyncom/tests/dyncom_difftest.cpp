@@ -23,7 +23,9 @@
  */
 
 #include <cpu/arm_dynarmic.h>
+#include <cpu/ekalynx.h>
 #include <cpu/dyncom/arm_dyncom.h>
+#include <cpu/dyncom/arm_dyncom_thumb.h>
 #include <cpu/dyncom/vfp/asm_vfp.h>
 #include <cpu/dyncom/vfp/vfp.h>
 #include <cpu/12l1r/exclusive_monitor.h>
@@ -39,6 +41,7 @@
 #include <cstring>
 #include <memory>
 #include <random>
+#include <string_view>
 #include <vector>
 
 using namespace eka2l1;
@@ -62,10 +65,10 @@ struct diff_env {
     }
 };
 
-std::unique_ptr<dyncom_core> make_core(diff_env &env) {
-    auto core = std::make_unique<dyncom_core>(&env.monitor, PAGE_BITS);
+template <typename Core>
+std::unique_ptr<Core> wire_core(diff_env &env, std::unique_ptr<Core> core) {
     std::uint8_t *base = env.mem.data();
-    dyncom_core *cp = core.get();
+    Core *cp = core.get();
 
     auto seed_tlb = [cp, base](std::uint32_t addr) {
         const std::uint32_t page = addr & ~PAGE_MASK;
@@ -153,7 +156,7 @@ struct cpu_state {
     }
 };
 
-cpu_state read_state(dyncom_core &c) {
+cpu_state read_state(core &c) {
     cpu_state s{};
     for (std::size_t i = 0; i < 16; i++) {
         s.reg[i] = c.get_reg(i);
@@ -162,7 +165,7 @@ cpu_state read_state(dyncom_core &c) {
     return s;
 }
 
-void write_state(dyncom_core &c, const cpu_state &s) {
+void write_state(core &c, const cpu_state &s) {
     for (std::size_t i = 0; i < 16; i++) {
         c.set_reg(i, s.reg[i]);
     }
@@ -1112,11 +1115,14 @@ void wire_backend(backend_env &e) {
     cp->system_call_handler = [ep](const std::uint32_t) { ep->syscalls++; };
 }
 
-std::unique_ptr<backend_env> make_dyncom_env() {
+std::unique_ptr<backend_env> make_interpreter_env(bool ekalynx) {
     auto e = std::make_unique<backend_env>();
-    e->name = "dyncom";
+    e->name = ekalynx ? "ekalynx" : "dyncom";
     e->monitor = std::make_unique<r12l1::exclusive_monitor>(1);
-    e->cpu = std::make_unique<dyncom_core>(e->monitor.get(), PAGE_BITS);
+    if (ekalynx)
+        e->cpu = make_ekalynx_interpreter(e->monitor.get());
+    else
+        e->cpu = std::make_unique<dyncom_core>(e->monitor.get(), PAGE_BITS);
     wire_backend(*e);
     return e;
 }
@@ -1437,6 +1443,22 @@ std::uint32_t gen_arm_block_transfer(rng &r, bool straddle_page) {
         | (l << 20) | (rn << 16) | list;
 }
 
+// PC-relative literal loads, and STMDB without write-back whose list includes
+// PC (APCS frame setup). Neither can move a pointer register.
+std::uint32_t gen_arm_pc_relative(rng &r) {
+    if (r.flip()) {
+        const std::uint32_t u = r.flip() ? 1u : 0u;
+        const std::uint32_t b = r.flip() ? 1u : 0u;
+        return (a_cond(r) << 28) | 0x051F0000u | (u << 23) | (b << 22) | (a_wreg(r) << 12)
+            | (r.range(16) * 4);
+    }
+    std::uint32_t list = 1u << 15;
+    for (std::uint32_t i = 0; i < A_WRITABLE_N; i++) {
+        if (r.flip()) list |= 1u << A_WRITABLE[i];
+    }
+    return (a_cond(r) << 28) | 0x09000000u | (A_PTR2 << 16) | list;
+}
+
 // Thumb: r5 is the data pointer and r6 a small index; neither is ever written,
 // and the low-register forms have no write-back, so no drift is possible.
 constexpr int T_PTR = 5;
@@ -1533,11 +1555,12 @@ program gen_arm_program(rng &r, std::uint32_t addr, std::uint32_t length) {
             else if (std::strcmp(only, "ls") == 0) inst = gen_arm_single_transfer(r);
             else if (std::strcmp(only, "hw") == 0) inst = gen_arm_halfword(r);
             else if (std::strcmp(only, "blk") == 0) inst = gen_arm_block_transfer(r, r.flip());
+            else if (std::strcmp(only, "pc") == 0) inst = gen_arm_pc_relative(r);
             else inst = gen_arm_multiply(r);
             push32(p.code, inst);
             continue;
         }
-        switch (r.range(10)) {
+        switch (r.range(11)) {
         case 0: case 1: case 2: case 3:
             inst = gen_arm_data_processing(r);
             break;
@@ -1551,6 +1574,9 @@ program gen_arm_program(rng &r, std::uint32_t addr, std::uint32_t length) {
             // Half of the block transfers use the pointer sitting on the page
             // edge, so the LDM/STM page cursor has to re-resolve mid-run.
             inst = gen_arm_block_transfer(r, r.flip());
+            break;
+        case 10:
+            inst = gen_arm_pc_relative(r);
             break;
         default:
             inst = gen_arm_multiply(r);
@@ -1668,8 +1694,12 @@ std::uint32_t suite_cold(backend_env &dc, backend_env &da, std::uint32_t base_se
         rng r(seed);
         const bool thumb = r.flip();
         const std::uint32_t len = 4 + r.range(20);
+        // Some ARM programs straddle a code page so execution continues onto the next page.
+        rng placement(seed ^ 0x27D4EB2Fu);
+        const std::uint32_t addr = !thumb && placement.flip()
+            ? PROG_CODE_LO + 0x1000 - 4 * placement.range(len + 1) : PROG_CODE_LO;
         const program p = thumb ? gen_thumb_program(r, PROG_CODE_LO, len)
-                                : gen_arm_program(r, PROG_CODE_LO, len);
+                                : gen_arm_program(r, addr, len);
         if (!run_pair("cold", dc, da, p, seed, true, cov)) failures++;
     }
     return failures;
@@ -1856,7 +1886,7 @@ std::uint32_t check_thumb_counted_word_loop(backend_env &dc, backend_env &da, co
             const auto iterations_before = cov.accel_bulk_iterations;
             if (!run_pair("counted-word-loop", dc, da, p, 0xc0123, true, cov, budget != 4096)) {
                 ++failures;
-            } else if ((cov.accel_bulk_iterations > iterations_before) != (budget != 35)) {
+            } else if (std::string_view(dc.name) == "dyncom" && (cov.accel_bulk_iterations > iterations_before) != (budget != 35)) {
                 std::printf("[HARNESS BUG] unexpected counted word loop batching\n");
                 ++failures;
             }
@@ -2160,7 +2190,7 @@ std::uint32_t check_block_link_invalidation(backend_env &dc) {
 // VFP: the host-float fast path against dynarmic's own VFP implementation.
 std::uint32_t suite_vfp(backend_env &dc, backend_env &da, std::uint32_t base_seed,
     std::uint32_t count, coverage &cov) {
-    // vadd/vsub/vmul/vdiv/vmla/vmls .f32 over s8..s15, then store the bank.
+    // Single-precision arithmetic and compares over s8..s15, then store the bank.
     static constexpr std::uint32_t vfp_ops[] = {
         0xEE344A05u, // vadd.f32 s8, s8, s10
         0xEE344A45u, // vsub.f32 s8, s8, s10
@@ -2170,6 +2200,12 @@ std::uint32_t suite_vfp(backend_env &dc, backend_env &da, std::uint32_t base_see
         0xEE044AC5u, // vmls.f32 s8, s9, s10
         0xEEB04AC5u, // vabs.f32 s8, s10
         0xEEB14A45u, // vneg.f32 s8, s10
+        0xEE144A85u, // vnmls.f32 s8, s9, s10
+        0xEE144AC5u, // vnmla.f32 s8, s9, s10
+        0xEE244AC5u, // vnmul.f32 s8, s9, s10
+        0xEEB44A45u, // vcmp.f32 s8, s10
+        0xEEB44AC5u, // vcmpe.f32 s8, s10
+        0xEEB54A40u, // vcmp.f32 s8, #0
     };
 
     std::uint32_t failures = 0;
@@ -2184,10 +2220,29 @@ std::uint32_t suite_vfp(backend_env &dc, backend_env &da, std::uint32_t base_see
         set_common_init(p, r);
         for (int v = 8; v < 16; v++) p.vfp_init[v] = random_normal_f32(r);
 
+        if (r.flip()) {
+            // Exercise both incoming states of the cumulative inexact flag.
+            push32(p.code, 0xe3a05010u); // mov r5, #0x10
+            push32(p.code, 0xeee15a10u); // vmsr fpscr, r5
+        }
+        push32(p.code, 0xeef14a10u); // vmrs r4, fpscr
         const std::uint32_t len = 4 + r.range(12);
         for (std::uint32_t n = 0; n < len; n++) {
             push32(p.code, vfp_ops[r.range(sizeof(vfp_ops) / sizeof(vfp_ops[0]))]);
         }
+        // The d4-d5 reload below overwrites s8, so preserve the arithmetic result in r6.
+        push32(p.code, 0xee146a10u); // vmov r6, s8
+        push32(p.code, 0xeef1fa10u); // vmrs APSR_nzcv, fpscr
+        push32(p.code, 0xee000a10u); // vmov s0, r0
+        push32(p.code, 0xeeb81bc0u); // vcvt.f64.s32 d1, s0
+        push32(p.code, 0xeeb82b40u); // vcvt.f64.u32 d2, s0
+        push32(p.code, 0xec532b11u); // vmov r2, r3, d1
+        push32(p.code, 0xed892b02u); // vstr d2, [r9, #8]
+        push32(p.code, 0xed993b02u); // vldr d3, [r9, #8]
+        if (std::string_view(dc.name) == "ekalynx")
+            push32(p.code, 0xeef14a10u); // Read cumulative exceptions after rounding.
+        push32(p.code, 0xeca92b04u); // vstmia r9!, {d2-d3}
+        push32(p.code, 0xed394b04u); // vldmdb r9!, {d4-d5}
         // Spill the bank so a divergence also shows up in memory.
         push32(p.code, 0xED894A00u); // vstr s8, [r9]
         push32(p.code, 0xEDC94A01u); // vstr s9, [r9, #4]
@@ -2195,6 +2250,235 @@ std::uint32_t suite_vfp(backend_env &dc, backend_env &da, std::uint32_t base_see
 
         p.budget = len * 4 + 64;
         if (!run_pair("vfp", dc, da, p, seed, true, cov)) failures++;
+    }
+    return failures;
+}
+
+bool check_thumb_memory_fault(bool store, bool retry, bool writeback, bool ekalynx) {
+    auto env = make_interpreter_env(ekalynx);
+    program p;
+    p.thumb = true;
+    p.budget = 5;
+    p.init[1] = PROG_DATA_PTR;
+    // MOVS, SUBS set N and clear C. The transfer must not change those flags.
+    const int transfer = writeback ? (store ? 0xc101 : 0xc901) : (store ? 0x6008 : 0x6808);
+    for (std::uint16_t hw : { 0x2000, 0x3801, transfer, 0x2201, 0x2302, 0xe7fe })
+        push16(p.code, hw);
+    install(*env, p);
+    unsigned accesses = 0, faults = 0;
+    bool valid = true;
+    const auto access = [&](address addr, std::uint32_t *value) {
+        ++accesses;
+        valid &= addr == PROG_DATA_PTR && env->cpu->get_pc() == p.addr + 4
+            && env->cpu->get_reg(1) == PROG_DATA_PTR + (writeback ? 4 : 0);
+        if (store)
+            valid &= *value == 0xffffffffu;
+        else if (accesses == 2)
+            *value = 0x56781234;
+        return accesses == 2;
+    };
+    env->cpu->read_32bit = access;
+    env->cpu->write_32bit = access;
+    env->cpu->exception_handler = [&](exception_type type, address addr) {
+        ++faults;
+        valid &= addr == PROG_DATA_PTR && env->cpu->get_pc() == p.addr + 4
+            && type == (store ? exception_type_access_violation_write : exception_type_access_violation_read);
+        env->cpu->stop();
+        return retry;
+    };
+    const auto state = execute(*env, p);
+    valid &= faults == 1 && accesses == (retry ? 2u : 1u) && state.reg[15] == p.addr + 6
+        && (state.cpsr >> 28) == 8 && state.reg[2] == 0 && state.reg[3] == 0
+        && state.reg[0] == (store ? 0xffffffffu : (retry ? 0x56781234u : 0u));
+    if (!valid)
+        std::printf("[FAIL] Thumb block fault store=%d retry=%d pc=%08x cpsr=%08x accesses=%u\n",
+            store, retry, state.reg[15], state.cpsr, accesses);
+    return valid;
+}
+
+std::uint32_t check_msr_fields(backend_env &env) {
+    std::uint32_t failures = 0;
+    for (unsigned fields = 1; fields <= 15; ++fields) {
+        for (bool immediate : { false, true }) {
+            program p;
+            p.init[0] = 0xffffffff;
+            p.init[1] = PROG_DATA_PTR;
+            std::uint32_t word = 0x12345678;
+            env.cpu->write_32bit(p.init[1], &word);
+            push32(p.code, (immediate ? 0xe320fc02u : 0xe120f000u) | (fields << 16)); // #0x200 or r0
+            push32(p.code, 0xe5912000); // LDR r2, [r1]
+            push32(p.code, 0xe10f3000); // MRS r3, CPSR
+            p.budget = 3;
+            install(env, p);
+            env.cpu->imb_range(p.addr, p.code.size());
+            const bool big_endian = fields & 2;
+            const auto expected = 0x10u | (big_endian ? 0x200u : 0u)
+                | (!immediate && (fields & 4) ? 0xf0000u : 0u)
+                | (!immediate && (fields & 8) ? 0xf8000000u : 0u);
+            const auto state = execute(env, p);
+            if (state.reg[2] != (big_endian ? 0x78563412u : word) || state.reg[3] != expected
+                || state.cpsr != expected || state.reg[15] != p.addr + 12) {
+                std::printf("[FAIL] MSR fields=%x immediate=%d\n", fields, immediate);
+                ++failures;
+            }
+        }
+    }
+    return failures;
+}
+
+std::uint32_t check_vfp_format_word(backend_env &env) {
+    std::uint32_t failures = 0;
+    for (bool big_endian : { false, true }) {
+        program p;
+        p.init[0] = PROG_DATA_PTR + 20;
+        p.init[1] = PROG_DATA_PTR;
+        for (unsigned i = 0; i < 4; ++i)
+            p.vfp_init[i] = 0x10203040u * (i + 1);
+        p.vfp_init[8] = 0xabcdef01;
+        std::uint32_t padding = 0xdeadbeef;
+        env.cpu->write_32bit(PROG_DATA_PTR + 16, &padding);
+        push32(p.code, big_endian ? 0xf1010200 : 0xf1010000); // SETEND
+        push32(p.code, 0xed200b05); // FSTMDBX r0!, {d0-d1}
+        push32(p.code, 0xecb12b05); // FLDMIAX r1!, {d2-d3}
+        p.budget = 3;
+        install(env, p);
+        env.cpu->imb_range(p.addr, p.code.size());
+        const auto state = execute(env, p);
+        std::uint32_t first, last;
+        env.cpu->read_32bit(PROG_DATA_PTR, &first);
+        env.cpu->read_32bit(PROG_DATA_PTR + 16, &last);
+        if (state.reg[0] != PROG_DATA_PTR || state.reg[1] != PROG_DATA_PTR + 20 || last != padding
+            || first != (big_endian ? 0x80604020u : 0x10203040u)
+            || std::memcmp(state.vfp + 4, p.vfp_init, 4 * sizeof(first)) || state.vfp[8] != p.vfp_init[8]) {
+            std::printf("[FAIL] legacy VFP format word, big endian=%d\n", big_endian);
+            ++failures;
+        }
+    }
+    return failures;
+}
+
+std::uint32_t check_user_instructions(backend_env &dc, backend_env &da, bool ekalynx, std::uint32_t base_seed,
+    coverage &cov) {
+    std::uint32_t failures = 0;
+    for (unsigned hint = 0; hint < 256; ++hint) {
+        std::uint32_t normalized, size;
+        const auto status = TranslateThumbInstruction(0, 0xbf00 | hint, &normalized, &size);
+        if ((hint & 15) == 0 && hint <= 0x40) {
+            if (status == ThumbDecodeStatus::UNDEFINED || normalized != (0xe320f000 | (hint >> 4)))
+                ++failures;
+        } else if (status != ThumbDecodeStatus::UNDEFINED) {
+            ++failures;
+        }
+    }
+    {
+        program p;
+        p.thumb = true;
+        push16(p.code, 0x2007); // MOVS r0, #7
+        push16(p.code, 0xbf00); // NOP
+        push16(p.code, 0xbf08); // IT is outside the emulated Thumb-1 profile.
+        install(dc, p);
+        dc.cpu->imb_range(p.addr, p.code.size());
+        dc.exceptions = 0;
+        p.budget = 2;
+        const auto prefix = execute(dc, p);
+        if (dc.exceptions || prefix.reg[0] != 7 || prefix.reg[15] != p.addr + 4) {
+            std::printf("[FAIL] Thumb hint prefix r0=%u pc=%x expected=%x exceptions=%llu\n",
+                prefix.reg[0], prefix.reg[15], p.addr + 4, static_cast<unsigned long long>(dc.exceptions));
+            ++failures;
+        }
+        dc.cpu->run(1);
+        if (dc.exceptions != 1 || dc.last_exception != exception_type_undefined_inst
+            || dc.last_exception_pc != p.addr + 4) {
+            std::printf("[FAIL] Thumb undefined pc=%x expected=%x exceptions=%llu\n",
+                dc.last_exception_pc, p.addr + 4, static_cast<unsigned long long>(dc.exceptions));
+            ++failures;
+        }
+    }
+    if (ekalynx) {
+        program p;
+        p.kind = "dual-multiply";
+        p.init[1] = 0x80007fff;
+        p.init[2] = 0xfffd0005;
+        p.init[3] = 0x7fffffff;
+        for (auto base : { 0xe7003211u, 0xe700f211u, 0xe7410312u }) {
+            for (auto variant : { 0u, 32u, 64u, 96u }) {
+                p.code.clear();
+                push32(p.code, base | variant);
+                p.budget = 1;
+                if (!run_pair(p.kind, dc, da, p, base_seed, true, cov, true))
+                    ++failures;
+            }
+        }
+        p.code.clear();
+        p.init[0] = 0x80051234;
+        p.init[1] = 0xc008abcd;
+        for (auto bits : {
+                 0xe12cf000u, // MSR CPSR_fs, r0
+                 0xe328f102u, // MSR CPSR_f, #0x80000000
+                 0xec410a30u, // VMOV s1, s2, r0, r1
+                 0xec532a30u, // VMOV r2, r3, s1, s2
+                 0xee213b10u, // VMOV d1[1], r3
+                 0xee314b10u, // VMOV r4, d1[1]
+                 0xe10f5000u }) // MRS r5, CPSR
+            push32(p.code, bits);
+        p.budget = 7;
+        install(dc, p);
+        dc.cpu->imb_range(p.addr, p.code.size());
+        const auto moved = execute(dc, p);
+        if (moved.reg[2] != p.init[0] || moved.reg[3] != p.init[1] || moved.vfp[3] != p.init[1]
+            || moved.reg[4] != p.init[1] || moved.reg[5] != 0x80050010)
+            ++failures;
+
+        p.code.clear();
+        p.init[1] = PROG_DATA_PTR;
+        p.init[2] = 0xffff8001;
+        for (auto bits : {
+                 0xe1c120b0u, // STRH r2, [r1]
+                 0xe0f100f2u, // LDRSHT r0, [r1], #2
+                 0xee1d3f70u, // MRC TPIDRURO
+                 0xeef04a10u, // VMRS r4, FPSID
+                 0xeef75a10u, // VMRS r5, MVFR0
+                 0xeef66a10u, // VMRS r6, MVFR1
+                 0xf10c0080u, // CPSID i in User mode
+                 0xe320f003u }) // WFI
+            push32(p.code, bits);
+        p.budget = 8;
+        install(dc, p);
+        dc.cpu->imb_range(p.addr, p.code.size());
+        const auto status = execute(dc, p);
+        if (status.reg[0] != 0xffff8001 || status.reg[1] != PROG_DATA_PTR + 2 || status.reg[3]
+            || status.reg[4] != 0x410120b4 || status.reg[5] != 0x11111111 || status.reg[6]
+            || status.cpsr != 0x10 || status.reg[15] != p.addr + 32)
+            ++failures;
+
+        p.init[1] = 0xc008abcd;
+        p.code.clear();
+        p.init[2] = PROG_DATA_PTR;
+        push32(p.code, 0xe1020091); // SWP r0, r1, [r2]
+        push32(p.code, 0xe1423090); // SWPB r3, r0, [r2]
+        p.budget = 2;
+        unsigned attempts = 0;
+        dc.cpu->exclusive_write_32bit = [&](address addr, std::uint32_t value, std::uint32_t old) {
+            if (++attempts == 1) {
+                std::uint32_t concurrent = 0x12345678;
+                dc.cpu->write_32bit(addr, &concurrent);
+                return 0;
+            }
+            return old == 0x12345678 && dc.cpu->write_32bit(addr, &value) ? 1 : -1;
+        };
+        dc.cpu->exclusive_write_8bit = [&](address addr, std::uint8_t value, std::uint8_t old) {
+            return old == std::uint8_t(p.init[1]) && dc.cpu->write_8bit(addr, &value) ? 1 : -1;
+        };
+        install(dc, p);
+        dc.cpu->imb_range(p.addr, p.code.size());
+        const auto swapped = execute(dc, p);
+        std::uint32_t stored;
+        dc.cpu->read_32bit(PROG_DATA_PTR, &stored);
+        if (attempts != 2 || swapped.reg[0] != 0x12345678 || swapped.reg[3] != std::uint8_t(p.init[1])
+            || stored != ((p.init[1] & ~255u) | 0x78))
+            ++failures;
+        dc.cpu->exclusive_write_32bit = {};
+        dc.cpu->exclusive_write_8bit = {};
     }
     return failures;
 }
@@ -2220,9 +2504,12 @@ int main(int argc, char **argv) {
                 "data-processing + load/store + ldm/stm + halfword, %u cases from seed %u\n",
         count, base_seed);
 
+    const bool ekalynx = argc > 3 && std::string_view(argv[3]) == "ekalynx";
     diff_env env_a, env_b;
-    auto core_a = make_core(env_a);
-    auto core_b = make_core(env_b);
+    auto core_a = wire_core(env_a, std::make_unique<dyncom_core>(&env_a.monitor, PAGE_BITS));
+    auto core_b = wire_core(env_b, std::make_unique<dyncom_core>(&env_b.monitor, PAGE_BITS));
+    auto candidate = ekalynx ? wire_core(env_b, make_ekalynx_interpreter(&env_b.monitor)) : nullptr;
+    core &integer_core = ekalynx ? *candidate : static_cast<core &>(*core_b);
     std::vector<std::uint8_t> golden_mem(MEM_SIZE, 0);
 
     std::uint32_t failures = 0;
@@ -2267,18 +2554,23 @@ int main(int argc, char **argv) {
         }
 
         core_a->imb_range(0, 8);
-        core_b->imb_range(0, 8);
+        integer_core.imb_range(0, 8);
+
+        if (ekalynx && (i & 1))
+            integer_core.set_tlb_page(0, env_b.mem.data(), prot_read_write_exec);
+        else if (ekalynx)
+            integer_core.dirty_tlb_page(0);
 
         write_state(*core_a, init);
-        write_state(*core_b, init);
+        write_state(integer_core, init);
 
         core_a->set_pc(0);
-        core_b->set_pc(0);
+        integer_core.set_pc(0);
         core_a->run(1);
-        core_b->run(1);
+        integer_core.run(1);
 
         const cpu_state got_a = read_state(*core_a);
-        const cpu_state got_b = read_state(*core_b);
+        const cpu_state got_b = read_state(integer_core);
         cpu_state golden;
         if (kind < 2) {
             golden = golden_data_processing(inst, init);
@@ -2324,9 +2616,43 @@ int main(int argc, char **argv) {
     // -----------------------------------------------------------------------
     std::printf("dyncom_difftest: phase 2 (dynarmic oracle, whole programs)\n");
 
-    auto dc = make_dyncom_env();
+    auto dc = make_interpreter_env(ekalynx);
+    if (ekalynx) {
+        program p;
+        p.init[0] = PROG_DATA_PTR;
+        p.init[1] = 0xaabbccdd;
+        p.budget = 2;
+        push32(p.code, 0xe1902f9f); // LDREX r2, [r0]
+        push32(p.code, 0xe1803f91); // STREX r3, r1, [r0]
+        bool correct_core = true;
+        dc->monitor->read_32bit = [&](core *c, address a, std::uint32_t *v) {
+            correct_core &= c == dc->cpu.get();
+            return c->read_32bit(a, v);
+        };
+        dc->monitor->write_32bit = [&](core *c, address a, std::uint32_t value, std::uint32_t expected) {
+            correct_core &= c == dc->cpu.get();
+            std::uint32_t old;
+            return c->read_32bit(a, &old) && old == expected && c->write_32bit(a, &value) ? 1 : 0;
+        };
+        install(*dc, p);
+        const auto state = execute(*dc, p);
+        std::uint32_t stored;
+        dc->cpu->read_32bit(PROG_DATA_PTR, &stored);
+        if (!correct_core || state.reg[3] != 0 || stored != p.init[1]) {
+            std::puts("[FAIL] exclusive access must use the scheduled core's address space");
+            ++failures;
+        }
+        dc->monitor->read_32bit = {};
+        dc->monitor->write_32bit = {};
+    }
     auto da = make_dynarmic_env();
     coverage cov;
+
+    failures += check_user_instructions(*dc, *da, ekalynx, base_seed, cov);
+    if (ekalynx) {
+        failures += check_msr_fields(*dc);
+        failures += check_vfp_format_word(*dc);
+    }
 
     const std::uint32_t programs = (count / 200 < 4) ? 4 : (count / 200);
     const std::uint32_t rounds = (programs / 8 < 2) ? 2 : (programs / 8);
@@ -2355,6 +2681,333 @@ int main(int argc, char **argv) {
                 ++failures;
         }
     }
+    if (ekalynx) {
+        program p;
+        p.kind = "shifted-arithmetic";
+        for (const auto bits : {
+                 0xe071c320u, // RSBS ip, r1, r0, LSR #6
+                 0x20400301u, // SUBCS r0, r0, r1, LSL #6
+                 0xe0a22002u, // ADC r2, r2, r2
+                 0xe1a03142u, // ASR r3, r2, #2
+                 0xe1a04223u, // LSR r4, r3, #4
+                 0xeafffffeu })
+            push32(p.code, bits);
+        for (const auto divisor : { 0u, 1u, 0x7fffffffu, 0x80000000u, 0xffffffffu }) {
+            p.init[0] = 0x80000000u;
+            p.init[1] = divisor;
+            p.init[2] = 0x40000001u;
+            for (p.budget = 1; p.budget <= 5; ++p.budget) {
+                if (!run_pair(p.kind, *dc, *da, p, base_seed, true, cov, true))
+                    ++failures;
+            }
+        }
+    }
+    if (ekalynx) {
+        program p;
+        p.kind = "halfword-stride";
+        p.init[0] = PROG_DATA_PTR;
+        p.init[1] = PROG_DATA_PTR + 4;
+        p.init[2] = 0x8003;
+        p.init[4] = 3;
+        for (const auto bits : {
+                 0xe1c020b0u, // STRH r2, [r0]
+                 0xe0d030f2u, // LDRSH r3, [r0], #2
+                 0xe0030394u, // MUL r3, r4, r3
+                 0xe04130b2u, // STRH r3, [r1], #-2
+                 0xe1d110b2u, // LDRH r1, [r1, #2]
+                 0xeafffffeu })
+            push32(p.code, bits);
+        for (p.budget = 1; p.budget <= 5; ++p.budget) {
+            if (!run_pair(p.kind, *dc, *da, p, base_seed, true, cov, true))
+                ++failures;
+        }
+    }
+    if (ekalynx) {
+        program p;
+        p.kind = "arm-jump-table";
+        push32(p.code, 0xe2000003); // AND r0, r0, #3
+        push32(p.code, 0xe3500001); // CMP r0, #1
+        push32(p.code, 0x979ff100); // LDRLS pc, [pc, r0, LSL #2]
+        push32(p.code, 0xea000003); // B to the ARM target
+        push32(p.code, p.addr + 32);
+        push32(p.code, p.addr + 25);
+        push16(p.code, 0x2107); // MOVS r1, #7
+        push16(p.code, 0xe7fe);
+        push32(p.code, 0xe1a00000);
+        push32(p.code, 0xe3110102); // TST r1, #0x80000000
+        push32(p.code, 0xe0c43291); // SMULL r3, r4, r1, r2
+        push32(p.code, 0xe0214293); // MLA r1, r3, r2, r4
+        push32(p.code, 0xeafffffe);
+        p.init[1] = 0x80000003u;
+        p.init[2] = 7;
+        for (const auto index : { 4u, 5u, 6u }) {
+            p.init[0] = index;
+            for (p.budget = 1; p.budget <= 8; ++p.budget) {
+                if (!run_pair(p.kind, *dc, *da, p, base_seed, true, cov, true))
+                    ++failures;
+            }
+        }
+    }
+    if (ekalynx) {
+        program p;
+        p.kind = "vfp-page-transfer";
+        p.init[0] = (PROG_DATA_PTR & ~4095u) + 4092;
+        p.init[1] = 0x76543210;
+        p.init[2] = 0x89abcdef;
+        push32(p.code, 0xec421b10); // VMOV d0, r1, r2
+        push32(p.code, 0xeca00b02); // VSTMIA r0!, {d0} across the page boundary
+        push32(p.code, 0xed301b02); // VLDMDB r0!, {d1}
+        push32(p.code, 0xed9f2a00); // VLDR s4, [pc]
+        push32(p.code, 0xea000000);
+        push32(p.code, 0xdeadbeef);
+        push32(p.code, 0xed802a03); // VSTR s4, [r0, #12]
+        push32(p.code, 0xeafffffe);
+        for (p.budget = 1; p.budget <= 7; ++p.budget) {
+            if (!run_pair(p.kind, *dc, *da, p, base_seed, true, cov, true))
+                ++failures;
+        }
+    }
+    auto span_core = make_interpreter_env(ekalynx);
+    for (const unsigned offset : { 0u, 0xff6u }) {
+        program span;
+        span.thumb = true;
+        span.addr = PROG_CODE_LO + offset;
+        span.kind = "thumb-block";
+        span.init[1] = PROG_DATA_PTR;
+        span.init[13] = PROG_DATA_PTR;
+        // LDR, immediate shifts (including #32), ADD/SUB, logical ops, MUL,
+        // CMP and a store outside the span; then load a halfword and a stack word.
+        for (std::uint16_t hw : { 0x6808, 0x0042, 0x0813, 0x1014, 0x18d5, 0x1ae6,
+                 0x1c77, 0x1ef6, 0x4032, 0x407a, 0x4332, 0x437a, 0x2a80, 0x600a,
+                 0x880b, 0x33ff, 0x3b80, 0x9c00, 0x2000, 0x0044, 0xe7fe })
+            push16(span.code, hw);
+        for (unsigned budget = 1; budget <= span.code.size() / 2; ++budget) {
+            span.budget = budget;
+            if (!run_pair("thumb-block", *span_core, *da, span, base_seed, true, cov, true))
+                ++failures;
+        }
+    }
+    program transfers;
+    transfers.thumb = true;
+    transfers.init[0] = 0xffed1234;
+    transfers.init[1] = PROG_DATA_PTR;
+    transfers.init[2] = 4;
+    transfers.init[13] = PROG_DATA_PTR + 64;
+    for (std::uint16_t hw : { 0x5088, 0x588b, 0x5288, 0x5a8c, 0x6048, 0x684d,
+             0x8088, 0x888e, 0x90ff, 0x9fff, 0x46be, 0x4477, 0xc101, 0xc908, 0x4800, 0x4b01, 0xe7fe })
+        push16(transfers.code, hw);
+    for (unsigned budget = 1; budget <= transfers.code.size() / 2; ++budget) {
+        transfers.budget = budget;
+        if (!run_pair("thumb-transfers", *span_core, *da, transfers, base_seed, true, cov, true))
+            ++failures;
+    }
+    program arithmetic;
+    arithmetic.thumb = true;
+    arithmetic.init[1] = 1;
+    arithmetic.budget = 3;
+    for (const auto lhs : { 0u, 0x7fffffffu, 0x80000000u, 0xffffffffu }) {
+        arithmetic.init[0] = lhs;
+        for (const std::uint16_t hw : { 0x1840, 0x1a40, 0x3001, 0x3801, 0x2801 }) {
+            arithmetic.code.clear();
+            push16(arithmetic.code, 0x2200); // MOVS r2, #0
+            push16(arithmetic.code, 0x2a00); // CMP r2, #0
+            push16(arithmetic.code, hw);
+            push16(arithmetic.code, 0xe7fe);
+            if (!run_pair("thumb-arithmetic-flags", *span_core, *da, arithmetic, base_seed, true, cov, true))
+                ++failures;
+        }
+    }
+    program dsp;
+    dsp.init[3] = 0x8000ffff;
+    dsp.init[4] = 0x7ffffffe;
+    dsp.init[5] = 0x7fffffff;
+    for (auto bits : { 0xe16f2f14u, 0xe1042053u, 0xe1242053u, 0xe1442053u, 0xe1642053u,
+             0xe1620483u, 0xe16204c3u, 0xe16204e3u, 0xe10254a3u, 0xe12204e3u, 0xe12254c3u, 0xe14214e3u,
+             0xe6bf2f33u, 0xe6bf2fb3u, 0xe6ff2fb3u, 0xe6a02473u, 0xe6b02873u, 0xe6802c73u,
+             0xe6e02073u, 0xe6f02073u, 0xe6c02073u })
+        push32(dsp.code, bits);
+    for (unsigned budget = 1; budget <= dsp.code.size() / 4; ++budget) {
+        dsp.budget = budget;
+        if (!run_pair("arm-signed-dsp", *dc, *da, dsp, base_seed, true, cov, true))
+            ++failures;
+    }
+    if (ekalynx) {
+        program stack_return;
+        stack_return.init[0] = 0x76543210;
+        stack_return.init[5] = 0x89abcdef;
+        stack_return.init[13] = PROG_DATA_PTR + 64;
+        stack_return.init[14] = stack_return.addr + 13;
+        push32(stack_return.code, 0xe92d4021); // PUSH {r0, r5, lr}
+        push32(stack_return.code, 0xe8bd8014); // POP {r2, r4, pc}
+        push32(stack_return.code, 0xeafffffe);
+        push16(stack_return.code, 0x3101);
+        push16(stack_return.code, 0xe7fe);
+        for (unsigned budget = 1; budget <= 4; ++budget) {
+            stack_return.budget = budget;
+            if (!run_pair("arm-stack-thumb-return", *dc, *da, stack_return, base_seed, true, cov, true))
+                ++failures;
+        }
+        program media;
+        media.init[1] = 0x7fff8000;
+        media.init[2] = 0x80ff0100;
+        media.init[3] = 0xffffff80;
+        media.budget = 2;
+        for (const auto bits : { 0xe6810412u, 0xe6810052u, 0xe6810452u,
+                 0xe6a00011u, 0xe6bf0011u, 0xe6a80051u, 0xe6e00011u, 0xe6ff0051u,
+                 0xe6a70f31u, 0xe6af0f31u, 0xe6e00f31u, 0xe6ef0f31u, 0xe780f211u, 0xe7803211u,
+                 0xe0403291u, 0xe750f211u, 0xe750f231u, 0xe7503211u, 0xe7503231u, 0xe75032d1u, 0xe75032f1u }) {
+            media.code.clear();
+            push32(media.code, bits);
+            push32(media.code, 0xe10f4000u); // MRS r4, CPSR exposes saturation.
+            if (!run_pair("arm-media", *dc, *da, media, base_seed, true, cov, true))
+                ++failures;
+        }
+        program packed;
+        packed.init[1] = 0x7f0080ff;
+        packed.init[2] = 0x01ff8002;
+        packed.budget = 3;
+        for (unsigned family : { 1u, 2u, 3u, 5u, 6u, 7u }) {
+            for (unsigned shape : { 0u, 1u, 2u, 3u, 4u, 7u }) {
+                packed.code.clear();
+                push32(packed.code, 0xe6513f92u); // UADD8 sets an incoming GE pattern.
+                push32(packed.code, 0xe6010f12u | (family << 20) | (shape << 5));
+                push32(packed.code, 0xe6814fb2u); // SEL exposes all four GE bits in r4.
+                if (!run_pair("arm-parallel-lanes", *dc, *da, packed, base_seed, true, cov, true))
+                    ++failures;
+            }
+        }
+        program endian;
+        endian.init[0] = PROG_DATA_PTR;
+        endian.init[1] = 0x12345678u;
+        for (auto bits : { 0xf1010200u, 0xe5801000u, 0xe5902000u, 0xf1010000u, 0xe5903000u })
+            push32(endian.code, bits);
+        for (unsigned budget = 1; budget <= endian.code.size() / 4; ++budget) {
+            endian.budget = budget;
+            if (!run_pair("setend-memory-order", *dc, *da, endian, base_seed, true, cov, true))
+                ++failures;
+        }
+    }
+    if (ekalynx) {
+        program preserve;
+        preserve.thumb = true;
+        push16(preserve.code, 0x46c0); // MOV r8, r8 preserves arbitrary incoming NZCV.
+        install(*dc, preserve);
+        dc->cpu->imb_range(preserve.addr, preserve.code.size());
+        dc->cpu->set_pc(preserve.addr);
+        dc->cpu->set_cpsr(0xf0000030u);
+        dc->cpu->run(1);
+        if (dc->cpu->get_cpsr() != 0xf0000030u)
+            ++failures;
+    }
+    for (const auto list : { 0u, 1u, 7u, 0x7cu, 0xffu }) {
+        program stack_call;
+        stack_call.thumb = true;
+        stack_call.init[13] = PROG_DATA_PTR + 64;
+        for (auto bits : { 0xf000u, 0xf802u, 0xe7feu, 0x46c0u, 0xb500u | list, 0xbd00u | list })
+            push16(stack_call.code, bits);
+        for (unsigned reg = 0; reg < 8; ++reg)
+            stack_call.init[reg] = 0x11111111u * (reg + 1);
+        install(*dc, stack_call);
+        dc->cpu->imb_range(stack_call.addr, stack_call.code.size());
+        for (unsigned budget = 1; budget <= 5; ++budget) {
+            stack_call.budget = budget;
+            const auto got = execute(*dc, stack_call);
+            const unsigned pcs[] = { 2, 8, 10, 4, 4 };
+            const auto stack_bytes = 4 * (std::popcount(list) + 1);
+            if (got.reg[15] != stack_call.addr + pcs[budget - 1] ||
+                got.reg[14] != stack_call.addr + (budget == 1 ? 4 : 5) ||
+                got.reg[13] != stack_call.init[13] - (budget == 3 ? stack_bytes : 0)) {
+                std::printf("[FAIL] Thumb-1 call/stack boundary, mask=%x budget=%u\n", list, budget);
+                ++failures;
+            }
+        }
+        stack_call.budget = 32;
+        if (!run_pair("thumb-call-stack-range", *dc, *da, stack_call, base_seed, true, cov))
+            ++failures;
+    }
+    program dual_transfer;
+    dual_transfer.init[0] = PROG_DATA_PTR;
+    dual_transfer.init[2] = 0x01234567u;
+    dual_transfer.init[3] = 0xfedcba98u;
+    for (auto bits : { 0xe1c020f0u, 0xe1c040d0u, 0xe1e020f8u, 0xe04060d8u })
+        push32(dual_transfer.code, bits);
+    for (unsigned budget = 1; budget <= dual_transfer.code.size() / 4; ++budget) {
+        dual_transfer.budget = budget;
+        if (!run_pair("arm-double-transfers", *dc, *da, dual_transfer, base_seed, true, cov, true))
+            ++failures;
+    }
+    program pairs;
+    pairs.thumb = true;
+    pairs.init[0] = 0x80000001;
+    pairs.init[1] = 0xffffffff;
+    pairs.init[2] = 3;
+    // Stop immediately before, between, and after the two operations.
+    for (const std::uint16_t first : { 0x0008, 0x4288, 0x0800, 0x0840, 0x0040, 0x4348, 0x1a40, 0x1840, 0x4008 }) {
+        for (const std::uint16_t second : { 0x0040, 0xdbfe, 0xd0fe, 0x4008, 0x4048, 0x0802, 0x0840, 0x4348 }) {
+            pairs.code.clear();
+            for (auto hw : { std::uint16_t(0x2300), first, second, std::uint16_t(0xe7fe) })
+                push16(pairs.code, hw);
+            for (unsigned budget = 1; budget <= 4; ++budget) {
+                pairs.budget = budget;
+                if (!run_pair("thumb-pairs", *span_core, *da, pairs, base_seed, true, cov, true))
+                    ++failures;
+            }
+        }
+    }
+    for (auto base : { PROG_DATA_PTR, (PROG_DATA_PTR | 4095u) - 3 }) {
+        program stores;
+        stores.init[1] = base;
+        stores.init[2] = 0x12345678;
+        stores.init[3] = 0x87654321;
+        for (const auto word : { 0xe3a00000u, 0xe7a12180u, 0xe5813004u, 0xe1520003u, 0xcafffffeu, 0xeafffffeu })
+            push32(stores.code, word);
+        for (unsigned budget = 1; budget <= 6; ++budget) {
+            stores.budget = budget;
+            if (!run_pair("arm-adjacent-stores", *dc, *da, stores, base_seed, true, cov, true))
+                ++failures;
+        }
+    }
+    if (ekalynx) {
+        for (const auto destination : { PROG_DATA_PTR + 128, (PROG_DATA_PTR | 4095u) - 15,
+                 PROG_DATA_PTR + 4 }) {
+            program fill;
+            fill.init[2] = 0x78563412;
+            fill.init[7] = 40;
+            fill.init[8] = PROG_DATA_PTR;
+            fill.init[10] = destination;
+            for (auto bits : {
+                     0xe588a000u, 0xe5887004u, // descriptor points to the destination and limit
+                     0xe5981000u, 0xe7812100u, // ldr r1,[r8] / str r2,[r1,r0,lsl #2]
+                     0xe2800001u, 0xe5983004u, // add r0,#1 / ldr r3,[r8,#4]
+                     0xe1500003u, 0xbafffff9u, 0xeafffffeu })
+                push32(fill.code, bits);
+            for (const auto budget : { 3, 6, 25, 79, 150, 241, 242, 256, 300 }) {
+                fill.budget = budget;
+                if (!run_pair("arm-counted-fill", *dc, *da, fill, base_seed, true, cov, true))
+                    ++failures;
+            }
+        }
+    }
+    program memory_pairs;
+    memory_pairs.thumb = true;
+    memory_pairs.init[1] = PROG_DATA_PTR;
+    memory_pairs.init[2] = 2;
+    memory_pairs.init[13] = PROG_DATA_PTR;
+    for (const auto pair : { 0x98000013u, 0x98009b01u, 0x00525a8bu, 0x90001850u }) {
+        memory_pairs.code.clear();
+        for (const auto hw : { 0x2300u, pair >> 16, pair & 65535u, 0xe7feu })
+            push16(memory_pairs.code, hw);
+        for (unsigned budget = 1; budget <= 4; ++budget) {
+            memory_pairs.budget = budget;
+            if (!run_pair("thumb-memory-pairs", *dc, *da, memory_pairs, base_seed, true, cov, true))
+                ++failures;
+        }
+    }
+    for (bool store : { false, true })
+        for (bool retry : { false, true })
+            for (bool writeback : { false, true })
+                if (!check_thumb_memory_fault(store, retry, writeback, ekalynx))
+                    ++failures;
     failures += check_thumb_counted_word_loop(*dc, *da, cov);
     failures += check_vfp_mac_cancellation(*dc, *da);
     failures += check_undefined_instructions(*dc);
@@ -2375,7 +3028,7 @@ int main(int argc, char **argv) {
     // Coverage assertions. Without these a suite that silently stopped
     // reaching its target would report a clean pass -- which is exactly how
     // the previous harness "verified" the loop accelerator it never ran.
-    if (cov.accel_attaches == 0) {
+    if (!ekalynx && cov.accel_attaches == 0) {
         std::printf("[HARNESS BUG] the loop accelerator never attached; the loop "
                     "suite is not testing it\n");
         failures++;

@@ -21,6 +21,7 @@
 
 #include <common/configure.h>
 #include <common/path_types.h>
+#include <common/platform.h>
 #include <config/options.inl>
 
 #include <array>
@@ -103,6 +104,12 @@ namespace eka2l1::config {
         std::uint32_t port_;
     };
 
+#if EKA2L1_PLATFORM(IOS)
+    inline constexpr const char *default_cpu_backend = "ekalynx";
+#else
+    inline constexpr const char *default_cpu_backend = "dynarmic";
+#endif
+
     struct state {
         float ui_scale{ 1.0 };
         host_path bkg_path;
@@ -115,11 +122,8 @@ namespace eka2l1::config {
         bool log_passed{ false };
         bool log_exports{ false };
 
-        std::string cpu_backend{ "dynarmic" };
-        // iOS-only explicit JIT opt-in (settings toggle). Kept separate from
-        // cpu_backend because that field defaults to (and may have persisted)
-        // "dynarmic" from the desktop default, which must not silently enable
-        // the JIT on iOS.
+        std::string cpu_backend{ default_cpu_backend };
+        // JIT requires an explicit opt-in regardless of the selected interpreter.
         bool ios_use_jit{ false };
         // iOS emulator thread QoS: "high-performance" (user-initiated) or
         // "balanced" (default).
