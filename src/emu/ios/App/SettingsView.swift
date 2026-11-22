@@ -14,7 +14,7 @@ struct SettingsView: View {
 
     @State private var extensiveLogging = false
     @State private var hideSystemApps = true
-    @State private var cpuBackend = "dyncom"
+    @State private var cpuBackend = "armv6"
     @State private var performanceMode = "balanced"
     @State private var availableLanguages: [EKA2L1LanguageItem] = []
     @State private var systemLanguageCode = -1
@@ -342,8 +342,8 @@ struct SettingsView: View {
             cpuBackend = "jit"
         } else {
             switch (snapshot["cpuBackend"] as? String)?.lowercased() {
-            case "armv6": cpuBackend = "armv6"
-            default: cpuBackend = "dyncom"
+            case "dyncom": cpuBackend = "dyncom"
+            default: cpuBackend = "armv6"
             }
         }
         // Anything the bridge doesn't recognise runs as balanced.

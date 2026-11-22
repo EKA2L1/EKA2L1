@@ -116,7 +116,7 @@ namespace eka2l1::config {
         bool log_exports{ false };
 
         std::string cpu_backend{ "dynarmic" };
-        // iOS-only explicit JIT opt-in (settings toggle). Kept separate from
+        // iOS-only explicit JIT opt-in. Kept separate from
         // cpu_backend because that field defaults to (and may have persisted)
         // "dynarmic" from the desktop default, which must not silently enable
         // the JIT on iOS.

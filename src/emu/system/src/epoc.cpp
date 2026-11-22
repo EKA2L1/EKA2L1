@@ -666,14 +666,10 @@ namespace eka2l1 {
 #if EKA2L1_ARCH(ARM)
         cpu_type = arm_emulator_type::r12l1;
 #elif EKA2L1_PLATFORM(IOS)
-        // dyncom by default: dynarmic's A32 backend is not robust enough to be
-        // the one an App Store build lands on, and the JIT win is in sustained
-        // execution rather than the launch this decides. Builds that carry it
-        // (EKA2L1_IOS_DYNARMIC) let the user opt in, through ios_use_jit rather
-        // than cpu_backend -- the latter defaults to "dynarmic" for desktop and
-        // may already be persisted, which must not enable a JIT by itself.
-        cpu_type = arm::string_to_arm_emulator_type(conf_->cpu_backend);
-        if (cpu_type != arm_emulator_type::armv6)
+        // Legacy iOS configurations may still carry the desktop "dynarmic" default.
+        const auto backend = common::lowercase_string(conf_->cpu_backend);
+        cpu_type = arm_emulator_type::armv6;
+        if (backend == "dyncom")
             cpu_type = arm_emulator_type::dyncom;
 #if EKA2L1_IOS_DYNARMIC
         if (conf_->ios_use_jit && arm::host_can_jit()) {
