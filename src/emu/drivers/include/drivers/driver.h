@@ -52,18 +52,23 @@ namespace eka2l1::drivers {
     };
 
     /**
-     * \brief A linked list of command.
+     * \brief Contiguous commands passed to the driver as one batch.
      */
     struct command_list {
         command *base_;
 
         std::size_t size_;
         std::size_t max_cap_;
+        std::size_t allocated_ = 0;
+        std::size_t first_capacity_;
 
-        explicit command_list(std::size_t max_cap = 0)
+        static constexpr std::size_t DEFAULT_FIRST_CAPACITY = 32;
+
+        explicit command_list(std::size_t max_cap = 0, std::size_t first_capacity = DEFAULT_FIRST_CAPACITY)
             : base_(nullptr)
             , size_(0)
-            , max_cap_(max_cap) {
+            , max_cap_(max_cap)
+            , first_capacity_(first_capacity) {
         }
 
         bool empty() const {
@@ -75,15 +80,7 @@ namespace eka2l1::drivers {
                 return nullptr;
             }
 
-            if (!base_) {
-                renew();
-            } else if (size_ >= max_cap_) {
-                command *grown = new command[max_cap_ * 2];
-                std::copy(base_, base_ + size_, grown);
-                delete[] base_;
-                base_ = grown;
-                max_cap_ *= 2;
-            }
+            reserve(size_ + 1);
 
             command *res = base_ + size_;
             res->status_ = nullptr;
@@ -93,14 +90,25 @@ namespace eka2l1::drivers {
             return res;
         }
 
-        void renew() {
-            if (max_cap_ == 0) {
+        void reserve(std::size_t count) {
+            if (count <= allocated_) {
                 return;
             }
-            // NOTE: After command all iterated, the base will be deleted.
-            // No memory leak!
-            base_ = new command[max_cap_];
-            size_ = 0;
+
+            // max_cap_ only limits merges; a batch may still outgrow it after a full merge.
+            std::size_t capacity = allocated_ ? allocated_ * 2 : first_capacity_;
+            if (count <= max_cap_) {
+                capacity = std::min(capacity, max_cap_);
+            }
+            capacity = std::max(capacity, count);
+
+            command *grown = new command[capacity];
+            if (base_) {
+                std::copy_n(base_, size_, grown);
+                delete[] base_;
+            }
+            base_ = grown;
+            allocated_ = capacity;
         }
     };
 
