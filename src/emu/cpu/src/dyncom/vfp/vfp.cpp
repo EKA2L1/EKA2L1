@@ -87,23 +87,23 @@ void VMOVR(ARMul_State *state, std::uint32_t single, std::uint32_t d, std::uint3
 }
 
 /* Miscellaneous functions */
-std::int32_t vfp_get_float(ARMul_State *state, unsigned int reg) {
+std::int32_t vfp_get_float(vfp_register_view *state, unsigned int reg) {
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "VFP get float: s{}=[{:08x}]", reg, state->ExtReg[reg]);
     return state->ExtReg[reg];
 }
 
-void vfp_put_float(ARMul_State *state, std::int32_t val, unsigned int reg) {
+void vfp_put_float(vfp_register_view *state, std::int32_t val, unsigned int reg) {
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "VFP put float: s{} <= [{:08x}]", reg, val);
     state->ExtReg[reg] = val;
 }
 
-std::uint64_t vfp_get_double(ARMul_State *state, unsigned int reg) {
+std::uint64_t vfp_get_double(vfp_register_view *state, unsigned int reg) {
     std::uint64_t result = ((std::uint64_t)state->ExtReg[reg * 2 + 1]) << 32 | state->ExtReg[reg * 2];
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "VFP get double: s[{}-{}]=[{:016x}]", reg * 2 + 1, reg * 2, result);
     return result;
 }
 
-void vfp_put_double(ARMul_State *state, std::uint64_t val, unsigned int reg) {
+void vfp_put_double(vfp_register_view *state, std::uint64_t val, unsigned int reg) {
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "VFP put double: s[{}-{}] <= [{:08x}-{:08x}]", reg * 2 + 1, reg * 2,
         (std::uint32_t)(val >> 32), (std::uint32_t)(val & 0xffffffff));
     state->ExtReg[reg * 2] = (std::uint32_t)(val & 0xffffffff);
@@ -113,7 +113,7 @@ void vfp_put_double(ARMul_State *state, std::uint64_t val, unsigned int reg) {
 /*
  * Process bitmask of exception conditions. (from vfpmodule.c)
  */
-void vfp_raise_exceptions(ARMul_State *state, std::uint32_t exceptions, std::uint32_t inst, std::uint32_t fpscr) {
+std::uint32_t vfp_apply_exceptions(std::uint32_t exceptions, std::uint32_t inst, std::uint32_t fpscr) {
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "VFP: raising exceptions {:08x}", exceptions);
 
     if (exceptions == VFP_EXCEPTION_ERROR) {
@@ -129,7 +129,19 @@ void vfp_raise_exceptions(ARMul_State *state, std::uint32_t exceptions, std::uin
     if (exceptions & (FPSCR_NFLAG | FPSCR_ZFLAG | FPSCR_CFLAG | FPSCR_VFLAG))
         fpscr &= ~(FPSCR_NFLAG | FPSCR_ZFLAG | FPSCR_CFLAG | FPSCR_VFLAG);
 
-    fpscr |= exceptions;
+    return fpscr | exceptions;
+}
 
-    state->VFP[VFP_FPSCR] = fpscr;
+void vfp_raise_exceptions(ARMul_State *state, std::uint32_t exceptions, std::uint32_t inst, std::uint32_t fpscr) {
+    state->VFP[VFP_FPSCR] = vfp_apply_exceptions(exceptions, inst, fpscr);
+}
+
+std::uint32_t vfp_single_cpdo(ARMul_State *state, std::uint32_t inst, std::uint32_t fpscr) {
+    vfp_register_view registers{state->ExtReg};
+    return vfp_single_cpdo(&registers, inst, fpscr, false);
+}
+
+std::uint32_t vfp_double_cpdo(ARMul_State *state, std::uint32_t inst, std::uint32_t fpscr) {
+    vfp_register_view registers{state->ExtReg};
+    return vfp_double_cpdo(&registers, inst, fpscr);
 }

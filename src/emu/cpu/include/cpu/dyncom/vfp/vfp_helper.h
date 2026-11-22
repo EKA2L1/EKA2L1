@@ -32,6 +32,7 @@
 
 #pragma once
 
+#include <cpu/vfp.h>
 #include <common/types.h>
 #include <cpu/dyncom/armstate.h>
 #include <cpu/dyncom/vfp/asm_vfp.h>
@@ -291,7 +292,7 @@ inline std::int32_t vfp_single_pack(const vfp_single *s) {
     return (std::int32_t)val;
 }
 
-std::uint32_t vfp_single_normaliseround(ARMul_State *state, int sd, vfp_single *vs, std::uint32_t fpscr, std::uint32_t exceptions,
+std::uint32_t vfp_single_normaliseround(vfp_register_view *state, int sd, vfp_single *vs, std::uint32_t fpscr, std::uint32_t exceptions,
     const char *func);
 
 // Double-precision
@@ -388,7 +389,7 @@ enum : std::uint32_t { OP_SCALAR = (1 << 0),
     OP_SM = (1 << 2) };
 
 struct op {
-    std::uint32_t (*const fn)(ARMul_State *state, int dd, int dn, int dm, std::uint32_t fpscr);
+    std::uint32_t (*const fn)(vfp_register_view *state, int dd, int dn, int dm, std::uint32_t fpscr);
     std::uint32_t flags;
 };
 
@@ -422,5 +423,5 @@ inline std::uint32_t fls(std::uint32_t x) {
 
 std::uint32_t vfp_double_multiply(vfp_double *vdd, vfp_double *vdn, vfp_double *vdm, std::uint32_t fpscr);
 std::uint32_t vfp_double_add(vfp_double *vdd, vfp_double *vdn, vfp_double *vdm, std::uint32_t fpscr);
-std::uint32_t vfp_double_normaliseround(ARMul_State *state, int dd, vfp_double *vd, std::uint32_t fpscr, std::uint32_t exceptions,
+std::uint32_t vfp_double_normaliseround(vfp_register_view *state, int dd, vfp_double *vd, std::uint32_t fpscr, std::uint32_t exceptions,
     const char *func);

@@ -85,7 +85,7 @@ static void vfp_double_normalise_denormal(struct vfp_double *vd) {
     vfp_double_dump("normalise_denormal: out", vd);
 }
 
-std::uint32_t vfp_double_normaliseround(ARMul_State *state, int dd, struct vfp_double *vd, std::uint32_t fpscr,
+std::uint32_t vfp_double_normaliseround(vfp_register_view *state, int dd, struct vfp_double *vd, std::uint32_t fpscr,
     std::uint32_t exceptions, const char *func) {
     std::uint64_t significand, incr;
     int exponent, shift, underflow;
@@ -233,7 +233,7 @@ pack:
 // See the single-precision counterpart: VMLA/VMLS are chained, so the product
 // is a double-precision value before it is accumulated. Rounds an intermediate
 // through a scratch slot that no guest instruction can observe.
-static std::uint32_t vfp_double_round_intermediate(ARMul_State *state, struct vfp_double *vd,
+static std::uint32_t vfp_double_round_intermediate(vfp_register_view *state, struct vfp_double *vd,
     std::uint32_t fpscr, const char *func) {
     constexpr int SCRATCH = 31; // d31: ExtReg has 64 single slots = 32 doubles
     const std::uint32_t saved_lo = state->ExtReg[SCRATCH * 2];
@@ -296,25 +296,25 @@ static std::uint32_t vfp_propagate_nan(struct vfp_double *vdd, struct vfp_double
 /*
  * Extended operations
  */
-static std::uint32_t vfp_double_fabs(ARMul_State *state, int dd, int unused, int dm, std::uint32_t fpscr) {
+static std::uint32_t vfp_double_fabs(vfp_register_view *state, int dd, int unused, int dm, std::uint32_t fpscr) {
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "In {}", __FUNCTION__);
     vfp_put_double(state, vfp_double_packed_abs(vfp_get_double(state, dm)), dd);
     return 0;
 }
 
-static std::uint32_t vfp_double_fcpy(ARMul_State *state, int dd, int unused, int dm, std::uint32_t fpscr) {
+static std::uint32_t vfp_double_fcpy(vfp_register_view *state, int dd, int unused, int dm, std::uint32_t fpscr) {
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "In {}", __FUNCTION__);
     vfp_put_double(state, vfp_get_double(state, dm), dd);
     return 0;
 }
 
-static std::uint32_t vfp_double_fneg(ARMul_State *state, int dd, int unused, int dm, std::uint32_t fpscr) {
+static std::uint32_t vfp_double_fneg(vfp_register_view *state, int dd, int unused, int dm, std::uint32_t fpscr) {
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "In {}", __FUNCTION__);
     vfp_put_double(state, vfp_double_packed_negate(vfp_get_double(state, dm)), dd);
     return 0;
 }
 
-static std::uint32_t vfp_double_fsqrt(ARMul_State *state, int dd, int unused, int dm, std::uint32_t fpscr) {
+static std::uint32_t vfp_double_fsqrt(vfp_register_view *state, int dd, int unused, int dm, std::uint32_t fpscr) {
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "In {}", __FUNCTION__);
     vfp_double vdm, vdd, *vdp;
     int ret, tm;
@@ -408,7 +408,7 @@ static std::uint32_t vfp_double_fsqrt(ARMul_State *state, int dd, int unused, in
  * Greater than	:= C
  * Unordered	:= CV
  */
-static std::uint32_t vfp_compare(ARMul_State *state, int dd, int signal_on_qnan, std::int64_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_compare(vfp_register_view *state, int dd, int signal_on_qnan, std::int64_t m, std::uint32_t fpscr) {
     std::int64_t d;
     std::uint32_t ret = 0;
 
@@ -471,27 +471,27 @@ static std::uint32_t vfp_compare(ARMul_State *state, int dd, int signal_on_qnan,
     return ret;
 }
 
-static std::uint32_t vfp_double_fcmp(ARMul_State *state, int dd, int unused, int dm, std::uint32_t fpscr) {
+static std::uint32_t vfp_double_fcmp(vfp_register_view *state, int dd, int unused, int dm, std::uint32_t fpscr) {
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "In {}", __FUNCTION__);
     return vfp_compare(state, dd, 0, vfp_get_double(state, dm), fpscr);
 }
 
-static std::uint32_t vfp_double_fcmpe(ARMul_State *state, int dd, int unused, int dm, std::uint32_t fpscr) {
+static std::uint32_t vfp_double_fcmpe(vfp_register_view *state, int dd, int unused, int dm, std::uint32_t fpscr) {
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "In {}", __FUNCTION__);
     return vfp_compare(state, dd, 1, vfp_get_double(state, dm), fpscr);
 }
 
-static std::uint32_t vfp_double_fcmpz(ARMul_State *state, int dd, int unused, int dm, std::uint32_t fpscr) {
+static std::uint32_t vfp_double_fcmpz(vfp_register_view *state, int dd, int unused, int dm, std::uint32_t fpscr) {
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "In {}", __FUNCTION__);
     return vfp_compare(state, dd, 0, 0, fpscr);
 }
 
-static std::uint32_t vfp_double_fcmpez(ARMul_State *state, int dd, int unused, int dm, std::uint32_t fpscr) {
+static std::uint32_t vfp_double_fcmpez(vfp_register_view *state, int dd, int unused, int dm, std::uint32_t fpscr) {
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "In {}", __FUNCTION__);
     return vfp_compare(state, dd, 1, 0, fpscr);
 }
 
-static std::uint32_t vfp_double_fcvts(ARMul_State *state, int sd, int unused, int dm, std::uint32_t fpscr) {
+static std::uint32_t vfp_double_fcvts(vfp_register_view *state, int sd, int unused, int dm, std::uint32_t fpscr) {
     struct vfp_double vdm;
     struct vfp_single vsd;
     int tm;
@@ -534,7 +534,7 @@ pack_nan:
     return exceptions;
 }
 
-static std::uint32_t vfp_double_fuito(ARMul_State *state, int dd, int unused, int dm, std::uint32_t fpscr) {
+static std::uint32_t vfp_double_fuito(vfp_register_view *state, int dd, int unused, int dm, std::uint32_t fpscr) {
     struct vfp_double vdm;
     std::uint32_t m = vfp_get_float(state, dm);
 
@@ -546,7 +546,7 @@ static std::uint32_t vfp_double_fuito(ARMul_State *state, int dd, int unused, in
     return vfp_double_normaliseround(state, dd, &vdm, fpscr, 0, "fuito");
 }
 
-static std::uint32_t vfp_double_fsito(ARMul_State *state, int dd, int unused, int dm, std::uint32_t fpscr) {
+static std::uint32_t vfp_double_fsito(vfp_register_view *state, int dd, int unused, int dm, std::uint32_t fpscr) {
     struct vfp_double vdm;
     std::uint32_t m = vfp_get_float(state, dm);
 
@@ -558,7 +558,7 @@ static std::uint32_t vfp_double_fsito(ARMul_State *state, int dd, int unused, in
     return vfp_double_normaliseround(state, dd, &vdm, fpscr, 0, "fsito");
 }
 
-static std::uint32_t vfp_double_ftoui(ARMul_State *state, int sd, int unused, int dm, std::uint32_t fpscr) {
+static std::uint32_t vfp_double_ftoui(vfp_register_view *state, int sd, int unused, int dm, std::uint32_t fpscr) {
     struct vfp_double vdm;
     std::uint32_t d, exceptions = 0;
     int rmode = fpscr & FPSCR_RMODE_MASK;
@@ -640,13 +640,13 @@ static std::uint32_t vfp_double_ftoui(ARMul_State *state, int sd, int unused, in
     return exceptions;
 }
 
-static std::uint32_t vfp_double_ftouiz(ARMul_State *state, int sd, int unused, int dm, std::uint32_t fpscr) {
+static std::uint32_t vfp_double_ftouiz(vfp_register_view *state, int sd, int unused, int dm, std::uint32_t fpscr) {
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "In {}", __FUNCTION__);
     return vfp_double_ftoui(state, sd, unused, dm,
         (fpscr & ~FPSCR_RMODE_MASK) | FPSCR_ROUND_TOZERO);
 }
 
-static std::uint32_t vfp_double_ftosi(ARMul_State *state, int sd, int unused, int dm, std::uint32_t fpscr) {
+static std::uint32_t vfp_double_ftosi(vfp_register_view *state, int sd, int unused, int dm, std::uint32_t fpscr) {
     struct vfp_double vdm;
     std::uint32_t d, exceptions = 0;
     int rmode = fpscr & FPSCR_RMODE_MASK;
@@ -723,7 +723,7 @@ static std::uint32_t vfp_double_ftosi(ARMul_State *state, int sd, int unused, in
     return exceptions;
 }
 
-static std::uint32_t vfp_double_ftosiz(ARMul_State *state, int dd, int unused, int dm, std::uint32_t fpscr) {
+static std::uint32_t vfp_double_ftosiz(vfp_register_view *state, int dd, int unused, int dm, std::uint32_t fpscr) {
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "In {}", __FUNCTION__);
     return vfp_double_ftosi(state, dd, unused, dm,
         (fpscr & ~FPSCR_RMODE_MASK) | FPSCR_ROUND_TOZERO);
@@ -916,7 +916,7 @@ std::uint32_t vfp_double_multiply(struct vfp_double *vdd, struct vfp_double *vdn
 #define NEG_MULTIPLY (1 << 0)
 #define NEG_SUBTRACT (1 << 1)
 
-static std::uint32_t vfp_double_multiply_accumulate(ARMul_State *state, int dd, int dn, int dm, std::uint32_t fpscr,
+static std::uint32_t vfp_double_multiply_accumulate(vfp_register_view *state, int dd, int dn, int dm, std::uint32_t fpscr,
     std::uint32_t negate, const char *func) {
     struct vfp_double vdd, vdp, vdn, vdm;
     std::uint32_t exceptions = 0;
@@ -957,7 +957,7 @@ static std::uint32_t vfp_double_multiply_accumulate(ARMul_State *state, int dd, 
 /*
  * sd = sd + (sn * sm)
  */
-static std::uint32_t vfp_double_fmac(ARMul_State *state, int dd, int dn, int dm, std::uint32_t fpscr) {
+static std::uint32_t vfp_double_fmac(vfp_register_view *state, int dd, int dn, int dm, std::uint32_t fpscr) {
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "In {}", __FUNCTION__);
     return vfp_double_multiply_accumulate(state, dd, dn, dm, fpscr, 0, "fmac");
 }
@@ -965,7 +965,7 @@ static std::uint32_t vfp_double_fmac(ARMul_State *state, int dd, int dn, int dm,
 /*
  * sd = sd - (sn * sm)
  */
-static std::uint32_t vfp_double_fnmac(ARMul_State *state, int dd, int dn, int dm, std::uint32_t fpscr) {
+static std::uint32_t vfp_double_fnmac(vfp_register_view *state, int dd, int dn, int dm, std::uint32_t fpscr) {
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "In {}", __FUNCTION__);
     return vfp_double_multiply_accumulate(state, dd, dn, dm, fpscr, NEG_MULTIPLY, "fnmac");
 }
@@ -973,7 +973,7 @@ static std::uint32_t vfp_double_fnmac(ARMul_State *state, int dd, int dn, int dm
 /*
  * sd = -sd + (sn * sm)
  */
-static std::uint32_t vfp_double_fmsc(ARMul_State *state, int dd, int dn, int dm, std::uint32_t fpscr) {
+static std::uint32_t vfp_double_fmsc(vfp_register_view *state, int dd, int dn, int dm, std::uint32_t fpscr) {
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "In {}", __FUNCTION__);
     return vfp_double_multiply_accumulate(state, dd, dn, dm, fpscr, NEG_SUBTRACT, "fmsc");
 }
@@ -981,7 +981,7 @@ static std::uint32_t vfp_double_fmsc(ARMul_State *state, int dd, int dn, int dm,
 /*
  * sd = -sd - (sn * sm)
  */
-static std::uint32_t vfp_double_fnmsc(ARMul_State *state, int dd, int dn, int dm, std::uint32_t fpscr) {
+static std::uint32_t vfp_double_fnmsc(vfp_register_view *state, int dd, int dn, int dm, std::uint32_t fpscr) {
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "In {}", __FUNCTION__);
     return vfp_double_multiply_accumulate(state, dd, dn, dm, fpscr, NEG_SUBTRACT | NEG_MULTIPLY,
         "fnmsc");
@@ -990,7 +990,7 @@ static std::uint32_t vfp_double_fnmsc(ARMul_State *state, int dd, int dn, int dm
 /*
  * sd = sn * sm
  */
-static std::uint32_t vfp_double_fmul(ARMul_State *state, int dd, int dn, int dm, std::uint32_t fpscr) {
+static std::uint32_t vfp_double_fmul(vfp_register_view *state, int dd, int dn, int dm, std::uint32_t fpscr) {
     struct vfp_double vdd, vdn, vdm;
     std::uint32_t exceptions = 0;
 
@@ -1010,7 +1010,7 @@ static std::uint32_t vfp_double_fmul(ARMul_State *state, int dd, int dn, int dm,
 /*
  * sd = -(sn * sm)
  */
-static std::uint32_t vfp_double_fnmul(ARMul_State *state, int dd, int dn, int dm, std::uint32_t fpscr) {
+static std::uint32_t vfp_double_fnmul(vfp_register_view *state, int dd, int dn, int dm, std::uint32_t fpscr) {
     struct vfp_double vdd, vdn, vdm;
     std::uint32_t exceptions = 0;
 
@@ -1032,7 +1032,7 @@ static std::uint32_t vfp_double_fnmul(ARMul_State *state, int dd, int dn, int dm
 /*
  * sd = sn + sm
  */
-static std::uint32_t vfp_double_fadd(ARMul_State *state, int dd, int dn, int dm, std::uint32_t fpscr) {
+static std::uint32_t vfp_double_fadd(vfp_register_view *state, int dd, int dn, int dm, std::uint32_t fpscr) {
     struct vfp_double vdd, vdn, vdm;
     std::uint32_t exceptions = 0;
 
@@ -1053,7 +1053,7 @@ static std::uint32_t vfp_double_fadd(ARMul_State *state, int dd, int dn, int dm,
 /*
  * sd = sn - sm
  */
-static std::uint32_t vfp_double_fsub(ARMul_State *state, int dd, int dn, int dm, std::uint32_t fpscr) {
+static std::uint32_t vfp_double_fsub(vfp_register_view *state, int dd, int dn, int dm, std::uint32_t fpscr) {
     struct vfp_double vdd, vdn, vdm;
     std::uint32_t exceptions = 0;
 
@@ -1079,7 +1079,7 @@ static std::uint32_t vfp_double_fsub(ARMul_State *state, int dd, int dn, int dm,
 /*
  * sd = sn / sm
  */
-static std::uint32_t vfp_double_fdiv(ARMul_State *state, int dd, int dn, int dm, std::uint32_t fpscr) {
+static std::uint32_t vfp_double_fdiv(vfp_register_view *state, int dd, int dn, int dm, std::uint32_t fpscr) {
     struct vfp_double vdd, vdn, vdm;
     std::uint32_t exceptions = 0;
     int tm, tn;
@@ -1210,7 +1210,7 @@ static inline bool vfp_f64_normalized(std::uint64_t bits) {
     return e != 0ull && e != 0x7FF0000000000000ull;
 }
 
-std::uint32_t vfp_double_cpdo(ARMul_State *state, std::uint32_t inst, std::uint32_t fpscr) {
+std::uint32_t vfp_double_cpdo(vfp_register_view *state, std::uint32_t inst, std::uint32_t fpscr) {
     std::uint32_t op = inst & FOP_MASK;
     std::uint32_t exceptions = 0;
     unsigned int dest;

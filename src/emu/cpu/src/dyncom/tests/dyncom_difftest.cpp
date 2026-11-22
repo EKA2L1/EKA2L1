@@ -23,6 +23,7 @@
  */
 
 #include <cpu/arm_dynarmic.h>
+#include <cpu/armv6.h>
 #include <cpu/dyncom/arm_dyncom.h>
 #include <cpu/dyncom/vfp/asm_vfp.h>
 #include <cpu/dyncom/vfp/vfp.h>
@@ -39,6 +40,7 @@
 #include <cstring>
 #include <memory>
 #include <random>
+#include <string_view>
 #include <vector>
 
 using namespace eka2l1;
@@ -62,10 +64,10 @@ struct diff_env {
     }
 };
 
-std::unique_ptr<dyncom_core> make_core(diff_env &env) {
-    auto core = std::make_unique<dyncom_core>(&env.monitor, PAGE_BITS);
+template <typename Core>
+std::unique_ptr<Core> wire_core(diff_env &env, std::unique_ptr<Core> core) {
     std::uint8_t *base = env.mem.data();
-    dyncom_core *cp = core.get();
+    Core *cp = core.get();
 
     auto seed_tlb = [cp, base](std::uint32_t addr) {
         const std::uint32_t page = addr & ~PAGE_MASK;
@@ -153,7 +155,7 @@ struct cpu_state {
     }
 };
 
-cpu_state read_state(dyncom_core &c) {
+cpu_state read_state(core &c) {
     cpu_state s{};
     for (std::size_t i = 0; i < 16; i++) {
         s.reg[i] = c.get_reg(i);
@@ -162,7 +164,7 @@ cpu_state read_state(dyncom_core &c) {
     return s;
 }
 
-void write_state(dyncom_core &c, const cpu_state &s) {
+void write_state(core &c, const cpu_state &s) {
     for (std::size_t i = 0; i < 16; i++) {
         c.set_reg(i, s.reg[i]);
     }
@@ -1112,11 +1114,14 @@ void wire_backend(backend_env &e) {
     cp->system_call_handler = [ep](const std::uint32_t) { ep->syscalls++; };
 }
 
-std::unique_ptr<backend_env> make_dyncom_env() {
+std::unique_ptr<backend_env> make_interpreter_env(bool armv6) {
     auto e = std::make_unique<backend_env>();
-    e->name = "dyncom";
+    e->name = armv6 ? "armv6" : "dyncom";
     e->monitor = std::make_unique<r12l1::exclusive_monitor>(1);
-    e->cpu = std::make_unique<dyncom_core>(e->monitor.get(), PAGE_BITS);
+    if (armv6)
+        e->cpu = make_armv6_interpreter(e->monitor.get());
+    else
+        e->cpu = std::make_unique<dyncom_core>(e->monitor.get(), PAGE_BITS);
     wire_backend(*e);
     return e;
 }
@@ -1856,7 +1861,7 @@ std::uint32_t check_thumb_counted_word_loop(backend_env &dc, backend_env &da, co
             const auto iterations_before = cov.accel_bulk_iterations;
             if (!run_pair("counted-word-loop", dc, da, p, 0xc0123, true, cov, budget != 4096)) {
                 ++failures;
-            } else if ((cov.accel_bulk_iterations > iterations_before) != (budget != 35)) {
+            } else if (std::string_view(dc.name) == "dyncom" && (cov.accel_bulk_iterations > iterations_before) != (budget != 35)) {
                 std::printf("[HARNESS BUG] unexpected counted word loop batching\n");
                 ++failures;
             }
@@ -2184,10 +2189,21 @@ std::uint32_t suite_vfp(backend_env &dc, backend_env &da, std::uint32_t base_see
         set_common_init(p, r);
         for (int v = 8; v < 16; v++) p.vfp_init[v] = random_normal_f32(r);
 
+        push32(p.code, 0xeef14a10u); // vmrs r4, fpscr
         const std::uint32_t len = 4 + r.range(12);
         for (std::uint32_t n = 0; n < len; n++) {
             push32(p.code, vfp_ops[r.range(sizeof(vfp_ops) / sizeof(vfp_ops[0]))]);
         }
+        push32(p.code, 0xee000a10u); // vmov s0, r0
+        push32(p.code, 0xeeb81bc0u); // vcvt.f64.s32 d1, s0
+        push32(p.code, 0xeeb82b40u); // vcvt.f64.u32 d2, s0
+        push32(p.code, 0xec532b11u); // vmov r2, r3, d1
+        push32(p.code, 0xed892b02u); // vstr d2, [r9, #8]
+        push32(p.code, 0xed993b02u); // vldr d3, [r9, #8]
+        if (std::string_view(dc.name) == "armv6")
+            push32(p.code, 0xeef14a10u); // Read cumulative exceptions after rounding.
+        push32(p.code, 0xeca92b04u); // vstmia r9!, {d2-d3}
+        push32(p.code, 0xed394b04u); // vldmdb r9!, {d4-d5}
         // Spill the bank so a divergence also shows up in memory.
         push32(p.code, 0xED894A00u); // vstr s8, [r9]
         push32(p.code, 0xEDC94A01u); // vstr s9, [r9, #4]
@@ -2197,6 +2213,48 @@ std::uint32_t suite_vfp(backend_env &dc, backend_env &da, std::uint32_t base_see
         if (!run_pair("vfp", dc, da, p, seed, true, cov)) failures++;
     }
     return failures;
+}
+
+bool check_thumb_memory_fault(bool store, bool retry, bool writeback, bool armv6) {
+    auto env = make_interpreter_env(armv6);
+    program p;
+    p.thumb = true;
+    p.budget = 5;
+    p.init[1] = PROG_DATA_PTR;
+    // MOVS, SUBS set N and clear C. The transfer must not change those flags.
+    const int transfer = writeback ? (store ? 0xc101 : 0xc901) : (store ? 0x6008 : 0x6808);
+    for (std::uint16_t hw : { 0x2000, 0x3801, transfer, 0x2201, 0x2302, 0xe7fe })
+        push16(p.code, hw);
+    install(*env, p);
+    unsigned accesses = 0, faults = 0;
+    bool valid = true;
+    const auto access = [&](address addr, std::uint32_t *value) {
+        ++accesses;
+        valid &= addr == PROG_DATA_PTR && env->cpu->get_pc() == p.addr + 4
+            && env->cpu->get_reg(1) == PROG_DATA_PTR + (writeback ? 4 : 0);
+        if (store)
+            valid &= *value == 0xffffffffu;
+        else if (accesses == 2)
+            *value = 0x56781234;
+        return accesses == 2;
+    };
+    env->cpu->read_32bit = access;
+    env->cpu->write_32bit = access;
+    env->cpu->exception_handler = [&](exception_type type, address addr) {
+        ++faults;
+        valid &= addr == PROG_DATA_PTR && env->cpu->get_pc() == p.addr + 4
+            && type == (store ? exception_type_access_violation_write : exception_type_access_violation_read);
+        env->cpu->stop();
+        return retry;
+    };
+    const auto state = execute(*env, p);
+    valid &= faults == 1 && accesses == (retry ? 2u : 1u) && state.reg[15] == p.addr + 6
+        && (state.cpsr >> 28) == 8 && state.reg[2] == 0 && state.reg[3] == 0
+        && state.reg[0] == (store ? 0xffffffffu : (retry ? 0x56781234u : 0u));
+    if (!valid)
+        std::printf("[FAIL] Thumb block fault store=%d retry=%d pc=%08x cpsr=%08x accesses=%u\n",
+            store, retry, state.reg[15], state.cpsr, accesses);
+    return valid;
 }
 
 } // namespace
@@ -2220,9 +2278,12 @@ int main(int argc, char **argv) {
                 "data-processing + load/store + ldm/stm + halfword, %u cases from seed %u\n",
         count, base_seed);
 
+    const bool armv6 = argc > 3 && std::string_view(argv[3]) == "armv6";
     diff_env env_a, env_b;
-    auto core_a = make_core(env_a);
-    auto core_b = make_core(env_b);
+    auto core_a = wire_core(env_a, std::make_unique<dyncom_core>(&env_a.monitor, PAGE_BITS));
+    auto core_b = wire_core(env_b, std::make_unique<dyncom_core>(&env_b.monitor, PAGE_BITS));
+    auto candidate = armv6 ? wire_core(env_b, make_armv6_interpreter(&env_b.monitor)) : nullptr;
+    core &integer_core = armv6 ? *candidate : static_cast<core &>(*core_b);
     std::vector<std::uint8_t> golden_mem(MEM_SIZE, 0);
 
     std::uint32_t failures = 0;
@@ -2267,18 +2328,23 @@ int main(int argc, char **argv) {
         }
 
         core_a->imb_range(0, 8);
-        core_b->imb_range(0, 8);
+        integer_core.imb_range(0, 8);
+
+        if (armv6 && (i & 1))
+            integer_core.set_tlb_page(0, env_b.mem.data(), prot_read_write_exec);
+        else if (armv6)
+            integer_core.dirty_tlb_page(0);
 
         write_state(*core_a, init);
-        write_state(*core_b, init);
+        write_state(integer_core, init);
 
         core_a->set_pc(0);
-        core_b->set_pc(0);
+        integer_core.set_pc(0);
         core_a->run(1);
-        core_b->run(1);
+        integer_core.run(1);
 
         const cpu_state got_a = read_state(*core_a);
-        const cpu_state got_b = read_state(*core_b);
+        const cpu_state got_b = read_state(integer_core);
         cpu_state golden;
         if (kind < 2) {
             golden = golden_data_processing(inst, init);
@@ -2324,7 +2390,35 @@ int main(int argc, char **argv) {
     // -----------------------------------------------------------------------
     std::printf("dyncom_difftest: phase 2 (dynarmic oracle, whole programs)\n");
 
-    auto dc = make_dyncom_env();
+    auto dc = make_interpreter_env(armv6);
+    if (armv6) {
+        program p;
+        p.init[0] = PROG_DATA_PTR;
+        p.init[1] = 0xaabbccdd;
+        p.budget = 2;
+        push32(p.code, 0xe1902f9f); // LDREX r2, [r0]
+        push32(p.code, 0xe1803f91); // STREX r3, r1, [r0]
+        bool correct_core = true;
+        dc->monitor->read_32bit = [&](core *c, address a, std::uint32_t *v) {
+            correct_core &= c == dc->cpu.get();
+            return c->read_32bit(a, v);
+        };
+        dc->monitor->write_32bit = [&](core *c, address a, std::uint32_t value, std::uint32_t expected) {
+            correct_core &= c == dc->cpu.get();
+            std::uint32_t old;
+            return c->read_32bit(a, &old) && old == expected && c->write_32bit(a, &value) ? 1 : 0;
+        };
+        install(*dc, p);
+        const auto state = execute(*dc, p);
+        std::uint32_t stored;
+        dc->cpu->read_32bit(PROG_DATA_PTR, &stored);
+        if (!correct_core || state.reg[3] != 0 || stored != p.init[1]) {
+            std::puts("[FAIL] exclusive access must use the scheduled core's address space");
+            ++failures;
+        }
+        dc->monitor->read_32bit = {};
+        dc->monitor->write_32bit = {};
+    }
     auto da = make_dynarmic_env();
     coverage cov;
 
@@ -2355,6 +2449,333 @@ int main(int argc, char **argv) {
                 ++failures;
         }
     }
+    if (armv6) {
+        program p;
+        p.kind = "shifted-arithmetic";
+        for (const auto bits : {
+                 0xe071c320u, // RSBS ip, r1, r0, LSR #6
+                 0x20400301u, // SUBCS r0, r0, r1, LSL #6
+                 0xe0a22002u, // ADC r2, r2, r2
+                 0xe1a03142u, // ASR r3, r2, #2
+                 0xe1a04223u, // LSR r4, r3, #4
+                 0xeafffffeu })
+            push32(p.code, bits);
+        for (const auto divisor : { 0u, 1u, 0x7fffffffu, 0x80000000u, 0xffffffffu }) {
+            p.init[0] = 0x80000000u;
+            p.init[1] = divisor;
+            p.init[2] = 0x40000001u;
+            for (p.budget = 1; p.budget <= 5; ++p.budget) {
+                if (!run_pair(p.kind, *dc, *da, p, base_seed, true, cov, true))
+                    ++failures;
+            }
+        }
+    }
+    if (armv6) {
+        program p;
+        p.kind = "halfword-stride";
+        p.init[0] = PROG_DATA_PTR;
+        p.init[1] = PROG_DATA_PTR + 4;
+        p.init[2] = 0x8003;
+        p.init[4] = 3;
+        for (const auto bits : {
+                 0xe1c020b0u, // STRH r2, [r0]
+                 0xe0d030f2u, // LDRSH r3, [r0], #2
+                 0xe0030394u, // MUL r3, r4, r3
+                 0xe04130b2u, // STRH r3, [r1], #-2
+                 0xe1d110b2u, // LDRH r1, [r1, #2]
+                 0xeafffffeu })
+            push32(p.code, bits);
+        for (p.budget = 1; p.budget <= 5; ++p.budget) {
+            if (!run_pair(p.kind, *dc, *da, p, base_seed, true, cov, true))
+                ++failures;
+        }
+    }
+    if (armv6) {
+        program p;
+        p.kind = "arm-jump-table";
+        push32(p.code, 0xe2000003); // AND r0, r0, #3
+        push32(p.code, 0xe3500001); // CMP r0, #1
+        push32(p.code, 0x979ff100); // LDRLS pc, [pc, r0, LSL #2]
+        push32(p.code, 0xea000003); // B to the ARM target
+        push32(p.code, p.addr + 32);
+        push32(p.code, p.addr + 25);
+        push16(p.code, 0x2107); // MOVS r1, #7
+        push16(p.code, 0xe7fe);
+        push32(p.code, 0xe1a00000);
+        push32(p.code, 0xe3110102); // TST r1, #0x80000000
+        push32(p.code, 0xe0c43291); // SMULL r3, r4, r1, r2
+        push32(p.code, 0xe0214293); // MLA r1, r3, r2, r4
+        push32(p.code, 0xeafffffe);
+        p.init[1] = 0x80000003u;
+        p.init[2] = 7;
+        for (const auto index : { 4u, 5u, 6u }) {
+            p.init[0] = index;
+            for (p.budget = 1; p.budget <= 8; ++p.budget) {
+                if (!run_pair(p.kind, *dc, *da, p, base_seed, true, cov, true))
+                    ++failures;
+            }
+        }
+    }
+    if (armv6) {
+        program p;
+        p.kind = "vfp-page-transfer";
+        p.init[0] = (PROG_DATA_PTR & ~4095u) + 4092;
+        p.init[1] = 0x76543210;
+        p.init[2] = 0x89abcdef;
+        push32(p.code, 0xec421b10); // VMOV d0, r1, r2
+        push32(p.code, 0xeca00b02); // VSTMIA r0!, {d0} across the page boundary
+        push32(p.code, 0xed301b02); // VLDMDB r0!, {d1}
+        push32(p.code, 0xed9f2a00); // VLDR s4, [pc]
+        push32(p.code, 0xea000000);
+        push32(p.code, 0xdeadbeef);
+        push32(p.code, 0xed802a03); // VSTR s4, [r0, #12]
+        push32(p.code, 0xeafffffe);
+        for (p.budget = 1; p.budget <= 7; ++p.budget) {
+            if (!run_pair(p.kind, *dc, *da, p, base_seed, true, cov, true))
+                ++failures;
+        }
+    }
+    auto span_core = make_interpreter_env(armv6);
+    for (const unsigned offset : { 0u, 0xff6u }) {
+        program span;
+        span.thumb = true;
+        span.addr = PROG_CODE_LO + offset;
+        span.kind = "thumb-block";
+        span.init[1] = PROG_DATA_PTR;
+        span.init[13] = PROG_DATA_PTR;
+        // LDR, immediate shifts (including #32), ADD/SUB, logical ops, MUL,
+        // CMP and a store outside the span; then load a halfword and a stack word.
+        for (std::uint16_t hw : { 0x6808, 0x0042, 0x0813, 0x1014, 0x18d5, 0x1ae6,
+                 0x1c77, 0x1ef6, 0x4032, 0x407a, 0x4332, 0x437a, 0x2a80, 0x600a,
+                 0x880b, 0x33ff, 0x3b80, 0x9c00, 0x2000, 0x0044, 0xe7fe })
+            push16(span.code, hw);
+        for (unsigned budget = 1; budget <= span.code.size() / 2; ++budget) {
+            span.budget = budget;
+            if (!run_pair("thumb-block", *span_core, *da, span, base_seed, true, cov, true))
+                ++failures;
+        }
+    }
+    program transfers;
+    transfers.thumb = true;
+    transfers.init[0] = 0xffed1234;
+    transfers.init[1] = PROG_DATA_PTR;
+    transfers.init[2] = 4;
+    transfers.init[13] = PROG_DATA_PTR + 64;
+    for (std::uint16_t hw : { 0x5088, 0x588b, 0x5288, 0x5a8c, 0x6048, 0x684d,
+             0x8088, 0x888e, 0x90ff, 0x9fff, 0x46be, 0x4477, 0xc101, 0xc908, 0x4800, 0x4b01, 0xe7fe })
+        push16(transfers.code, hw);
+    for (unsigned budget = 1; budget <= transfers.code.size() / 2; ++budget) {
+        transfers.budget = budget;
+        if (!run_pair("thumb-transfers", *span_core, *da, transfers, base_seed, true, cov, true))
+            ++failures;
+    }
+    program arithmetic;
+    arithmetic.thumb = true;
+    arithmetic.init[1] = 1;
+    arithmetic.budget = 3;
+    for (const auto lhs : { 0u, 0x7fffffffu, 0x80000000u, 0xffffffffu }) {
+        arithmetic.init[0] = lhs;
+        for (const std::uint16_t hw : { 0x1840, 0x1a40, 0x3001, 0x3801, 0x2801 }) {
+            arithmetic.code.clear();
+            push16(arithmetic.code, 0x2200); // MOVS r2, #0
+            push16(arithmetic.code, 0x2a00); // CMP r2, #0
+            push16(arithmetic.code, hw);
+            push16(arithmetic.code, 0xe7fe);
+            if (!run_pair("thumb-arithmetic-flags", *span_core, *da, arithmetic, base_seed, true, cov, true))
+                ++failures;
+        }
+    }
+    program dsp;
+    dsp.init[3] = 0x8000ffff;
+    dsp.init[4] = 0x7ffffffe;
+    dsp.init[5] = 0x7fffffff;
+    for (auto bits : { 0xe16f2f14u, 0xe1042053u, 0xe1242053u, 0xe1442053u, 0xe1642053u,
+             0xe1620483u, 0xe16204c3u, 0xe16204e3u, 0xe10254a3u, 0xe12204e3u, 0xe12254c3u, 0xe14214e3u,
+             0xe6bf2f33u, 0xe6bf2fb3u, 0xe6ff2fb3u, 0xe6a02473u, 0xe6b02873u, 0xe6802c73u,
+             0xe6e02073u, 0xe6f02073u, 0xe6c02073u })
+        push32(dsp.code, bits);
+    for (unsigned budget = 1; budget <= dsp.code.size() / 4; ++budget) {
+        dsp.budget = budget;
+        if (!run_pair("arm-signed-dsp", *dc, *da, dsp, base_seed, true, cov, true))
+            ++failures;
+    }
+    if (armv6) {
+        program stack_return;
+        stack_return.init[0] = 0x76543210;
+        stack_return.init[5] = 0x89abcdef;
+        stack_return.init[13] = PROG_DATA_PTR + 64;
+        stack_return.init[14] = stack_return.addr + 13;
+        push32(stack_return.code, 0xe92d4021); // PUSH {r0, r5, lr}
+        push32(stack_return.code, 0xe8bd8014); // POP {r2, r4, pc}
+        push32(stack_return.code, 0xeafffffe);
+        push16(stack_return.code, 0x3101);
+        push16(stack_return.code, 0xe7fe);
+        for (unsigned budget = 1; budget <= 4; ++budget) {
+            stack_return.budget = budget;
+            if (!run_pair("arm-stack-thumb-return", *dc, *da, stack_return, base_seed, true, cov, true))
+                ++failures;
+        }
+        program media;
+        media.init[1] = 0x7fff8000;
+        media.init[2] = 0x80ff0100;
+        media.init[3] = 0xffffff80;
+        media.budget = 2;
+        for (const auto bits : { 0xe6810412u, 0xe6810052u, 0xe6810452u,
+                 0xe6a00011u, 0xe6bf0011u, 0xe6a80051u, 0xe6e00011u, 0xe6ff0051u,
+                 0xe6a70f31u, 0xe6af0f31u, 0xe6e00f31u, 0xe6ef0f31u, 0xe780f211u, 0xe7803211u,
+                 0xe0403291u, 0xe750f211u, 0xe750f231u, 0xe7503211u, 0xe7503231u, 0xe75032d1u, 0xe75032f1u }) {
+            media.code.clear();
+            push32(media.code, bits);
+            push32(media.code, 0xe10f4000u); // MRS r4, CPSR exposes saturation.
+            if (!run_pair("arm-media", *dc, *da, media, base_seed, true, cov, true))
+                ++failures;
+        }
+        program packed;
+        packed.init[1] = 0x7f0080ff;
+        packed.init[2] = 0x01ff8002;
+        packed.budget = 3;
+        for (unsigned family : { 1u, 2u, 3u, 5u, 6u, 7u }) {
+            for (unsigned shape : { 0u, 1u, 2u, 3u, 4u, 7u }) {
+                packed.code.clear();
+                push32(packed.code, 0xe6513f92u); // UADD8 sets an incoming GE pattern.
+                push32(packed.code, 0xe6010f12u | (family << 20) | (shape << 5));
+                push32(packed.code, 0xe6814fb2u); // SEL exposes all four GE bits in r4.
+                if (!run_pair("arm-parallel-lanes", *dc, *da, packed, base_seed, true, cov, true))
+                    ++failures;
+            }
+        }
+        program endian;
+        endian.init[0] = PROG_DATA_PTR;
+        endian.init[1] = 0x12345678u;
+        for (auto bits : { 0xf1010200u, 0xe5801000u, 0xe5902000u, 0xf1010000u, 0xe5903000u })
+            push32(endian.code, bits);
+        for (unsigned budget = 1; budget <= endian.code.size() / 4; ++budget) {
+            endian.budget = budget;
+            if (!run_pair("setend-memory-order", *dc, *da, endian, base_seed, true, cov, true))
+                ++failures;
+        }
+    }
+    if (armv6) {
+        program preserve;
+        preserve.thumb = true;
+        push16(preserve.code, 0x46c0); // MOV r8, r8 preserves arbitrary incoming NZCV.
+        install(*dc, preserve);
+        dc->cpu->imb_range(preserve.addr, preserve.code.size());
+        dc->cpu->set_pc(preserve.addr);
+        dc->cpu->set_cpsr(0xf0000030u);
+        dc->cpu->run(1);
+        if (dc->cpu->get_cpsr() != 0xf0000030u)
+            ++failures;
+    }
+    for (const auto list : { 0u, 1u, 7u, 0x7cu, 0xffu }) {
+        program stack_call;
+        stack_call.thumb = true;
+        stack_call.init[13] = PROG_DATA_PTR + 64;
+        for (auto bits : { 0xf000u, 0xf802u, 0xe7feu, 0x46c0u, 0xb500u | list, 0xbd00u | list })
+            push16(stack_call.code, bits);
+        for (unsigned reg = 0; reg < 8; ++reg)
+            stack_call.init[reg] = 0x11111111u * (reg + 1);
+        install(*dc, stack_call);
+        dc->cpu->imb_range(stack_call.addr, stack_call.code.size());
+        for (unsigned budget = 1; budget <= 5; ++budget) {
+            stack_call.budget = budget;
+            const auto got = execute(*dc, stack_call);
+            const unsigned pcs[] = { 2, 8, 10, 4, 4 };
+            const auto stack_bytes = 4 * (std::popcount(list) + 1);
+            if (got.reg[15] != stack_call.addr + pcs[budget - 1] ||
+                got.reg[14] != stack_call.addr + (budget == 1 ? 4 : 5) ||
+                got.reg[13] != stack_call.init[13] - (budget == 3 ? stack_bytes : 0)) {
+                std::printf("[FAIL] Thumb-1 call/stack boundary, mask=%x budget=%u\n", list, budget);
+                ++failures;
+            }
+        }
+        stack_call.budget = 32;
+        if (!run_pair("thumb-call-stack-range", *dc, *da, stack_call, base_seed, true, cov))
+            ++failures;
+    }
+    program dual_transfer;
+    dual_transfer.init[0] = PROG_DATA_PTR;
+    dual_transfer.init[2] = 0x01234567u;
+    dual_transfer.init[3] = 0xfedcba98u;
+    for (auto bits : { 0xe1c020f0u, 0xe1c040d0u, 0xe1e020f8u, 0xe04060d8u })
+        push32(dual_transfer.code, bits);
+    for (unsigned budget = 1; budget <= dual_transfer.code.size() / 4; ++budget) {
+        dual_transfer.budget = budget;
+        if (!run_pair("arm-double-transfers", *dc, *da, dual_transfer, base_seed, true, cov, true))
+            ++failures;
+    }
+    program pairs;
+    pairs.thumb = true;
+    pairs.init[0] = 0x80000001;
+    pairs.init[1] = 0xffffffff;
+    pairs.init[2] = 3;
+    // Stop immediately before, between, and after the two operations.
+    for (const std::uint16_t first : { 0x0008, 0x4288, 0x0800, 0x0840, 0x0040, 0x4348, 0x1a40, 0x1840, 0x4008 }) {
+        for (const std::uint16_t second : { 0x0040, 0xdbfe, 0xd0fe, 0x4008, 0x4048, 0x0802, 0x0840, 0x4348 }) {
+            pairs.code.clear();
+            for (auto hw : { std::uint16_t(0x2300), first, second, std::uint16_t(0xe7fe) })
+                push16(pairs.code, hw);
+            for (unsigned budget = 1; budget <= 4; ++budget) {
+                pairs.budget = budget;
+                if (!run_pair("thumb-pairs", *span_core, *da, pairs, base_seed, true, cov, true))
+                    ++failures;
+            }
+        }
+    }
+    for (auto base : { PROG_DATA_PTR, (PROG_DATA_PTR | 4095u) - 3 }) {
+        program stores;
+        stores.init[1] = base;
+        stores.init[2] = 0x12345678;
+        stores.init[3] = 0x87654321;
+        for (const auto word : { 0xe3a00000u, 0xe7a12180u, 0xe5813004u, 0xe1520003u, 0xcafffffeu, 0xeafffffeu })
+            push32(stores.code, word);
+        for (unsigned budget = 1; budget <= 6; ++budget) {
+            stores.budget = budget;
+            if (!run_pair("arm-adjacent-stores", *dc, *da, stores, base_seed, true, cov, true))
+                ++failures;
+        }
+    }
+    if (armv6) {
+        for (const auto destination : { PROG_DATA_PTR + 128, (PROG_DATA_PTR | 4095u) - 15,
+                 PROG_DATA_PTR + 4 }) {
+            program fill;
+            fill.init[2] = 0x78563412;
+            fill.init[7] = 40;
+            fill.init[8] = PROG_DATA_PTR;
+            fill.init[10] = destination;
+            for (auto bits : {
+                     0xe588a000u, 0xe5887004u, // descriptor points to the destination and limit
+                     0xe5981000u, 0xe7812100u, // ldr r1,[r8] / str r2,[r1,r0,lsl #2]
+                     0xe2800001u, 0xe5983004u, // add r0,#1 / ldr r3,[r8,#4]
+                     0xe1500003u, 0xbafffff9u, 0xeafffffeu })
+                push32(fill.code, bits);
+            for (const auto budget : { 3, 6, 25, 79, 150, 241, 242, 256, 300 }) {
+                fill.budget = budget;
+                if (!run_pair("arm-counted-fill", *dc, *da, fill, base_seed, true, cov, true))
+                    ++failures;
+            }
+        }
+    }
+    program memory_pairs;
+    memory_pairs.thumb = true;
+    memory_pairs.init[1] = PROG_DATA_PTR;
+    memory_pairs.init[2] = 2;
+    memory_pairs.init[13] = PROG_DATA_PTR;
+    for (const auto pair : { 0x98000013u, 0x98009b01u, 0x00525a8bu, 0x90001850u }) {
+        memory_pairs.code.clear();
+        for (const auto hw : { 0x2300u, pair >> 16, pair & 65535u, 0xe7feu })
+            push16(memory_pairs.code, hw);
+        for (unsigned budget = 1; budget <= 4; ++budget) {
+            memory_pairs.budget = budget;
+            if (!run_pair("thumb-memory-pairs", *dc, *da, memory_pairs, base_seed, true, cov, true))
+                ++failures;
+        }
+    }
+    for (bool store : { false, true })
+        for (bool retry : { false, true })
+            for (bool writeback : { false, true })
+                if (!check_thumb_memory_fault(store, retry, writeback, armv6))
+                    ++failures;
     failures += check_thumb_counted_word_loop(*dc, *da, cov);
     failures += check_vfp_mac_cancellation(*dc, *da);
     failures += check_undefined_instructions(*dc);
@@ -2375,7 +2796,7 @@ int main(int argc, char **argv) {
     // Coverage assertions. Without these a suite that silently stopped
     // reaching its target would report a clean pass -- which is exactly how
     // the previous harness "verified" the loop accelerator it never ran.
-    if (cov.accel_attaches == 0) {
+    if (!armv6 && cov.accel_attaches == 0) {
         std::printf("[HARNESS BUG] the loop accelerator never attached; the loop "
                     "suite is not testing it\n");
         failures++;

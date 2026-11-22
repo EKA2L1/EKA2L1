@@ -36,10 +36,10 @@
 
 void VFPInit(ARMul_State *state);
 
-std::int32_t vfp_get_float(ARMul_State *state, std::uint32_t reg);
-void vfp_put_float(ARMul_State *state, std::int32_t val, std::uint32_t reg);
-std::uint64_t vfp_get_double(ARMul_State *state, std::uint32_t reg);
-void vfp_put_double(ARMul_State *state, std::uint64_t val, std::uint32_t reg);
+std::int32_t vfp_get_float(vfp_register_view *state, std::uint32_t reg);
+void vfp_put_float(vfp_register_view *state, std::int32_t val, std::uint32_t reg);
+std::uint64_t vfp_get_double(vfp_register_view *state, std::uint32_t reg);
+void vfp_put_double(vfp_register_view *state, std::uint64_t val, std::uint32_t reg);
 void vfp_raise_exceptions(ARMul_State *state, std::uint32_t exceptions, std::uint32_t inst, std::uint32_t fpscr);
 std::uint32_t vfp_single_cpdo(ARMul_State *state, std::uint32_t inst, std::uint32_t fpscr);
 std::uint32_t vfp_double_cpdo(ARMul_State *state, std::uint32_t inst, std::uint32_t fpscr);

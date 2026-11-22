@@ -84,7 +84,7 @@ static void vfp_single_normalise_denormal(struct vfp_single *vs) {
     vfp_single_dump("normalise_denormal: out", vs);
 }
 
-std::uint32_t vfp_single_normaliseround(ARMul_State *state, int sd, struct vfp_single *vs, std::uint32_t fpscr,
+std::uint32_t vfp_single_normaliseround(vfp_register_view *state, int sd, struct vfp_single *vs, std::uint32_t fpscr,
     std::uint32_t exceptions, const char *func) {
     std::uint32_t significand, incr, rmode;
     int exponent, shift, underflow;
@@ -235,7 +235,7 @@ pack:
 // register. Multiply-accumulate needs this: VFPv2/v3 VMLA/VMLS are chained,
 // not fused, so the product is a single-precision value before it is
 // accumulated. Reuses normaliseround by routing it through a scratch slot.
-static std::uint32_t vfp_single_round_intermediate(ARMul_State *state, struct vfp_single *vs,
+static std::uint32_t vfp_single_round_intermediate(vfp_register_view *state, struct vfp_single *vs,
     std::uint32_t fpscr, const char *func) {
     // ExtReg has 64 slots; the single-precision register file only uses the
     // first 32, so the upper half is free for a scratch value that no guest
@@ -299,17 +299,17 @@ static std::uint32_t vfp_propagate_nan(struct vfp_single *vsd, struct vfp_single
 /*
  * Extended operations
  */
-static std::uint32_t vfp_single_fabs(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fabs(vfp_register_view *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     vfp_put_float(state, vfp_single_packed_abs(m), sd);
     return 0;
 }
 
-static std::uint32_t vfp_single_fcpy(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fcpy(vfp_register_view *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     vfp_put_float(state, m, sd);
     return 0;
 }
 
-static std::uint32_t vfp_single_fneg(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fneg(vfp_register_view *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     vfp_put_float(state, vfp_single_packed_negate(m), sd);
     return 0;
 }
@@ -380,7 +380,7 @@ std::uint32_t vfp_estimate_sqrt_significand(std::uint32_t exponent, std::uint32_
     }
 }
 
-static std::uint32_t vfp_single_fsqrt(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fsqrt(vfp_register_view *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     struct vfp_single vsm, vsd, *vsp;
     int ret, tm;
     std::uint32_t exceptions = 0;
@@ -469,7 +469,7 @@ static std::uint32_t vfp_single_fsqrt(ARMul_State *state, int sd, std::int32_t u
  * Greater than	:= C
  * Unordered	:= CV
  */
-static std::uint32_t vfp_compare(ARMul_State *state, int sd, std::int32_t signal_on_qnan, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_compare(vfp_register_view *state, int sd, std::int32_t signal_on_qnan, std::int32_t m, std::uint32_t fpscr) {
     std::int32_t d;
     std::uint32_t ret = 0;
 
@@ -527,23 +527,23 @@ static std::uint32_t vfp_compare(ARMul_State *state, int sd, std::int32_t signal
     return ret;
 }
 
-static std::uint32_t vfp_single_fcmp(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fcmp(vfp_register_view *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     return vfp_compare(state, sd, 0, m, fpscr);
 }
 
-static std::uint32_t vfp_single_fcmpe(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fcmpe(vfp_register_view *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     return vfp_compare(state, sd, 1, m, fpscr);
 }
 
-static std::uint32_t vfp_single_fcmpz(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fcmpz(vfp_register_view *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     return vfp_compare(state, sd, 0, 0, fpscr);
 }
 
-static std::uint32_t vfp_single_fcmpez(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fcmpez(vfp_register_view *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     return vfp_compare(state, sd, 1, 0, fpscr);
 }
 
-static std::uint32_t vfp_single_fcvtd(ARMul_State *state, int dd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fcvtd(vfp_register_view *state, int dd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     struct vfp_single vsm;
     struct vfp_double vdd;
     int tm;
@@ -585,7 +585,7 @@ pack_nan:
     return exceptions;
 }
 
-static std::uint32_t vfp_single_fuito(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fuito(vfp_register_view *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     struct vfp_single vs;
 
     vs.sign = 0;
@@ -595,7 +595,7 @@ static std::uint32_t vfp_single_fuito(ARMul_State *state, int sd, std::int32_t u
     return vfp_single_normaliseround(state, sd, &vs, fpscr, 0, "fuito");
 }
 
-static std::uint32_t vfp_single_fsito(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fsito(vfp_register_view *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     struct vfp_single vs;
 
     vs.sign = (m & 0x80000000) >> 16;
@@ -605,7 +605,7 @@ static std::uint32_t vfp_single_fsito(ARMul_State *state, int sd, std::int32_t u
     return vfp_single_normaliseround(state, sd, &vs, fpscr, 0, "fsito");
 }
 
-static std::uint32_t vfp_single_ftoui(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_ftoui(vfp_register_view *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     struct vfp_single vsm;
     std::uint32_t d, exceptions = 0;
     int rmode = fpscr & FPSCR_RMODE_MASK;
@@ -691,11 +691,11 @@ static std::uint32_t vfp_single_ftoui(ARMul_State *state, int sd, std::int32_t u
     return exceptions;
 }
 
-static std::uint32_t vfp_single_ftouiz(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_ftouiz(vfp_register_view *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     return vfp_single_ftoui(state, sd, unused, m, (fpscr & ~FPSCR_RMODE_MASK) | FPSCR_ROUND_TOZERO);
 }
 
-static std::uint32_t vfp_single_ftosi(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_ftosi(vfp_register_view *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     struct vfp_single vsm;
     std::uint32_t d, exceptions = 0;
     int rmode = fpscr & FPSCR_RMODE_MASK;
@@ -772,7 +772,7 @@ static std::uint32_t vfp_single_ftosi(ARMul_State *state, int sd, std::int32_t u
     return exceptions;
 }
 
-static std::uint32_t vfp_single_ftosiz(ARMul_State *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_ftosiz(vfp_register_view *state, int sd, std::int32_t unused, std::int32_t m, std::uint32_t fpscr) {
     return vfp_single_ftosi(state, sd, unused, m, (fpscr & ~FPSCR_RMODE_MASK) | FPSCR_ROUND_TOZERO);
 }
 
@@ -962,7 +962,7 @@ static std::uint32_t vfp_single_multiply(struct vfp_single *vsd, struct vfp_sing
 #define NEG_MULTIPLY (1 << 0)
 #define NEG_SUBTRACT (1 << 1)
 
-static std::uint32_t vfp_single_multiply_accumulate(ARMul_State *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr,
+static std::uint32_t vfp_single_multiply_accumulate(vfp_register_view *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr,
     std::uint32_t negate, const char *func) {
     vfp_single vsd, vsp, vsn, vsm;
     std::uint32_t exceptions = 0;
@@ -1012,7 +1012,7 @@ static std::uint32_t vfp_single_multiply_accumulate(ARMul_State *state, int sd, 
 /*
  * sd = sd + (sn * sm)
  */
-static std::uint32_t vfp_single_fmac(ARMul_State *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fmac(vfp_register_view *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "s{} = {:08x}", sn, sd);
     return vfp_single_multiply_accumulate(state, sd, sn, m, fpscr, 0, "fmac");
 }
@@ -1020,7 +1020,7 @@ static std::uint32_t vfp_single_fmac(ARMul_State *state, int sd, int sn, std::in
 /*
  * sd = sd - (sn * sm)
  */
-static std::uint32_t vfp_single_fnmac(ARMul_State *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fnmac(vfp_register_view *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
     // TODO: this one has its arguments inverted, investigate.
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "s{} = {:08x}", sd, sn);
     return vfp_single_multiply_accumulate(state, sd, sn, m, fpscr, NEG_MULTIPLY, "fnmac");
@@ -1029,7 +1029,7 @@ static std::uint32_t vfp_single_fnmac(ARMul_State *state, int sd, int sn, std::i
 /*
  * sd = -sd + (sn * sm)
  */
-static std::uint32_t vfp_single_fmsc(ARMul_State *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fmsc(vfp_register_view *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "s{} = {:08x}", sn, sd);
     return vfp_single_multiply_accumulate(state, sd, sn, m, fpscr, NEG_SUBTRACT, "fmsc");
 }
@@ -1037,7 +1037,7 @@ static std::uint32_t vfp_single_fmsc(ARMul_State *state, int sd, int sn, std::in
 /*
  * sd = -sd - (sn * sm)
  */
-static std::uint32_t vfp_single_fnmsc(ARMul_State *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fnmsc(vfp_register_view *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "s{} = {:08x}", sn, sd);
     return vfp_single_multiply_accumulate(state, sd, sn, m, fpscr, NEG_SUBTRACT | NEG_MULTIPLY,
         "fnmsc");
@@ -1046,7 +1046,7 @@ static std::uint32_t vfp_single_fnmsc(ARMul_State *state, int sd, int sn, std::i
 /*
  * sd = sn * sm
  */
-static std::uint32_t vfp_single_fmul(ARMul_State *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fmul(vfp_register_view *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
     struct vfp_single vsd, vsn, vsm;
     std::uint32_t exceptions = 0;
     std::int32_t n = vfp_get_float(state, sn);
@@ -1068,7 +1068,7 @@ static std::uint32_t vfp_single_fmul(ARMul_State *state, int sd, int sn, std::in
 /*
  * sd = -(sn * sm)
  */
-static std::uint32_t vfp_single_fnmul(ARMul_State *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fnmul(vfp_register_view *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
     struct vfp_single vsd, vsn, vsm;
     std::uint32_t exceptions = 0;
     std::int32_t n = vfp_get_float(state, sn);
@@ -1091,7 +1091,7 @@ static std::uint32_t vfp_single_fnmul(ARMul_State *state, int sd, int sn, std::i
 /*
  * sd = sn + sm
  */
-static std::uint32_t vfp_single_fadd(ARMul_State *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fadd(vfp_register_view *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
     struct vfp_single vsd, vsn, vsm;
     std::uint32_t exceptions = 0;
     std::int32_t n = vfp_get_float(state, sn);
@@ -1117,7 +1117,7 @@ static std::uint32_t vfp_single_fadd(ARMul_State *state, int sd, int sn, std::in
 /*
  * sd = sn - sm
  */
-static std::uint32_t vfp_single_fsub(ARMul_State *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fsub(vfp_register_view *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "s{} = {:08x}", sn, sd);
     /*
      * Subtraction is addition with one sign inverted. Unpack the second operand to perform FTZ if
@@ -1141,7 +1141,7 @@ static std::uint32_t vfp_single_fsub(ARMul_State *state, int sd, int sn, std::in
 /*
  * sd = sn / sm
  */
-static std::uint32_t vfp_single_fdiv(ARMul_State *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
+static std::uint32_t vfp_single_fdiv(vfp_register_view *state, int sd, int sn, std::int32_t m, std::uint32_t fpscr) {
     struct vfp_single vsd, vsn, vsm;
     std::uint32_t exceptions = 0;
     std::int32_t n = vfp_get_float(state, sn);
@@ -1338,7 +1338,7 @@ static inline bool vfp_host_f32_mac(std::uint32_t nb, std::uint32_t mb, std::uin
     return vfp_host_result_ok(rb, true);
 }
 
-static inline bool vfp_single_host_fast(ARMul_State *state, std::uint32_t inst, std::uint32_t fpscr,
+static inline bool vfp_single_host_fast(vfp_register_view *state, std::uint32_t inst, std::uint32_t fpscr,
     std::uint32_t &ret) {
     const std::uint32_t sd = vfp_get_sd(inst);
     const std::uint32_t sm = vfp_get_sm(inst);
@@ -1481,9 +1481,10 @@ static inline bool vfp_single_host_fast(ARMul_State *state, std::uint32_t inst, 
     return true;
 }
 
-std::uint32_t vfp_single_cpdo(ARMul_State *state, std::uint32_t inst, std::uint32_t fpscr) {
+std::uint32_t vfp_single_cpdo(vfp_register_view *state, std::uint32_t inst, std::uint32_t fpscr, bool precise) {
     std::uint32_t fast_ret;
-    if (g_vfp_host_fast && vfp_single_host_fast(state, inst, fpscr, fast_ret))
+    // The native path may omit IXC once the guest has already set the sticky bit.
+    if ((!precise || (fpscr & FPSCR_IXC)) && g_vfp_host_fast && vfp_single_host_fast(state, inst, fpscr, fast_ret))
         return fast_ret;
 
     std::uint32_t op = inst & FOP_MASK;
@@ -1521,8 +1522,8 @@ std::uint32_t vfp_single_cpdo(ARMul_State *state, std::uint32_t inst, std::uint3
     VFP_LOG_TRACE(eka2l1::CPU_DYNCOM, "vecstride={} veclen={}", vecstride, (veclen >> FPSCR_LENGTH_BIT) + 1);
 
     if (!fop->fn) {
-        LOG_CRITICAL(eka2l1::CPU_DYNCOM, "could not find single op {}, inst=0x{:x}@0x{:x}",
-            FEXT_TO_IDX(inst), inst, state->Reg[15]);
+        LOG_CRITICAL(eka2l1::CPU_DYNCOM, "could not find single op {}, inst=0x{:x}",
+            FEXT_TO_IDX(inst), inst);
         //Crash();
         goto invalid;
     }
