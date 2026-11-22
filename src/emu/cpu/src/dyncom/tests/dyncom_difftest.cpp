@@ -1443,6 +1443,22 @@ std::uint32_t gen_arm_block_transfer(rng &r, bool straddle_page) {
         | (l << 20) | (rn << 16) | list;
 }
 
+// PC-relative literal loads, and STMDB without write-back whose list includes
+// PC (APCS frame setup). Neither can move a pointer register.
+std::uint32_t gen_arm_pc_relative(rng &r) {
+    if (r.flip()) {
+        const std::uint32_t u = r.flip() ? 1u : 0u;
+        const std::uint32_t b = r.flip() ? 1u : 0u;
+        return (a_cond(r) << 28) | 0x051F0000u | (u << 23) | (b << 22) | (a_wreg(r) << 12)
+            | (r.range(16) * 4);
+    }
+    std::uint32_t list = 1u << 15;
+    for (std::uint32_t i = 0; i < A_WRITABLE_N; i++) {
+        if (r.flip()) list |= 1u << A_WRITABLE[i];
+    }
+    return (a_cond(r) << 28) | 0x09000000u | (A_PTR2 << 16) | list;
+}
+
 // Thumb: r5 is the data pointer and r6 a small index; neither is ever written,
 // and the low-register forms have no write-back, so no drift is possible.
 constexpr int T_PTR = 5;
@@ -1539,11 +1555,12 @@ program gen_arm_program(rng &r, std::uint32_t addr, std::uint32_t length) {
             else if (std::strcmp(only, "ls") == 0) inst = gen_arm_single_transfer(r);
             else if (std::strcmp(only, "hw") == 0) inst = gen_arm_halfword(r);
             else if (std::strcmp(only, "blk") == 0) inst = gen_arm_block_transfer(r, r.flip());
+            else if (std::strcmp(only, "pc") == 0) inst = gen_arm_pc_relative(r);
             else inst = gen_arm_multiply(r);
             push32(p.code, inst);
             continue;
         }
-        switch (r.range(10)) {
+        switch (r.range(11)) {
         case 0: case 1: case 2: case 3:
             inst = gen_arm_data_processing(r);
             break;
@@ -1557,6 +1574,9 @@ program gen_arm_program(rng &r, std::uint32_t addr, std::uint32_t length) {
             // Half of the block transfers use the pointer sitting on the page
             // edge, so the LDM/STM page cursor has to re-resolve mid-run.
             inst = gen_arm_block_transfer(r, r.flip());
+            break;
+        case 10:
+            inst = gen_arm_pc_relative(r);
             break;
         default:
             inst = gen_arm_multiply(r);
@@ -1674,8 +1694,12 @@ std::uint32_t suite_cold(backend_env &dc, backend_env &da, std::uint32_t base_se
         rng r(seed);
         const bool thumb = r.flip();
         const std::uint32_t len = 4 + r.range(20);
+        // Some ARM programs straddle a code page so execution continues onto the next page.
+        rng placement(seed ^ 0x27D4EB2Fu);
+        const std::uint32_t addr = !thumb && placement.flip()
+            ? PROG_CODE_LO + 0x1000 - 4 * placement.range(len + 1) : PROG_CODE_LO;
         const program p = thumb ? gen_thumb_program(r, PROG_CODE_LO, len)
-                                : gen_arm_program(r, PROG_CODE_LO, len);
+                                : gen_arm_program(r, addr, len);
         if (!run_pair("cold", dc, da, p, seed, true, cov)) failures++;
     }
     return failures;
@@ -2166,7 +2190,7 @@ std::uint32_t check_block_link_invalidation(backend_env &dc) {
 // VFP: the host-float fast path against dynarmic's own VFP implementation.
 std::uint32_t suite_vfp(backend_env &dc, backend_env &da, std::uint32_t base_seed,
     std::uint32_t count, coverage &cov) {
-    // vadd/vsub/vmul/vdiv/vmla/vmls .f32 over s8..s15, then store the bank.
+    // Single-precision arithmetic and compares over s8..s15, then store the bank.
     static constexpr std::uint32_t vfp_ops[] = {
         0xEE344A05u, // vadd.f32 s8, s8, s10
         0xEE344A45u, // vsub.f32 s8, s8, s10
@@ -2176,6 +2200,12 @@ std::uint32_t suite_vfp(backend_env &dc, backend_env &da, std::uint32_t base_see
         0xEE044AC5u, // vmls.f32 s8, s9, s10
         0xEEB04AC5u, // vabs.f32 s8, s10
         0xEEB14A45u, // vneg.f32 s8, s10
+        0xEE144A85u, // vnmls.f32 s8, s9, s10
+        0xEE144AC5u, // vnmla.f32 s8, s9, s10
+        0xEE244AC5u, // vnmul.f32 s8, s9, s10
+        0xEEB44A45u, // vcmp.f32 s8, s10
+        0xEEB44AC5u, // vcmpe.f32 s8, s10
+        0xEEB54A40u, // vcmp.f32 s8, #0
     };
 
     std::uint32_t failures = 0;
@@ -2190,11 +2220,19 @@ std::uint32_t suite_vfp(backend_env &dc, backend_env &da, std::uint32_t base_see
         set_common_init(p, r);
         for (int v = 8; v < 16; v++) p.vfp_init[v] = random_normal_f32(r);
 
+        if (r.flip()) {
+            // Exercise both incoming states of the cumulative inexact flag.
+            push32(p.code, 0xe3a05010u); // mov r5, #0x10
+            push32(p.code, 0xeee15a10u); // vmsr fpscr, r5
+        }
         push32(p.code, 0xeef14a10u); // vmrs r4, fpscr
         const std::uint32_t len = 4 + r.range(12);
         for (std::uint32_t n = 0; n < len; n++) {
             push32(p.code, vfp_ops[r.range(sizeof(vfp_ops) / sizeof(vfp_ops[0]))]);
         }
+        // The d4-d5 reload below overwrites s8, so preserve the arithmetic result in r6.
+        push32(p.code, 0xee146a10u); // vmov r6, s8
+        push32(p.code, 0xeef1fa10u); // vmrs APSR_nzcv, fpscr
         push32(p.code, 0xee000a10u); // vmov s0, r0
         push32(p.code, 0xeeb81bc0u); // vcvt.f64.s32 d1, s0
         push32(p.code, 0xeeb82b40u); // vcvt.f64.u32 d2, s0
