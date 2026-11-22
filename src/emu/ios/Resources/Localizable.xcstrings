@@ -3757,18 +3757,18 @@
         }
       }
     },
-    "settings.interpreter.armv6" : {
+    "settings.interpreter.ekalynx" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ARMv5/v6 (experimental)"
+            "value" : "ekalynx (experimental)"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "ARMv5/v6（实验性）"
+            "value" : "ekalynx（实验性）"
           }
         }
       }

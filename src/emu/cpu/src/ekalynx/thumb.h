@@ -6,7 +6,7 @@
 #include <cstdint>
 #include <cpu/dyncom/arm_dyncom_thumb.h>
 
-namespace eka2l1::arm::thumb {
+namespace eka2l1::arm::ekalynx::thumb {
     enum class code : std::uint8_t {
         other,
         lsl,

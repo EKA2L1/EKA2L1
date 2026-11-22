@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <limits>
 
-namespace eka2l1::arm::armv6 {
+namespace eka2l1::arm::ekalynx {
     inline std::int32_t saturate_signed(std::int64_t value, std::uint32_t& cpsr) {
         const auto result = std::clamp<std::int64_t>(value, std::numeric_limits<std::int32_t>::min(),
             std::numeric_limits<std::int32_t>::max());

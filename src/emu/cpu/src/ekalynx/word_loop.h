@@ -9,7 +9,7 @@
 #include <limits>
 #include <optional>
 
-namespace eka2l1::arm::armv6 {
+namespace eka2l1::arm::ekalynx {
     struct word_loop {
         static constexpr unsigned capacity = 16;
         std::array<arm_op, capacity> body;

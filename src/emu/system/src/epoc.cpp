@@ -668,7 +668,7 @@ namespace eka2l1 {
 #elif EKA2L1_PLATFORM(IOS)
         // Legacy iOS configurations may still carry the desktop "dynarmic" default.
         const auto backend = common::lowercase_string(conf_->cpu_backend);
-        cpu_type = arm_emulator_type::armv6;
+        cpu_type = arm_emulator_type::ekalynx;
         if (backend == "dyncom")
             cpu_type = arm_emulator_type::dyncom;
 #if EKA2L1_IOS_DYNARMIC

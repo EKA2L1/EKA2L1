@@ -6,7 +6,7 @@
 #include <atomic>
 #include <bit>
 #include <cpu/12l1r/tlb.h>
-#include <cpu/armv6.h>
+#include <cpu/ekalynx.h>
 #include <cpu/vfp.h>
 #include <common/bytes.h>
 #include <cstdlib>
@@ -16,7 +16,7 @@
 
 namespace eka2l1::arm {
     namespace {
-        using namespace armv6;
+        using namespace ekalynx;
         constexpr std::uint32_t N = 1u << 31, Z = 1u << 30, C = 1u << 29, V = 1u << 28, T = 1u << 5;
 
         bool passes(unsigned cond, std::uint32_t flags) {
@@ -489,7 +489,7 @@ namespace eka2l1::arm {
                 case arm_code::hint:
                     break;
                 case arm_code::dual_multiply:
-                    armv6::dual_multiply(op.value, regs, flags);
+                    ekalynx::dual_multiply(op.value, regs, flags);
                     break;
                 case vfp_math:
                     execute_vfp_arithmetic(op.value);
@@ -1640,7 +1640,7 @@ namespace eka2l1::arm {
             regs[15] = next;
         }
     }
-    std::unique_ptr<core> make_armv6_interpreter(exclusive_monitor* monitor) {
+    std::unique_ptr<core> make_ekalynx_interpreter(exclusive_monitor* monitor) {
         return std::make_unique<interpreter>(monitor);
     }
 }

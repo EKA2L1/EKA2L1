@@ -85,7 +85,7 @@ add_library(cpu
         include/cpu/arm_utils.h
         src/arm_analyser_capstone.cpp
         src/arm_analyser.cpp
-        src/armv6/interpreter.cpp
+        src/ekalynx/interpreter.cpp
         src/arm_factory.cpp
         src/arm_utils.cpp
         ${SOURCE_12L1R_PUBLIC}

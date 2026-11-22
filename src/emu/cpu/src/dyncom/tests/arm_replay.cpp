@@ -135,7 +135,7 @@ int main(int argc, char** argv) {
             std::fprintf(stderr, "%s: invalid snapshot\n", argv[i]);
             return 2;
         }
-        for (auto mode : { arm_emulator_type::dyncom, arm_emulator_type::armv6 })
+        for (auto mode : { arm_emulator_type::dyncom, arm_emulator_type::ekalynx })
             if (!replay(argv[i], mode, image))
                 return 1;
     }

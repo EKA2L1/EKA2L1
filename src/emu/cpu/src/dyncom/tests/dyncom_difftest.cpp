@@ -23,7 +23,7 @@
  */
 
 #include <cpu/arm_dynarmic.h>
-#include <cpu/armv6.h>
+#include <cpu/ekalynx.h>
 #include <cpu/dyncom/arm_dyncom.h>
 #include <cpu/dyncom/arm_dyncom_thumb.h>
 #include <cpu/dyncom/vfp/asm_vfp.h>
@@ -1115,12 +1115,12 @@ void wire_backend(backend_env &e) {
     cp->system_call_handler = [ep](const std::uint32_t) { ep->syscalls++; };
 }
 
-std::unique_ptr<backend_env> make_interpreter_env(bool armv6) {
+std::unique_ptr<backend_env> make_interpreter_env(bool ekalynx) {
     auto e = std::make_unique<backend_env>();
-    e->name = armv6 ? "armv6" : "dyncom";
+    e->name = ekalynx ? "ekalynx" : "dyncom";
     e->monitor = std::make_unique<r12l1::exclusive_monitor>(1);
-    if (armv6)
-        e->cpu = make_armv6_interpreter(e->monitor.get());
+    if (ekalynx)
+        e->cpu = make_ekalynx_interpreter(e->monitor.get());
     else
         e->cpu = std::make_unique<dyncom_core>(e->monitor.get(), PAGE_BITS);
     wire_backend(*e);
@@ -2239,7 +2239,7 @@ std::uint32_t suite_vfp(backend_env &dc, backend_env &da, std::uint32_t base_see
         push32(p.code, 0xec532b11u); // vmov r2, r3, d1
         push32(p.code, 0xed892b02u); // vstr d2, [r9, #8]
         push32(p.code, 0xed993b02u); // vldr d3, [r9, #8]
-        if (std::string_view(dc.name) == "armv6")
+        if (std::string_view(dc.name) == "ekalynx")
             push32(p.code, 0xeef14a10u); // Read cumulative exceptions after rounding.
         push32(p.code, 0xeca92b04u); // vstmia r9!, {d2-d3}
         push32(p.code, 0xed394b04u); // vldmdb r9!, {d4-d5}
@@ -2254,8 +2254,8 @@ std::uint32_t suite_vfp(backend_env &dc, backend_env &da, std::uint32_t base_see
     return failures;
 }
 
-bool check_thumb_memory_fault(bool store, bool retry, bool writeback, bool armv6) {
-    auto env = make_interpreter_env(armv6);
+bool check_thumb_memory_fault(bool store, bool retry, bool writeback, bool ekalynx) {
+    auto env = make_interpreter_env(ekalynx);
     program p;
     p.thumb = true;
     p.budget = 5;
@@ -2357,7 +2357,7 @@ std::uint32_t check_vfp_format_word(backend_env &env) {
     return failures;
 }
 
-std::uint32_t check_user_instructions(backend_env &dc, backend_env &da, bool armv6, std::uint32_t base_seed,
+std::uint32_t check_user_instructions(backend_env &dc, backend_env &da, bool ekalynx, std::uint32_t base_seed,
     coverage &cov) {
     std::uint32_t failures = 0;
     for (unsigned hint = 0; hint < 256; ++hint) {
@@ -2394,7 +2394,7 @@ std::uint32_t check_user_instructions(backend_env &dc, backend_env &da, bool arm
             ++failures;
         }
     }
-    if (armv6) {
+    if (ekalynx) {
         program p;
         p.kind = "dual-multiply";
         p.init[1] = 0x80007fff;
@@ -2504,12 +2504,12 @@ int main(int argc, char **argv) {
                 "data-processing + load/store + ldm/stm + halfword, %u cases from seed %u\n",
         count, base_seed);
 
-    const bool armv6 = argc > 3 && std::string_view(argv[3]) == "armv6";
+    const bool ekalynx = argc > 3 && std::string_view(argv[3]) == "ekalynx";
     diff_env env_a, env_b;
     auto core_a = wire_core(env_a, std::make_unique<dyncom_core>(&env_a.monitor, PAGE_BITS));
     auto core_b = wire_core(env_b, std::make_unique<dyncom_core>(&env_b.monitor, PAGE_BITS));
-    auto candidate = armv6 ? wire_core(env_b, make_armv6_interpreter(&env_b.monitor)) : nullptr;
-    core &integer_core = armv6 ? *candidate : static_cast<core &>(*core_b);
+    auto candidate = ekalynx ? wire_core(env_b, make_ekalynx_interpreter(&env_b.monitor)) : nullptr;
+    core &integer_core = ekalynx ? *candidate : static_cast<core &>(*core_b);
     std::vector<std::uint8_t> golden_mem(MEM_SIZE, 0);
 
     std::uint32_t failures = 0;
@@ -2556,9 +2556,9 @@ int main(int argc, char **argv) {
         core_a->imb_range(0, 8);
         integer_core.imb_range(0, 8);
 
-        if (armv6 && (i & 1))
+        if (ekalynx && (i & 1))
             integer_core.set_tlb_page(0, env_b.mem.data(), prot_read_write_exec);
-        else if (armv6)
+        else if (ekalynx)
             integer_core.dirty_tlb_page(0);
 
         write_state(*core_a, init);
@@ -2616,8 +2616,8 @@ int main(int argc, char **argv) {
     // -----------------------------------------------------------------------
     std::printf("dyncom_difftest: phase 2 (dynarmic oracle, whole programs)\n");
 
-    auto dc = make_interpreter_env(armv6);
-    if (armv6) {
+    auto dc = make_interpreter_env(ekalynx);
+    if (ekalynx) {
         program p;
         p.init[0] = PROG_DATA_PTR;
         p.init[1] = 0xaabbccdd;
@@ -2648,8 +2648,8 @@ int main(int argc, char **argv) {
     auto da = make_dynarmic_env();
     coverage cov;
 
-    failures += check_user_instructions(*dc, *da, armv6, base_seed, cov);
-    if (armv6) {
+    failures += check_user_instructions(*dc, *da, ekalynx, base_seed, cov);
+    if (ekalynx) {
         failures += check_msr_fields(*dc);
         failures += check_vfp_format_word(*dc);
     }
@@ -2681,7 +2681,7 @@ int main(int argc, char **argv) {
                 ++failures;
         }
     }
-    if (armv6) {
+    if (ekalynx) {
         program p;
         p.kind = "shifted-arithmetic";
         for (const auto bits : {
@@ -2702,7 +2702,7 @@ int main(int argc, char **argv) {
             }
         }
     }
-    if (armv6) {
+    if (ekalynx) {
         program p;
         p.kind = "halfword-stride";
         p.init[0] = PROG_DATA_PTR;
@@ -2722,7 +2722,7 @@ int main(int argc, char **argv) {
                 ++failures;
         }
     }
-    if (armv6) {
+    if (ekalynx) {
         program p;
         p.kind = "arm-jump-table";
         push32(p.code, 0xe2000003); // AND r0, r0, #3
@@ -2748,7 +2748,7 @@ int main(int argc, char **argv) {
             }
         }
     }
-    if (armv6) {
+    if (ekalynx) {
         program p;
         p.kind = "vfp-page-transfer";
         p.init[0] = (PROG_DATA_PTR & ~4095u) + 4092;
@@ -2767,7 +2767,7 @@ int main(int argc, char **argv) {
                 ++failures;
         }
     }
-    auto span_core = make_interpreter_env(armv6);
+    auto span_core = make_interpreter_env(ekalynx);
     for (const unsigned offset : { 0u, 0xff6u }) {
         program span;
         span.thumb = true;
@@ -2831,7 +2831,7 @@ int main(int argc, char **argv) {
         if (!run_pair("arm-signed-dsp", *dc, *da, dsp, base_seed, true, cov, true))
             ++failures;
     }
-    if (armv6) {
+    if (ekalynx) {
         program stack_return;
         stack_return.init[0] = 0x76543210;
         stack_return.init[5] = 0x89abcdef;
@@ -2887,7 +2887,7 @@ int main(int argc, char **argv) {
                 ++failures;
         }
     }
-    if (armv6) {
+    if (ekalynx) {
         program preserve;
         preserve.thumb = true;
         push16(preserve.code, 0x46c0); // MOV r8, r8 preserves arbitrary incoming NZCV.
@@ -2967,7 +2967,7 @@ int main(int argc, char **argv) {
                 ++failures;
         }
     }
-    if (armv6) {
+    if (ekalynx) {
         for (const auto destination : { PROG_DATA_PTR + 128, (PROG_DATA_PTR | 4095u) - 15,
                  PROG_DATA_PTR + 4 }) {
             program fill;
@@ -3006,7 +3006,7 @@ int main(int argc, char **argv) {
     for (bool store : { false, true })
         for (bool retry : { false, true })
             for (bool writeback : { false, true })
-                if (!check_thumb_memory_fault(store, retry, writeback, armv6))
+                if (!check_thumb_memory_fault(store, retry, writeback, ekalynx))
                     ++failures;
     failures += check_thumb_counted_word_loop(*dc, *da, cov);
     failures += check_vfp_mac_cancellation(*dc, *da);
@@ -3028,7 +3028,7 @@ int main(int argc, char **argv) {
     // Coverage assertions. Without these a suite that silently stopped
     // reaching its target would report a clean pass -- which is exactly how
     // the previous harness "verified" the loop accelerator it never ran.
-    if (!armv6 && cov.accel_attaches == 0) {
+    if (!ekalynx && cov.accel_attaches == 0) {
         std::printf("[HARNESS BUG] the loop accelerator never attached; the loop "
                     "suite is not testing it\n");
         failures++;

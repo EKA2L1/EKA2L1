@@ -4,5 +4,5 @@
 #include <cpu/arm_interface.h>
 
 namespace eka2l1::arm {
-    std::unique_ptr<core> make_armv6_interpreter(exclusive_monitor *monitor);
+    std::unique_ptr<core> make_ekalynx_interpreter(exclusive_monitor *monitor);
 }

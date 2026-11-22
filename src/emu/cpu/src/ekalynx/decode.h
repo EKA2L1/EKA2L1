@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <cpu/dyncom/arm_dyncom_thumb.h>
 
-namespace eka2l1::arm::armv6 {
+namespace eka2l1::arm::ekalynx {
     enum class opcode : std::uint8_t {
         empty,
         undefined,

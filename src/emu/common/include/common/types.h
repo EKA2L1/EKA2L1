@@ -157,7 +157,7 @@ enum class arm_emulator_type {
     dynarmic = 1,
     r12l1 = 2,
     dyncom = 3,
-    armv6 = 5
+    ekalynx = 5
 };
 
 typedef std::uint32_t vaddress;

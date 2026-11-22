@@ -14,7 +14,7 @@ struct SettingsView: View {
 
     @State private var extensiveLogging = false
     @State private var hideSystemApps = true
-    @State private var cpuBackend = "armv6"
+    @State private var cpuBackend = "ekalynx"
     @State private var performanceMode = "balanced"
     @State private var availableLanguages: [EKA2L1LanguageItem] = []
     @State private var systemLanguageCode = -1
@@ -104,7 +104,7 @@ struct SettingsView: View {
                     }
                 )) {
                     Text(verbatim: "Dyncom").tag("dyncom")
-                    Text("settings.interpreter.armv6").tag("armv6")
+                    Text("settings.interpreter.ekalynx").tag("ekalynx")
                     if EKA2L1Bridge.shared.jitCompiledIn {
                         Text("settings.jit").tag("jit")
                     }
@@ -343,7 +343,7 @@ struct SettingsView: View {
         } else {
             switch (snapshot["cpuBackend"] as? String)?.lowercased() {
             case "dyncom": cpuBackend = "dyncom"
-            default: cpuBackend = "armv6"
+            default: cpuBackend = "ekalynx"
             }
         }
         // Anything the bridge doesn't recognise runs as balanced.
