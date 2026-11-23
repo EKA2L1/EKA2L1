@@ -6214,6 +6214,24 @@ namespace eka2l1::epoc {
         BRIDGE_REGISTER(0x10D, library_load_prepare)
     };
 
+    // Belle FP2 inserted two slow calls before MutexWait (0x11) and dropped one of ThreadGetHeap/ThreadAsProcess (0xD6/0xD7).
+    static eka2l1::hle::func_map make_belle_fp2_svc_map(const eka2l1::hle::func_map &v10_map) {
+        eka2l1::hle::func_map result;
+        for (const auto &[num, func] : v10_map) {
+            if ((num & 0x800000) || (num < 0x11)) {
+                result.emplace(num, func);
+            } else if (num <= 0xD5) {
+                result.emplace(num + 2, func);
+            } else if (num >= 0xD8) {
+                result.emplace(num + 1, func);
+            }
+        }
+
+        return result;
+    }
+
+    const eka2l1::hle::func_map svc_register_funcs_v10_belle_fp2 = make_belle_fp2_svc_map(svc_register_funcs_v10);
+
     const eka2l1::hle::func_map svc_register_funcs_v94 = {
         /* FAST EXECUTIVE CALL */
         BRIDGE_REGISTER(0x00800000, wait_for_any_request),

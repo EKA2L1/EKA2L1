@@ -343,6 +343,9 @@ namespace eka2l1::epoc {
     ///> @brief The SVC map for Symbian S^3.
     extern const eka2l1::hle::func_map svc_register_funcs_v10;
 
+    ///> @brief The S^3 SVC map renumbered for Belle FP2.
+    extern const eka2l1::hle::func_map svc_register_funcs_v10_belle_fp2;
+
     ///> @brief The SVC map for Symbian 8.0.
     extern const eka2l1::hle::func_map svc_register_funcs_v80;
 

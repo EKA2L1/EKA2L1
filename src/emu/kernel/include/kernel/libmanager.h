@@ -158,6 +158,7 @@ namespace eka2l1 {
 
             std::uint32_t additional_mode_;
             std::optional<bool> dll_tls_keyed_by_uid_;
+            bool svcs_adapted_{ false };
 
             void apply_pending_patches();
             void apply_trick_or_treat_algo();
@@ -197,6 +198,9 @@ namespace eka2l1 {
 
             // Whether the ROM's kernel keys DLL TLS by handle and DLL UID. Early Symbian 9.1 keys by handle only.
             bool is_dll_tls_keyed_by_uid();
+
+            // Switches to the Belle FP2 slow executive call numbering if the ROM's EUSER uses it. Call once drive Z is mounted.
+            void adapt_svcs_to_rom();
 
             // Search through all drives, which will parse all existing file
             std::pair<std::optional<loader::e32img>, std::optional<loader::romimg>>
