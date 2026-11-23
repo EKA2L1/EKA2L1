@@ -397,7 +397,7 @@ namespace eka2l1::arm {
                 auto& entry = tlb_.entries[(base >> 12) & r12l1::TLB_ENTRY_MASK];
                 if (entry.execute_addr != base)
                     return;
-                slot.arm_ops = std::make_unique_for_overwrite<arm_op[]>(1024);
+                slot.arm_ops = std::make_unique_for_overwrite<arm_op[]>(1025);
                 for (unsigned i = 0; i < 1024; ++i) {
                     std::uint32_t bits;
                     std::memcpy(&bits, entry.host_base + 4 * i, 4);
@@ -408,6 +408,7 @@ namespace eka2l1::arm {
                         const auto start = i + branch.value;
                         if (auto loop = analyze_word_loop(slot.arm_ops.get() + start, 1 - branch.value)) {
                             slot.arm_ops[start].code = arm_code::word_loop_entry;
+                            slot.arm_ops[start].cond = 16;
                             slot.arm_ops[start].value = static_cast<unsigned>(slot.loops.size());
                             slot.loops.push_back(*loop);
                         }
@@ -415,6 +416,7 @@ namespace eka2l1::arm {
                 }
                 for (unsigned i = 1; i < 1024; ++i)
                     fuse_arm(slot.arm_ops[i - 1], slot.arm_ops[i]);
+                slot.arm_ops[1024] = { .code = arm_code::page_end, .cond = 14 };
             }
             const auto* ops = slot.arm_ops.get();
             auto& regs = state_.cpu_registers;
@@ -441,35 +443,51 @@ namespace eka2l1::arm {
                     std::memcpy(&value, p, 4);
                 return true;
             };
-            while (index < 1024 && remaining) {
+            while (remaining) {
                 const auto* decoded = &ops[index];
-                if (decoded->code == arm_code::word_loop_entry) {
-                    const auto& loop = slot.loops[decoded->value];
-                    if (const auto iterations = run_word_loop(loop, regs, remaining, ptr)) {
-                        const auto left = regs[loop.reverse_compare ? loop.limit : loop.counter];
-                        const auto right = regs[loop.reverse_compare ? loop.counter : loop.limit];
-                        subtract(left, right, flags);
-                        remaining -= iterations * loop.length;
-                        if (regs[loop.counter] == regs[loop.limit])
-                            index += loop.length;
-                        continue;
-                    }
-                    decoded = &loop.body[0];
+                if (decoded->cond != 14) [[unlikely]] {
+                    if (decoded->code == arm_code::word_loop_entry) {
+                        const auto& loop = slot.loops[decoded->value];
+                        if (const auto iterations = run_word_loop(loop, regs, remaining, ptr)) {
+                            const auto left = regs[loop.reverse_compare ? loop.limit : loop.counter];
+                            const auto right = regs[loop.reverse_compare ? loop.counter : loop.limit];
+                            subtract(left, right, flags);
+                            remaining -= iterations * loop.length;
+                            if (regs[loop.counter] == regs[loop.limit])
+                                index += loop.length;
+                            continue;
+                        }
+                        decoded = &loop.body[0];
+                    } else if (decoded->cond < 14 && !passes(decoded->cond, flags))
+                        goto advance_arm;
                 }
+                {
                 const auto& op = *decoded;
                 using enum arm_code;
                 auto a = regs[op.a];
                 auto& d = regs[op.d];
-                if (op.cond < 14 && !passes(op.cond, flags))
-                    goto advance_arm;
+#if defined(__GNUC__)
+                // A label table avoids the jump-table base and offset arithmetic of the switch.
+#define EKALYNX_HANDLER_ADDRESS(name) &&handle_##name,
+                static const void* const handlers[] = { EKALYNX_ARM_CODES(EKALYNX_HANDLER_ADDRESS) };
+#undef EKALYNX_HANDLER_ADDRESS
+#define EKALYNX_CASE(name) \
+    case name:             \
+    handle_##name:
+                goto *handlers[static_cast<unsigned>(op.code)];
+#else
+#define EKALYNX_CASE(name) case name:
+#endif
                 switch (op.code) {
-                case data: {
+                EKALYNX_CASE(data) {
                     const auto next = data_processing(op.value, regs, flags, base + 4 * index, 4);
                     index = ((next - base) >> 2) - 1;
+                    if (index + 1 >= 1024) [[unlikely]]
+                        goto leave_page;
                     break;
                 }
-                case vfp_load:
-                case vfp_store: {
+                EKALYNX_CASE(vfp_load)
+                EKALYNX_CASE(vfp_store) {
                     const bool store = op.code == vfp_store;
                     const auto address = op.a == 15 ? base + 4 * index + 8 : a;
                     const auto updated = address + op.value;
@@ -486,36 +504,38 @@ namespace eka2l1::arm {
                         regs[op.a] = updated;
                     break;
                 }
-                case arm_code::hint:
+                EKALYNX_CASE(hint)
                     break;
-                case arm_code::dual_multiply:
+                EKALYNX_CASE(dual_multiply)
                     ekalynx::dual_multiply(op.value, regs, flags);
                     break;
-                case vfp_math:
+                EKALYNX_CASE(vfp_math)
                     execute_vfp_arithmetic(op.value);
                     break;
-                case write_flags:
+                EKALYNX_CASE(write_flags)
                     flags = (flags & ~op.value) | (regs[op.b] & op.value);
                     break;
-                case vmov_from:
+                EKALYNX_CASE(vmov_from)
                     d = state_.fpu_registers[op.value];
                     break;
-                case vmov_to:
+                EKALYNX_CASE(vmov_to)
                     state_.fpu_registers[op.value] = d;
                     break;
-                case vmov_pair_from:
+                EKALYNX_CASE(vmov_pair_from)
                     d = state_.fpu_registers[op.value];
                     regs[op.a] = state_.fpu_registers[op.value + 1];
                     break;
-                case vmov_pair_to:
+                EKALYNX_CASE(vmov_pair_to)
                     state_.fpu_registers[op.value] = d;
                     state_.fpu_registers[op.value + 1] = a;
                     break;
-                case arm_code::widen_integer:
+                EKALYNX_CASE(widen_integer)
                     convert_integer_to_double(state_.fpu_registers, op.value, op.b, op.flags);
                     break;
-                case arm_code::word_loop_entry:
-                case other: {
+                EKALYNX_CASE(page_end)
+                    goto done;
+                EKALYNX_CASE(word_loop_entry)
+                EKALYNX_CASE(other) {
                     const auto pc = base + 4 * index;
                     retired_ = budget - remaining + 1;
                     state_.cpsr = flags;
@@ -523,22 +543,22 @@ namespace eka2l1::arm {
                     execute({ op.value, op.generic, op.cond }, pc, 4);
                     return;
                 }
-                case add_i:
+                EKALYNX_CASE(add_i)
                     d = a + op.value;
                     break;
-                case sub_i:
+                EKALYNX_CASE(sub_i)
                     d = a - op.value;
                     break;
-                case sub_lsl:
+                EKALYNX_CASE(sub_lsl)
                     d = a - (regs[op.b] << op.shift);
                     break;
-                case mul:
+                EKALYNX_CASE(mul)
                     d = a * regs[op.b];
                     break;
-                case mla:
+                EKALYNX_CASE(mla)
                     d = a * regs[op.b] + regs[op.value];
                     break;
-                case smull: {
+                EKALYNX_CASE(smull) {
                     const auto left = static_cast<std::int32_t>(regs[op.b]);
                     const auto right = static_cast<std::int32_t>(regs[op.value]);
                     const auto product = static_cast<std::uint64_t>(std::int64_t(left) * right);
@@ -546,45 +566,54 @@ namespace eka2l1::arm {
                     regs[op.a] = static_cast<std::uint32_t>(product >> 32);
                     break;
                 }
-                case adc_r:
+                EKALYNX_CASE(adc_r)
                     d = a + regs[op.b] + ((flags & C) != 0);
                     break;
-                case add_lsl:
+                EKALYNX_CASE(add_lsl)
                     d = a + (regs[op.b] << op.shift);
                     break;
-                case mov_i:
+                EKALYNX_CASE(orr_lsl)
+                    d = a | (regs[op.b] << op.shift);
+                    break;
+                EKALYNX_CASE(subs_i)
+                    d = subtract(a, op.value, flags);
+                    break;
+                EKALYNX_CASE(mov_i)
                     d = op.value;
                     break;
-                case mov_lsl:
+                EKALYNX_CASE(mov_lsl)
                     d = regs[op.b] << op.shift;
                     break;
-                case mov_asr:
+                EKALYNX_CASE(mov_asr)
                     d = static_cast<std::int32_t>(regs[op.b]) >> op.shift;
                     break;
-                case mov_lsr:
+                EKALYNX_CASE(mov_lsr)
                     d = regs[op.b] >> op.shift;
                     break;
-                case rsbs_lsr:
+                EKALYNX_CASE(rsbs_lsr)
                     d = subtract(regs[op.b] >> op.shift, a, flags);
                     break;
-                case cmp_branch:
-                case cmp_i:
-                case cmp_r: {
+                EKALYNX_CASE(cmp_branch)
+                EKALYNX_CASE(cmp_i)
+                EKALYNX_CASE(cmp_r) {
                     const auto b = op.code == cmp_i ? op.value : regs[op.b];
                     subtract(a, b, flags);
                     if (op.code == cmp_branch && remaining > 1) {
                         ++index;
                         --remaining;
-                        if (passes(op.flags, flags))
+                        if (passes(op.flags, flags)) {
                             index += op.value - 1;
+                            if (index + 1 >= 1024) [[unlikely]]
+                                goto leave_page;
+                        }
                     }
                     break;
                 }
-                case and_i:
+                EKALYNX_CASE(and_i)
                     d = a & op.value;
                     break;
-                case tst_i:
-                case ands_i: {
+                EKALYNX_CASE(tst_i)
+                EKALYNX_CASE(ands_i) {
                     const auto result = a & op.value;
                     if (op.code == ands_i)
                         d = result;
@@ -593,16 +622,18 @@ namespace eka2l1::arm {
                         flags = (flags & ~C) | ((op.value & N) ? C : 0);
                     break;
                 }
-                case call:
+                EKALYNX_CASE(call)
                     regs[14] = base + 4 * index + 4;
                     [[fallthrough]];
-                case branch:
+                EKALYNX_CASE(branch)
                     index += op.value - 1;
+                    if (index + 1 >= 1024) [[unlikely]]
+                        goto leave_page;
                     break;
-                case blx:
-                case bx:
-                case ldr_pc_literal:
-                case ldr_pc_table: {
+                EKALYNX_CASE(blx)
+                EKALYNX_CASE(bx)
+                EKALYNX_CASE(ldr_pc_literal)
+                EKALYNX_CASE(ldr_pc_table) {
                     auto target = regs[op.b];
                     if (op.code == ldr_pc_literal || op.code == ldr_pc_table) {
                         const auto offset = op.code == ldr_pc_table ? 8 + (target << op.shift) : op.value;
@@ -618,35 +649,37 @@ namespace eka2l1::arm {
                         return;
                     }
                     index = ((target - base) >> 2) - 1;
+                    if (index + 1 >= 1024) [[unlikely]]
+                        goto leave_page;
                     break;
                 }
-                case ldr: {
+                EKALYNX_CASE(ldr) {
                     const auto updated = a + op.value;
                     if (!transfer.template operator()<false, false>(updated, d))
                         goto done;
                     break;
                 }
-                case str: {
+                EKALYNX_CASE(str) {
                     const auto updated = a + op.value;
                     if (!transfer.template operator()<true, false>(updated, d))
                         goto done;
                     break;
                 }
-                case ldrb: {
+                EKALYNX_CASE(ldrb) {
                     const auto updated = a + op.value;
                     if (!transfer.template operator()<false, true>(updated, d))
                         goto done;
                     break;
                 }
-                case strb: {
+                EKALYNX_CASE(strb) {
                     const auto updated = a + op.value;
                     if (!transfer.template operator()<true, true>(updated, d))
                         goto done;
                     break;
                 }
-                case ldrh:
-                case ldrsh:
-                case strh: {
+                EKALYNX_CASE(ldrh)
+                EKALYNX_CASE(ldrsh)
+                EKALYNX_CASE(strh) {
                     const auto updated = a + op.value;
                     const bool store = op.code == strh;
                     auto* p = ptr(op.flags ? a : updated, 2, store);
@@ -663,7 +696,7 @@ namespace eka2l1::arm {
                         regs[op.a] = updated;
                     break;
                 }
-                case ldr_index: {
+                EKALYNX_CASE(ldr_index) {
                     const auto updated = a + (regs[op.b] << op.shift);
                     if (!transfer.template operator()<false, false>(updated, d))
                         goto done;
@@ -671,7 +704,7 @@ namespace eka2l1::arm {
                         regs[op.a] = updated;
                     break;
                 }
-                case str_pair: {
+                EKALYNX_CASE(str_pair) {
                     const auto updated = a + (regs[op.b] << op.shift);
                     if (remaining > 1) {
                         if (auto* dest = ptr(updated, 8, true)) {
@@ -688,7 +721,7 @@ namespace eka2l1::arm {
                     regs[op.a] = updated;
                     break;
                 }
-                case str_index: {
+                EKALYNX_CASE(str_index) {
                     const auto updated = a + (regs[op.b] << op.shift);
                     if (!transfer.template operator()<true, false>(updated, d))
                         goto done;
@@ -696,40 +729,42 @@ namespace eka2l1::arm {
                         regs[op.a] = updated;
                     break;
                 }
-                case ldrb_post: {
+                EKALYNX_CASE(ldrb_post) {
                     const auto updated = a + op.value;
                     if (!transfer.template operator()<false, true>(a, d))
                         goto done;
                     regs[op.a] = updated;
                     break;
                 }
-                case strb_post: {
+                EKALYNX_CASE(strb_post) {
                     const auto updated = a + op.value;
                     if (!transfer.template operator()<true, true>(a, d))
                         goto done;
                     regs[op.a] = updated;
                     break;
                 }
-                case ldr_post: {
+                EKALYNX_CASE(ldr_post) {
                     const auto updated = a + op.value;
                     if (!transfer.template operator()<false, false>(a, d))
                         goto done;
                     regs[op.a] = updated;
                     break;
                 }
-                case str_post: {
+                EKALYNX_CASE(str_post) {
                     const auto updated = a + op.value;
                     if (!transfer.template operator()<true, false>(a, d))
                         goto done;
                     regs[op.a] = updated;
                     break;
                 }
-                case ldm:
-                case stm: {
+                EKALYNX_CASE(ldm)
+                EKALYNX_CASE(stm) {
                     const bool store = op.code == stm;
                     auto* p = ptr(a + static_cast<std::int8_t>(op.flags), 4 * op.shift, store);
                     if (!p)
                         goto done;
+                    if (store && (op.value & 0x8000))
+                        regs[15] = base + 4 * index + 8;
                     for (auto mask = op.value; mask; mask &= mask - 1, p += 4) {
                         auto& r = regs[std::countr_zero(mask)];
                         if (store)
@@ -739,7 +774,7 @@ namespace eka2l1::arm {
                     }
                     if (op.b)
                         regs[op.a] = a + static_cast<std::int8_t>(op.b);
-                    if (op.value & 0x8000) {
+                    if (!store && (op.value & 0x8000)) {
                         const auto target = regs[15];
                         if (target & 1) {
                             retired_ = budget - remaining + 1;
@@ -748,14 +783,28 @@ namespace eka2l1::arm {
                             return;
                         }
                         index = ((target - base) >> 2) - 1;
+                        if (index + 1 >= 1024) [[unlikely]]
+                            goto leave_page;
                     }
                     break;
                 }
+                default:
+#if defined(_MSC_VER)
+                    __assume(0);
+#else
+                    __builtin_unreachable();
+#endif
+                }
+#undef EKALYNX_CASE
                 }
             advance_arm:
                 ++index;
                 --remaining;
             }
+            goto done;
+        leave_page:
+            ++index;
+            --remaining;
         done:
             retired_ = budget - remaining;
             state_.cpsr = flags;
@@ -941,17 +990,21 @@ namespace eka2l1::arm {
                     result = add_flags(lhs, rhs);
                     break;
                 case sub_i:
-                case cmp_i:
                     result = sub_flags(lhs, rhs);
                     break;
+                case cmp_i:
+                    nz = static_cast<std::int32_t>(sub_flags(lhs, rhs));
+                    goto advance;
                 case thumb::code::add:
                     result = add_flags(lhs, regs[rhs]);
                     break;
                 case thumb::code::sub:
-                case cmp:
-                case cmp_high:
                     result = sub_flags(lhs, regs[rhs]);
                     break;
+                case cmp:
+                case cmp_high:
+                    nz = static_cast<std::int32_t>(sub_flags(lhs, regs[rhs]));
+                    goto advance;
                 case adc: {
                     const auto right = regs[rhs];
                     result = lhs + right + c;
@@ -970,15 +1023,17 @@ namespace eka2l1::arm {
                     result = sub_flags(0, regs[rhs]);
                     break;
                 case cmn:
-                    result = add_flags(lhs, regs[rhs]);
-                    break;
+                    nz = static_cast<std::int32_t>(add_flags(lhs, regs[rhs]));
+                    goto advance;
                 case mul:
                     result = lhs * regs[rhs];
                     break;
                 case bit_and:
-                case tst:
                     result = lhs & regs[rhs];
                     break;
+                case tst:
+                    nz = static_cast<std::int32_t>(lhs & regs[rhs]);
+                    goto advance;
                 case bit_xor:
                     result = lhs ^ regs[rhs];
                     break;
@@ -1210,8 +1265,7 @@ namespace eka2l1::arm {
                     goto done;
                 }
                 nz = static_cast<std::int32_t>(result);
-                if (op.kind != cmp && op.kind != cmp_i && op.kind != cmp_high && op.kind != tst && op.kind != cmn)
-                    regs[op.dst] = result;
+                regs[op.dst] = result;
             advance:
                 ++index;
                 --remaining;
