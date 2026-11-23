@@ -730,6 +730,8 @@ namespace eka2l1::arm {
                     auto* p = ptr(a + static_cast<std::int8_t>(op.flags), 4 * op.shift, store);
                     if (!p)
                         goto done;
+                    if (store && (op.value & 0x8000))
+                        regs[15] = base + 4 * index + 8;
                     for (auto mask = op.value; mask; mask &= mask - 1, p += 4) {
                         auto& r = regs[std::countr_zero(mask)];
                         if (store)
@@ -739,7 +741,7 @@ namespace eka2l1::arm {
                     }
                     if (op.b)
                         regs[op.a] = a + static_cast<std::int8_t>(op.b);
-                    if (op.value & 0x8000) {
+                    if (!store && (op.value & 0x8000)) {
                         const auto target = regs[15];
                         if (target & 1) {
                             retired_ = budget - remaining + 1;

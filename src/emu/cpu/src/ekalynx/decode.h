@@ -441,8 +441,7 @@ namespace eka2l1::arm::ekalynx {
             else if (!load && kind == 13)
                 op.code = imm ? arm_code::mov_i : arm_code::mov_lsl;
             op.value = std::rotr(bits & 255u, static_cast<int>((bits >> 7) & 30));
-        } else if (ins.op == opcode::multiple && (load || !(bits & 0x8000))
-            && (!(bits & (1u << 21)) || !(bits & (1u << op.a)))) {
+        } else if (ins.op == opcode::multiple && (!(bits & (1u << 21)) || !(bits & (1u << op.a)))) {
             op.code = load ? arm_code::ldm : arm_code::stm;
             op.value = bits & 65535;
             op.shift = std::popcount(op.value);
