@@ -301,7 +301,9 @@ namespace eka2l1::arm::ekalynx {
         write_flags,
         word_loop_entry,
         hint,
-        dual_multiply
+        dual_multiply,
+        orr_lsl,
+        subs_i
     };
     struct arm_op {
         arm_code code {};
@@ -440,7 +442,15 @@ namespace eka2l1::arm::ekalynx {
                 op.code = arm_code::adc_r;
             else if (!load && kind == 13)
                 op.code = imm ? arm_code::mov_i : arm_code::mov_lsl;
+            else if (!load && kind == 12 && !imm)
+                op.code = arm_code::orr_lsl;
+            else if (load && kind == 2 && imm)
+                op.code = arm_code::subs_i;
             op.value = std::rotr(bits & 255u, static_cast<int>((bits >> 7) & 30));
+            if (!load && imm && (kind == 14 || kind == 15)) {
+                op.code = kind == 14 ? arm_code::and_i : arm_code::mov_i;
+                op.value = ~op.value;
+            }
         } else if (ins.op == opcode::multiple && (!(bits & (1u << 21)) || !(bits & (1u << op.a)))) {
             op.code = load ? arm_code::ldm : arm_code::stm;
             op.value = bits & 65535;

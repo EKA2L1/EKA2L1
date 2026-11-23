@@ -552,6 +552,12 @@ namespace eka2l1::arm {
                 case add_lsl:
                     d = a + (regs[op.b] << op.shift);
                     break;
+                case orr_lsl:
+                    d = a | (regs[op.b] << op.shift);
+                    break;
+                case subs_i:
+                    d = subtract(a, op.value, flags);
+                    break;
                 case mov_i:
                     d = op.value;
                     break;
