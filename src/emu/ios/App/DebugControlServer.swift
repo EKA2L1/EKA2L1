@@ -65,7 +65,7 @@ extension Notification.Name {
 /// | `GET /v1` | | Endpoint list |
 /// | `GET /v1/status` | | Booted device, card, session, guest screen geometry, frame count, running jobs, `documents` and `log` host paths |
 /// | `GET /v1/devices` | | |
-/// | `POST /v1/devices` | `{"rom", "rpkg"?}` or `{"archive"}`, `"isolateDrives"?`, `"boot"?` (default true) | Job. Boots the new device |
+/// | `POST /v1/devices` | `{"rom", "rpkg"?}` or `{"archive", "firmwareVariant"?}`, `"isolateDrives"?`, `"boot"?` (default true) | Job. Boots the new device. `firmwareVariant` indexes the variants of a flash-file archive (default 0) |
 /// | `POST /v1/devices/rescan` | | Job |
 /// | `POST /v1/devices/{id}/boot` | | Job. Closes a running app first |
 /// | `PATCH /v1/devices/{id}` | `{"name"}` | Rename |
@@ -609,8 +609,10 @@ private final class DebugControlServer {
 
         let result: EKA2L1InstallResult
         if let archive = body["archive"] as? String {
+            let variant = body["firmwareVariant"] as? Int ?? 0
             result = await store.perform {
-                EKA2L1Bridge.installDevice(archivePath: archive, isolateDrives: isolate, progress: progress)
+                EKA2L1Bridge.installDevice(archivePath: archive, firmwareVariant: variant, isolateDrives: isolate,
+                                           progress: progress)
             }
         } else if let rom = body["rom"] as? String {
             let rpkg = body["rpkg"] as? String

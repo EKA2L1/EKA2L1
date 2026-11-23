@@ -20,6 +20,7 @@
 #include <common/path_types.h>
 #include <system/devices.h>
 #include <system/installation/archive.h>
+#include <system/installation/firmware.h>
 #include <system/installation/rpkg.h>
 #include <system/software.h>
 
@@ -34,6 +35,7 @@
 
 #include <cstdint>
 #include <cstring>
+#include <filesystem>
 #include <string>
 #include <vector>
 
@@ -50,7 +52,9 @@ namespace eka2l1::loader {
             // A ROM image, plus an RPKG if the archive carries one.
             rom_and_rpkg,
             // An already-unpacked device: drive Z tree plus the ROM image.
-            data_dump
+            data_dump,
+            // Nokia flash files: one or more VPLs next to the FPSX images they list.
+            firmware
         };
 
         kind type = unknown;
@@ -70,7 +74,13 @@ namespace eka2l1::loader {
         // The pack's own devices.yml, when it ships one.
         std::size_t devices_yml_index = 0;
         bool has_devices_yml = false;
+
+        // firmware. Indices into the entry list.
+        std::vector<std::size_t> vpl_files;
     };
+
+    // A flash package is a few KB of VPL; anything far bigger is not one.
+    static constexpr std::uint64_t MAX_VPL_SIZE = 4 * 1024 * 1024;
 
     static bool has_extension(const std::string &lowercased_path, const char *dotted_extension) {
         const std::size_t ext_len = std::strlen(dotted_extension);
@@ -198,6 +208,17 @@ namespace eka2l1::loader {
             }
 
             LOG_WARN(SYSTEM, "Archive has a drive Z tree for {} but no ROM image to go with it", code);
+        }
+
+        for (std::size_t i = 0; i < entries.size(); i++) {
+            if (!entries[i].is_directory && has_extension(common::lowercase_string(entries[i].path), ".vpl")) {
+                layout.vpl_files.push_back(i);
+            }
+        }
+
+        if (!layout.vpl_files.empty()) {
+            layout.type = archive_device_layout::firmware;
+            return layout;
         }
 
         bool rom_found = false;
@@ -504,9 +525,180 @@ namespace eka2l1::loader {
         return device_installation_none;
     }
 
+    struct archive_firmware_variant {
+        std::size_t vpl_index;
+        int variant_index;
+        std::string description;
+        // Entries holding the variant's FPSX files that the archive actually carries.
+        std::vector<std::size_t> file_indices;
+    };
+
+    static std::string entry_folder(const std::string &lowercased_path) {
+        const std::size_t slash = lowercased_path.find_last_of('/');
+        return (slash == std::string::npos) ? std::string() : lowercased_path.substr(0, slash + 1);
+    }
+
+    /**
+     * @brief List every variant of every VPL in the archive whose FPSX files are present.
+     *
+     * A flash package for one product type usually carries a VPL per product code, all sharing the same
+     * core and ROFS2 images and differing only in the language/colour ROFS3. Variants none of whose files
+     * made it into the archive are left out.
+     */
+    static device_installation_error collect_archive_firmware_variants(const host_path &archive_path,
+        const std::vector<common::archive_entry_info> &entries, const archive_device_layout &layout,
+        std::vector<archive_firmware_variant> &candidates) {
+        candidates.clear();
+
+        for (const std::size_t vpl_index : layout.vpl_files) {
+            std::vector<char> content;
+            if (!common::read_archive_entry(archive_path, entries[vpl_index].path, content, MAX_VPL_SIZE)) {
+                return device_installation_archive_corrupt;
+            }
+
+            std::vector<firmware_variant_info> variants;
+            const device_installation_error result = read_firmware_variants(content, variants);
+
+            if (result != device_installation_none) {
+                LOG_WARN(SYSTEM, "Skipping unreadable VPL {} in the archive", entries[vpl_index].path);
+                continue;
+            }
+
+            const std::string folder = entry_folder(common::lowercase_string(entries[vpl_index].path));
+
+            for (std::size_t variant_index = 0; variant_index < variants.size(); variant_index++) {
+                archive_firmware_variant candidate;
+                candidate.vpl_index = vpl_index;
+                candidate.variant_index = static_cast<int>(variant_index);
+                candidate.description = variants[variant_index].description;
+
+                for (const std::string &file : variants[variant_index].files) {
+                    const std::string wanted = folder + common::lowercase_string(file);
+
+                    for (std::size_t i = 0; i < entries.size(); i++) {
+                        if (!entries[i].is_directory && (common::lowercase_string(entries[i].path) == wanted)) {
+                            candidate.file_indices.push_back(i);
+                            break;
+                        }
+                    }
+                }
+
+                if (!candidate.file_indices.empty()) {
+                    candidates.push_back(std::move(candidate));
+                }
+            }
+        }
+
+        return candidates.empty() ? device_installation_archive_no_device : device_installation_none;
+    }
+
+    static device_installation_error install_archive_firmware(device_manager *dvcmngr,
+        const host_path &archive_path, const std::vector<common::archive_entry_info> &entries,
+        const archive_device_layout &layout, const host_path &rom_resident_path,
+        const host_path &drives_z_resident_path, const bool isolate_drives,
+        device_firmware_choose_variant_callback choose_variant_cb, progress_changed_callback progress_cb,
+        cancel_requested_callback cancel_cb) {
+        std::vector<archive_firmware_variant> candidates;
+        const device_installation_error list_result = collect_archive_firmware_variants(archive_path, entries,
+            layout, candidates);
+
+        if (list_result != device_installation_none) {
+            return list_result;
+        }
+
+        int chosen = 0;
+
+        if ((candidates.size() > 1) && choose_variant_cb) {
+            std::vector<std::string> descriptions;
+            for (const archive_firmware_variant &candidate : candidates) {
+                descriptions.push_back(candidate.description);
+            }
+
+            chosen = choose_variant_cb(descriptions);
+        }
+
+        if ((chosen < 0) || (static_cast<std::size_t>(chosen) >= candidates.size())) {
+            return device_installation_general_failure;
+        }
+
+        const archive_firmware_variant &variant = candidates[chosen];
+        LOG_INFO(SYSTEM, "Installing firmware variant {} from {}", variant.description, entries[variant.vpl_index].path);
+
+        // install_firmware resolves FPSX names against the VPL's folder, so both land in one folder.
+        const host_path staging = add_path(rom_resident_path, "tempfirmware\\");
+        common::delete_folder(staging);
+
+        std::vector<host_path> destinations(entries.size());
+        const host_path vpl_path = add_path(staging, eka2l1::filename(entries[variant.vpl_index].path, false));
+        destinations[variant.vpl_index] = vpl_path;
+
+        for (const std::size_t index : variant.file_indices) {
+            destinations[index] = add_path(staging, eka2l1::filename(entries[index].path, false));
+        }
+
+        if (!extract_planned(archive_path, destinations, ARCHIVE_PROGRESS_TOTAL * 2 / 5, progress_cb, cancel_cb)) {
+            common::delete_folder(staging);
+
+            return (cancel_cb && cancel_cb()) ? device_installation_general_failure
+                                              : device_installation_archive_corrupt;
+        }
+
+        progress_changed_callback install_cb = nullptr;
+
+        if (progress_cb) {
+            install_cb = [progress_cb](const std::size_t done, const std::size_t total) {
+                if (!total) {
+                    return;
+                }
+
+                progress_cb(ARCHIVE_PROGRESS_TOTAL * 2 / 5 + done * (ARCHIVE_PROGRESS_TOTAL * 3 / 5) / total,
+                    ARCHIVE_PROGRESS_TOTAL);
+            };
+        }
+
+        // drives_z_resident_path is `<storage>/drives/z/`; install_firmware wants the storage root.
+        const host_path storage_path(std::filesystem::path(drives_z_resident_path.utf8()).lexically_normal()
+                                         .parent_path().parent_path().parent_path().string());
+
+        const int variant_index = variant.variant_index;
+        const device_installation_error result = install_firmware(dvcmngr, vpl_path, storage_path,
+            rom_resident_path, isolate_drives, [variant_index](const std::vector<std::string> &) { return variant_index; },
+            install_cb, cancel_cb);
+
+        common::delete_folder(staging);
+
+        return result;
+    }
+
+    device_installation_error list_archive_firmware_variants(const host_path &path,
+        std::vector<std::string> &descriptions) {
+        descriptions.clear();
+
+        std::vector<common::archive_entry_info> entries;
+
+        if (!common::list_archive(path, entries)) {
+            return device_installation_archive_corrupt;
+        }
+
+        const archive_device_layout layout = determine_layout(entries);
+        if (layout.type != archive_device_layout::firmware) {
+            return device_installation_none;
+        }
+
+        std::vector<archive_firmware_variant> candidates;
+        const device_installation_error result = collect_archive_firmware_variants(path, entries, layout, candidates);
+
+        for (const archive_firmware_variant &candidate : candidates) {
+            descriptions.push_back(candidate.description);
+        }
+
+        return result;
+    }
+
     device_installation_error install_archive(device_manager *dvcmngr, const host_path &path,
         const host_path &rom_resident_path, const host_path &drives_z_resident_path,
-        const bool isolate_drives, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb) {
+        const bool isolate_drives, progress_changed_callback progress_cb, cancel_requested_callback cancel_cb,
+        device_firmware_choose_variant_callback choose_variant_cb) {
         if (!common::exists(path)) {
             return device_installation_not_exist;
         }
@@ -532,6 +724,12 @@ namespace eka2l1::loader {
 
             return install_archive_rom_and_rpkg(dvcmngr, path, entries, layout, rom_resident_path,
                 drives_z_resident_path, isolate_drives, progress_cb, cancel_cb);
+
+        case archive_device_layout::firmware:
+            LOG_INFO(SYSTEM, "Installing device from firmware flash files in {}", path);
+
+            return install_archive_firmware(dvcmngr, path, entries, layout, rom_resident_path,
+                drives_z_resident_path, isolate_drives, choose_variant_cb, progress_cb, cancel_cb);
 
         default:
             break;

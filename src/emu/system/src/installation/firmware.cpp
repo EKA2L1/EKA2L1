@@ -280,6 +280,77 @@ namespace eka2l1 {
         return device_installation_none;
     }
 
+    static bool is_installed_file_subtype(const char *sub_type) {
+        return (common::compare_ignore_case(sub_type, "Mcu") == 0) || (common::compare_ignore_case(sub_type, "Ppm") == 0)
+            || (common::compare_ignore_case(sub_type, "Content") == 0)
+            || (common::compare_ignore_case(sub_type, "MemoryCardContent") == 0);
+    }
+
+    device_installation_error read_firmware_variants(const std::vector<char> &vpl_content, std::vector<firmware_variant_info> &variants) {
+        variants.clear();
+
+        pugi::xml_document document;
+        const pugi::xml_parse_result parse_result = document.load_buffer(vpl_content.data(), vpl_content.size());
+
+        if (!parse_result) {
+            LOG_ERROR(SYSTEM, "VPL file parse failed, description: {}", parse_result.description());
+            return device_installation_vpl_file_invalid;
+        }
+
+        pugi::xml_node variant_list = document.child("VariantPackingList");
+        if (!variant_list) {
+            LOG_ERROR(SYSTEM, "VPL file does not have variant tracking list");
+            return device_installation_vpl_file_invalid;
+        }
+
+        for (pugi::xml_node variant : variant_list.children("Variant")) {
+            pugi::xml_node variant_identification = variant.child("VariantIdentification");
+            if (!variant_identification) {
+                LOG_ERROR(SYSTEM, "VPL variant does not contain identification!");
+                return device_installation_vpl_file_invalid;
+            }
+
+            pugi::xml_node variant_id_des = variant_identification.child("Description");
+            if (!variant_id_des) {
+                LOG_ERROR(SYSTEM, "VPL variant does not contain product description");
+                return device_installation_vpl_file_invalid;
+            }
+
+            firmware_variant_info info;
+            info.description = variant_id_des.child_value();
+
+            if (auto firm_code = variant_identification.child("ProductCode")) {
+                info.description += " (" + std::string(firm_code.child_value()) + ")";
+            }
+
+            pugi::xml_node file_list = variant.child("FileList");
+            if (!file_list) {
+                LOG_ERROR(SYSTEM, "VPL variant unable to load FileList node!");
+                return device_installation_vpl_file_invalid;
+            }
+
+            for (pugi::xml_node file_node : file_list.children("File")) {
+                if (common::compare_ignore_case(file_node.child_value("FileType"), "Binary") != 0) {
+                    continue;
+                }
+
+                const char *sub_type = file_node.child_value("FileSubType");
+                const char *name = file_node.child_value("Name");
+
+                if (!is_installed_file_subtype(sub_type) || !*name) {
+                    continue;
+                }
+
+                info.files.push_back(name);
+                info.file_weights.push_back((common::compare_ignore_case(sub_type, "Mcu") == 0) ? 2 : 1);
+            }
+
+            variants.push_back(std::move(info));
+        }
+
+        return device_installation_none;
+    }
+
     device_installation_error install_firmware(device_manager *dvcmngr, const host_path &vpl_path,
         const host_path &storage_path, const host_path &rom_resident_path, const bool isolate_drives,
         device_firmware_choose_variant_callback choose_callback, progress_changed_callback progress_callback,
@@ -294,117 +365,44 @@ namespace eka2l1 {
         const host_path full_folder(eka2l1::file_directory(full_vpl));
 
         common::ro_std_file_stream doc_stream(full_vpl, true);
-
-        std::vector<std::uint8_t> temp_buf;
-        temp_buf.resize(doc_stream.size());
-        doc_stream.read(temp_buf.data(), temp_buf.size());
-
-        pugi::xml_document document;
-        const pugi::xml_parse_result parse_result = document.load_buffer(temp_buf.data(), temp_buf.size());
-
-        if (!parse_result) {
-            LOG_ERROR(SYSTEM, "VPL file parse failed, description: {}", parse_result.description());
+        if (!doc_stream.valid()) {
             return device_installation_vpl_file_invalid;
         }
 
-        pugi::xml_node variant_list = document.child("VariantPackingList");
-        if (!variant_list) {
-            LOG_ERROR(SYSTEM, "VPL file does not have variant tracking list");
-            return device_installation_vpl_file_invalid;
+        std::vector<char> vpl_content(doc_stream.size());
+        doc_stream.read(vpl_content.data(), vpl_content.size());
+
+        std::vector<firmware_variant_info> variants;
+        const device_installation_error read_result = read_firmware_variants(vpl_content, variants);
+
+        if (read_result != device_installation_none) {
+            return read_result;
         }
 
-        auto all_variants = variant_list.children("Variant");
         std::vector<std::string> all_variant_strings;
-
-        for (auto &variant : all_variants) {
-            pugi::xml_node variant_identification = variant.child("VariantIdentification");
-            if (!variant_identification) {
-                LOG_ERROR(SYSTEM, "VPL variant does not contain identification!");
-                return device_installation_vpl_file_invalid;
-            }
-
-            // Get description string
-            pugi::xml_node variant_id_des = variant_identification.child("Description");
-            if (!variant_id_des) {
-                LOG_ERROR(SYSTEM, "VPL variant does not contain product description");
-                return device_installation_vpl_file_invalid;
-            }
-
-            std::string des_string = variant_id_des.first_child().value();
-            if (auto firm_code = variant_identification.child("ProductCode")) {
-                des_string += " (" + std::string(firm_code.first_child().value()) + ")";
-            }
-
-            all_variant_strings.push_back(des_string);
+        for (const firmware_variant_info &variant : variants) {
+            all_variant_strings.push_back(variant.description);
         }
 
-        const int variant_index = choose_callback(all_variant_strings);
-        if ((variant_index >= all_variant_strings.size()) || (variant_index < 0)) {
+        const int variant_index = choose_callback ? choose_callback(all_variant_strings) : 0;
+        if ((variant_index < 0) || (static_cast<std::size_t>(variant_index) >= variants.size())) {
             LOG_ERROR(SYSTEM, "Invalid variant index!");
             return device_installation_general_failure;
         }
 
-        pugi::xml_node final_variant;
-        int i = 0;
-
-        for (auto &variant : all_variants) {
-            if (i == variant_index) {
-                final_variant = variant;
-            } else {
-                i++;
-            }
-        }
-
-        if (!final_variant) {
-            LOG_ERROR(SYSTEM, "Can't find variant for some reason!");
-            return device_installation_general_failure;
-        }
-
-        // Get file list. And we only want to grab file with the following subtype:
-        // MCU, PPM, Content (Internal drive), MemoryCardContent
-        pugi::xml_node file_list = final_variant.child("FileList");
-        if (!file_list) {
-            LOG_ERROR(SYSTEM, "VPL variant unable to load FileList node!");
-            return device_installation_vpl_file_invalid;
-        }
+        const firmware_variant_info &final_variant = variants[variant_index];
 
         std::vector<host_path> filenames;
         int average_progress_max = 0;
 
-        auto file_nodes = file_list.children("File");
-        for (auto &file_node : file_nodes) {
-            pugi::xml_node type_of_file = file_node.child("FileType");
-            if (!type_of_file || (common::compare_ignore_case(type_of_file.first_child().value(), "Binary") != 0)) {
+        for (std::size_t i = 0; i < final_variant.files.size(); i++) {
+            const host_path full_fpsx_path(eka2l1::add_path(full_folder, final_variant.files[i]));
+            if (!common::exists(full_fpsx_path)) {
                 continue;
             }
 
-            std::string file_sub_type;
-            pugi::xml_node file_subtype_node = file_node.child("FileSubType");
-            if (!file_subtype_node) {
-                continue;
-            }
-
-            file_sub_type = file_subtype_node.first_child().value();
-
-            if ((common::compare_ignore_case(file_sub_type.c_str(), "Mcu") == 0) || (common::compare_ignore_case(file_sub_type.c_str(), "Ppm") == 0) || (common::compare_ignore_case(file_sub_type.c_str(), "Content") == 0) || (common::compare_ignore_case(file_sub_type.c_str(), "MemoryCardContent") == 0)) {
-                // Get the filename
-                pugi::xml_node fname = file_node.child("Name");
-                if (!fname) {
-                    continue;
-                }
-
-                const host_path full_fpsx_path(eka2l1::add_path(full_folder, fname.first_child().value()));
-                if (!common::exists(full_fpsx_path)) {
-                    continue;
-                }
-
-                filenames.push_back(full_fpsx_path);
-                if (common::compare_ignore_case(file_sub_type.c_str(), "Mcu") == 0) {
-                    average_progress_max += 2;
-                } else {
-                    average_progress_max += 1;
-                }
-            }
+            filenames.push_back(full_fpsx_path);
+            average_progress_max += final_variant.file_weights[i];
         }
 
         if (average_progress_max == 0) {
@@ -484,7 +482,8 @@ namespace eka2l1 {
 
         // Rename temp folder to its product code
         common::move_file(drives_z_temp_path, eka2l1::host_path{add_path(drives_z_path, firmcode_low + "\\")});
-        const add_device_error err_adddvc = dvcmngr->add_new_device(firmcode, model, manufacturer, ver, 0, isolate_drives);
+        const std::uint32_t machine_uid = loader::determine_rpkg_machine_uid(eka2l1::host_path{add_path(drives_z_path, firmcode_low + "\\")});
+        const add_device_error err_adddvc = dvcmngr->add_new_device(firmcode, model, manufacturer, ver, machine_uid, isolate_drives);
 
         if (err_adddvc != add_device_none) {
             LOG_ERROR(SYSTEM, "This device ({}) failed to be install, revert all changes", firmcode);

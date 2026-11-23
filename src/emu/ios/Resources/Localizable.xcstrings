@@ -2429,6 +2429,22 @@
         }
       }
     },
+    "import.error.firmwareNoVariant" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No firmware variant in this archive can be installed. It needs a .vpl file next to the FPSX images it lists."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "这个压缩包里没有可安装的固件版本。需要 .vpl 文件和它列出的 FPSX 镜像放在一起。"
+          }
+        }
+      }
+    },
     "import.error.fpsxCorrupt" : {
       "localizations" : {
         "en" : {
@@ -2589,6 +2605,70 @@
         }
       }
     },
+    "import.firmwareFile" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Firmware package"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "固件包"
+          }
+        }
+      }
+    },
+    "import.firmwareHint" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a .zip, .7z, .rar or self-extracting .exe holding Nokia flash files: the .vpl files together with the FPSX images they list (core, rofs2, rofs3, uda). When the package covers several product codes, pick the one to install."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择一个包含诺基亚刷机文件的 .zip、.7z、.rar 或自解压 .exe：.vpl 文件以及它列出的 FPSX 镜像（core、rofs2、rofs3、uda）。如果包里有多个产品代码的版本，请选择要安装的那个。"
+          }
+        }
+      }
+    },
+    "import.firmwareReading" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading firmware variants…"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "正在读取固件版本…"
+          }
+        }
+      }
+    },
+    "import.firmwareVariant" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Variant"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "版本"
+          }
+        }
+      }
+    },
     "import.installing %lld" : {
       "localizations" : {
         "en" : {
@@ -2745,6 +2825,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "7z 压缩包"
+          }
+        }
+      }
+    },
+    "import.source.firmware" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Firmware package"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "固件包"
           }
         }
       }

@@ -1562,6 +1562,7 @@ namespace eka2l1::ios {
 }
 
 - (EKA2L1InstallResult)installDeviceWithArchivePath:(NSString *)archivePath
+                                    firmwareVariant:(NSInteger)firmwareVariant
                                       isolateDrives:(BOOL)isolateDrives
                                            progress:(void (^)(double))progress
                                         cancelCheck:(BOOL (^)(void))cancelCheck {
@@ -1575,8 +1576,24 @@ namespace eka2l1::ios {
                                      const eka2l1::host_path &root_z_path, progress_changed_callback progress_cb,
                                      cancel_requested_callback cancel_cb) {
         return eka2l1::loader::install_archive(dvc, archive_std, rom_resident_path, root_z_path,
-            isolateDrives == YES, progress_cb, cancel_cb);
+            isolateDrives == YES, progress_cb, cancel_cb,
+            [firmwareVariant](const std::vector<std::string> &) { return static_cast<int>(firmwareVariant); });
     } progress:progress cancelCheck:cancelCheck];
+}
+
+- (NSArray<NSString *> *)firmwareVariantsInArchiveAtPath:(NSString *)archivePath {
+    std::vector<std::string> descriptions;
+    const eka2l1::device_installation_error result = eka2l1::loader::list_archive_firmware_variants(
+        eka2l1::host_path(archivePath.UTF8String), descriptions);
+    if (result == eka2l1::device_installation_archive_corrupt) {
+        return nil;
+    }
+
+    NSMutableArray<NSString *> *variants = [NSMutableArray arrayWithCapacity:descriptions.size()];
+    for (const std::string &description : descriptions) {
+        [variants addObject:[NSString stringWithUTF8String:description.c_str()] ?: @"?"];
+    }
+    return variants;
 }
 
 - (BOOL)bootDeviceAtIndex:(NSUInteger)index {

@@ -915,6 +915,18 @@ private let rpkgTypes: [UTType] = importTypes(extension: "rpkg", declaredAs: "co
 // minting a com.eka2l1.* type nothing else would recognise.
 private let archiveTypes: [UTType] = importTypes(extension: "7z", declaredAs: "org.7-zip.7-zip-archive")
 private let rarTypes: [UTType] = importTypes(extension: "rar", declaredAs: "com.rarlab.rar-archive")
+// Nokia flash files are passed around packed in any of the three, or as the
+// self-extracting .exe that Nokia's flashing tools downloaded (a 7z SFX).
+private let firmwareInstallerTypes: [UTType] = unfilteredImport ? [] : ["exe"].compactMap {
+    UTType(filenameExtension: $0)
+}
+private let firmwareArchiveTypes: [UTType] = {
+    var types: [UTType] = unfilteredImport ? [] : [.zip]
+    for type in archiveTypes + rarTypes + firmwareInstallerTypes where !types.contains(type) {
+        types.append(type)
+    }
+    return types
+}()
 
 // Shared between the main queue (which sets it from the Stop button) and the
 // install thread (which polls it between files), so the accesses are locked.
@@ -935,12 +947,14 @@ private final class InstallCancelFlag: @unchecked Sendable {
     }
 }
 
-// Device-install Form, in two flavours the user picks between.
+// Device-install Form, in three flavours the user picks between.
 //
 // Loose files: ROM is mandatory; RPKG is supplied only when the installer needs
 // it (S60v2+ dumps). A .7z instead: one file holding either of those same two,
 // or a device that someone already unpacked into the emulator's folder layout —
-// the installer works out which from the archive's contents.
+// the installer works out which from the archive's contents. A firmware package:
+// Nokia flash files (VPL + FPSX) in a .zip/.7z/.rar/.exe; when it carries several
+// product variants, the user picks one before installing.
 //
 // Everything is read in place at install time. The installer copies the ROM onto
 // the device folder and extracts the rest itself, so staging a sandbox copy first
@@ -952,17 +966,24 @@ struct ImportDeviceView: View {
     @Environment(\.dismiss) private var dismiss
 
     private struct PickedFile { let name: String; let url: URL }
-    private enum PickTarget { case rom, rpkg, archive }
+    private enum PickTarget { case rom, rpkg, archive, firmware }
 
     private enum SourceKind: Hashable {
         case looseFiles
         case archive
+        case firmware
     }
 
     @State private var source: SourceKind = .looseFiles
     @State private var rom: PickedFile?
     @State private var rpkg: PickedFile?
     @State private var archive: PickedFile?
+    @State private var firmware: PickedFile?
+    // Variants of the picked firmware package, read from its VPLs right after
+    // the pick. Empty until then.
+    @State private var firmwareVariants: [String] = []
+    @State private var firmwareVariant = 0
+    @State private var inspectingFirmware = false
     @State private var isolateDrives = false
     // A single fileImporter driven by which row was tapped. Stacking two
     // .fileImporter modifiers on one view makes SwiftUI drop one of them, so
@@ -987,6 +1008,7 @@ struct ImportDeviceView: View {
                     Picker("import.source", selection: $source) {
                         Text("import.source.looseFiles").tag(SourceKind.looseFiles)
                         Text("import.source.archive").tag(SourceKind.archive)
+                        Text("import.source.firmware").tag(SourceKind.firmware)
                     }
                     .pickerStyle(.menu)
                     .disabled(installing)
@@ -1000,18 +1022,38 @@ struct ImportDeviceView: View {
                         Button { pickTarget = .rpkg; showingImporter = true } label: {
                             fileRow(title: String(localized: "import.rpkgFile"), value: rpkg?.name)
                         }
-                    } else {
+                    } else if source == .archive {
                         Button { pickTarget = .archive; showingImporter = true } label: {
                             fileRow(title: String(localized: "import.archiveFile"), value: archive?.name)
                         }
+                    } else {
+                        Button { pickTarget = .firmware; showingImporter = true } label: {
+                            fileRow(title: String(localized: "import.firmwareFile"), value: firmware?.name)
+                        }
+                        .disabled(installing || inspectingFirmware)
+                        if inspectingFirmware {
+                            HStack {
+                                Text("import.firmwareReading").foregroundColor(.secondary)
+                                Spacer()
+                                ProgressView()
+                            }
+                        } else if firmwareVariants.count > 1 {
+                            Picker("import.firmwareVariant", selection: $firmwareVariant) {
+                                ForEach(firmwareVariants.indices, id: \.self) { index in
+                                    Text(firmwareVariants[index]).tag(index)
+                                }
+                            }
+                            .pickerStyle(.navigationLink)
+                            .disabled(installing)
+                        }
                     }
                 } footer: {
-                    // Both take a LocalizedStringKey rather than a resolved String, so the wiki link in
+                    // These take a LocalizedStringKey rather than a resolved String, so the wiki link in
                     // the loose-files text keeps rendering as markdown.
-                    if source == .looseFiles {
-                        Text("import.recommendedDevices")
-                    } else {
-                        Text("import.archiveHint")
+                    switch source {
+                    case .looseFiles: Text("import.recommendedDevices")
+                    case .archive: Text("import.archiveHint")
+                    case .firmware: Text("import.firmwareHint")
                     }
                 }
 
@@ -1047,7 +1089,7 @@ struct ImportDeviceView: View {
                         Button(action: install) {
                             Text("common.install")
                         }
-                        .disabled(source == .looseFiles ? (rom == nil) : (archive == nil))
+                        .disabled(!canInstall)
                     }
                 }
             }
@@ -1079,31 +1121,42 @@ struct ImportDeviceView: View {
         }
     }
 
+    private var canInstall: Bool {
+        switch source {
+        case .looseFiles: return rom != nil
+        case .archive: return archive != nil
+        case .firmware: return firmware != nil && !firmwareVariants.isEmpty && !inspectingFirmware
+        }
+    }
+
     private func contentTypes(for target: PickTarget) -> [UTType] {
         switch target {
         case .rom: return romTypes
         case .rpkg: return rpkgTypes
         case .archive: return archiveTypes
+        case .firmware: return firmwareArchiveTypes
         }
     }
 
-    private func expectedExtension(for target: PickTarget) -> String {
+    private func expectedExtensions(for target: PickTarget) -> [String] {
         switch target {
-        case .rom: return "rom"
-        case .rpkg: return "rpkg"
-        case .archive: return "7z"
+        case .rom: return ["rom"]
+        case .rpkg: return ["rpkg"]
+        case .archive: return ["7z"]
+        case .firmware: return ["zip", "7z", "rar", "exe"]
         }
     }
 
     private func pick(_ result: Result<[URL], Error>, target: PickTarget) {
         guard case .success(let urls) = result, let url = urls.first else { return }
-        let kind = expectedExtension(for: target)
+        let kinds = expectedExtensions(for: target)
         // The picker filters by content type, which a file from a provider that
         // types everything as generic data can slip past. The extension is the
         // only thing the installers key off, so hold the line here too rather
         // than feeding a ROM to the RPKG reader (and vice versa).
-        guard url.pathExtension.caseInsensitiveCompare(kind) == .orderedSame else {
-            errorMessage = String(localized: "import.error.wrongExtension \(kind.uppercased())")
+        guard kinds.contains(where: { url.pathExtension.caseInsensitiveCompare($0) == .orderedSame }) else {
+            let names = kinds.map { $0.uppercased() }.joined(separator: "/")
+            errorMessage = String(localized: "import.error.wrongExtension \(names)")
             return
         }
 
@@ -1113,6 +1166,34 @@ struct ImportDeviceView: View {
         case .rom: rom = picked
         case .rpkg: rpkg = picked
         case .archive: archive = picked
+        case .firmware:
+            firmware = picked
+            inspectFirmware(picked.url)
+        }
+    }
+
+    private func inspectFirmware(_ url: URL) {
+        firmwareVariants = []
+        firmwareVariant = 0
+        inspectingFirmware = true
+
+        DispatchQueue.global(qos: .userInitiated).async {
+            let scoped = url.startAccessingSecurityScopedResource()
+            defer { if scoped { url.stopAccessingSecurityScopedResource() } }
+            let variants = EKA2L1Bridge.firmwareVariants(archivePath: url.path)
+
+            DispatchQueue.main.async {
+                // A newer pick supersedes this one.
+                guard firmware?.url == url else { return }
+                inspectingFirmware = false
+                if let variants, !variants.isEmpty {
+                    firmwareVariants = variants
+                } else {
+                    errorMessage = variants == nil
+                        ? String(localized: "import.error.archiveCorrupt")
+                        : String(localized: "import.error.firmwareNoVariant")
+                }
+            }
         }
     }
 
@@ -1143,6 +1224,16 @@ struct ImportDeviceView: View {
             run = { progress, cancel in
                 EKA2L1Bridge.installDevice(archivePath: archivePath, isolateDrives: isolate,
                                            progress: progress, cancelCheck: cancel)
+            }
+
+        case .firmware:
+            guard let firmware else { return }
+            let archivePath = firmware.url.path
+            let variant = firmwareVariant
+            urls = [firmware.url]
+            run = { progress, cancel in
+                EKA2L1Bridge.installDevice(archivePath: archivePath, firmwareVariant: variant,
+                                           isolateDrives: isolate, progress: progress, cancelCheck: cancel)
             }
         }
 
