@@ -1,64 +1,100 @@
 import SwiftUI
 
 struct OnboardingView: View {
-    var onFinish: () -> Void
-
     @Environment(\.dismiss) private var dismiss
-    @State private var page = 0
 
-    private let pages: [(symbol: String, title: LocalizedStringResource, body: LocalizedStringResource)] = [
-        ("iphone.and.arrow.forward", "onboarding.device.title", "onboarding.device.body"),
-        ("folder.badge.plus", "onboarding.install.title", "onboarding.install.body"),
-        ("hand.raised", "onboarding.legal.title", "onboarding.legal.body")
-    ]
+    private static let dumberURL = URL(string: "https://github.com/EKA2L1/Dumber")!
+    private static let dumpsURL = URL(string: "https://eka2l1.miraheze.org/wiki/Important_Links")!
 
     var body: some View {
         NavigationStack {
-            VStack(spacing: 24) {
-                TabView(selection: $page) {
-                    ForEach(pages.indices, id: \.self) { index in
-                        VStack(spacing: 18) {
-                            Image(systemName: pages[index].symbol)
-                                .font(.system(size: 54, weight: .semibold))
-                                .foregroundStyle(.tint)
-                                .frame(width: 86, height: 86)
-                            Text(pages[index].title)
-                                .font(.title2.weight(.semibold))
-                                .multilineTextAlignment(.center)
-                            Text(pages[index].body)
-                                .font(.body)
-                                .foregroundStyle(.secondary)
-                                .multilineTextAlignment(.center)
-                                .fixedSize(horizontal: false, vertical: true)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    OnboardingStep(number: 1, title: "onboarding.dump.title") {
+                        Text("onboarding.dump.body")
+                        HStack(spacing: 16) {
+                            Link(destination: Self.dumberURL) {
+                                Label("onboarding.dump.dumber", systemImage: "arrow.up.right")
+                            }
+                            Link(destination: Self.dumpsURL) {
+                                Label("onboarding.dump.links", systemImage: "arrow.up.right")
+                            }
                         }
-                        .padding(.horizontal, 28)
-                        .tag(index)
+                        .font(.subheadline.weight(.medium))
+                        .foregroundStyle(.tint)
                     }
-                }
-                .tabViewStyle(.page(indexDisplayMode: .always))
 
-                Button(page == pages.count - 1 ? "onboarding.done" : "onboarding.next") {
-                    if page == pages.count - 1 {
-                        onFinish()
-                        dismiss()
-                    } else {
-                        withAnimation(.easeInOut(duration: 0.2)) {
-                            page += 1
-                        }
+                    OnboardingStep(number: 2, title: "onboarding.rom.title") {
+                        Text("onboarding.rom.body")
                     }
+
+                    OnboardingStep(number: 3, title: "onboarding.game.title", isLast: true) {
+                        Text("onboarding.game.body \(Image(systemName: "plus"))")
+                    }
+
+                    Text("onboarding.legal")
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.large)
-                .padding(.horizontal, 28)
-                .padding(.bottom, 20)
+                .padding(20)
+                .frame(maxWidth: 560, alignment: .leading)
+                .frame(maxWidth: .infinity)
             }
             .navigationTitle("onboarding.title")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("onboarding.done") { dismiss() }
+                }
+            }
         }
-        .presentationDetents([.large])
+        .modifier(PhoneHalfSheet())
     }
 }
 
-#Preview {
-    OnboardingView {}
+// Detents turn the iPad form sheet into a bottom sheet, so only iPhone gets them.
+private struct PhoneHalfSheet: ViewModifier {
+    func body(content: Content) -> some View {
+        if UIDevice.current.userInterfaceIdiom == .phone {
+            content.presentationDetents([.medium, .large])
+        } else {
+            content
+        }
+    }
+}
+
+private struct OnboardingStep<Content: View>: View {
+    let number: Int
+    let title: LocalizedStringKey
+    var isLast = false
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 14) {
+            VStack(spacing: 6) {
+                Text("\(number)")
+                    .font(.subheadline.weight(.bold))
+                    .foregroundStyle(.white)
+                    .frame(width: 28, height: 28)
+                    .background(Color.accentColor, in: Circle())
+                if !isLast {
+                    Rectangle()
+                        .fill(Color(.separator))
+                        .frame(width: 2)
+                        .frame(maxHeight: .infinity)
+                }
+            }
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text(title)
+                    .font(.headline)
+                    .padding(.top, 3)
+                content
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .padding(.bottom, 28)
+        }
+    }
 }

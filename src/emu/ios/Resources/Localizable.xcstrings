@@ -3229,130 +3229,162 @@
         }
       }
     },
-    "onboarding.device.body" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Start by importing a ROM dump from a device you own. Some newer S60 devices also need the matching RPKG file."
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "先从你拥有的设备导入 ROM 转储开始。部分较新的 S60 设备还需要配套的 RPKG 文件。"
-          }
-        }
-      }
-    },
-    "onboarding.device.title" : {
-      "localizations" : {
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Install a Device"
-          }
-        },
-        "zh-Hans" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "安装设备"
-          }
-        }
-      }
-    },
     "onboarding.done" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Get Started"
+            "value" : "Done"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "开始使用"
+            "value" : "完成"
           }
         }
       }
     },
-    "onboarding.install.body" : {
+    "onboarding.dump.body" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "After a device is installed, use the + button to add SIS, SISX, or supported N-Gage content to the current device."
+            "value" : "Dump it from a hacked Symbian phone with Dumber, or find one others have dumped on the wiki."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "安装设备后，用 + 按钮把 SIS、SISX 或受支持的 N-Gage 内容添加到当前设备。"
+            "value" : "用 Dumber 从已破解的 Symbian 手机导出，或去 Wiki 找别人导出好的。"
           }
         }
       }
     },
-    "onboarding.install.title" : {
+    "onboarding.dump.dumber" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Add Your Apps"
+            "value" : "Dumber"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "添加你的应用"
+            "value" : "Dumber"
           }
         }
       }
     },
-    "onboarding.legal.body" : {
+    "onboarding.dump.links" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "EKA2L1 does not include firmware, ROMs, or games. Use only content you own and dumped yourself."
+            "value" : "EKA2L1 Wiki"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "EKA2L1 不含固件、ROM 或游戏。请只使用你自己拥有并亲自转储的内容。"
+            "value" : "EKA2L1 Wiki"
           }
         }
       }
     },
-    "onboarding.legal.title" : {
+    "onboarding.dump.title" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bring Your Own Content"
+            "value" : "Dump a ROM"
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "自备内容"
+            "value" : "导出 ROM"
           }
         }
       }
     },
-    "onboarding.next" : {
+    "onboarding.game.body %@" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Next"
+            "value" : "Tap %@ on the home screen and choose a .sis or .sisx package."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "下一步"
+            "value" : "在主页点按 %@，选择 .sis 或 .sisx 安装包。"
+          }
+        }
+      }
+    },
+    "onboarding.game.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install Games"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装游戏"
+          }
+        }
+      }
+    },
+    "onboarding.legal" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EKA2L1 does not include firmware, ROMs or games."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EKA2L1 不含任何固件、ROM 或游戏。"
+          }
+        }
+      }
+    },
+    "onboarding.rom.body" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose the ROM and RPKG files, or a packed .7z."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "选择 ROM 和 RPKG 文件，或打包好的 .7z。"
+          }
+        }
+      }
+    },
+    "onboarding.rom.title" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Install the ROM"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "安装 ROM"
           }
         }
       }
