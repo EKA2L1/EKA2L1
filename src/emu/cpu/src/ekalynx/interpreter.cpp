@@ -990,17 +990,21 @@ namespace eka2l1::arm {
                     result = add_flags(lhs, rhs);
                     break;
                 case sub_i:
-                case cmp_i:
                     result = sub_flags(lhs, rhs);
                     break;
+                case cmp_i:
+                    nz = static_cast<std::int32_t>(sub_flags(lhs, rhs));
+                    goto advance;
                 case thumb::code::add:
                     result = add_flags(lhs, regs[rhs]);
                     break;
                 case thumb::code::sub:
-                case cmp:
-                case cmp_high:
                     result = sub_flags(lhs, regs[rhs]);
                     break;
+                case cmp:
+                case cmp_high:
+                    nz = static_cast<std::int32_t>(sub_flags(lhs, regs[rhs]));
+                    goto advance;
                 case adc: {
                     const auto right = regs[rhs];
                     result = lhs + right + c;
@@ -1019,15 +1023,17 @@ namespace eka2l1::arm {
                     result = sub_flags(0, regs[rhs]);
                     break;
                 case cmn:
-                    result = add_flags(lhs, regs[rhs]);
-                    break;
+                    nz = static_cast<std::int32_t>(add_flags(lhs, regs[rhs]));
+                    goto advance;
                 case mul:
                     result = lhs * regs[rhs];
                     break;
                 case bit_and:
-                case tst:
                     result = lhs & regs[rhs];
                     break;
+                case tst:
+                    nz = static_cast<std::int32_t>(lhs & regs[rhs]);
+                    goto advance;
                 case bit_xor:
                     result = lhs ^ regs[rhs];
                     break;
@@ -1259,8 +1265,7 @@ namespace eka2l1::arm {
                     goto done;
                 }
                 nz = static_cast<std::int32_t>(result);
-                if (op.kind != cmp && op.kind != cmp_i && op.kind != cmp_high && op.kind != tst && op.kind != cmn)
-                    regs[op.dst] = result;
+                regs[op.dst] = result;
             advance:
                 ++index;
                 --remaining;
