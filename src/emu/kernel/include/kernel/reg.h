@@ -27,6 +27,12 @@ namespace eka2l1::epoc {
     void register_epocv10(eka2l1::hle::lib_manager &mngr);
 
     /**
+     * @brief Replace the registered supervisor calls with the Belle FP2 numbering.
+     * @param mngr Reference to library manager.
+     **/
+    void register_epocv10_belle_fp2(eka2l1::hle::lib_manager &mngr);
+
+    /**
      * @brief Register Symbian 8.0 supervisor calls.
      * @param mngr Reference to library manager.
      **/

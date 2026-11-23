@@ -93,3 +93,25 @@ TEST_CASE("archive_installation_preserves_firmware_names", "[installation]") {
         nullptr, nullptr) == device_installation_none);
     fixture.check_installed(devices);
 }
+
+TEST_CASE("archive_firmware_variants_need_their_files", "[installation]") {
+    const eka2l1::host_path archive{"systemassets/firmware_variants.zip"};
+
+    std::vector<std::string> variants;
+    REQUIRE(loader::list_archive_firmware_variants(archive, variants) == device_installation_none);
+    REQUIRE(variants == std::vector<std::string>{ "Region A (0000001)", "Region B (0000002)" });
+
+    firmware_fixture fixture;
+    device_manager devices(&fixture.conf);
+    std::vector<std::string> offered;
+    REQUIRE(loader::install_archive(&devices, archive, eka2l1::host_path{add_path(fixture.root, "roms/")},
+                eka2l1::host_path{add_path(fixture.root, "drives/z/")}, false, nullptr, nullptr,
+                [&offered](const std::vector<std::string> &list) {
+                    offered = list;
+                    return 1;
+                })
+        == device_installation_fpsx_corrupt);
+    REQUIRE(offered == variants);
+    REQUIRE(devices.total() == 0);
+    REQUIRE(!common::exists(eka2l1::host_path{add_path(fixture.root, "roms/tempfirmware/")}));
+}

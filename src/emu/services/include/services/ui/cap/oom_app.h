@@ -190,6 +190,7 @@ namespace eka2l1 {
         std::unique_ptr<epoc::coe_data_storage> coe_storage;
 
         window_server *winsrv{ nullptr };
+        bool system_faded_{ false };
 
         std::mutex lock;
 
@@ -202,6 +203,8 @@ namespace eka2l1 {
         void set_sgc_params(service::ipc_context &ctx, const bool old_layout);
         void update_key_block_mode(service::ipc_context &ctx);
         void redraw_status_pane();
+        void set_system_faded(service::ipc_context &ctx);
+        void is_system_faded(service::ipc_context &ctx);
 
         void init_fep_default_data();
 

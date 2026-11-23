@@ -1394,6 +1394,7 @@ namespace eka2l1 {
             return;
         }
 
+        get_lib_manager()->adapt_svcs_to_rom();
         get_lib_manager()->load_patch_libraries(eka2l1::host_path{runtime_resource_path(eka2l1::host_path{PATCH_FOLDER_PATH})});
         dispatch::libraries::register_functions(kern_.get(), dispatcher_.get());
 

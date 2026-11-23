@@ -138,6 +138,14 @@ namespace eka2l1 {
             break;
         }
 
+        case akn_eik_app_ui_set_system_faded:
+            server<oom_ui_app_server>()->set_system_faded(*ctx);
+            break;
+
+        case akn_eik_app_ui_is_system_faded:
+            server<oom_ui_app_server>()->is_system_faded(*ctx);
+            break;
+
         case akns_update_key_block_mode:
             server<oom_ui_app_server>()->update_key_block_mode(*ctx);
             break;
@@ -156,6 +164,24 @@ namespace eka2l1 {
 
     void oom_ui_app_server::redraw_status_pane() {
         LOG_TRACE(SERVICE_UI, "Status pane redrawed");
+    }
+
+    void oom_ui_app_server::set_system_faded(service::ipc_context &ctx) {
+        std::optional<std::int32_t> faded = ctx.get_argument_value<std::int32_t>(0);
+        if (!faded) {
+            ctx.complete(epoc::error_argument);
+            return;
+        }
+
+        system_faded_ = (faded.value() != 0);
+        ctx.complete(epoc::error_none);
+    }
+
+    void oom_ui_app_server::is_system_faded(service::ipc_context &ctx) {
+        // The client reads an uninitialised TBool back through this package.
+        const std::int32_t faded = system_faded_ ? 1 : 0;
+        ctx.write_data_to_descriptor_argument<std::int32_t>(0, faded);
+        ctx.complete(epoc::error_none);
     }
 
     static std::uint32_t calculate_screen_style_hash(const std::string &style) {

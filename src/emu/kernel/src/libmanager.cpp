@@ -1216,6 +1216,61 @@ namespace eka2l1::hle {
         return dll_tls_keyed_by_uid_.value();
     }
 
+    void lib_manager::adapt_svcs_to_rom() {
+        // EUSER ordinal of RMutex::Wait(), whose first call goes to the Exec::MutexWait stub.
+        static constexpr std::uint32_t MUTEX_WAIT_ORDINAL = 922;
+        static constexpr std::uint32_t BELLE_FP2_MUTEX_WAIT_SVC = 0xEF000013;
+        static constexpr int MAX_PROLOGUE_HALFWORDS = 8;
+
+        if (svcs_adapted_ || (kern_->get_epoc_version() < epocver::epoc95)) {
+            return;
+        }
+
+        svcs_adapted_ = true;
+
+        codeseg_ptr euser = load(guest_path(u"Z:\\sys\\bin\\euser.dll"));
+        const address wait_func = euser ? euser->lookup_no_relocate(MUTEX_WAIT_ORDINAL) : 0;
+        if (!(wait_func & 1)) {
+            return;
+        }
+
+        const std::uint16_t *code = reinterpret_cast<const std::uint16_t *>(mem_->get_real_pointer(wait_func & ~1));
+        if (!code) {
+            return;
+        }
+
+        address stub = 0;
+        for (int i = 0; i + 1 < MAX_PROLOGUE_HALFWORDS; i++) {
+            const std::uint16_t hi = code[i];
+            const std::uint16_t lo = code[i + 1];
+
+            // Thumb-2 BL (lo bit 12 set) or BLX to ARM (clear).
+            if (((hi & 0xF800) != 0xF000) || ((lo & 0xC000) != 0xC000)) {
+                continue;
+            }
+
+            const std::uint32_t s = (hi >> 10) & 1;
+            const std::uint32_t i1 = 1 - (((lo >> 13) & 1) ^ s);
+            const std::uint32_t i2 = 1 - (((lo >> 11) & 1) ^ s);
+            std::int32_t offset = static_cast<std::int32_t>((s << 24) | (i1 << 23) | (i2 << 22) | ((hi & 0x3FF) << 12) | ((lo & 0x7FF) << 1));
+            if (s) {
+                offset -= (1 << 25);
+            }
+
+            const address pc = (wait_func & ~1) + i * 2 + 4;
+            stub = (lo & 0x1000) ? (pc + offset) : ((pc & ~3) + offset);
+            break;
+        }
+
+        const std::uint32_t *stub_code = stub ? reinterpret_cast<const std::uint32_t *>(mem_->get_real_pointer(stub & ~1)) : nullptr;
+        if (!stub_code || (*stub_code != BELLE_FP2_MUTEX_WAIT_SVC)) {
+            return;
+        }
+
+        epoc::register_epocv10_belle_fp2(*this);
+        LOG_INFO(KERNEL, "Using the Belle FP2 executive call numbering");
+    }
+
     codeseg_ptr lib_manager::load(const guest_path &name) {
         bool is_driver_lib = false;
 

@@ -114,7 +114,7 @@
 	url = https://github.com/tukaani-project/xz
 [submodule "src/external/libarchive"]
 	path = src/external/libarchive
-	url = https://github.com/libarchive/libarchive
+	url = https://github.com/EKA2L1/libarchive
 [submodule "src/external/zlib"]
 	path = src/external/zlib
 	url = https://github.com/madler/zlib

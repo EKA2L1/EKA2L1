@@ -34,6 +34,15 @@ namespace eka2l1 {
 
     class device_manager;
 
+    struct firmware_variant_info {
+        std::string description;
+        // FPSX files the installer reads, relative to the VPL's folder.
+        std::vector<std::string> files;
+        std::vector<int> file_weights;
+    };
+
+    device_installation_error read_firmware_variants(const std::vector<char> &vpl_content, std::vector<firmware_variant_info> &variants);
+
     /**
      * @param storage_path    The emulator's data root. Drive Z goes to `drives/z/<firmware code>/`, and the
      *                        firmware's drive C content to the device's drive C folder.

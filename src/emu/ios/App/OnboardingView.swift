@@ -72,7 +72,7 @@ private struct OnboardingStep<Content: View>: View {
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
             VStack(spacing: 6) {
-                Text("\(number)")
+                Text(verbatim: "\(number)")
                     .font(.subheadline.weight(.bold))
                     .foregroundStyle(.white)
                     .frame(width: 28, height: 28)

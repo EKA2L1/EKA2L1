@@ -144,19 +144,28 @@ typedef NS_ENUM(NSInteger, EKA2L1InstallResult) {
                                     cancelCheck:(nullable BOOL (^)(void))cancelCheck
     NS_SWIFT_NAME(installDevice(romPath:rpkgPath:isolateDrives:progress:cancelCheck:));
 
-// Install a device from a .7z archive. Two packagings are understood, since
-// both are what gets shared: a ROM image with the RPKG that goes with it, or an
-// already-unpacked device (a `data/drives/z/<code>/` tree plus the ROM under
-// `data/roms/<code>/`) which is copied straight into place. Which one it is
-// comes out of the archive's file list, so the caller doesn't choose.
+// Install a device from an archive (.7z, .zip or .rar). Three packagings are
+// understood, since all are what gets shared: a ROM image with the RPKG that
+// goes with it, an already-unpacked device (a `data/drives/z/<code>/` tree plus
+// the ROM under `data/roms/<code>/`) which is copied straight into place, or
+// Nokia flash files (VPLs next to their FPSX images). Which one it is comes out
+// of the archive's file list, so the caller doesn't choose. `firmwareVariant`
+// indexes firmwareVariantsInArchiveAtPath: and is ignored for other packagings.
 //
 // Same contract as installDeviceWithRomPath: above — progress/cancel callbacks,
 // synchronous, does not boot the device.
 - (EKA2L1InstallResult)installDeviceWithArchivePath:(NSString *)archivePath
+                                    firmwareVariant:(NSInteger)firmwareVariant
                                       isolateDrives:(BOOL)isolateDrives
                                            progress:(nullable void (^)(double fraction))progress
                                         cancelCheck:(nullable BOOL (^)(void))cancelCheck
-    NS_SWIFT_NAME(installDevice(archivePath:isolateDrives:progress:cancelCheck:));
+    NS_SWIFT_NAME(installDevice(archivePath:firmwareVariant:isolateDrives:progress:cancelCheck:));
+
+// The firmware variants a flash-file archive offers, described as "<region>
+// (<product code>)". Empty when the archive holds no VPL, nil when it cannot be
+// read. Reads only the VPLs; call it off the main thread.
+- (nullable NSArray<NSString *> *)firmwareVariantsInArchiveAtPath:(NSString *)archivePath
+    NS_SWIFT_NAME(firmwareVariants(archivePath:));
 
 // Boot a previously-installed device by index: (re)builds the system, sets
 // the device, mounts drives, binds the graphics driver. Returns YES on
