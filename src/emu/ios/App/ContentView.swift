@@ -207,10 +207,8 @@ struct ContentView: View {
                     }
                 }
             }
-            .sheet(isPresented: $showingOnboarding) {
-                OnboardingView {
-                    onboardingCompleted = true
-                }
+            .sheet(isPresented: $showingOnboarding, onDismiss: { onboardingCompleted = true }) {
+                OnboardingView()
             }
             .alert(String(localized: "home.error.deviceBootCrashedTitle"),
                    isPresented: Binding(get: { failedBootDevice != nil },
@@ -310,16 +308,31 @@ struct ContentView: View {
             } description: {
                 Text("import.noDeviceInstalled")
             } actions: {
-                Button("import.title") { showingImportDevice = true }
-                    .buttonStyle(.borderedProminent)
+                emptyStateActions
             }
         } else {
             FallbackUnavailableView(title: String(localized: "home.noDevice.title"),
                                     systemImage: "iphone.slash",
                                     message: String(localized: "import.noDeviceInstalled")) {
-                Button("import.title") { showingImportDevice = true }
-                    .buttonStyle(.borderedProminent)
+                emptyStateActions
             }
+        }
+    }
+
+    private var emptyStateActions: some View {
+        VStack(spacing: 12) {
+            Button {
+                showingImportDevice = true
+            } label: {
+                Label("import.title", systemImage: "plus")
+                    .font(.headline)
+                    .padding(.horizontal, 12)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.large)
+
+            Button("onboarding.title") { showingOnboarding = true }
+                .font(.subheadline)
         }
     }
 
