@@ -246,66 +246,71 @@ namespace eka2l1::arm::ekalynx {
         return { bits, op, cond };
     }
 
+#define EKALYNX_ARM_CODES(X) \
+    X(other) \
+    X(add_i) \
+    X(add_lsl) \
+    X(sub_i) \
+    X(mul) \
+    X(mla) \
+    X(smull) \
+    X(sub_lsl) \
+    X(adc_r) \
+    X(rsbs_lsr) \
+    X(mov_i) \
+    X(mov_lsl) \
+    X(mov_lsr) \
+    X(mov_asr) \
+    X(cmp_r) \
+    X(cmp_i) \
+    X(branch) \
+    X(ldr) \
+    X(str) \
+    X(ldrb) \
+    X(strb) \
+    X(ldrh) \
+    X(ldrsh) \
+    X(strh) \
+    X(ldr_index) \
+    X(str_index) \
+    X(ldrb_post) \
+    X(strb_post) \
+    X(ldr_post) \
+    X(str_post) \
+    X(ldm) \
+    X(stm) \
+    X(call) \
+    X(bx) \
+    X(blx) \
+    X(ldr_pc_literal) \
+    X(ldr_pc_table) \
+    X(and_i) \
+    X(tst_i) \
+    X(ands_i) \
+    X(cmp_branch) \
+    X(str_pair) \
+    X(vmov_from) \
+    X(vmov_to) \
+    X(vmov_pair_from) \
+    X(vmov_pair_to) \
+    X(widen_integer) \
+    X(data) \
+    X(vfp_load) \
+    X(vfp_store) \
+    X(vfp_math) \
+    X(write_flags) \
+    X(word_loop_entry) \
+    X(hint) \
+    X(dual_multiply) \
+    X(orr_lsl) \
+    X(subs_i) \
+    X(page_end)
     enum class arm_code : std::uint8_t {
-        other,
-        add_i,
-        add_lsl,
-        sub_i,
-        mul,
-        mla,
-        smull,
-        sub_lsl,
-        adc_r,
-        rsbs_lsr,
-        mov_i,
-        mov_lsl,
-        mov_lsr,
-        mov_asr,
-        cmp_r,
-        cmp_i,
-        branch,
-        ldr,
-        str,
-        ldrb,
-        strb,
-        ldrh,
-        ldrsh,
-        strh,
-        ldr_index,
-        str_index,
-        ldrb_post,
-        strb_post,
-        ldr_post,
-        str_post,
-        ldm,
-        stm,
-        call,
-        bx,
-        blx,
-        ldr_pc_literal,
-        ldr_pc_table,
-        and_i,
-        tst_i,
-        ands_i,
-        cmp_branch,
-        str_pair,
-        vmov_from,
-        vmov_to,
-        vmov_pair_from,
-        vmov_pair_to,
-        widen_integer,
-        data,
-        vfp_load,
-        vfp_store,
-        vfp_math,
-        write_flags,
-        word_loop_entry,
-        hint,
-        dual_multiply,
-        orr_lsl,
-        subs_i
+#define EKALYNX_ARM_CODE_ENUM(name) name,
+        EKALYNX_ARM_CODES(EKALYNX_ARM_CODE_ENUM)
+#undef EKALYNX_ARM_CODE_ENUM
     };
-    struct arm_op {
+    struct alignas(16) arm_op {
         arm_code code {};
         opcode generic {};
         std::uint8_t d {}, a {}, b {}, shift {}, flags {}, cond {};

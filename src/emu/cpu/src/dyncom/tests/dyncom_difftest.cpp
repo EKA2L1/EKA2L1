@@ -2749,6 +2749,37 @@ int main(int argc, char **argv) {
         }
     }
     if (ekalynx) {
+        // Each kind of control transfer leaves the decoded page in one direction or the other.
+        program p;
+        p.kind = "arm-page-exit";
+        p.addr = PROG_CODE_LO + 0x1000 - 32;
+        for (const auto bits : {
+                 0xea000008u, // B to the next page
+                 0xe1a00000u,
+                 0xe28f4028u, // ADD r4, pc, #40
+                 0xe1a0f004u, // MOV pc, r4 to the next page
+                 0xe3a0da09u, // MOV sp, #0x9000
+                 0xe28f502cu, // ADD r5, pc, #44
+                 0xe92d0020u, // STMFD sp!, {r5}
+                 0xe8bd8000u, // LDMFD sp!, {pc} to the next page
+                 0xe1a00000u,
+                 0xe1a00000u,
+                 0xe3a00001u, // MOV r0, #1
+                 0xe24f302cu, // SUB r3, pc, #44
+                 0xe12fff13u, // BX r3 to the previous page
+                 0xe1a00000u,
+                 0xe1500000u, // CMP r0, r0
+                 0x0afffff3u, // BEQ to the previous page
+                 0xe1a00000u,
+                 0xe1a00000u,
+                 0xeafffffeu })
+            push32(p.code, bits);
+        for (p.budget = 1; p.budget <= 16; ++p.budget) {
+            if (!run_pair(p.kind, *dc, *da, p, base_seed, true, cov, true))
+                ++failures;
+        }
+    }
+    if (ekalynx) {
         program p;
         p.kind = "vfp-page-transfer";
         p.init[0] = (PROG_DATA_PTR & ~4095u) + 4092;
