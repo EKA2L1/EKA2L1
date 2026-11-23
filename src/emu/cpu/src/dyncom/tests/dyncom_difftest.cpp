@@ -2781,6 +2781,54 @@ int main(int argc, char **argv) {
     }
     if (ekalynx) {
         program p;
+        p.kind = "thumb-page-exit";
+        p.thumb = true;
+        p.addr = PROG_CODE_LO + 0x1000 - 32;
+        for (const std::uint16_t bits : {
+                 0xe012u, // B to the next page
+                 0x46c0u,
+                 0xa40au, // ADR r4, pc, #40
+                 0x3401u, // ADDS r4, #1
+                 0x4720u, // BX r4 to the next page
+                 0xb500u, // PUSH {lr}
+                 0xbd00u, // POP {pc} to the next page
+                 0x46c0u,
+                 0x2000u, // MOVS r0, #0
+                 0xd016u, // BEQ to the next page
+                 0x46c0u,
+                 0x46c0u,
+                 0x46c0u,
+                 0x46c0u,
+                 0x46c0u,
+                 0x46c0u,
+                 0x46c0u,
+                 0x46c0u,
+                 0x46c0u,
+                 0x46c0u,
+                 0x2001u, // MOVS r0, #1
+                 0x4280u, // CMP r0, r0
+                 0xd0eau, // BEQ to the previous page
+                 0x46c0u,
+                 0x2190u, // MOVS r1, #0x90
+                 0x0209u, // LSLS r1, r1, #8
+                 0x468du, // MOV sp, r1
+                 0xa603u, // ADR r6, pc, #12
+                 0x3601u, // ADDS r6, #1
+                 0x46b6u, // MOV lr, r6
+                 0x1c27u, // ADDS r7, r4, #0
+                 0x3f26u, // SUBS r7, #38
+                 0x4738u, // BX r7 to the previous page
+                 0xe7feu,
+                 0xe7e4u, // B to the previous page
+             })
+            push16(p.code, bits);
+        for (p.budget = 1; p.budget <= 24; ++p.budget) {
+            if (!run_pair(p.kind, *dc, *da, p, base_seed, true, cov, true))
+                ++failures;
+        }
+    }
+    if (ekalynx) {
+        program p;
         p.kind = "vfp-page-transfer";
         p.init[0] = (PROG_DATA_PTR & ~4095u) + 4092;
         p.init[1] = 0x76543210;
