@@ -19,7 +19,7 @@ namespace eka2l1::arm {
         using namespace ekalynx;
         constexpr std::uint32_t N = 1u << 31, Z = 1u << 30, C = 1u << 29, V = 1u << 28, T = 1u << 5;
 
-        bool passes(unsigned cond, std::uint32_t flags) {
+        constexpr bool test_condition(unsigned cond, std::uint32_t flags) {
             bool take;
             switch (cond >> 1) {
             case 0:
@@ -45,6 +45,17 @@ namespace eka2l1::arm {
                 break;
             }
             return take != static_cast<bool>(cond & 1);
+        }
+
+        bool passes(unsigned cond, std::uint32_t flags) {
+            static constexpr auto masks = [] {
+                std::array<std::uint16_t, 16> result {};
+                for (unsigned cond = 0; cond < 16; ++cond)
+                    for (unsigned nzcv = 0; nzcv < 16; ++nzcv)
+                        result[cond] |= test_condition(cond, nzcv << 28) << nzcv;
+                return result;
+            }();
+            return (masks[cond] >> (flags >> 28)) & 1;
         }
 
         std::uint32_t subtract(std::uint32_t a, std::uint32_t b, std::uint32_t& flags) {
