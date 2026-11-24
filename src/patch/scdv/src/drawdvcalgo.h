@@ -29,6 +29,14 @@ void PanicAtTheEndOfTheWorld();
 class CFbsDrawDeviceAlgorithm : public CFbsDrawDevice,
                                 public Scdv::MOrientation {
 protected:
+    static TBool ReplacesOpaquePixel(CGraphicsContext::TDrawMode aDrawMode) {
+#ifdef EKA2
+        if (aDrawMode == CGraphicsContext::EDrawModeWriteAlpha)
+            return ETrue;
+#endif
+        return aDrawMode == CGraphicsContext::EDrawModePEN;
+    }
+
     TInt iScanLineWords;
     TInt iLongWidth;
     TOrientation iOrientation;

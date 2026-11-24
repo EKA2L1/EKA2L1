@@ -39,7 +39,7 @@ TRgb CFbsTwentyfourBitDrawDevice::ReadPixel(TInt aX, TInt aY) const {
 
     // Try to access that pixel
     TUint8 *pixelStart = GetPixelStartAddress(aX, aY);
-    return TRgb(pixelStart[0], pixelStart[1], pixelStart[2]);
+    return TRgb(pixelStart[2], pixelStart[1], pixelStart[0]);
 }
 
 void CFbsTwentyfourBitDrawDevice::ReadLineRaw(TInt aX, TInt aY, TInt aLength, TAny *aBuffer) const {
@@ -178,9 +178,14 @@ void CFbsTwentyfourBitDrawDevice::WriteLine(TInt aX, TInt aY, TInt aLength, TUin
     if (aX + aLength > LongWidth())
         PanicAtTheEndOfTheWorld();
 
+    if (ReplacesOpaquePixel(aDrawMode)) {
+        if (aLength > 0)
+            Mem::Move(pixelAddress, aBuffer, aLength * 3);
+        return;
+    }
+
     for (TInt x = aX; x < aX + aLength; x++) {
-        // Try to reduce if calls pls
-        WriteRgbToAddress(pixelAddress, buffer8[0], buffer8[1], buffer8[2], aDrawMode);
+        WriteRgbToAddress(pixelAddress, buffer8[2], buffer8[1], buffer8[0], aDrawMode);
 
         pixelAddress += 3;
         buffer8 += 3;
