@@ -8,9 +8,13 @@ struct BTNetFriend: Identifiable, Hashable {
 }
 
 struct SettingsView: View {
+    @Environment(\.openURL) private var openURL
     @ObservedObject private var peripheralManager = PeripheralManager.shared
     @State private var mappingTarget: PeripheralManager.Peripheral?
+    @State private var showMailUnavailable = false
     @AppStorage("ios.showFPSOverlay") private var showFPSOverlay = false
+
+    private static let developerEmail = "iyeatse@gmail.com"
 
     @State private var extensiveLogging = false
     @State private var hideSystemApps = true
@@ -204,12 +208,20 @@ struct SettingsView: View {
                 Link(destination: URL(string: "https://discord.gg/5Bm5SJ9")!) {
                     Label("settings.discord", systemImage: "bubble.left.and.bubble.right")
                 }
+                Button(action: contactDeveloper) {
+                    Label("settings.contactDeveloper", systemImage: "envelope")
+                }
                 Link(destination: URL(string: "https://github.com/EKA2L1/EKA2L1")!) {
                     Label("settings.license", systemImage: "curlybraces")
                 }
             }
         }
         .navigationTitle("settings.title")
+        .alert("settings.mailUnavailable", isPresented: $showMailUnavailable) {
+            Button("common.ok", role: .cancel) {}
+        } message: {
+            Text(verbatim: Self.developerEmail)
+        }
         .navigationDestination(isPresented: Binding(
             get: { mappingTarget != nil },
             set: { if !$0 { mappingTarget = nil } }
@@ -254,6 +266,38 @@ struct SettingsView: View {
             } label: {
                 Text(verbatim: field.title)
             }
+        }
+    }
+
+    private func contactDeveloper() {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
+        var info = utsname()
+        uname(&info)
+        let hardware = withUnsafeBytes(of: info.machine) { bytes in
+            String(decoding: bytes.prefix(while: { $0 != 0 }), as: UTF8.self)
+        }
+        let device = ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] ?? hardware
+        let body = [
+            "", "", "---",
+            "App Version: \(version) (\(build))",
+            "Device: \(device)",
+            "System: iOS \(UIDevice.current.systemVersion)"
+        ].joined(separator: "\r\n")
+
+        var draft = URLComponents()
+        draft.scheme = "mailto"
+        draft.path = Self.developerEmail
+        draft.queryItems = [
+            URLQueryItem(name: "subject", value: String(localized: "settings.feedbackSubject")),
+            URLQueryItem(name: "body", value: body)
+        ]
+        guard let url = draft.url else {
+            showMailUnavailable = true
+            return
+        }
+        openURL(url) { accepted in
+            showMailUnavailable = !accepted
         }
     }
 
