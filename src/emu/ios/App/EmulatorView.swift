@@ -15,6 +15,7 @@ struct EmulatorView: View {
     @AppStorage(KeypadDefaults.landscapeLayoutKey) private var landscapeKeypadLayout = ""
     @AppStorage private var dpadMode: DirectionPadMode
     @AppStorage(KeypadDefaults.opacityKey) private var keypadOpacity = KeypadDefaults.opacity
+    @AppStorage(KeypadDefaults.hapticsEnabledKey) private var keypadHapticsEnabled = true
     @AppStorage(DisplayLayoutDefaults.portraitKey) private var portraitDisplayLayout = ""
     @AppStorage(DisplayLayoutDefaults.landscapeKey) private var landscapeDisplayLayout = ""
     @AppStorage("ios.showFPSOverlay") private var showFPSOverlay = false
@@ -349,6 +350,7 @@ struct EmulatorView: View {
                 ),
                 dpadMode: $dpadMode,
                 opacity: $keypadOpacity,
+                hapticsEnabled: $keypadHapticsEnabled,
                 fullScreen: fullscreenSelection,
                 actions: menuActions,
                 onReset: {
@@ -371,6 +373,7 @@ struct EmulatorView: View {
                 actions: menuActions
             )
             .opacity(keypadOpacity)
+            .environment(\.keypadHapticsEnabled, keypadHapticsEnabled)
         }
     }
 

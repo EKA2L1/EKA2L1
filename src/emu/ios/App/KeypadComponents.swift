@@ -1,6 +1,10 @@
 import SwiftUI
 import UIKit
 
+extension EnvironmentValues {
+    @Entry var keypadHapticsEnabled = true
+}
+
 // Shared building blocks for the on-screen keypad layouts in VirtualKeypad.swift:
 // scan codes, the press/release key primitive, key-cap styling, the d-pad and
 // the numeric pads.
@@ -41,6 +45,7 @@ struct HoldableRawKey<Label: View>: View {
     var hitShape: AnyShape = AnyShape(Rectangle())
     @ViewBuilder let label: (Bool) -> Label
 
+    @Environment(\.keypadHapticsEnabled) private var hapticsEnabled
     @State private var pressed = false
     @State private var sentDown = false
     @State private var impacts = 0
@@ -67,7 +72,9 @@ struct HoldableRawKey<Label: View>: View {
         guard !sentDown else { return }
         sentDown = true
         pressed = true
-        impacts += 1
+        if hapticsEnabled {
+            impacts += 1
+        }
         EKA2L1Bridge.shared.submitRawKey(scan, pressed: true)
     }
 
@@ -331,6 +338,7 @@ struct DirectionPad: View {
     let diameter: CGFloat
     var isInteractive = true
 
+    @Environment(\.keypadHapticsEnabled) private var hapticsEnabled
     @State private var state = DPadState()
     @State private var activeScans: Set<UInt32> = []
     @State private var impacts = 0
@@ -385,7 +393,7 @@ struct DirectionPad: View {
         for scan in pressedScans.sorted() {
             EKA2L1Bridge.shared.submitRawKey(scan, pressed: true)
         }
-        if !pressedScans.isEmpty || enteredSector {
+        if hapticsEnabled && (!pressedScans.isEmpty || enteredSector) {
             impacts += 1
         }
         activeScans = scans
@@ -393,7 +401,9 @@ struct DirectionPad: View {
 
     private func tapOK() {
         EKA2L1Bridge.shared.tapRawKey(Scan.select)
-        impacts += 1
+        if hapticsEnabled {
+            impacts += 1
+        }
     }
 }
 
