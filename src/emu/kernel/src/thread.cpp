@@ -474,6 +474,40 @@ namespace eka2l1 {
             return true;
         }
 
+        std::uint64_t thread::poll_clock(const std::uint32_t source, const std::uint64_t now_us, const std::uint64_t period_us) {
+            // Far more same-value reads than real per-frame bookkeeping does within one period.
+            static constexpr std::uint32_t SPIN_READ_THRESHOLD = 256;
+
+            const std::uint64_t value = now_us / period_us;
+
+            if ((clock_poll_source != source) || (clock_poll_value != value)) {
+                clock_poll_source = source;
+                clock_poll_value = value;
+                clock_poll_repeats = 0;
+
+                return value;
+            }
+
+            if (++clock_poll_repeats < SPIN_READ_THRESHOLD) {
+                return value;
+            }
+
+            clock_poll_repeats = 0;
+
+            // sleep() shares the wakeup event with a pending After, which would complete early.
+            if (sleep_nof_sts) {
+                return value;
+            }
+
+            const std::uint64_t next_boundary_us = (value + 1) * period_us;
+            if (!sleep(static_cast<std::uint32_t>(next_boundary_us - now_us))) {
+                return value;
+            }
+
+            clock_poll_value = value + 1;
+            return value + 1;
+        }
+
         bool thread::sleep_nof(eka2l1::ptr<epoc::request_status> sts, uint32_t mssecs) {
             assert(!sleep_nof_sts && "Thread supposed to sleep already");
             sleep_nof_sts = sts;

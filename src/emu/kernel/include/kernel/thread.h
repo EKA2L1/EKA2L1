@@ -221,6 +221,10 @@ namespace eka2l1 {
 
             int sleep_level;
 
+            std::uint32_t clock_poll_source = 0;
+            std::uint64_t clock_poll_value = 0;
+            std::uint32_t clock_poll_repeats = 0;
+
             entity_exit_type exit_type;
             std::u16string exit_category;
 
@@ -364,6 +368,10 @@ namespace eka2l1 {
 
             bool sleep(std::uint32_t ussecs);
             bool sleep_nof(eka2l1::ptr<epoc::request_status> sts, std::uint32_t mssecs);
+
+            // Returns now_us / period_us. A thread that keeps reading an unchanged value is
+            // spinning on the clock: it sleeps to the next period boundary and gets that value.
+            std::uint64_t poll_clock(const std::uint32_t source, const std::uint64_t now_us, const std::uint64_t period_us);
 
             void notify_sleep(const int errcode);
 
