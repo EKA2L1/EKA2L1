@@ -939,15 +939,19 @@ private final class StickTouchView: DPadTouchView {
         radius * DPadLayout.stickTravel
     }
 
-    // Only the knob takes new touches; the ring is just a guide.
-    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
-        distance(point) <= radius * DPadLayout.stickKnobRadius
-    }
-
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard touch == nil, let first = touches.first else { return }
         touch = ObjectIdentifier(first)
-        phase = .pending(start: first.location(in: self))
+        let point = first.location(in: self)
+        if distance(point) > radius * DPadLayout.stickKnobRadius {
+            let centre = CGPoint(x: bounds.midX, y: bounds.midY)
+            phase = .steering(anchor: centre)
+            steer(point, from: centre)
+            publishPhase()
+            return
+        }
+
+        phase = .pending(start: point)
         holdTask = Task { [weak self] in
             try? await Task.sleep(nanoseconds: DPadLayout.stickHoldDelay)
             guard !Task.isCancelled else { return }
