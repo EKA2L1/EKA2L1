@@ -2289,6 +2289,57 @@ bool check_arm_load_pair(unsigned budget) {
         && (budget != 1 || state.reg[2] == p.init[2]);
 }
 
+bool check_arm_straight_block(unsigned budget, bool fault, bool retry) {
+    auto env = make_interpreter_env(true);
+    program p;
+    p.budget = budget;
+    p.init[0] = PROG_DATA_PTR;
+    p.init[1] = 1;
+    p.init[4] = PROG_DATA_PTR + 4096;
+    for (const auto bits : {
+             0xe1a02101u, // MOV r2, r1, LSL #2
+             0xe19030b2u, // LDRH r3, [r0, r2]
+             0xe0333001u, // EORS r3, r3, r1
+             0xe18430b2u, // STRH r3, [r4, r2]
+             0xe2855001u }) // ADD r5, r5, #1
+        push32(p.code, bits);
+    install(*env, p);
+    const auto dest = p.init[4] + 4;
+    env->mem[PROG_DATA_PTR + 4] = 1;
+    env->mem[dest] = 0x5a;
+    env->cpu->set_tlb_page(p.addr, env->mem.data() + p.addr, prot_read_write_exec);
+    env->cpu->set_tlb_page(PROG_DATA_PTR, env->mem.data() + PROG_DATA_PTR, prot_read_write_exec);
+
+    unsigned faults = 0, writes = 0;
+    bool valid = true;
+    if (!fault)
+        env->cpu->set_tlb_page(p.init[4], env->mem.data() + p.init[4], prot_read_write_exec);
+    else {
+        env->cpu->write_16bit = [&](address addr, std::uint16_t *value) {
+            valid &= addr == dest && *value == 0 && env->cpu->get_pc() == p.addr + 12
+                && env->cpu->get_cpsr() == 0x40000010;
+            if (++writes != 2)
+                return false;
+            std::memcpy(env->mem.data() + dest, value, sizeof(*value));
+            return true;
+        };
+        env->cpu->exception_handler = [&](exception_type type, address addr) {
+            ++faults;
+            valid &= type == exception_type_access_violation_write && addr == dest;
+            env->cpu->stop();
+            return retry;
+        };
+    }
+    const auto state = execute(*env, p);
+    const auto retired = fault ? 4u : budget;
+    return valid && state.reg[2] == 4 && state.reg[3] == (budget == 2 ? 1u : 0u)
+        && state.cpsr == (budget >= 3 ? 0x40000010u : 0x10u)
+        && state.reg[5] == unsigned(retired == 5) && state.reg[15] == p.addr + 4 * retired
+        && env->cpu->get_num_instruction_executed() == retired
+        && env->mem[dest] == ((budget >= 4 && (!fault || retry)) ? 0 : 0x5a)
+        && faults == unsigned(fault) && writes == unsigned(fault) + unsigned(retry);
+}
+
 bool check_thumb_memory_fault(bool store, bool retry, bool writeback, bool ekalynx) {
     auto env = make_interpreter_env(ekalynx);
     program p;
@@ -2688,6 +2739,18 @@ int main(int argc, char **argv) {
         for (unsigned budget : { 1u, 2u }) {
             if (!check_arm_load_pair(budget)) {
                 std::printf("[FAIL] ARM load pair with budget %u\n", budget);
+                ++failures;
+            }
+        }
+        for (unsigned budget = 1; budget <= 5; ++budget) {
+            if (!check_arm_straight_block(budget, false, false)) {
+                std::printf("[FAIL] ARM straight block with budget %u\n", budget);
+                ++failures;
+            }
+        }
+        for (bool retry : { false, true }) {
+            if (!check_arm_straight_block(5, true, retry)) {
+                std::printf("[FAIL] ARM straight block fault retry=%d\n", retry);
                 ++failures;
             }
         }

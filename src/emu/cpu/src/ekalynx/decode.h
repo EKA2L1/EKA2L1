@@ -246,6 +246,17 @@ namespace eka2l1::arm::ekalynx {
         return { bits, op, cond };
     }
 
+#define EKALYNX_ARM_BLOCKS(X, ARG) \
+    X(ARG, block_data_data_load, data, data, orr_lsl, ldrh_index, add_lsl) \
+    X(ARG, block_shift_load_store, mov_lsl, ldrh_index, data, strh_index, add_i) \
+    X(ARG, block_data_load_store, data, orr_lsl, ldrh_index, add_lsl, strh) \
+    X(ARG, block_store_data_load, strh, data, data, orr_lsl, ldrh_index) \
+    X(ARG, block_add_store_data, add_lsl, strh, data, data, orr_lsl) \
+    X(ARG, block_load_store_data, ldrh_index, add_lsl, strh, data, data) \
+    X(ARG, block_orr_load_store, orr_lsl, ldrh_index, add_lsl, strh, data) \
+    X(ARG, block_multiply_data, smull, data, data)
+
+#define EKALYNX_ARM_BLOCK_CODE(X, name, ...) X(name)
 #define EKALYNX_ARM_CODES(X) \
     X(other) \
     X(add_i) \
@@ -307,6 +318,7 @@ namespace eka2l1::arm::ekalynx {
     X(ldrh_index) \
     X(strh_index) \
     X(ldr_pair) \
+    EKALYNX_ARM_BLOCKS(EKALYNX_ARM_BLOCK_CODE, X) \
     X(page_end)
     enum class arm_code : std::uint8_t {
 #define EKALYNX_ARM_CODE_ENUM(name) name,
@@ -498,6 +510,31 @@ namespace eka2l1::arm::ekalynx {
             op.value = bits;
         }
         return op;
+    }
+
+    template <arm_code... Codes>
+    bool matches_arm_block(const arm_op* ops, unsigned available) {
+        if (available < sizeof...(Codes))
+            return false;
+        unsigned index = 0;
+        const auto matches = [&]<arm_code Code>() {
+            const auto& op = ops[index++];
+            return op.code == Code && op.cond == 14 && (Code != arm_code::data || op.d != 15);
+        };
+        return (matches.template operator()<Codes>() && ...);
+    }
+
+    inline void fuse_arm_block(arm_op* ops, unsigned available) {
+        if (ops->cond != 14)
+            return;
+        using enum arm_code;
+#define EKALYNX_MATCH_ARM_BLOCK(_, name, ...)            \
+    if (matches_arm_block<__VA_ARGS__>(ops, available)) { \
+        ops->code = name;                                \
+        return;                                          \
+    }
+        EKALYNX_ARM_BLOCKS(EKALYNX_MATCH_ARM_BLOCK, _)
+#undef EKALYNX_MATCH_ARM_BLOCK
     }
 
     inline void fuse_arm(arm_op& first, const arm_op& second) {
