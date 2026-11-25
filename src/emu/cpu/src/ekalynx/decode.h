@@ -304,6 +304,9 @@ namespace eka2l1::arm::ekalynx {
     X(dual_multiply) \
     X(orr_lsl) \
     X(subs_i) \
+    X(ldrh_index) \
+    X(strh_index) \
+    X(ldr_pair) \
     X(page_end)
     enum class arm_code : std::uint8_t {
 #define EKALYNX_ARM_CODE_ENUM(name) name,
@@ -407,6 +410,10 @@ namespace eka2l1::arm::ekalynx {
             op.value = (bits >> 8) & 15;
             return op;
         }
+        if (ins.op == opcode::half && (bits & 0x01E00F60) == 0x01800020 && op.b != 15) {
+            op.code = load ? arm_code::ldrh_index : arm_code::strh_index;
+            return op;
+        }
         if (ins.op == opcode::half && (bits & (1u << 22)) && !(bits & (1u << 21))) {
             const bool post = !(bits & (1u << 24));
             const auto kind = (bits >> 5) & 3;
@@ -500,6 +507,8 @@ namespace eka2l1::arm::ekalynx {
             first.code = arm_code::cmp_branch;
             first.value = second.value;
             first.flags = second.cond;
+        } else if (first.code == arm_code::ldr && second.code == arm_code::ldr && second.cond == 14) {
+            first.code = arm_code::ldr_pair;
         } else if (first.code == arm_code::str_index && first.flags && second.code == arm_code::str && second.cond == 14
             && second.value == 4 && first.a == second.a && second.d != first.a) {
             first.code = arm_code::str_pair;

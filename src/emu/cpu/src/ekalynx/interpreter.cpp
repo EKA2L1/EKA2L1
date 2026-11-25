@@ -664,10 +664,17 @@ namespace eka2l1::arm {
                         goto leave_page;
                     break;
                 }
+                EKALYNX_CASE(ldr_pair)
                 EKALYNX_CASE(ldr) {
                     const auto updated = a + op.value;
                     if (!transfer.template operator()<false, false>(updated, d))
                         goto done;
+                    if (op.code == ldr_pair && remaining > 1) {
+                        const auto& second = ops[++index];
+                        --remaining;
+                        if (!transfer.template operator()<false, false>(regs[second.a] + second.value, regs[second.d]))
+                            goto done;
+                    }
                     break;
                 }
                 EKALYNX_CASE(str) {
@@ -705,6 +712,23 @@ namespace eka2l1::arm {
                     }
                     if (op.flags)
                         regs[op.a] = updated;
+                    break;
+                }
+                EKALYNX_CASE(ldrh_index) {
+                    const auto* source = ptr(a + regs[op.b], 2, false);
+                    if (!source)
+                        goto done;
+                    std::uint16_t value;
+                    std::memcpy(&value, source, sizeof(value));
+                    d = value;
+                    break;
+                }
+                EKALYNX_CASE(strh_index) {
+                    auto* dest = ptr(a + regs[op.b], 2, true);
+                    if (!dest)
+                        goto done;
+                    const auto value = static_cast<std::uint16_t>(d);
+                    std::memcpy(dest, &value, sizeof(value));
                     break;
                 }
                 EKALYNX_CASE(ldr_index) {
