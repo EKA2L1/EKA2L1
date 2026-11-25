@@ -89,6 +89,15 @@ void CFbsDrawDeviceByteBuffer::WriteLine(TInt aX, TInt aY, TInt aLength, TUint32
     if (aX + aLength > LongWidth())
         PanicAtTheEndOfTheWorld();
 
+    if (ReplacesOpaquePixel(aDrawMode)) {
+        TUint16 *dest = reinterpret_cast<TUint16 *>(pixelAddress);
+        const TUint16 *src = reinterpret_cast<const TUint16 *>(aBuffer);
+        const TUint16 mask = (iDisplayMode == EColor4K) ? 0x0FFF : 0xFFFF;
+        for (TInt x = 0; x < aLength; ++x)
+            dest[x] = src[x] & mask;
+        return;
+    }
+
     for (TInt x = aX; x < aX + aLength; x++) {
         // Try to reduce if calls pls
         WriteRgbToAddress(pixelAddress, buffer8, aDrawMode);

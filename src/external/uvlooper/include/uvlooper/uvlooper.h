@@ -12,7 +12,6 @@ extern "C" {
 #include <mutex>
 #include <queue>
 
-#include <unordered_map>
 #include <unordered_set>
 #include <optional>
 
@@ -32,14 +31,9 @@ namespace libuv {
         friend struct looper;
 
         std::function<void()> callback_;
-        std::unordered_map<looper*, uv_async_t*> assigned_;
-        bool callback_invoked_;
-
-        std::mutex lock_;
 
     public:
         explicit task(std::function<void()> callback);
-        ~task();
 
         std::function<void()> callback() {
             return callback_;
@@ -58,30 +52,22 @@ namespace libuv {
      */
     struct looper {
     private:
-        static constexpr std::size_t CLEANUP_URGENT_INTERVAL = 10;
-
-        friend struct task;
-
         uv_loop_t *target_loop_;
         uv_async_t *stop_async_;
         uv_async_t *task_post_async_;
         uv_async_t *cleanup_async_;
-        uv_async_t *cleanup_urgent_regular_async_;
 
         std::unique_ptr<std::thread> running_thread_;
         std::function<void()> loop_thread_prepare_callback_;
         std::queue<std::shared_ptr<task>> tasks_;
-        std::unordered_set<task *> cleanup_instanced_tasks_;
-        std::unordered_set<uv_async_t *> urgent_cleanup_instanced_tasks_;
+        std::unordered_set<task *> pending_;
         std::mutex looper_mutex_;
 
-        bool stopped_;
-        bool in_tasks_handling_;
+        std::atomic_bool stopped_;
 
     private:
         void initialize_critical_asyncs();
         void create_neccessary_handles();
-        void detach_from_cleanup(task *target);
 
     public:
         explicit looper(uv_loop_t *loop_name, std::function<void()> loop_thread_prepare_callback = nullptr);
@@ -97,7 +83,6 @@ namespace libuv {
 
         void tasks_handle_function();
         void task_cleanup_final_function();
-        void task_cleanup_urgent_regularly_function();
         void loop_thread_function();
         void stop_function();
 

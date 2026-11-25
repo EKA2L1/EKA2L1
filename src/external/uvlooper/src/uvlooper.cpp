@@ -1,16 +1,8 @@
 #include <uvlooper/uvlooper.h>
-#include <vector>
 
 namespace libuv {
     task::task(std::function<void()> callback)
-        : callback_(callback)
-        , callback_invoked_(false) {
-    }
-
-    task::~task() {
-        for (auto looper_and_async: assigned_) {
-            looper_and_async.first->detach_from_cleanup(this);
-        }
+        : callback_(std::move(callback)) {
     }
 
     looper::looper(uv_loop_t *loop_name, std::function<void()> loop_thread_prepare_callback)
@@ -18,11 +10,9 @@ namespace libuv {
         , stop_async_(nullptr)
         , task_post_async_(nullptr)
         , cleanup_async_(nullptr)
-        , cleanup_urgent_regular_async_(nullptr)
         , running_thread_(nullptr)
         , loop_thread_prepare_callback_(loop_thread_prepare_callback)
-        , stopped_(false)
-        , in_tasks_handling_(false) {
+        , stopped_(false) {
         initialize_critical_asyncs();
     }
 
@@ -97,10 +87,6 @@ namespace libuv {
         cleanup_async_ = create_raw_async(target_loop_, this, [](uv_async_t *callback) {
             reinterpret_cast<looper *>(callback->data)->task_cleanup_final_function();
         });
-
-        cleanup_urgent_regular_async_ = create_raw_async(target_loop_, this, [](uv_async_t *callback) {
-            reinterpret_cast<looper *>(callback->data)->task_cleanup_urgent_regularly_function();
-        });
     }
 
     void looper::stop_function() {
@@ -108,113 +94,30 @@ namespace libuv {
     }
 
     void looper::tasks_handle_function() {
-        const std::lock_guard<std::mutex> guard(looper_mutex_);
-        in_tasks_handling_ = true;
-
-        while (!tasks_.empty()) {
-            std::shared_ptr<task> task_to_run = std::move(tasks_.front());
+        std::unique_lock<std::mutex> lock(looper_mutex_);
+        // A callback may repost itself. Leave new posts for the next loop iteration.
+        for (auto remaining = tasks_.size(); remaining > 0; --remaining) {
+            auto current = std::move(tasks_.front());
             tasks_.pop();
-
-            // Make a reference to get the task not to destroyed before the callback is invoked
-            uv_async_t *new_task = new uv_async_t;
-            new_task->data = new std::shared_ptr<task>(task_to_run);
-
-            uv_async_init(target_loop_, new_task, [](uv_async_t *async) {
-                std::shared_ptr<task> *task_to_run = reinterpret_cast<std::shared_ptr<task> *>(async->data);
-                std::shared_ptr<task> task_to_run_moved = std::move(*task_to_run);
-
-                task_to_run_moved->callback()();
-            });
-
-            task_to_run->assigned_[this] = new_task;
-            cleanup_instanced_tasks_.emplace(task_to_run.get());
-
-            uv_async_send(new_task);
+            pending_.erase(current.get());
+            lock.unlock();
+            current->callback()();
+            current.reset();
+            lock.lock();
         }
-
-        in_tasks_handling_ = false;
-    }
-
-    static void destroy_looper_async(uv_async_t *async) {
-        std::shared_ptr<libuv::task> *task_ptr = reinterpret_cast<std::shared_ptr<libuv::task> *>(async->data);
-
-        delete task_ptr;
-        close_and_delete_async(async);
     }
 
     void looper::task_cleanup_final_function() {
-        std::vector<uv_async_t *> task_asyncs;
-        {
-            const std::lock_guard<std::mutex> guard(looper_mutex_);
-            for (auto task: cleanup_instanced_tasks_) {
-                auto ite = task->assigned_.find(this);
-                if (ite != task->assigned_.end()) {
-                    task_asyncs.push_back(ite->second);
-                    task->assigned_.erase(ite);
-                }
-            }
-
-            cleanup_instanced_tasks_.clear();
-        }
-
-        // A task that never ran may be released here, and its destructor takes looper_mutex_.
-        for (uv_async_t *async: task_asyncs) {
-            destroy_looper_async(async);
-        }
-
         close_and_delete_async(stop_async_);
         close_and_delete_async(task_post_async_);
         close_and_delete_async(cleanup_async_);
-        close_and_delete_async(cleanup_urgent_regular_async_);
 
         uv_stop(target_loop_);
     }
     
-    void looper::task_cleanup_urgent_regularly_function() {
-        // Cleanup handles
-        const std::lock_guard<std::mutex> guard(looper_mutex_);
-        for (auto task: urgent_cleanup_instanced_tasks_) {
-            destroy_looper_async(task);
-        }
-
-        urgent_cleanup_instanced_tasks_.clear();
-    }
-
-    void looper::detach_from_cleanup(task *target) {
-       std::unique_lock<std::mutex> lock;
-        
-        if (!in_tasks_handling_) {
-            lock = std::unique_lock<std::mutex>(looper_mutex_);
-        }
-
-        if (cleanup_instanced_tasks_.find(target) != cleanup_instanced_tasks_.end()) {
-            auto found_assigned_ite = target->assigned_.find(this);
-            if (found_assigned_ite != target->assigned_.end()) {
-                urgent_cleanup_instanced_tasks_.emplace(found_assigned_ite->second);
-            }
-
-            cleanup_instanced_tasks_.erase(target);
-
-            // Cleanup if exceed a max
-            if (urgent_cleanup_instanced_tasks_.size() >= CLEANUP_URGENT_INTERVAL) {
-                uv_async_send(cleanup_urgent_regular_async_);
-            }
-        }
-    }
-
     void looper::post_task(std::shared_ptr<task> task_to_run) {
         const std::lock_guard<std::mutex> guard(looper_mutex_);
-        const std::lock_guard<std::mutex> guard2(task_to_run->lock_);
-
-        auto task_with_this_loop = task_to_run->assigned_.find(this);
-
-        if (task_with_this_loop != task_to_run->assigned_.end()) {
-            std::shared_ptr<task> *task_ptr = reinterpret_cast<std::shared_ptr<task>*>(task_with_this_loop->second->data);
-            *task_ptr = std::move(task_to_run);
-
-            uv_async_send(task_with_this_loop->second);
-        } else {
-            // Push task to create a libuv instance for it...
+        if (pending_.insert(task_to_run.get()).second) {
             tasks_.push(std::move(task_to_run));
             uv_async_send(task_post_async_);
         }
