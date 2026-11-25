@@ -3853,18 +3853,34 @@
         }
       }
     },
-    "settings.imei.invalidChecksum" : {
+    "settings.imei.hint" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The IMEI check digit doesn't match. The value is still saved."
+            "value" : "Enter a 15-digit IMEI with a valid check digit."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "IMEI 校验位不正确。仍会保存当前值。"
+            "value" : "请输入 15 位数字，最后一位为校验位。"
+          }
+        }
+      }
+    },
+    "settings.imei.invalidChecksum" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The IMEI check digit doesn't match."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IMEI 校验位不正确。"
           }
         }
       }
@@ -3874,13 +3890,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "An IMEI has 15 digits. The value is still saved."
+            "value" : "The IMEI length is incorrect."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "IMEI 应为 15 位数字。仍会保存当前值。"
+            "value" : "IMEI 长度不正确。"
           }
         }
       }
@@ -4002,13 +4018,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Invalid MMC ID. Enter 32 hexadecimal digits; this value has not been saved."
+            "value" : "Invalid MMC ID."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MMC ID 无效。请输入 32 位十六进制值；当前输入尚未保存。"
+            "value" : "MMC ID 无效。"
           }
         }
       }
