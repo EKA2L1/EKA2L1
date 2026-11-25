@@ -1459,7 +1459,7 @@ namespace eka2l1::hle {
             return false;
         }
 
-        epoc_import_func func = res->second;
+        const epoc_import_func &func = res->second;
 
         if (kern_->get_config()->log_svc) {
             LOG_TRACE(KERNEL, "Calling SVC 0x{:x} {}", svcnum, func.name);

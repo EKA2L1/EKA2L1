@@ -3045,25 +3045,30 @@ namespace eka2l1::epoc {
         timer->cancel_request();
     }
 
-    BRIDGE_FUNC(std::uint32_t, fast_counter) {
-        const std::uint64_t DEFAULT_FAST_COUNTER_PERIOD = (common::microsecs_per_sec / epoc::HIGH_RES_TIMER_HZ);
+    enum clock_poll_source : std::uint32_t {
+        CLOCK_POLL_FAST_COUNTER = 1,
+        CLOCK_POLL_NTICK_COUNT,
+        CLOCK_POLL_TICK_COUNT
+    };
 
-        ntimer *timing = kern->get_ntimer();
-        return static_cast<std::uint32_t>(timing->microseconds() / DEFAULT_FAST_COUNTER_PERIOD);
+    static std::uint64_t read_guest_clock(kernel_system *kern, const clock_poll_source source, const std::uint64_t hz) {
+        const std::uint64_t now_us = kern->get_ntimer()->microseconds();
+        const std::uint64_t period_us = common::microsecs_per_sec / hz;
+
+        kernel::thread *thr = kern->crr_thread();
+        return thr ? thr->poll_clock(source, now_us, period_us) : (now_us / period_us);
+    }
+
+    BRIDGE_FUNC(std::uint32_t, fast_counter) {
+        return static_cast<std::uint32_t>(read_guest_clock(kern, CLOCK_POLL_FAST_COUNTER, epoc::HIGH_RES_TIMER_HZ));
     }
 
     BRIDGE_FUNC(std::uint32_t, ntick_count) {
-        const std::uint64_t DEFAULT_NTICK_PERIOD = (common::microsecs_per_sec / epoc::NANOKERNEL_HZ);
-
-        ntimer *timing = kern->get_ntimer();
-        return static_cast<std::uint32_t>(timing->microseconds() / DEFAULT_NTICK_PERIOD);
+        return static_cast<std::uint32_t>(read_guest_clock(kern, CLOCK_POLL_NTICK_COUNT, epoc::NANOKERNEL_HZ));
     }
 
     BRIDGE_FUNC(std::uint32_t, tick_count) {
-        const std::uint64_t DEFAULT_TICK_PERIOD = (common::microsecs_per_sec / epoc::TICK_TIMER_HZ);
-
-        ntimer *timing = kern->get_ntimer();
-        const std::uint32_t count = static_cast<std::uint32_t>(timing->microseconds() / DEFAULT_TICK_PERIOD);
+        const std::uint32_t count = static_cast<std::uint32_t>(read_guest_clock(kern, CLOCK_POLL_TICK_COUNT, epoc::TICK_TIMER_HZ));
         const kernel::process *process = kern->crr_process();
         return process ? (count & process->get_tick_count_mask()) : count;
     }
