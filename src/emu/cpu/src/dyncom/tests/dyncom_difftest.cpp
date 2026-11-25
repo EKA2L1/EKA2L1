@@ -2254,6 +2254,92 @@ std::uint32_t suite_vfp(backend_env &dc, backend_env &da, std::uint32_t base_see
     return failures;
 }
 
+bool check_arm_load_pair(unsigned budget) {
+    auto env = make_interpreter_env(true);
+    program p;
+    p.budget = budget;
+    p.init[0] = PROG_DATA_PTR;
+    p.init[1] = 0x12345678;
+    p.init[2] = 0x87654321;
+    push32(p.code, 0xe5901000); // LDR r1, [r0]
+    push32(p.code, 0xe5912004); // LDR r2, [r1, #4]
+    install(*env, p);
+    const std::uint32_t first = PROG_DATA_PTR + 4096;
+    std::memcpy(env->mem.data() + PROG_DATA_PTR, &first, sizeof(first));
+    env->cpu->set_tlb_page(p.addr, env->mem.data() + p.addr, prot_read_write_exec);
+    env->cpu->set_tlb_page(PROG_DATA_PTR, env->mem.data() + PROG_DATA_PTR, prot_read_write_exec);
+
+    unsigned reads = 0, faults = 0;
+    bool valid = true;
+    env->cpu->read_32bit = [&](address addr, std::uint32_t *) {
+        ++reads;
+        valid &= addr == first + 4 && env->cpu->get_pc() == p.addr + 4
+            && env->cpu->get_reg(1) == first;
+        return false;
+    };
+    env->cpu->exception_handler = [&](exception_type type, address addr) {
+        ++faults;
+        valid &= type == exception_type_access_violation_read && addr == first + 4;
+        env->cpu->stop();
+        return false;
+    };
+    const auto state = execute(*env, p);
+    return valid && reads == budget - 1 && faults == budget - 1 && state.reg[1] == first
+        && state.reg[15] == p.addr + 4 * budget && env->cpu->get_num_instruction_executed() == budget
+        && (budget != 1 || state.reg[2] == p.init[2]);
+}
+
+bool check_arm_straight_block(unsigned budget, bool fault, bool retry) {
+    auto env = make_interpreter_env(true);
+    program p;
+    p.budget = budget;
+    p.init[0] = PROG_DATA_PTR;
+    p.init[1] = 1;
+    p.init[4] = PROG_DATA_PTR + 4096;
+    for (const auto bits : {
+             0xe1a02101u, // MOV r2, r1, LSL #2
+             0xe19030b2u, // LDRH r3, [r0, r2]
+             0xe0333001u, // EORS r3, r3, r1
+             0xe18430b2u, // STRH r3, [r4, r2]
+             0xe2855001u }) // ADD r5, r5, #1
+        push32(p.code, bits);
+    install(*env, p);
+    const auto dest = p.init[4] + 4;
+    env->mem[PROG_DATA_PTR + 4] = 1;
+    env->mem[dest] = 0x5a;
+    env->cpu->set_tlb_page(p.addr, env->mem.data() + p.addr, prot_read_write_exec);
+    env->cpu->set_tlb_page(PROG_DATA_PTR, env->mem.data() + PROG_DATA_PTR, prot_read_write_exec);
+
+    unsigned faults = 0, writes = 0;
+    bool valid = true;
+    if (!fault)
+        env->cpu->set_tlb_page(p.init[4], env->mem.data() + p.init[4], prot_read_write_exec);
+    else {
+        env->cpu->write_16bit = [&](address addr, std::uint16_t *value) {
+            valid &= addr == dest && *value == 0 && env->cpu->get_pc() == p.addr + 12
+                && env->cpu->get_cpsr() == 0x40000010;
+            if (++writes != 2)
+                return false;
+            std::memcpy(env->mem.data() + dest, value, sizeof(*value));
+            return true;
+        };
+        env->cpu->exception_handler = [&](exception_type type, address addr) {
+            ++faults;
+            valid &= type == exception_type_access_violation_write && addr == dest;
+            env->cpu->stop();
+            return retry;
+        };
+    }
+    const auto state = execute(*env, p);
+    const auto retired = fault ? 4u : budget;
+    return valid && state.reg[2] == 4 && state.reg[3] == (budget == 2 ? 1u : 0u)
+        && state.cpsr == (budget >= 3 ? 0x40000010u : 0x10u)
+        && state.reg[5] == unsigned(retired == 5) && state.reg[15] == p.addr + 4 * retired
+        && env->cpu->get_num_instruction_executed() == retired
+        && env->mem[dest] == ((budget >= 4 && (!fault || retry)) ? 0 : 0x5a)
+        && faults == unsigned(fault) && writes == unsigned(fault) + unsigned(retry);
+}
+
 bool check_thumb_memory_fault(bool store, bool retry, bool writeback, bool ekalynx) {
     auto env = make_interpreter_env(ekalynx);
     program p;
@@ -2650,6 +2736,24 @@ int main(int argc, char **argv) {
 
     failures += check_user_instructions(*dc, *da, ekalynx, base_seed, cov);
     if (ekalynx) {
+        for (unsigned budget : { 1u, 2u }) {
+            if (!check_arm_load_pair(budget)) {
+                std::printf("[FAIL] ARM load pair with budget %u\n", budget);
+                ++failures;
+            }
+        }
+        for (unsigned budget = 1; budget <= 5; ++budget) {
+            if (!check_arm_straight_block(budget, false, false)) {
+                std::printf("[FAIL] ARM straight block with budget %u\n", budget);
+                ++failures;
+            }
+        }
+        for (bool retry : { false, true }) {
+            if (!check_arm_straight_block(5, true, retry)) {
+                std::printf("[FAIL] ARM straight block fault retry=%d\n", retry);
+                ++failures;
+            }
+        }
         failures += check_msr_fields(*dc);
         failures += check_vfp_format_word(*dc);
     }
@@ -2709,15 +2813,18 @@ int main(int argc, char **argv) {
         p.init[1] = PROG_DATA_PTR + 4;
         p.init[2] = 0x8003;
         p.init[4] = 3;
+        p.init[5] = 2;
         for (const auto bits : {
                  0xe1c020b0u, // STRH r2, [r0]
                  0xe0d030f2u, // LDRSH r3, [r0], #2
                  0xe0030394u, // MUL r3, r4, r3
                  0xe04130b2u, // STRH r3, [r1], #-2
                  0xe1d110b2u, // LDRH r1, [r1, #2]
+                 0xe18030b5u, // STRH r3, [r0, r5]
+                 0xe19050b5u, // LDRH r5, [r0, r5]
                  0xeafffffeu })
             push32(p.code, bits);
-        for (p.budget = 1; p.budget <= 5; ++p.budget) {
+        for (p.budget = 1; p.budget <= 7; ++p.budget) {
             if (!run_pair(p.kind, *dc, *da, p, base_seed, true, cov, true))
                 ++failures;
         }

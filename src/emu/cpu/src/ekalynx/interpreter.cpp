@@ -427,6 +427,8 @@ namespace eka2l1::arm {
                 }
                 for (unsigned i = 1; i < 1024; ++i)
                     fuse_arm(slot.arm_ops[i - 1], slot.arm_ops[i]);
+                for (unsigned i = 0; i + 2 < 1024; ++i)
+                    fuse_arm_block(slot.arm_ops.get() + i, 1024 - i);
                 slot.arm_ops[1024] = { .code = arm_code::page_end, .cond = 14 };
             }
             const auto* ops = slot.arm_ops.get();
@@ -453,6 +455,75 @@ namespace eka2l1::arm {
                 else
                     std::memcpy(&value, p, 4);
                 return true;
+            };
+            const auto halfword = [&]<arm_code Code>(const arm_op& op) {
+                using enum arm_code;
+                constexpr bool indexed = Code == ldrh_index || Code == strh_index;
+                constexpr bool store = Code == strh || Code == strh_index;
+                const auto address = regs[op.a];
+                const auto updated = address + (indexed ? regs[op.b] : op.value);
+                auto* p = ptr(!indexed && op.flags ? address : updated, 2, store);
+                if (!p)
+                    return false;
+                auto& dest = regs[op.d];
+                if constexpr (store) {
+                    const auto value = static_cast<std::uint16_t>(dest);
+                    std::memcpy(p, &value, sizeof(value));
+                } else {
+                    std::uint16_t value;
+                    std::memcpy(&value, p, sizeof(value));
+                    dest = Code == ldrsh ? static_cast<std::int16_t>(value) : value;
+                }
+                if (!indexed && op.flags)
+                    regs[op.a] = updated;
+                return true;
+            };
+            const auto multiply_long = [&](const arm_op& op) {
+                const auto left = static_cast<std::int32_t>(regs[op.b]);
+                const auto right = static_cast<std::int32_t>(regs[op.value]);
+                const auto product = static_cast<std::uint64_t>(std::int64_t(left) * right);
+                regs[op.d] = static_cast<std::uint32_t>(product);
+                regs[op.a] = static_cast<std::uint32_t>(product >> 32);
+            };
+            const auto arithmetic = [&]<arm_code Code>(const arm_op& op) {
+                using enum arm_code;
+                auto& dest = regs[op.d];
+                if constexpr (Code == add_i)
+                    dest = regs[op.a] + op.value;
+                else if constexpr (Code == add_lsl)
+                    dest = regs[op.a] + (regs[op.b] << op.shift);
+                else if constexpr (Code == orr_lsl)
+                    dest = regs[op.a] | (regs[op.b] << op.shift);
+                else if constexpr (Code == mov_lsl)
+                    dest = regs[op.b] << op.shift;
+                else {
+                    static_assert(Code == smull);
+                    multiply_long(op);
+                }
+            };
+            const auto run_block = [&]<arm_code First, arm_code... Rest>() {
+                using enum arm_code;
+                unsigned completed = 0;
+                const auto step = [&]<arm_code Code>() {
+                    const auto& op = ops[index + completed];
+                    if constexpr (Code == ldrh_index || Code == strh_index || Code == strh) {
+                        if (!halfword.template operator()<Code>(op))
+                            return false;
+                    } else if constexpr (Code == data) {
+                        data_processing(op.value, regs, flags, base + 4 * (index + completed), 4);
+                    } else {
+                        arithmetic.template operator()<Code>(op);
+                    }
+                    ++completed;
+                    return true;
+                };
+                // Leave PC and the budget at the first instruction needing the slow path.
+                const bool success = step.template operator()<First>()
+                    && (remaining < 1 + sizeof...(Rest) || (step.template operator()<Rest>() && ...));
+                const auto skipped = success ? completed - 1 : completed;
+                index += skipped;
+                remaining -= skipped;
+                return success;
             };
             while (remaining) {
                 const auto* decoded = &ops[index];
@@ -490,6 +561,13 @@ namespace eka2l1::arm {
 #define EKALYNX_CASE(name) case name:
 #endif
                 switch (op.code) {
+#define EKALYNX_RUN_ARM_BLOCK(_, name, ...)              \
+    EKALYNX_CASE(name)                                   \
+        if (!run_block.template operator()<__VA_ARGS__>()) \
+            goto done;                                   \
+        break;
+                EKALYNX_ARM_BLOCKS(EKALYNX_RUN_ARM_BLOCK, _)
+#undef EKALYNX_RUN_ARM_BLOCK
                 EKALYNX_CASE(data) {
                     const auto next = data_processing(op.value, regs, flags, base + 4 * index, 4);
                     index = ((next - base) >> 2) - 1;
@@ -555,7 +633,7 @@ namespace eka2l1::arm {
                     return;
                 }
                 EKALYNX_CASE(add_i)
-                    d = a + op.value;
+                    arithmetic.template operator()<add_i>(op);
                     break;
                 EKALYNX_CASE(sub_i)
                     d = a - op.value;
@@ -569,22 +647,17 @@ namespace eka2l1::arm {
                 EKALYNX_CASE(mla)
                     d = a * regs[op.b] + regs[op.value];
                     break;
-                EKALYNX_CASE(smull) {
-                    const auto left = static_cast<std::int32_t>(regs[op.b]);
-                    const auto right = static_cast<std::int32_t>(regs[op.value]);
-                    const auto product = static_cast<std::uint64_t>(std::int64_t(left) * right);
-                    d = static_cast<std::uint32_t>(product);
-                    regs[op.a] = static_cast<std::uint32_t>(product >> 32);
+                EKALYNX_CASE(smull)
+                    multiply_long(op);
                     break;
-                }
                 EKALYNX_CASE(adc_r)
                     d = a + regs[op.b] + ((flags & C) != 0);
                     break;
                 EKALYNX_CASE(add_lsl)
-                    d = a + (regs[op.b] << op.shift);
+                    arithmetic.template operator()<add_lsl>(op);
                     break;
                 EKALYNX_CASE(orr_lsl)
-                    d = a | (regs[op.b] << op.shift);
+                    arithmetic.template operator()<orr_lsl>(op);
                     break;
                 EKALYNX_CASE(subs_i)
                     d = subtract(a, op.value, flags);
@@ -593,7 +666,7 @@ namespace eka2l1::arm {
                     d = op.value;
                     break;
                 EKALYNX_CASE(mov_lsl)
-                    d = regs[op.b] << op.shift;
+                    arithmetic.template operator()<mov_lsl>(op);
                     break;
                 EKALYNX_CASE(mov_asr)
                     d = static_cast<std::int32_t>(regs[op.b]) >> op.shift;
@@ -664,10 +737,17 @@ namespace eka2l1::arm {
                         goto leave_page;
                     break;
                 }
+                EKALYNX_CASE(ldr_pair)
                 EKALYNX_CASE(ldr) {
                     const auto updated = a + op.value;
                     if (!transfer.template operator()<false, false>(updated, d))
                         goto done;
+                    if (op.code == ldr_pair && remaining > 1) {
+                        const auto& second = ops[++index];
+                        --remaining;
+                        if (!transfer.template operator()<false, false>(regs[second.a] + second.value, regs[second.d]))
+                            goto done;
+                    }
                     break;
                 }
                 EKALYNX_CASE(str) {
@@ -689,24 +769,25 @@ namespace eka2l1::arm {
                     break;
                 }
                 EKALYNX_CASE(ldrh)
-                EKALYNX_CASE(ldrsh)
-                EKALYNX_CASE(strh) {
-                    const auto updated = a + op.value;
-                    const bool store = op.code == strh;
-                    auto* p = ptr(op.flags ? a : updated, 2, store);
-                    if (!p)
+                    if (!halfword.template operator()<ldrh>(op))
                         goto done;
-                    auto half = static_cast<std::uint16_t>(d);
-                    if (store) {
-                        std::memcpy(p, &half, sizeof(half));
-                    } else {
-                        std::memcpy(&half, p, sizeof(half));
-                        d = op.code == ldrsh ? static_cast<std::int16_t>(half) : half;
-                    }
-                    if (op.flags)
-                        regs[op.a] = updated;
                     break;
-                }
+                EKALYNX_CASE(ldrsh)
+                    if (!halfword.template operator()<ldrsh>(op))
+                        goto done;
+                    break;
+                EKALYNX_CASE(strh)
+                    if (!halfword.template operator()<strh>(op))
+                        goto done;
+                    break;
+                EKALYNX_CASE(ldrh_index)
+                    if (!halfword.template operator()<ldrh_index>(op))
+                        goto done;
+                    break;
+                EKALYNX_CASE(strh_index)
+                    if (!halfword.template operator()<strh_index>(op))
+                        goto done;
+                    break;
                 EKALYNX_CASE(ldr_index) {
                     const auto updated = a + (regs[op.b] << op.shift);
                     if (!transfer.template operator()<false, false>(updated, d))
