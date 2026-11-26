@@ -42,10 +42,12 @@ namespace eka2l1 {
             return std::nullopt;
         }
 
-        // Icons are stored as bitmap/mask pairs, one per size; show the largest pair whose mask fits.
+        // UIQ stores one bitmap/mask pair per size; show the largest pair whose mask fits.
+        // Avkon's list icon is always pair 0/1; pair 2/3 is the context pane icon.
         std::size_t bitmap_index = 0;
         bool has_mask = false;
-        const std::size_t pair_count = std::min<std::size_t>(std::max(icon_count, 1), parser.sbm_headers.size() / 2);
+        const int pairs_to_scan = uiq ? std::max(icon_count, 1) : 1;
+        const std::size_t pair_count = std::min<std::size_t>(pairs_to_scan, parser.sbm_headers.size() / 2);
         for (std::size_t i = 0; i < pair_count; i++) {
             const vec2 size = parser.sbm_headers[i * 2].size_pixels;
             if (parser.sbm_headers[i * 2 + 1].size_pixels != size) {
