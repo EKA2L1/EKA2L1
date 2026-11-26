@@ -420,6 +420,10 @@ private enum DPadLayout {
     static let crossDeadZoneRelease: CGFloat = 0.13
     // Extra degrees a finger must pass an arm boundary before switching.
     static let crossSectorHysteresis: Double = 8
+    // How far past an arm's edge a moving finger must reach into the gap
+    // between two arms before it presses both, and how far back to let go.
+    static let crossDiagonalEngage: CGFloat = 0.03
+    static let crossDiagonalRelease: CGFloat = 0.03
 
     // Stick
     static let stickRingWidth: CGFloat = 1.5  // points
@@ -516,9 +520,17 @@ private enum CrossKey: Hashable {
     case ok
 }
 
+// A finger between two arms lights both, one platter per arm.
 private struct CrossFinger: Equatable {
-    let id: Int
+    struct ID: Hashable {
+        let serial: Int
+        let key: CrossKey
+    }
+
+    let serial: Int
     let key: CrossKey
+
+    var id: ID { ID(serial: serial, key: key) }
 }
 
 private struct CrossPadFace: View {
@@ -872,11 +884,29 @@ private final class CrossTouchView: DPadTouchView {
         }
     }
 
-    // Four-way: always a cardinal sector (0, 2, 4, 6), never a diagonal.
+    // A cardinal sector (0, 2, 4, 6) on an arm, or a diagonal one in the gap
+    // between two arms. Fingers off the pad are judged at its rim.
     private func sector(at point: CGPoint, current: Int?) -> Int {
+        var v = vector(point)
+        let d = hypot(v.dx, v.dy)
+        if d > radius {
+            v = CGVector(dx: v.dx * radius / d, dy: v.dy * radius / d)
+        }
+        let gap = min(abs(v.dx), abs(v.dy)) / radius - DPadLayout.crossArmHalfWidth
+        let wasDiagonal = current.map { $0 % 2 == 1 } ?? false
+        if wasDiagonal ? gap > -DPadLayout.crossDiagonalRelease
+                       : gap > (current == nil ? 0 : DPadLayout.crossDiagonalEngage) {
+            switch (v.dx > 0, v.dy > 0) {
+            case (true, true): return 1
+            case (false, true): return 3
+            case (false, false): return 5
+            case (true, false): return 7
+            }
+        }
+
         let angle = degrees(point)
         let nearest = (Int((angle / 90).rounded()) % 4 + 4) % 4 * 2
-        guard let current else { return nearest }
+        guard let current, !wasDiagonal else { return nearest }
         var delta = abs(angle - Double(current) * 45).truncatingRemainder(dividingBy: 360)
         delta = min(delta, 360 - delta)
         return delta > 45 + DPadLayout.crossSectorHysteresis ? nearest : current
@@ -889,15 +919,14 @@ private final class CrossTouchView: DPadTouchView {
             switch zone {
             case .ok:
                 state.okPressed = true
-                state.fingers.append(CrossFinger(id: serial, key: .ok))
+                state.fingers.append(CrossFinger(serial: serial, key: .ok))
             case .dead:
                 break
             case .sector(let sector):
                 let directions = PadDirection.directions(for: sector)
                 state.directions.formUnion(directions)
-                // Four-way, so a sector is always exactly one arm.
-                if let direction = directions.first {
-                    state.fingers.append(CrossFinger(id: serial, key: .arm(direction)))
+                for direction in PadDirection.allCases where directions.contains(direction) {
+                    state.fingers.append(CrossFinger(serial: serial, key: .arm(direction)))
                 }
             }
         }
