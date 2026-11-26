@@ -373,6 +373,7 @@ namespace eka2l1 {
             // spinning on the clock: it sleeps to the next period boundary and gets that value.
             std::uint64_t poll_clock(const std::uint32_t source, const std::uint64_t now_us, const std::uint64_t period_us);
 
+            // Caller must hold the kernel lock from thread lookup through notification.
             void notify_sleep(const int errcode);
 
             bool stop();

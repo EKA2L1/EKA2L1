@@ -25,6 +25,7 @@
 #include <common/log.h>
 
 #include <functional>
+#include <mutex>
 #include <kernel/kernel.h>
 #include <kernel/scheduler.h>
 #include <kernel/thread.h>
@@ -45,13 +46,12 @@ namespace eka2l1::kernel {
 
         if (wakeup_evt == -1) {
             wakeup_evt = timing->register_event("SchedulerWakeUpThread", [kern](std::uint64_t userdata, std::uint64_t cycles_late) {
+                const std::lock_guard<kernel_system> guard(*kern);
                 kernel::thread *thr = kern->get_by_id<kernel::thread>(static_cast<kernel::uid>(userdata));
 
-                if (thr == nullptr) {
-                    return;
+                if (thr && thr->get_exit_type() == entity_exit_type::pending) {
+                    thr->notify_sleep(0);
                 }
-
-                thr->notify_sleep(0);
             });
         }
 
