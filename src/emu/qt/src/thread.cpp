@@ -90,6 +90,26 @@ static void on_ui_window_mouse_evt(void *userdata, eka2l1::vec3 mouse_pos, int b
         return;
     }
 
+    // A touch on a key drawn on the skin presses that key
+    if (emu->ui_main) {
+        std::uint32_t skin_code = 0;
+        bool skin_down = false;
+
+        const int skin_result = emu->ui_main->skin_touch(mouse_pos, action, mouse_id, skin_code, skin_down);
+        if (skin_result != 0) {
+            if ((skin_result == 2) && emu->winserv) {
+                eka2l1::drivers::input_event key_evt;
+                key_evt.type_ = eka2l1::drivers::input_event_type::key_raw;
+                key_evt.key_.code_ = skin_code;
+                key_evt.key_.state_ = skin_down ? eka2l1::drivers::key_state::pressed : eka2l1::drivers::key_state::released;
+
+                emu->winserv->queue_input_from_driver(key_evt);
+            }
+
+            return;
+        }
+    }
+
     const float scale = emu->symsys->get_config()->ui_scale;
     auto mouse_evt = make_mouse_event_driver(mouse_pos_x / scale, mouse_pos_y / scale, mouse_pos_z / scale,
         button, action, emu->ui_main->map_mouse_id_to_touch_index(mouse_id, (action == 2)));
