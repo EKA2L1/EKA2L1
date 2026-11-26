@@ -8,9 +8,13 @@ struct BTNetFriend: Identifiable, Hashable {
 }
 
 struct SettingsView: View {
+    @Environment(\.openURL) private var openURL
     @ObservedObject private var peripheralManager = PeripheralManager.shared
     @State private var mappingTarget: PeripheralManager.Peripheral?
+    @State private var showMailUnavailable = false
     @AppStorage("ios.showFPSOverlay") private var showFPSOverlay = false
+
+    private static let developerEmail = "iyeatse@gmail.com"
 
     @State private var extensiveLogging = false
     @State private var hideSystemApps = true
@@ -38,13 +42,6 @@ struct SettingsView: View {
         URL(fileURLWithPath: documentsRoot()).appendingPathComponent("data/EKA2L1.log")
     }
 
-    private var normalizedMMCId: String? {
-        let input = mmcId.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard input.range(of: "^([0-9a-fA-F]{32}|[0-9a-fA-F]{8}(-[0-9a-fA-F]{8}){3})$",
-                          options: .regularExpression) != nil else { return nil }
-        return input.replacingOccurrences(of: "-", with: "").lowercased()
-    }
-
     var body: some View {
         Form {
             Section {
@@ -56,15 +53,8 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                         .submitLabel(.done)
                 }
-                HStack {
-                    Text(verbatim: "IMEI")
-                    Spacer()
-                    TextField(String("540806859904945"), text: $imei)
-                        .multilineTextAlignment(.trailing)
-                        .foregroundStyle(.secondary)
-                        .monospacedDigit()
-                        .keyboardType(.numberPad)
-                }
+                deviceIdentifierLink(.imei, value: $imei)
+                deviceIdentifierLink(.mmcId, value: $mmcId)
                 if !availableLanguages.isEmpty {
                     Picker("settings.systemLanguage", selection: $systemLanguageCode) {
                         ForEach(availableLanguages) { language in
@@ -74,17 +64,6 @@ struct SettingsView: View {
                 }
             } header: {
                 Text("settings.device")
-            } footer: {
-                // Like the desktop frontend, an invalid IMEI is flagged but still saved,
-                // since some registration schemes expect a specific serial.
-                switch EKA2L1Bridge.shared.validateIMEI(imei) {
-                case 0:
-                    EmptyView()
-                case -1:
-                    Text("settings.imei.invalidLength")
-                default:
-                    Text("settings.imei.invalidChecksum")
-                }
             }
             Section {
                 Picker("settings.performanceMode", selection: $performanceMode) {
@@ -110,28 +89,9 @@ struct SettingsView: View {
                     }
                 }
                 .accessibilityIdentifier("settings.cpuBackend")
-                HStack {
-                    Text(verbatim: "MMC ID")
-                    Spacer()
-                    TextField(String("00000000-00000000-00000000-00000000"), text: $mmcId)
-                        .multilineTextAlignment(.trailing)
-                        .foregroundStyle(.secondary)
-                        .monospacedDigit()
-                        .keyboardType(.asciiCapable)
-                        .autocorrectionDisabled()
-                        .textInputAutocapitalization(.never)
-                        .accessibilityLabel(Text(verbatim: "MMC ID"))
-                        .accessibilityIdentifier("settings.mmcId")
-                }
             } header: {
                 Text("settings.system")
             } footer: {
-                if normalizedMMCId == nil {
-                    Text("settings.mmcId.invalid")
-                        .foregroundStyle(.red)
-                } else {
-                    Text("settings.mmcId.hint")
-                }
                 if cpuBackend == "jit" {
                     if !EKA2L1Bridge.shared.jitAvailable {
                         Text("settings.jit.unavailable")
@@ -248,12 +208,20 @@ struct SettingsView: View {
                 Link(destination: URL(string: "https://discord.gg/5Bm5SJ9")!) {
                     Label("settings.discord", systemImage: "bubble.left.and.bubble.right")
                 }
+                Button(action: contactDeveloper) {
+                    Label("settings.contactDeveloper", systemImage: "envelope")
+                }
                 Link(destination: URL(string: "https://github.com/EKA2L1/EKA2L1")!) {
                     Label("settings.license", systemImage: "curlybraces")
                 }
             }
         }
         .navigationTitle("settings.title")
+        .alert("settings.mailUnavailable", isPresented: $showMailUnavailable) {
+            Button("common.ok", role: .cancel) {}
+        } message: {
+            Text(verbatim: Self.developerEmail)
+        }
         .navigationDestination(isPresented: Binding(
             get: { mappingTarget != nil },
             set: { if !$0 { mappingTarget = nil } }
@@ -265,25 +233,7 @@ struct SettingsView: View {
         .onAppear {
             load()
         }
-        .onDisappear {
-            // Committed once rather than per keystroke: on UIQ each write also
-            // rewrites the guest's PlpVariant machine ID file.
-            if !imei.isEmpty {
-                _ = EKA2L1Bridge.shared.applyConfigSnapshot(["imei": imei])
-            }
-        }
         .onChange(of: friendlyPhoneName) { _ in save() }
-        .onChange(of: imei) { newValue in
-            let digits = String(newValue.filter { $0.isASCII && $0.isNumber }.prefix(15))
-            if digits != newValue {
-                imei = digits
-            }
-        }
-        .onChange(of: mmcId) { _ in
-            if let normalizedMMCId {
-                _ = EKA2L1Bridge.shared.applyConfigSnapshot(["mmcId": normalizedMMCId])
-            }
-        }
         .onChange(of: performanceMode) { _ in save() }
         .onChange(of: extensiveLogging) { _ in save() }
         .onChange(of: hideSystemApps) { _ in save() }
@@ -299,6 +249,55 @@ struct SettingsView: View {
                 // surface to re-scan so the app names reload in the new language.
                 NotificationCenter.default.post(name: .eka2l1AppListInvalidated, object: nil)
             }
+        }
+    }
+
+    private func deviceIdentifierLink(_ field: DeviceIdentifierEditor.Field, value: Binding<String>) -> some View {
+        NavigationLink {
+            DeviceIdentifierEditor(field: field, value: value)
+        } label: {
+            LabeledContent {
+                Text(verbatim: value.wrappedValue)
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+                    .frame(maxWidth: 200, alignment: .trailing)
+            } label: {
+                Text(verbatim: field.title)
+            }
+        }
+    }
+
+    private func contactDeveloper() {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "?"
+        var info = utsname()
+        uname(&info)
+        let hardware = withUnsafeBytes(of: info.machine) { bytes in
+            String(decoding: bytes.prefix(while: { $0 != 0 }), as: UTF8.self)
+        }
+        let device = ProcessInfo.processInfo.environment["SIMULATOR_MODEL_IDENTIFIER"] ?? hardware
+        let body = [
+            "", "", "---",
+            "App Version: \(version) (\(build))",
+            "Device: \(device)",
+            "System: iOS \(UIDevice.current.systemVersion)"
+        ].joined(separator: "\r\n")
+
+        var draft = URLComponents()
+        draft.scheme = "mailto"
+        draft.path = Self.developerEmail
+        draft.queryItems = [
+            URLQueryItem(name: "subject", value: String(localized: "settings.feedbackSubject")),
+            URLQueryItem(name: "body", value: body)
+        ]
+        guard let url = draft.url else {
+            showMailUnavailable = true
+            return
+        }
+        openURL(url) { accepted in
+            showMailUnavailable = !accepted
         }
     }
 
@@ -398,5 +397,100 @@ struct SettingsView: View {
         newFriendAddress = ""
         newFriendPort = ""
         save()
+    }
+}
+
+private struct DeviceIdentifierEditor: View {
+    enum Field: String {
+        case imei, mmcId
+
+        var title: String {
+            self == .imei ? "IMEI" : "MMC ID"
+        }
+    }
+
+    @Environment(\.dismiss) private var dismiss
+    @Binding private var value: String
+    @State private var draft: String
+    let field: Field
+
+    init(field: Field, value: Binding<String>) {
+        self.field = field
+        _value = value
+        _draft = State(initialValue: value.wrappedValue)
+    }
+
+    private var input: String? {
+        switch field {
+        case .imei:
+            // UIQ registration can require a specific serial despite a checksum warning.
+            return draft.isEmpty ? nil : draft
+        case .mmcId:
+            let trimmed = draft.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard trimmed.range(of: "^([0-9a-fA-F]{32}|[0-9a-fA-F]{8}(-[0-9a-fA-F]{8}){3})$",
+                                options: .regularExpression) != nil else { return nil }
+            return trimmed
+        }
+    }
+
+    var body: some View {
+        Form {
+            Section {
+                TextField(field.title, text: $draft)
+                    .font(field == .imei ? .body.monospaced() : .subheadline.monospaced())
+                    .keyboardType(field == .imei ? .numberPad : .asciiCapable)
+                    .autocorrectionDisabled()
+                    .textInputAutocapitalization(.never)
+                    .submitLabel(.done)
+                    .onSubmit(save)
+                    .accessibilityLabel(Text(verbatim: field.title))
+                    .accessibilityIdentifier("settings.\(field.rawValue)")
+                    .onChange(of: draft) { newValue in
+                        guard field == .imei else { return }
+                        let digits = String(newValue.filter { $0.isASCII && $0.isNumber }.prefix(15))
+                        if digits != newValue {
+                            draft = digits
+                        }
+                    }
+            } footer: {
+                VStack(alignment: .leading, spacing: 4) {
+                    switch field {
+                    case .imei:
+                        Text("settings.imei.hint")
+                        switch EKA2L1Bridge.shared.validateIMEI(draft) {
+                        case 0:
+                            EmptyView()
+                        case -1:
+                            Text("settings.imei.invalidLength")
+                        default:
+                            Text("settings.imei.invalidChecksum")
+                        }
+                    case .mmcId:
+                        Text("settings.mmcId.hint")
+                        if input == nil {
+                            Text("settings.mmcId.invalid")
+                                .foregroundStyle(.red)
+                        }
+                    }
+                }
+            }
+        }
+        .navigationTitle(Text(verbatim: field.title))
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .confirmationAction) {
+                Button("common.done", action: save)
+                    .disabled(input == nil)
+            }
+        }
+    }
+
+    private func save() {
+        guard let input else { return }
+        if input != value {
+            guard EKA2L1Bridge.shared.applyConfigSnapshot([field.rawValue: input]) else { return }
+            value = EKA2L1Bridge.shared.currentConfigSnapshot()[field.rawValue] as? String ?? input
+        }
+        dismiss()
     }
 }

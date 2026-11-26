@@ -81,6 +81,22 @@
         }
       }
     },
+    "common.off" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Off"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "关"
+          }
+        }
+      }
+    },
     "common.ok" : {
       "localizations" : {
         "en" : {
@@ -93,6 +109,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "好"
+          }
+        }
+      }
+    },
+    "common.on" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "开"
           }
         }
       }
@@ -3245,6 +3277,22 @@
         }
       }
     },
+    "keypad.editor.haptics" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Haptic Feedback"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "振动反馈"
+          }
+        }
+      }
+    },
     "keypad.editor.hint" : {
       "localizations" : {
         "en" : {
@@ -3533,6 +3581,22 @@
         }
       }
     },
+    "settings.contactDeveloper" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Contact Developer"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "联系开发者"
+          }
+        }
+      }
+    },
     "settings.cpuBackend" : {
       "localizations" : {
         "en" : {
@@ -3625,6 +3689,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "大规模日志记录"
+          }
+        }
+      }
+    },
+    "settings.feedbackSubject" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EKA2L1 iOS Feedback and Suggestions"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "EKA2L1 iOS 反馈及建议"
           }
         }
       }
@@ -3853,18 +3933,34 @@
         }
       }
     },
-    "settings.imei.invalidChecksum" : {
+    "settings.imei.hint" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The IMEI check digit doesn't match. The value is still saved."
+            "value" : "Enter a 15-digit IMEI with a valid check digit."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "IMEI 校验位不正确。仍会保存当前值。"
+            "value" : "请输入 15 位数字，最后一位为校验位。"
+          }
+        }
+      }
+    },
+    "settings.imei.invalidChecksum" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The IMEI check digit doesn't match."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "IMEI 校验位不正确。"
           }
         }
       }
@@ -3874,13 +3970,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "An IMEI has 15 digits. The value is still saved."
+            "value" : "The IMEI length is incorrect."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "IMEI 应为 15 位数字。仍会保存当前值。"
+            "value" : "IMEI 长度不正确。"
           }
         }
       }
@@ -3981,6 +4077,22 @@
         }
       }
     },
+    "settings.mailUnavailable" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn’t Open Mail"
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "无法打开邮件应用"
+          }
+        }
+      }
+    },
     "settings.mmcId.hint" : {
       "localizations" : {
         "en" : {
@@ -4002,13 +4114,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Invalid MMC ID. Enter 32 hexadecimal digits; this value has not been saved."
+            "value" : "Invalid MMC ID."
           }
         },
         "zh-Hans" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "MMC ID 无效。请输入 32 位十六进制值；当前输入尚未保存。"
+            "value" : "MMC ID 无效。"
           }
         }
       }

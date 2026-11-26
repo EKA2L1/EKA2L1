@@ -1,6 +1,10 @@
 import SwiftUI
 import UIKit
 
+extension EnvironmentValues {
+    @Entry var keypadHapticsEnabled = true
+}
+
 // Shared building blocks for the on-screen keypad layouts in VirtualKeypad.swift:
 // scan codes, the press/release key primitive, key-cap styling, the d-pad and
 // the numeric pads.
@@ -41,6 +45,7 @@ struct HoldableRawKey<Label: View>: View {
     var hitShape: AnyShape = AnyShape(Rectangle())
     @ViewBuilder let label: (Bool) -> Label
 
+    @Environment(\.keypadHapticsEnabled) private var hapticsEnabled
     @State private var pressed = false
     @State private var sentDown = false
     @State private var impacts = 0
@@ -67,7 +72,9 @@ struct HoldableRawKey<Label: View>: View {
         guard !sentDown else { return }
         sentDown = true
         pressed = true
-        impacts += 1
+        if hapticsEnabled {
+            impacts += 1
+        }
         EKA2L1Bridge.shared.submitRawKey(scan, pressed: true)
     }
 
@@ -331,6 +338,7 @@ struct DirectionPad: View {
     let diameter: CGFloat
     var isInteractive = true
 
+    @Environment(\.keypadHapticsEnabled) private var hapticsEnabled
     @State private var state = DPadState()
     @State private var activeScans: Set<UInt32> = []
     @State private var impacts = 0
@@ -385,7 +393,7 @@ struct DirectionPad: View {
         for scan in pressedScans.sorted() {
             EKA2L1Bridge.shared.submitRawKey(scan, pressed: true)
         }
-        if !pressedScans.isEmpty || enteredSector {
+        if hapticsEnabled && (!pressedScans.isEmpty || enteredSector) {
             impacts += 1
         }
         activeScans = scans
@@ -393,7 +401,9 @@ struct DirectionPad: View {
 
     private func tapOK() {
         EKA2L1Bridge.shared.tapRawKey(Scan.select)
-        impacts += 1
+        if hapticsEnabled {
+            impacts += 1
+        }
     }
 }
 
@@ -929,15 +939,19 @@ private final class StickTouchView: DPadTouchView {
         radius * DPadLayout.stickTravel
     }
 
-    // Only the knob takes new touches; the ring is just a guide.
-    override func point(inside point: CGPoint, with event: UIEvent?) -> Bool {
-        distance(point) <= radius * DPadLayout.stickKnobRadius
-    }
-
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard touch == nil, let first = touches.first else { return }
         touch = ObjectIdentifier(first)
-        phase = .pending(start: first.location(in: self))
+        let point = first.location(in: self)
+        if distance(point) > radius * DPadLayout.stickKnobRadius {
+            let centre = CGPoint(x: bounds.midX, y: bounds.midY)
+            phase = .steering(anchor: centre)
+            steer(point, from: centre)
+            publishPhase()
+            return
+        }
+
+        phase = .pending(start: point)
         holdTask = Task { [weak self] in
             try? await Task.sleep(nanoseconds: DPadLayout.stickHoldDelay)
             guard !Task.isCancelled else { return }

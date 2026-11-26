@@ -461,6 +461,7 @@ enum KeypadDefaults {
     static let opacityKey = "ios.keypadOpacity"
     static let opacity = 0.85
     static let opacityRange: ClosedRange<Double> = 0.1...1.0
+    static let hapticsEnabledKey = "ios.keypadHapticsEnabled"
     static let portraitLayoutKey = "ios.keypadPositions.portrait"
     static let landscapeLayoutKey = "ios.keypadPositions.landscape"
     static let fullscreenKey = "ios.fullscreenDisplay"
@@ -534,7 +535,6 @@ struct SystemMenuKey: View {
             fpsLimitPicker
 
             if !actions.guestScreenModes.isEmpty {
-                Divider()
                 guestScreenModePicker
             }
         } label: {
@@ -554,34 +554,24 @@ struct SystemMenuKey: View {
         }
     }
 
-    @ViewBuilder
     private var fpsLimitPicker: some View {
-        let picker = Picker("emulator.menu.fpsLimit", selection: actions.frameLimit) {
+        Picker("emulator.menu.fpsLimit", selection: actions.frameLimit) {
             Text(verbatim: "15").tag(15)
             Text(verbatim: "25").tag(25)
             Text(verbatim: "30").tag(30)
             Text(verbatim: "60").tag(60)
             Text("emulator.fpsLimit.unlimited").tag(0)
         }
-        if #available(iOS 17, *) {
-            picker.pickerStyle(.palette)
-        } else {
-            picker
-        }
+        .pickerStyle(.menu)
     }
 
-    @ViewBuilder
     private var guestScreenModePicker: some View {
-        let picker = Picker("emulator.menu.guestScreenMode", selection: actions.guestScreenMode) {
+        Picker("emulator.menu.guestScreenMode", selection: actions.guestScreenMode) {
             ForEach(actions.guestScreenModes, id: \.self) { mode in
                 Text(verbatim: "\(mode)").tag(mode)
             }
         }
-        if #available(iOS 17, *) {
-            picker.pickerStyle(.palette)
-        } else {
-            picker
-        }
+        .pickerStyle(.menu)
     }
 }
 
@@ -654,6 +644,7 @@ struct KeypadLayoutEditor: View {
     @Binding var configuration: KeypadLayoutConfiguration
     @Binding var dpadMode: DirectionPadMode
     @Binding var opacity: Double
+    @Binding var hapticsEnabled: Bool
     @Binding var fullScreen: Bool
     let actions: KeypadMenuActions
     let onReset: () -> Void
@@ -729,6 +720,14 @@ struct KeypadLayoutEditor: View {
             } label: {
                 Label("keypad.editor.letterKeys", systemImage: "keyboard")
             }
+
+            Picker(selection: $hapticsEnabled) {
+                Text("common.on").tag(true)
+                Text("common.off").tag(false)
+            } label: {
+                Label("keypad.editor.haptics", systemImage: "iphone.radiowaves.left.and.right")
+            }
+            .pickerStyle(.menu)
         } label: {
             HStack(spacing: 8) {
                 Image(systemName: "square.grid.2x2")
