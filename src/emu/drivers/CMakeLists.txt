@@ -74,6 +74,7 @@ add_library(drivers
         include/drivers/audio/clip_writer.h
         include/drivers/audio/dsp.h
         include/drivers/audio/player.h
+        include/drivers/audio/ringtone.h
         include/drivers/audio/stream.h
         include/drivers/audio/backend/minibae/player_minibae.h
         include/drivers/audio/backend/tinysoundfont/player_tsf.h
@@ -103,6 +104,7 @@ add_library(drivers
         src/audio/clip_writer.cpp
         src/audio/dsp.cpp
         src/audio/player.cpp
+        src/audio/ringtone.cpp
         src/audio/stream.cpp
         src/audio/backend/minibae/player_minibae.cpp
         src/audio/backend/tinysoundfont/player_tsf.cpp

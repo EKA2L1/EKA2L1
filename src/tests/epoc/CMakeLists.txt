@@ -6,6 +6,7 @@ set(CORE_TEST_FILES
     ${CMAKE_CURRENT_SOURCE_DIR}/drivers/command_list.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/drivers/audio.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/drivers/clip_writer.cpp
+    ${CMAKE_CURRENT_SOURCE_DIR}/drivers/ringtone.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/drivers/video.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/gdbstub.cpp
     ${CMAKE_CURRENT_SOURCE_DIR}/j2me/applist.cpp
