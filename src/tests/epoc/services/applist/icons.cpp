@@ -135,3 +135,11 @@ TEST_CASE("Host MBM icons show the largest registered pair with a matching mask"
     REQUIRE(first_only->size == vec2(18, 18));
     REQUIRE(registered->pixels[3] == 255);
 }
+
+TEST_CASE("Host MBM icons use Avkon's list icon pair on S60", "app_icon") {
+    const auto file = make_icon_pairs({ { 18, 18 }, { 32, 32 } });
+    const auto icon = decode(file, epocver::epoc94, false, 2);
+    REQUIRE(icon);
+    REQUIRE(icon->size == vec2(18, 18));
+    REQUIRE(icon->pixels[3] == 255);
+}
