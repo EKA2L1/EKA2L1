@@ -1165,7 +1165,12 @@ namespace eka2l1::dispatch {
         kernel::uid crr_thread_uid = crr_thread->unique_id();
 
         egl_context *context = controller.current_context(crr_thread_uid);
-        if (!context || (context->context_type() != EGL_GLES1_CONTEXT)) {
+        if (!context) {
+            // GL error state belongs to a context; with none current there is nowhere to record it.
+            return nullptr;
+        }
+
+        if (context->context_type() != EGL_GLES1_CONTEXT) {
             controller.push_error(crr_thread_uid, GL_INVALID_OPERATION);
             return nullptr;
         }
