@@ -54,13 +54,31 @@ namespace eka2l1::epoc {
             epoc::canvas_base *cv = reinterpret_cast<epoc::canvas_base*>(win);
             bitmap_cache_ = cv->client->get_ws().get_bitmap_cache();
 
-            if (cv->can_be_physically_seen() && cv->surface_streaming()) {
+            if (cv->is_visible() && !cv->surface_visible_region().empty() && cv->surface_streaming()) {
                 streaming_window_ = cv;
             }
 
             if (cv->draw(builder_))
                 total_redrawed_++;
 
+            return false;
+        }
+    };
+
+    // A new surface frame is drawn under the descendants, so they must replay their content over it.
+    struct surface_descendant_redraw_walker : public window_tree_walker {
+        common::region region_;
+
+        bool do_it(window *win) override {
+            if (win->type != window_kind::client) {
+                return false;
+            }
+            epoc::canvas_base *cv = reinterpret_cast<epoc::canvas_base *>(win);
+            if (cv->is_visible() && cv->background_surface_.changed()) {
+                common::region below = cv->descendants_visible_region();
+                below.clip(cv->abs_rect);
+                region_.add_region(below);
+            }
             return false;
         }
     };
@@ -450,6 +468,11 @@ namespace eka2l1::epoc {
         builder.set_feature(eka2l1::drivers::graphics_feature::stencil_test, false);
 
         const bool full_redraw = flags_ & FLAG_SERVER_REDRAW_PENDING;
+        if (!full_redraw && region_redraw_supported()) {
+            surface_descendant_redraw_walker surface_walker;
+            root->walk_tree(&surface_walker, epoc::window_tree_walk_style::bonjour_children);
+            server_redraw_region_.add_region(surface_walker.region_);
+        }
         region_redraw_active_ = !full_redraw && !server_redraw_region_.empty();
         if (region_redraw_active_) {
             // Windows replay their stores over what is on screen, clipped to the region.

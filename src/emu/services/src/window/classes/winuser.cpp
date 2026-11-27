@@ -198,7 +198,7 @@ namespace eka2l1::epoc {
     }
 
     bool canvas_base::draw_surface(drivers::graphics_command_builder &builder, window_surface_attachment &attachment) {
-        if (!attachment.surface || !can_be_physically_seen()) {
+        if (!attachment.surface || !is_visible()) {
             return false;
         }
         auto &source = *attachment.surface;
@@ -212,7 +212,7 @@ namespace eka2l1::epoc {
         const auto placement = place_surface(attachment.config, abs_rect, source.size(), scr->display_scale_factor, native_rotation);
         common::region clip;
         clip.add_rect(placement.clip);
-        clip = clip.intersect(visible_region);
+        clip = clip.intersect((&attachment == &background_surface_) ? surface_visible_region() : visible_region);
         if (clip.empty() || placement.destination.empty() || placement.source.empty()) {
             return false;
         }
@@ -347,6 +347,32 @@ namespace eka2l1::epoc {
 
     bool canvas_base::can_be_physically_seen() const {
         return is_visible() && !visible_region.empty();
+    }
+
+    common::region canvas_base::descendants_visible_region() const {
+        common::region result;
+        for (const window *cur = child; cur; cur = cur->sibling) {
+            if (cur->type != window_kind::client) {
+                continue;
+            }
+            const canvas_base *cv = reinterpret_cast<const canvas_base *>(cur);
+            result.add_region(cv->visible_region);
+            result.add_region(cv->descendants_visible_region());
+        }
+        return result;
+    }
+
+    common::region canvas_base::surface_visible_region() const {
+        // A GCE background surface lies below the UI layer, so it shows through descendants
+        // that leave their area untouched, unless AUTOCLEAR paints their background.
+        if (!background_surface_.surface || !scr->region_redraw_supported()) {
+            return visible_region;
+        }
+        common::region result = visible_region;
+        common::region below = descendants_visible_region();
+        below.clip(abs_rect);
+        result.add_region(below);
+        return result;
     }
 
     bool canvas_base::is_visible() const {
@@ -594,7 +620,7 @@ namespace eka2l1::epoc {
         }
 
         // Want to trigger a screen redraw
-        if (can_be_physically_seen()) {
+        if (is_visible() && !surface_visible_region().empty()) {
             epoc::animation_scheduler *sched = client->get_ws().get_anim_scheduler();
             ntimer *timing = client->get_ws().get_ntimer();
 
@@ -1446,7 +1472,7 @@ namespace eka2l1::epoc {
             return false;
         }
         const bool server_redraw = (scr->flags_ & screen::FLAG_SERVER_REDRAW_PENDING)
-            && !scr->server_redraw_clip(visible_region).empty();
+            && !scr->server_redraw_clip(surface_visible_region()).empty();
         if (!surface_changed() && !pending_segment_ && !server_redraw && surface_ui_) {
             return false;
         }
@@ -1454,7 +1480,7 @@ namespace eka2l1::epoc {
         update_surface_ui(builder);
         builder.set_feature(drivers::graphics_feature::blend, false);
         builder.clip_bitmap_region(visible_region, scr->display_scale_factor);
-        if (clear_color_enable && !(surface_transparent_ && background_surface_.surface)) {
+        if (clear_color_enable && !visible_region.empty() && !(surface_transparent_ && background_surface_.surface)) {
             auto color = common::rgba_to_vec(clear_color);
             if (!is_display_mode_alpha(display_mode())) {
                 color.w = 255;
@@ -1464,6 +1490,9 @@ namespace eka2l1::epoc {
         }
         background_region.make_empty();
         draw_surface(builder, background_surface_);
+        if (visible_region.empty()) {
+            return true;
+        }
 
         builder.clip_bitmap_region(visible_region, scr->display_scale_factor);
         builder.set_feature(drivers::graphics_feature::blend, true);
@@ -1748,7 +1777,7 @@ namespace eka2l1::epoc {
     }
 
     bool redraw_msg_canvas::draw(drivers::graphics_command_builder &builder) {
-        if (!can_be_physically_seen()) {
+        if (!is_visible() || surface_visible_region().empty()) {
             // No need to redraw this window yet. It doesn't even have any content ready.
             return false;
         }

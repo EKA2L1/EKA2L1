@@ -1447,7 +1447,7 @@ namespace eka2l1::dispatch {
 
         egl_context *context = controller.current_context(crr_thread_uid);
         if (!context) {
-            controller.push_error(crr_thread_uid, GL_INVALID_OPERATION);
+            // GL error state belongs to a context; with none current there is nowhere to record it.
             return nullptr;
         }
 

@@ -169,6 +169,9 @@ namespace eka2l1::epoc {
         bool is_translucent() const;
         bool can_be_physically_seen() const;
 
+        common::region descendants_visible_region() const;
+        common::region surface_visible_region() const;
+
         bool is_faded() const {
             return (flags & flags_faded);
         }
