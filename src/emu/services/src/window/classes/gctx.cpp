@@ -52,6 +52,11 @@ namespace eka2l1::epoc {
         return server_bmp->bitmap_;
     }
 
+    static bool ui_target_has_alpha(const canvas_base *win) {
+        // ScreenPlay draws every window into the ARGB UI layer, whatever its display mode.
+        return epoc::is_display_mode_alpha(win->display_mode()) || win->scr->is_screenplay_architecture();
+    }
+
     void graphic_context::set_origin(service::ipc_context &context, ws_cmd &cmd) {
         origin = *reinterpret_cast<const eka2l1::vec2 *>(cmd.data_ptr);
         context.complete(epoc::error_none);
@@ -209,7 +214,7 @@ namespace eka2l1::epoc {
             return false;
 
         case brush_style::solid:
-            if (epoc::is_display_mode_alpha(attached_window->display_mode())) {
+            if (ui_target_has_alpha(attached_window)) {
                 if (color_result.w == 0) {
                     // Nothing, dont draw
                     return false;
@@ -1114,7 +1119,7 @@ namespace eka2l1::epoc {
         rect_draw_data.color_ = common::rgba_to_vec(brush_color);
         gdi_cmd.opcode_ = epoc::gdi_store_command_draw_rect;
 
-        if (!epoc::is_display_mode_alpha(attached_window->display_mode())) {
+        if (!ui_target_has_alpha(attached_window)) {
             rect_draw_data.color_.w = 255;
         }
 
@@ -1142,7 +1147,7 @@ namespace eka2l1::epoc {
         rect_draw_data.color_ = common::rgba_to_vec(brush_color);
         gdi_cmd.opcode_ = epoc::gdi_store_command_draw_rect;
 
-        if (!epoc::is_display_mode_alpha(attached_window->display_mode())) {
+        if (!ui_target_has_alpha(attached_window)) {
             rect_draw_data.color_.w = 255;
         }
         
